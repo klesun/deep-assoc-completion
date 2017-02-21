@@ -1,6 +1,7 @@
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.ResolveResult;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.lang.Opt;
@@ -9,6 +10,7 @@ import org.klesun.lang.shortcuts.F;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
@@ -80,14 +82,86 @@ public class DeepKeys extends CompletionContributor
             .collect(Collectors.toList());
     }
 
-    private static Opt<List<String>> findArrayKeysInVar(Variable variable, int depth)
+    private static Opt<PsiElement> getParentScope(PsiElement psi)
     {
-        return opt(variable.resolve())
-            .fap(toCast(VariableImpl.class))
-            .map(v -> v.getParent())
-            .fap(toCast(AssignmentExpressionImpl.class))
-            .map(v -> v.getValue())
-            .fap(v -> findKeysInExpr(v, depth));
+        PsiElement next = psi.getParent();
+        while (next != null) {
+            Opt<PsiElement> scopeMb = Opt.fst(list(
+                opt(null) // for coma formatting
+                , Tls.cast(GroupStatementImpl.class, next).map(v -> v)
+                // elseif ($result = anotherFunction())
+                , Tls.cast(ElseIfImpl.class, next).map(v -> v)
+            ));
+            if (scopeMb.has()) {
+                return scopeMb;
+            }
+            next = next.getParent();
+        }
+        return new Opt(null);
+    }
+
+    private static List<PsiElement> getParentScopes(PsiElement psi)
+    {
+        List<PsiElement> result = new ArrayList<>();
+        Opt<PsiElement> next = getParentScope(psi);
+        while (next.has()) {
+            next.thn(result::add);
+            next = getParentScope(next.def(null));
+        }
+        return result;
+    }
+
+    /**
+     * // and this will be true
+     * $someVar = ['someKey' => 'dsa'];
+     * if (...) {
+     *     // and this will be false
+     *     $someVar = 123;
+     * } else {
+     *     // this will be true
+     *     $someVar = ['someKey' => 'asd'];
+     *     // for this statement
+     *     print($someVar['someKey']);
+     * }
+     */
+    private static boolean isReachable(Variable usage, PsiElement declaration)
+    {
+        if (usage.getTextOffset() < declaration.getTextOffset()) {
+            return false;
+        }
+        return getParentScope(declaration)
+            .map(declScope -> getParentScopes(usage)
+                .stream()
+                .anyMatch(scope -> scope.isEquivalentTo(declScope)))
+            .def(false);
+    }
+
+    private static List<String> findArrayKeysInVar(Variable variable, int depth)
+    {
+        // it is not perfect still, but should handle 99% cases
+
+        List<String> result = new ArrayList<>();
+        ResolveResult[] references = variable.multiResolve(false);
+
+        for (int i = references.length - 1; i >= 0; --i) {
+            ResolveResult res = references[i];
+            if (opt(res.getElement())
+                // to filter out further assignments
+                .flt(v -> v.getTextOffset() < variable.getTextOffset())
+                .map(v -> v.getParent())
+                .fap(toCast(AssignmentExpressionImpl.class))
+                .map(v -> v.getValue())
+                .fap(v -> findKeysInExpr(v, depth))
+                .thn(v -> v.forEach(result::add))
+                .has()
+            ) {
+                // direct assignment, everything before it is meaningless
+                if (isReachable(variable, res.getElement())) {
+                    break;
+                }
+            }
+        };
+        return result;
     }
 
     private static Opt<List<String>> findKeysInExpr(PsiElement expr, int depth)
@@ -101,7 +175,7 @@ public class DeepKeys extends CompletionContributor
         return Opt.fst(list(
             opt(null) // for coma formatting
             , Tls.cast(VariableImpl.class, expr)
-                .fap(v -> findArrayKeysInVar(v, nextDepth))
+                .map(v -> findArrayKeysInVar(v, nextDepth))
             , Tls.cast(ArrayCreationExpressionImpl.class, expr)
                 .map(arr -> findKeysInArrCtor(arr))
             , Tls.cast(FunctionReferenceImpl.class, expr)
@@ -116,9 +190,24 @@ public class DeepKeys extends CompletionContributor
     @Override
     public void fillCompletionVariants(CompletionParameters parameters, CompletionResultSet result)
     {
-        // TODO: collect and fix corner-cases like multiple
-        // var assignment/assigning keys outside declaration/nested arrays/etc...
-        // cuz for now i just want it to become usable as soon as possible
+        // TODO: assigning keys outside declaration/nested arrays/etc...
+
+        // TODO: support lists of associative arrays
+        // (like when parser returns segments and you iterate through them)
+        
+        // TODO: go to definition
+        
+        // TODO: show error when user tries to access not existing key
+
+        // TODO: use phpdocs:
+        //   1. Reference to the function that provides such output
+        //   2. Relaxed parse of description like ['k1' => 'v1', ...], array('k1' => 'v1', ...)
+
+        // TODO: autocomplete of arrays resulted from lambdas?
+        
+        // TODO: autocomplete from XML file with payload example ($xml['body'][0]['main'][0][...])
+        
+        // TODO: (not sure) autocomplete of function arguments by usage
 
         opt(parameters.getPosition().getParent())
             .thn(literal -> opt(literal.getParent())

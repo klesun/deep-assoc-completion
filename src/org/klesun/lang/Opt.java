@@ -42,6 +42,11 @@ public class Opt<T>
         }
     }
 
+    public Opt<T> flt(F<T, Boolean> f)
+    {
+        return map(v -> f.apply(v) ? v : null);
+    }
+
     /** Flat Map - to combine Opt-s */
     public <T1> Opt<T1> fap(F<T, Opt<T1>> f)
     {
