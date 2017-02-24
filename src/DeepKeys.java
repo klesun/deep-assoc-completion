@@ -86,12 +86,7 @@ public class DeepKeys extends CompletionContributor
     {
         PsiElement next = psi.getParent();
         while (next != null) {
-            Opt<PsiElement> scopeMb = Opt.fst(list(
-                opt(null) // for coma formatting
-                , Tls.cast(GroupStatementImpl.class, next).map(v -> v)
-                // elseif ($result = anotherFunction())
-                , Tls.cast(ElseIfImpl.class, next).map(v -> v)
-            ));
+            Opt<PsiElement> scopeMb = Tls.cast(GroupStatementImpl.class, next).map(v -> v);
             if (scopeMb.has()) {
                 return scopeMb;
             }
@@ -111,9 +106,39 @@ public class DeepKeys extends CompletionContributor
         return result;
     }
 
+    private static boolean isPartOf(PsiElement child, PsiElement grandParent)
+    {
+        PsiElement parent = child;
+        while (parent != null) {
+            if (parent.isEquivalentTo(grandParent)) {
+                return true;
+            }
+            parent = parent.getParent();
+        }
+        return false;
+    }
+
+    private static Opt<ElseIfImpl> isInElseIfCondition(PsiElement varReference)
+    {
+        PsiElement parent = varReference;
+        while (parent != null) {
+            Opt<ElseIfImpl> elseIf = Tls.cast(ElseIfImpl.class, parent);
+            if (elseIf.has()) {
+                return elseIf.flt(v -> isPartOf(varReference, v.getCondition()));
+
+            }
+            parent = parent.getParent();
+        }
+        return opt(null);
+    }
+
     /**
      * // and this will be true
      * $someVar = ['someKey' => 'dsa'];
+     * if (...) {
+     *     // and this will be false
+     *     $someVar = 456;
+     * }
      * if (...) {
      *     // and this will be false
      *     $someVar = 123;
@@ -124,16 +149,93 @@ public class DeepKeys extends CompletionContributor
      *     print($someVar['someKey']);
      * }
      */
-    private static boolean isReachable(Variable usage, PsiElement declaration)
+    private static boolean didSurelyHappen(PsiElement reference, Variable usage)
     {
-        if (usage.getTextOffset() < declaration.getTextOffset()) {
+        if (usage.getTextOffset() < reference.getTextOffset()) {
             return false;
         }
-        return getParentScope(declaration)
-            .map(declScope -> getParentScopes(usage)
+
+        Opt<PsiElement> refScope = getParentScope(reference);
+        List<PsiElement> varScopes = getParentScopes(usage);
+
+        Opt<ElseIfImpl> elseIf = isInElseIfCondition(reference);
+        if (elseIf.has()) {
+            for (PsiElement part: elseIf.def(null).getChildren()) {
+                if (part instanceof GroupStatement) {
+                    return varScopes.stream().anyMatch(s -> s.isEquivalentTo(part));
+                }
+            }
+            return false;
+        }
+
+        return refScope
+            .map(declScope -> varScopes
                 .stream()
                 .anyMatch(scope -> scope.isEquivalentTo(declScope)))
             .def(false);
+    }
+
+    /**
+     * // and this will be true
+     * $someVar = ['someKey' => 'dsa'];
+     * if (...) {
+     *     // and this will be true
+     *     $someVar = 456;
+     * }
+     * if (...) {
+     *     // and this will be false
+     *     $someVar = 123;
+     * } else {
+     *     // this will be true
+     *     $someVar = ['someKey' => 'asd'];
+     *     // for this statement
+     *     print($someVar['someKey']);
+     * }
+     */
+    private static boolean didPossiblyHappen(PsiElement reference, Variable usage)
+    {
+        if (usage.getTextOffset() < reference.getTextOffset()) {
+            return false;
+        }
+
+        List<PsiElement> scopesL = getParentScopes(reference);
+        List<PsiElement> scopesR = getParentScopes(usage);
+
+        int l = 0;
+        int r = 0;
+
+        // 1. find deepest same scope
+        while (l < scopesL.size() && r < scopesR.size()) {
+            if (scopesL.get(l).getTextOffset() < scopesR.get(r).getTextOffset()) {
+                ++r;
+            } else if (scopesL.get(l).getTextOffset() > scopesR.get(r).getTextOffset()) {
+                ++l;
+            } else {
+                // could check offset of parent/child to handle
+                // cases when different psi have same offset
+                // or use textrange
+                break;
+            }
+        }
+
+        // 2. if right inside it are (if|elseif) and (elseif|else) respectively, then false
+        if (l < scopesL.size() && r < scopesR.size()) {
+            if (l > 0 && r > 0) {
+                boolean lIsIf = opt(scopesL.get(l - 1).getParent())
+                    .map(v -> v instanceof If || v instanceof ElseIf)
+                    .def(false);
+                boolean rIsElse = opt(scopesR.get(r - 1).getParent())
+                    .map(v -> v instanceof Else || v instanceof ElseIf)
+                    .def(false);
+                boolean incompatibleScopes = lIsIf && rIsElse;
+
+                return !incompatibleScopes;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
     }
 
     private static List<String> findArrayKeysInVar(Variable variable, int depth)
@@ -145,20 +247,29 @@ public class DeepKeys extends CompletionContributor
 
         for (int i = references.length - 1; i >= 0; --i) {
             ResolveResult res = references[i];
-            if (opt(res.getElement())
-                // to filter out further assignments
-                .flt(v -> v.getTextOffset() < variable.getTextOffset())
-                .map(v -> v.getParent())
-                .fap(toCast(AssignmentExpressionImpl.class))
-                .map(v -> v.getValue())
-                .fap(v -> findKeysInExpr(v, depth))
-                .thn(v -> v.forEach(result::add))
-                .has()
+            Opt<PsiElement> expr = opt(res.getElement())
+                .flt(v -> didPossiblyHappen(v, variable))
+                .map(v -> v.getParent());
+
+                // $record = ['initialKey' => 123];
+            if (expr.fap(toCast(AssignmentExpressionImpl.class))
+                    .map(v -> v.getValue())
+                    .fap(v -> findKeysInExpr(v, depth))
+                    .thn(v -> v.forEach(result::add))
+                    .has()
             ) {
                 // direct assignment, everything before it is meaningless
-                if (isReachable(variable, res.getElement())) {
+                if (didSurelyHappen(res.getElement(), variable)) {
                     break;
                 }
+            } else {
+                // $record['dynamicKey2'] = 345;
+                expr.fap(toCast(ArrayAccessExpressionImpl.class))
+                    .flt(access -> access.getParent() instanceof AssignmentExpression)
+                    .map(access -> access.getIndex())
+                    .map(index -> index.getValue())
+                    .fap(toCast(StringLiteralExpressionImpl.class))
+                    .thn(lit -> result.add(lit.getContents()));
             }
         };
         return result;
@@ -204,6 +315,8 @@ public class DeepKeys extends CompletionContributor
         //   2. Relaxed parse of description like ['k1' => 'v1', ...], array('k1' => 'v1', ...)
 
         // TODO: autocomplete of arrays resulted from lambdas?
+        
+        // TODO: autocomplete through yield?
         
         // TODO: autocomplete from XML file with payload example ($xml['body'][0]['main'][0][...])
         
