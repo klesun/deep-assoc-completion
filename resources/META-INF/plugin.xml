@@ -16,25 +16,14 @@
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
   <idea-version since-build="145.0"/>
 
+  <extensions defaultExtensionNs="com.intellij">
+    <completion.contributor language="PHP" implementationClass="org.klesun.deep_keys.DeepKeysCbtr"/>
+  </extensions>
+
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
        on how to target different products -->
   <depends>com.intellij.modules.lang</depends>
   <depends>com.jetbrains.php</depends>
   <depends>com.intellij.modules.platform</depends>
 
-  <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-  </extensions>
-
-  <actions>
-    <!-- Add your actions here -->
-    <action id="autocomplete-deep-keys" class="AutocompleteDeepKeys" text="Autocomplete Deep Keys"
-            description="Autocomplete using keys from function this variable got value">
-      <add-to-group group-id="ToolsMenu" anchor="first"/>
-    </action>
-  </actions>
-
-  <extensions defaultExtensionNs="com.intellij">
-    <completion.contributor language="PHP" implementationClass="DeepKeys"/>
-  </extensions>
 </idea-plugin>
