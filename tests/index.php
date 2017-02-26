@@ -4,7 +4,7 @@ class DeepKeysTest
 {
     private static function makeRecord()
     {
-        return [
+        $record = [
             'id' => 123,
             'firstName' => 'Vasya',
             'lastName' => 'Pupkin',
@@ -16,27 +16,29 @@ class DeepKeysTest
                 'passCode' => '123ABC',
                 'expirationDate' => '2021-01-01',
                 'family' => [
-                    'spouse' => 'Perpetuya Orlova',
+                    'spouse' => 'Perpetuya Pupkina',
                     'children' => [
                         'Valera Orlov',
                     ],
                 ],
             ],
-            'chosenSubSubjects' => [
-                [
-                    'name' => 'philosophy',
-                    'priority' => 5.7,
-                ],
-                [
-                    'name' => 'micro-controllers',
-                    'priority' => 4.1,
-                ],
-                [
-                    'name' => 'french',
-                    'priority' => 3.2,
-                ],
-            ],
+            'chosenSubSubjects' => array_map(function($i) {
+                return [
+                    'name' => 'philosophy_'.$i,
+                    'priority' => 5.7 + $i,
+                ];
+            }, range(0,9)),
         ];
+        $record['friends'][] = [
+            'name' => 'Madao',
+            'occupation' => 'Madao',
+        ];
+        $record['friends'][] = [
+            'name' => 'Phoenix Wright',
+            'occupation' => 'Madao',
+        ];
+
+        return $record;
     }
 
     private static function testSimple()
@@ -44,7 +46,7 @@ class DeepKeysTest
         $denya = self::makeRecord();
         // should suggest: id, firstName,
         // lastName, year, faculty, chosenSubSubjects
-        print($denya['']);
+        print($denya['pass']);
         // should suggest same
         self::makeRecord()[''];
     }
@@ -112,25 +114,27 @@ class DeepKeysTest
         // should suggest birthDate, birthCountry,
         // passCode, expirationDate, family
         $record['pass'][''];
-        $family = $record['pass']['family'];
+        $family = $record['pass'][''];
         // should suggest spouse, children
-        $family[''];
+        $family['children'];
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
-    private static function testListAccess()
+    private static function testBasisListAccess()
     {
-        $subjects = self::makeRecord()['chosenSubSubjects'];
         // should suggest name, priority
-        $subjects[1][''];
+        self::makeRecord()['chosenSubSubjects'][4][''];
 
-        foreach ($subjects as $subject) {
-            // should suggest name, priority
-            $subject[''];
-        }
+        $makeTax = function($i) {
+            return [
+                'currency' => -'USD',
+                'amount' => 199 + $i,
+            ];
+        };
+        $mapped = \array_map($makeTax, [1,2,3]);
+        // should suggest currency, amount
+        $mapped[0][''];
+
+        return $mapped;
     }
 
     private static function testLambdaAccess()
@@ -153,11 +157,72 @@ class DeepKeysTest
         $mapped[2][''];
     }
 
+    //============================
+    // not implemented follow
+    //============================
+
+    private static function testListAccess()
+    {
+        $mapped = self::testBasisListAccess();
+
+        $addTaxCode = function(array $taxRecord) {
+            $taxRecord['taxCode'] = 'YQ';
+            return $taxRecord;
+        };
+
+        $withTaxCode = array_map($addTaxCode, $mapped);
+        // should suggest currency, amount, taxCode
+        $withTaxCode[0][''];
+
+        $record = self::makeRecord();
+
+        $subjects = $record['chosenSubSubjects'];
+
+        foreach ($subjects as $subject) {
+            // should suggest name, priority
+            $subject[''];
+        }
+
+        // should suggest friends
+        $record[''];
+        // should suggest name, occupation
+        $record['friends'][123][''];
+    }
+
     private static function testUndefinedKeyError()
     {
         $record = ['a' => 6, 'b' => 8];
         // should show error like "Key 'someNotExistingKey' is not defined"
         print($record['someNotExistingKey']);
+    }
+
+    private static function testTupleAccess()
+    {
+        $recordA = ['aField1' => 13, 'aField2' => 234.42];
+        $recordB = ['bField1' => [1,2,3], 'bField2' => 'asdasdd'];
+        $tuple = [$recordA, $recordB];
+        // should suggest aField1, aField2
+        $tuple[0][''];
+        // should suggest bField1, bField2
+        $tuple[1][''];
+        list($restoredA, $restoredB) = $tuple;
+        // should suggest aField1, aField2
+        $restoredA[''];
+        // should suggest bField1, bField2
+        $restoredB[''];
+    }
+
+    private static function testClosureInference()
+    {
+        $func = function($i) {
+            return [
+                'asdad' => 'asda',
+                'qweq' => $i * 2,
+            ];
+        };
+        $record = $func(123);
+        // should suggest asdad, qweq
+        $record[''];
     }
 }
 

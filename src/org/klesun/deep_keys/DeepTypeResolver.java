@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveResult;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import org.apache.commons.lang.StringUtils;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 import org.klesun.lang.shortcuts.F;
@@ -97,6 +98,33 @@ public class DeepTypeResolver
         return possibleTypes;
     }
 
+    private static Opt<List<DeepType>> findBuiltInFuncCallType(FunctionReferenceImpl call, int depth)
+    {
+        return opt(call.getName()).fap(name -> {
+            PsiElement[] params = call.getParameters();
+            if (name.equals("array_map")) {
+                DeepType result = new DeepType(call);
+                if (params.length > 1) {
+                    PsiElement callback = params[0];
+                    PsiElement array = params[1];
+                    for (DeepType callbackType: findExprType(callback, depth)) {
+                        for (DeepType indexType: callbackType.returnTypes) {
+                            result.indexTypes.add(indexType);
+                        }
+                    }
+                }
+                return opt(list(result));
+            } else if (name.equals("array_filter")) {
+                return params.length > 0
+                    ? opt(findExprType(params[0], depth))
+                    : opt(list());
+            } else {
+                return opt(null);
+            }
+
+        });
+    }
+
     private static List<PhpReturnImpl> findFunctionReturns(PsiElement func)
     {
         List<PhpReturnImpl> result = new ArrayList<>();
@@ -124,20 +152,32 @@ public class DeepTypeResolver
         return possibleTypes;
     }
 
+    private static DeepType findLambdaType(FunctionImpl lambda, int depth)
+    {
+        DeepType result = new DeepType(lambda);
+        findFuncRetType(lambda, depth).forEach(result.returnTypes::add);
+        return result;
+    }
+
     private static List<DeepType> findKeyType(ArrayAccessExpressionImpl keyAccess, int depth)
     {
+        List<DeepType> dictTypes = findExprType(keyAccess.getValue(), depth);
+
         return opt(keyAccess.getIndex())
             .map(v -> v.getValue())
             .fap(toCast(StringLiteralExpressionImpl.class))
             .map(lit -> lit.getContents())
-            .map(key -> findExprType(keyAccess.getValue(), depth).stream()
+            .map(key -> dictTypes.stream()
                 .map(type -> getKey(type.keys, key))
                 .filter(v -> v.has())
                 .map(v -> v.def(null))
                 .flatMap(v -> v.stream())
                 .collect(Collectors.toList())
             )
-            .def(list());
+            .def(dictTypes.stream()
+                .map(type -> type.indexTypes)
+                .flatMap(v -> v.stream())
+                .collect(Collectors.toList()));
     }
 
     private static DeepType findArrCtorType(ArrayCreationExpressionImpl expr, int depth)
@@ -175,15 +215,25 @@ public class DeepTypeResolver
             , Tls.cast(ArrayCreationExpressionImpl.class, expr)
                 .map(arr -> list(findArrCtorType(arr, nextDepth)))
             , Tls.cast(FunctionReferenceImpl.class, expr)
+                .fap(call -> findBuiltInFuncCallType(call, nextDepth))
+            , Tls.cast(FunctionReferenceImpl.class, expr)
                 .map(call -> call.resolve())
-                .map(call -> findFuncRetType(call, nextDepth))
+                .map(func -> findFuncRetType(func, nextDepth))
             , Tls.cast(MethodReferenceImpl.class, expr)
                 .map(call -> call.resolve())
-                .map(call -> findFuncRetType(call, nextDepth))
+                .map(func -> findFuncRetType(func, nextDepth))
             , Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .map(keyAccess -> findKeyType(keyAccess, nextDepth))
-            , Tls.cast(PhpTypedElement.class, expr)
-                .map(t -> list(new DeepType(t)))
+            , Tls.cast(StringLiteralExpressionImpl.class, expr)
+                .map(lit -> list(new DeepType(lit)))
+            , Tls.cast(PhpExpressionImpl.class, expr)
+                .map(v -> v.getFirstChild())
+                .fap(toCast(FunctionImpl.class))
+                .map(lambda -> list(findLambdaType(lambda, nextDepth)))
+            , Tls.cast(PhpExpressionImpl.class, expr)
+                .map(mathExpr -> list(new DeepType(mathExpr)))
+//            , Tls.cast(PhpTypedElement.class, expr)
+//                .map(t -> list(new DeepType(t)))
         ))
             .els(() -> System.out.println("Unknown expression type " + expr.getText() + " " + expr.getClass()))
             .def(new ArrayList<>());

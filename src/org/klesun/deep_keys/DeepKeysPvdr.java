@@ -1,21 +1,25 @@
 package org.klesun.deep_keys;
 
 import com.intellij.codeInsight.completion.*;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
+import com.jetbrains.php.PhpIcons;
+import com.jetbrains.php.completion.PhpLookupElement;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
+import com.jetbrains.php.lang.psi.elements.PhpNamedElement;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
+import com.jetbrains.php.lang.psi.stubs.indexes.PhpClassIndex;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 import org.klesun.lang.shortcuts.F;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import javax.swing.*;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -35,6 +39,21 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         return obj -> Tls.cast(cls, obj);
     }
 
+    private static LookupElement makeLookup(String key, List<DeepType> possibleTypes, Project project)
+    {
+        if (possibleTypes.size() > 0) {
+            DeepType type = possibleTypes.get(0);
+
+            // TODO: hardcode type.briefType -> icon mapping and use the icon matching type
+            // also it would be really nice to distinct array-lists from array-shapes
+            return new PhpLookupElement(key, PhpClassIndex.KEY, PhpIcons.STATIC_CLASS, type.briefType, project, (insertionContext, lookupElement) -> {
+                System.out.println("you have chosen " + lookupElement);
+            });
+        } else {
+            return LookupElementBuilder.create(key);
+        }
+    }
+
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
@@ -42,6 +61,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // (like when parser returns segments and you iterate through them)
 
         // TODO: support lambdas (array_map, array_filter, etc...)
+
+        // TODO: get var/key type info
 
         // TODO: support properties like if they were variables
 
@@ -75,26 +96,21 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                         }
                     }
 
-                    if (!(literal instanceof StringLiteralExpression)) {
-                        // add quotes if not inside quotes
-                        options = options.stream()
-                            .map(o -> "'" + o + "'")
-                            .collect(Collectors.toList());
-                    }
-
                     int i = 0;
                     Set<String> suggested = new HashSet<>();
-                    for (String key: options) {
-                        if (suggested.contains(key)) continue;
-                        suggested.add(key);
-                        result.addElement(
-                            PrioritizedLookupElement.withPriority(
-                                LookupElementBuilder.create(key)
-                                    .bold()
-                                    .withTailText("(assoc.)"),
-                                300000 + --i
-                            )
-                        );
+                    for (DeepType type: types) {
+                        for (Map.Entry<String, List<DeepType>> entry: type.keys.entrySet()) {
+                            String key = entry.getKey();
+                            if (suggested.contains(key)) continue;
+                            suggested.add(key);
+
+                            if (literal instanceof StringLiteralExpression) {
+                                key = "'" + key + "'";
+                            }
+                            Project project = parameters.getPosition().getProject();
+                            LookupElement lookup = makeLookup(entry.getKey(), entry.getValue(), project);
+                            result.addElement(PrioritizedLookupElement.withPriority(lookup, 3000 - ++i));
+                        }
                     }
 
                     result.addLookupAdvertisement("Press <End> to skip built-in suggestions");
