@@ -157,9 +157,102 @@ class DeepKeysTest
         $mapped[2][''];
     }
 
+    private static function testArrayAppendInference()
+    {
+        $records = [];
+
+        for ($i = 0; $i < 10; ++$i) {
+            $records[] = [
+                'id' => $i,
+                'randomValue' => rand(),
+                'origin' => 'here',
+            ];
+        }
+        // should suggest id, randomValue, origin
+        $records[0][''];
+
+        $lala = [];
+        $lala[0]['asdas'][] = [
+            'id' => -100,
+            'randomValue' => rand(),
+            'origin' => 'there',
+            'originData' => [1,2,3],
+        ];
+        $lolo = $lala;
+        // should suggest asdas
+        $lolo[0][''];
+        // should suggest id, randomValue, origin, originData
+        $lolo[0]['asdas'][4][''];
+    }
+
+    private static function testNullKeyAccess()
+    {
+        $record = [
+            'a' => 5,
+            'b' => null,
+            'c' => null,
+            'd' => 7,
+        ];
+        // should suggest a,b,c,d
+        $record[''];
+    }
+
     //============================
     // not implemented follow
     //============================
+
+    private static function testTernarOperator()
+    {
+        $record = [
+            'a' => 5,
+            'b' => rand() > 0.5 ? [
+                'trueKeyB' => 5,
+            ] : [
+                'falseKeyB' => 5,
+            ],
+        ];
+        $record['c'] = rand() > 0.5 ? [
+            'trueKeyB' => 5,
+        ] : [
+            'falseKeyB' => 5,
+        ];
+
+        // should suggest trueKeyB, falseKeyB
+        $record['b'][''];
+        // should suggest trueKeyC, falseKeyC
+        $record['c'][''];
+    }
+
+    private static function testIndexedArrayCreation()
+    {
+        $records = [
+            ['a' => 5, 'b' => 6],
+            ['a' => 5, 'b' => 6],
+            ['a' => 5, 'b' => 6],
+        ];
+        // should suggest a, b
+        $records[0][''];
+    }
+
+    private static function testGenericAccess()
+    {
+        $records = [];
+        $records[] = [
+            'key1' => 15,
+            'key2' => 15,
+            'subAssArray' => [
+                'nestedKey1' => 12,
+                'nestedKey2' => 12,
+            ],
+        ];
+        $records[] = ['optionalKey' => 4];
+
+        $mapped = array_map(function($record) {
+            // should suggest key1, key2, subAssArray, optionalKey
+            $record[''];
+            return null;
+        }, $records);
+    }
 
     private static function testListAccess()
     {
@@ -194,6 +287,24 @@ class DeepKeysTest
         $record = ['a' => 6, 'b' => 8];
         // should show error like "Key 'someNotExistingKey' is not defined"
         print($record['someNotExistingKey']);
+    }
+
+    private static function testArgumentCompatibilityError()
+    {
+        $records = [];
+        $records[] = [
+            'key1' => 15,
+            'key2' => 15,
+        ];
+
+        $mapping = function($record) {
+            // should not suggest anything
+            $record[''];
+            return $record['key1'] + $record['key2'] + $record['key3'];
+        };
+        // should report error since $records elements
+        // don't have 'key3' used in the function
+        $mapped = array_map($mapping, $records);
     }
 
     private static function testTupleAccess()

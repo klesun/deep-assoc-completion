@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ElseIfImpl;
 import com.jetbrains.php.lang.psi.elements.impl.GroupStatementImpl;
+import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
@@ -14,13 +15,8 @@ import java.util.List;
  * determines whether var declaration
  * happen before usage or not
  */
-public class ScopeFinder
+public class ScopeFinder extends Lang
 {
-    private static <T> Opt<T> opt(T value)
-    {
-        return new Opt(value);
-    }
-
     private static Opt<PsiElement> getParentScope(PsiElement psi)
     {
         PsiElement next = psi.getParent();

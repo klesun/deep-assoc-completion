@@ -4,41 +4,23 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
 import com.jetbrains.php.completion.PhpLookupElement;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
-import com.jetbrains.php.lang.psi.elements.PhpNamedElement;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import com.jetbrains.php.lang.psi.stubs.indexes.PhpClassIndex;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
-import org.klesun.lang.shortcuts.F;
+import org.klesun.lang.Lang;
 
-import javax.swing.*;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  * contains the completion logic
  */
 public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
-    /** i HATE writing "new " before every usage! */
-    private static <T> Opt<T> opt(T value)
-    {
-        return new Opt(value);
-    }
-
-    private static <T, Tin extends PsiElement> F<Tin, Opt<T>> toCast(Class<T> cls)
-    {
-        return obj -> Tls.cast(cls, obj);
-    }
-
     private static LookupElement makeLookup(String key, List<DeepType> possibleTypes, Project project)
     {
         if (possibleTypes.size() > 0) {
@@ -57,9 +39,6 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        // TODO: support lists of associative arrays
-        // (like when parser returns segments and you iterate through them)
-
         // TODO: support lambdas (array_map, array_filter, etc...)
 
         // TODO: get var/key type info
@@ -80,11 +59,11 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
         // TODO: inspect so that type passed to function was compatible with expected type (has used keys)
 
-        opt(parameters.getPosition().getParent())
-            .thn(literal -> opt(literal.getParent())
-                .fap(toCast(ArrayIndex.class))
+        Lang.opt(parameters.getPosition().getParent())
+            .thn(literal -> Lang.opt(literal.getParent())
+                .fap(Lang.toCast(ArrayIndex.class))
                 .map(index -> index.getParent())
-                .fap(toCast(ArrayAccessExpressionImpl.class))
+                .fap(Lang.toCast(ArrayAccessExpressionImpl.class))
                 .map(expr -> expr.getValue())
                 .map(srcExpr -> DeepTypeResolver.findExprType(srcExpr, 30))
                 .thn(types -> {

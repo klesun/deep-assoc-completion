@@ -1,13 +1,17 @@
 package org.klesun.deep_keys;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveResult;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
-import org.apache.commons.lang.StringUtils;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
-import org.klesun.lang.shortcuts.F;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,85 +21,125 @@ import java.util.stream.Collectors;
  * Unlike original jetbrain's type resolver, this
  * includes associative array key information
  */
-public class DeepTypeResolver
+public class DeepTypeResolver extends Lang
 {
-    /** i HATE writing "new " before every usage! */
-    private static <T> Opt<T> opt(T value)
+    private static <T extends PsiElement> F<PsiElement, Opt<T>> toFindParent(Class<T> cls)
     {
-        return new Opt(value);
+        return (psi) -> {
+            PsiElement parent = psi;
+            while (parent != null) {
+                Opt<T> matching = Tls.cast(cls, parent);
+                if (matching.has()) {
+                    return matching;
+                }
+                parent = parent.getParent();
+            }
+            return opt(null);
+        };
     }
 
-    private static <T> Opt<T> getKey(Map<String, T> dict, String key)
+    /**
+     * extends type with the key assignment information
+     */
+    private static void addAssignment(List<DeepType> dest, Assign assign, boolean overwritingAssignment)
     {
-        if (dict.containsKey(key)) {
-            return opt(dict.get(key));
+        if (assign.keys.size() == 0) {
+            if (assign.didSurelyHappen && !overwritingAssignment) {
+                dest.clear();
+            }
+            assign.assignedType.forEach(dest::add);
         } else {
-            return opt(null);
+            if (dest.size() == 0) {
+                dest.add(new DeepType(null, PhpType.ARRAY));
+            }
+            String nextKey = assign.keys.remove(0);
+            dest.forEach(type -> {
+                if (nextKey == null) {
+                    // index key
+                    addAssignment(type.indexTypes, assign, true);
+                } else {
+                    // associative key
+                    if (!type.keys.containsKey(nextKey)) {
+                        type.keys.put(nextKey, list());
+                    }
+                    addAssignment(type.keys.get(nextKey), assign, false);
+                }
+            });
+            assign.keys.add(0, nextKey);
         }
     }
 
-    private static <T> ArrayList<T> list(T... args)
+    private static List<DeepType> assignmentsToTypes(List<Assign> assignments)
     {
-        ArrayList<T> result = new ArrayList<>();
-        Collections.addAll(result, args);
-        return result;
+        List<DeepType> resultTypes = list();
+
+        // assignments are supposedly in chronological order
+        assignments.forEach(ass -> addAssignment(resultTypes, ass, true));
+
+        return resultTypes;
     }
 
-    private static <T, Tin extends PsiElement> F<Tin, Opt<T>> toCast(Class<T> cls)
+    // null in key chain means index (when it is number or variable, not named key)
+    private static Opt<T2<List<String>, List<DeepType>>> collectKeyAssignment(AssignmentExpressionImpl ass, int depth)
     {
-        return obj -> Tls.cast(cls, obj);
+        Opt<ArrayAccessExpressionImpl> nextKeyOpt = opt(ass.getVariable())
+            .fap(toCast(ArrayAccessExpressionImpl.class));
+
+        List<String> reversedKeys = list();
+
+        while (nextKeyOpt.has()) {
+            ArrayAccessExpressionImpl nextKey = nextKeyOpt.def(null);
+
+            opt(nextKey.getIndex())
+                .map(index -> index.getValue())
+                .thn(key -> Tls.cast(StringLiteralExpressionImpl.class, key)
+                    .thn(lit -> reversedKeys.add(lit.getContents()))
+                    .els(() -> reversedKeys.add(null))) // index, not named key
+                .els(() -> reversedKeys.add(null));
+
+            nextKeyOpt = opt(nextKey.getValue())
+                .fap(toCast(ArrayAccessExpressionImpl.class));
+        }
+
+        List<String> keys = list();
+        for (int i = reversedKeys.size() - 1; i >= 0; --i) {
+            keys.add(reversedKeys.get(i));
+        }
+
+        return opt(ass.getValue())
+            .map(value -> new T2(keys, findExprType(value, depth)));
     }
 
     private static List<DeepType> findVarType(Variable variable, int depth)
     {
-        List<DeepType> possibleTypes = list();
-        LinkedHashMap<String, List<DeepType>> assignedKeys = new LinkedHashMap<>();
-
+        List<Assign> reversedAssignments = list();
         ResolveResult[] references = variable.multiResolve(false);
 
+        Mutable<Boolean> finished = new Mutable<>(false);
         for (int i = references.length - 1; i >= 0; --i) {
+            if (finished.get()) break;
+
             ResolveResult res = references[i];
-            Opt<PsiElement> expr = opt(res.getElement())
+            opt(res.getElement())
                 .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
-                .map(v -> v.getParent());
-
-            // $record = ['initialKey' => 123];
-            if (expr.fap(toCast(AssignmentExpressionImpl.class))
-                .map(v -> v.getValue())
-                .map(v -> findExprType(v, depth))
-                .thn(possibleTypes::addAll)
-                .has()
-                ) {
-                // direct assignment, everything before it is meaningless
-                if (ScopeFinder.didSurelyHappen(res.getElement(), variable)) {
-                    break;
-                }
-            } else {
-                // $record['dynamicKey2'] = 345;
-                expr.fap(toCast(ArrayAccessExpressionImpl.class))
-                    .flt(access -> access.getParent() instanceof AssignmentExpression)
-                    .thn(access -> {
-                        String key = opt(access.getIndex())
-                            .map(index -> index.getValue())
-                            .fap(toCast(StringLiteralExpressionImpl.class))
-                            .map(lit -> lit.getContents())
-                            .def("Error: failed to key");
-
-                        opt(access.getParent())
-                            .fap(toCast(AssignmentExpressionImpl.class))
-                            .map(v -> findExprType(v, depth))
-                            .thn(types -> assignedKeys.put(key, types));
-                    });
-            }
+                .fap(toFindParent(AssignmentExpressionImpl.class))
+                .fap(ass -> collectKeyAssignment(ass, depth))
+                .thn(ass -> {
+                    boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
+                    reversedAssignments.add(new Assign(ass.a, ass.b, didSurelyHappen));
+                    if (didSurelyHappen && ass.a.size() == 0) {
+                        // direct assignment, everything before it is meaningless
+                        finished.set(true);
+                    }
+                });
         }
 
-        // relying on fact they are not supposed to be immutable
-        // ... maybe creating new instance would be better after all?
-        assignedKeys.entrySet().forEach(
-            e -> possibleTypes.forEach(
-            t -> t.keys.put(e.getKey(), e.getValue())));
+        List<Assign> assignments = list();
+        for (int i = reversedAssignments.size() - 1; i >= 0; --i) {
+            assignments.add(reversedAssignments.get(i));
+        }
 
-        return possibleTypes;
+        return assignmentsToTypes(assignments);
     }
 
     private static Opt<List<DeepType>> findBuiltInFuncCallType(FunctionReferenceImpl call, int depth)
@@ -154,7 +198,7 @@ public class DeepTypeResolver
 
     private static DeepType findLambdaType(FunctionImpl lambda, int depth)
     {
-        DeepType result = new DeepType(lambda);
+        DeepType result = new DeepType(lambda, lambda.getInferredType(false));
         findFuncRetType(lambda, depth).forEach(result.returnTypes::add);
         return result;
     }
@@ -237,5 +281,26 @@ public class DeepTypeResolver
         ))
             .els(() -> System.out.println("Unknown expression type " + expr.getText() + " " + expr.getClass()))
             .def(new ArrayList<>());
+    }
+
+    /**
+     * contains info related to assignment to a
+     * specific associative array variable key
+     */
+    private static class Assign
+    {
+        final public List<String> keys;
+        // list?
+        final public List<DeepType> assignedType;
+        // when true, that means this assignment happens _always_,
+        // i.e. it is not inside an "if" branch or a loop
+        final public boolean didSurelyHappen;
+
+        public Assign(List<String> keys, List<DeepType> assignedType, boolean didSurelyHappen)
+        {
+            this.keys = keys;
+            this.assignedType = assignedType;
+            this.didSurelyHappen = didSurelyHappen;
+        }
     }
 }

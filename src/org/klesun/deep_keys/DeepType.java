@@ -1,6 +1,8 @@
 package org.klesun.deep_keys;
 
-import com.jetbrains.php.lang.psi.elements.PhpTypedElement;
+import com.google.gson.annotations.Expose;
+import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 
 import java.util.ArrayList;
@@ -20,11 +22,15 @@ class DeepType
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     final List<DeepType> returnTypes = new ArrayList<>();
-    final PhpTypedElement definition;
+    final PsiElement definition;
     final PhpType briefType;
 
-    DeepType(PhpTypedElement definition) {
+    DeepType(PhpExpression definition) {
+        this(definition, definition.getType());
+    }
+
+    DeepType(PsiElement definition, PhpType briefType) {
         this.definition = definition;
-        this.briefType = definition.getType();
+        this.briefType = briefType;
     }
 }

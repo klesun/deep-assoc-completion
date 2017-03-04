@@ -1,12 +1,5 @@
 package org.klesun.lang;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.klesun.lang.shortcuts.C;
-import org.klesun.lang.shortcuts.F;
-import org.klesun.lang.shortcuts.R;
-import org.klesun.lang.shortcuts.S;
-
 /**
  * very similar stuff to Java-s Optional,
  * but requires less characters to use it
@@ -33,7 +26,7 @@ public class Opt<T>
     }
 
     /** transform value if present */
-    public <T1> Opt<T1> map(F<T, T1> f)
+    public <T1> Opt<T1> map(Lang.F<T, T1> f)
     {
         if (has()) {
             return new Opt(f.apply(value));
@@ -42,13 +35,13 @@ public class Opt<T>
         }
     }
 
-    public Opt<T> flt(F<T, Boolean> f)
+    public Opt<T> flt(Lang.F<T, Boolean> f)
     {
         return map(v -> f.apply(v) ? v : null);
     }
 
     /** Flat Map - to combine Opt-s */
-    public <T1> Opt<T1> fap(F<T, Opt<T1>> f)
+    public <T1> Opt<T1> fap(Lang.F<T, Opt<T1>> f)
     {
         return map(f).uni(
             (opt) -> opt,
@@ -57,7 +50,7 @@ public class Opt<T>
     }
 
     /** run if present */
-    public Opt<T> thn(C<T> f)
+    public Opt<T> thn(Lang.C<T> f)
     {
         if (has()) {
             f.accept(value);
@@ -66,7 +59,7 @@ public class Opt<T>
     }
 
     /** run if absent */
-    public Opt<T> els(R f)
+    public Opt<T> els(Lang.R f)
     {
         if (!has()) {
             f.run();
@@ -88,7 +81,7 @@ public class Opt<T>
      * @param thn - you get result of this function if value is present
      * @param els - you get result of this function if value is absent
      */
-    public <Tuni> Tuni uni(F<T, Tuni> thn, S<Tuni> els)
+    public <Tuni> Tuni uni(Lang.F<T, Tuni> thn, Lang.S<Tuni> els)
     {
         if (has()) {
             return thn.apply(value);
