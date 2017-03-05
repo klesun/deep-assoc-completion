@@ -21,33 +21,32 @@ import java.util.*;
  */
 public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
-    private static LookupElement makeLookup(String key, List<DeepType> possibleTypes, Project project)
+    private static LookupElement makeLookup(DeepType.Key keyEntry, Project project)
     {
-        if (possibleTypes.size() > 0) {
-            DeepType type = possibleTypes.get(0);
+        if (keyEntry.types.size() > 0) {
+            DeepType type = keyEntry.types.get(0);
 
             // TODO: hardcode type.briefType -> icon mapping and use the icon matching type
             // also it would be really nice to distinct array-lists from array-shapes
-            return new PhpLookupElement(key, PhpClassIndex.KEY, PhpIcons.STATIC_CLASS, type.briefType, project, (insertionContext, lookupElement) -> {
-                System.out.println("you have chosen " + lookupElement);
+            return new PhpLookupElement(keyEntry.name, PhpClassIndex.KEY, PhpIcons.STATIC_CLASS, type.briefType, project, (insertionContext, lookupElement) -> {
+//                System.out.println("you have chosen " + lookupElement);
             });
         } else {
-            return LookupElementBuilder.create(key);
+            return LookupElementBuilder.create(keyEntry.name);
         }
     }
 
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        // TODO: support lambdas (array_map, array_filter, etc...)
+        // TODO: go to definition
 
         // TODO: get var/key type info
 
         // TODO: support properties like if they were variables
 
-        // TODO: go to definition
-
-        // TODO: show error when user tries to access not existing key
+        // TODO: show error when user tries to access not existing
+        // key if array definition does not have unknown parts
 
         // TODO: use phpdocs:
         //   1. Reference to the function that provides such output
@@ -65,7 +64,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 .map(index -> index.getParent())
                 .fap(Lang.toCast(ArrayAccessExpressionImpl.class))
                 .map(expr -> expr.getValue())
-                .map(srcExpr -> DeepTypeResolver.findExprType(srcExpr, 15))
+                .map(srcExpr -> DeepTypeResolver.findExprType(srcExpr, 20))
                 .thn(types -> {
                     // TODO: use element type information
                     List<String> options = new ArrayList<>();
@@ -78,8 +77,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                     int i = 0;
                     Set<String> suggested = new HashSet<>();
                     for (DeepType type: types) {
-                        for (Map.Entry<String, List<DeepType>> entry: type.keys.entrySet()) {
-                            String key = entry.getKey();
+                        for (DeepType.Key keyEntry: type.keys.values()) {
+                            String key = keyEntry.name;
                             if (suggested.contains(key)) continue;
                             suggested.add(key);
 
@@ -87,7 +86,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                                 key = "'" + key + "'";
                             }
                             Project project = parameters.getPosition().getProject();
-                            LookupElement lookup = makeLookup(entry.getKey(), entry.getValue(), project);
+                            LookupElement lookup = makeLookup(keyEntry, project);
                             result.addElement(PrioritizedLookupElement.withPriority(lookup, 3000 - ++i));
                         }
                     }

@@ -17,7 +17,8 @@
   <idea-version since-build="145.0"/>
 
   <extensions defaultExtensionNs="com.intellij">
-    <completion.contributor language="PHP" implementationClass="org.klesun.deep_keys.DeepKeysCbtr"/>
+    <completion.contributor language="PHP" implementationClass="org.klesun.deep_keys.entry.DeepKeysCbtr"/>
+    <gotoDeclarationHandler implementation="org.klesun.deep_keys.entry.DeepKeysGoToDecl"/>
   </extensions>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html

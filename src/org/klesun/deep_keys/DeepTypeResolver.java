@@ -14,6 +14,7 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,14 +25,16 @@ import java.util.stream.Stream;
  */
 public class DeepTypeResolver extends Lang
 {
-    private static <T extends PsiElement> F<PsiElement, Opt<T>> toFindParent(Class<T> cls)
+    private static <T extends PsiElement> F<PsiElement, Opt<T>> toFindParent(Class<T> cls, Predicate<PsiElement> continuePred)
     {
         return (psi) -> {
-            PsiElement parent = psi;
+            PsiElement parent = psi.getParent();
             while (parent != null) {
                 Opt<T> matching = Tls.cast(cls, parent);
                 if (matching.has()) {
                     return matching;
+                } else if (!continuePred.test(parent)) {
+                    break;
                 }
                 parent = parent.getParent();
             }
@@ -61,9 +64,10 @@ public class DeepTypeResolver extends Lang
                 } else {
                     // associative key
                     if (!type.keys.containsKey(nextKey)) {
-                        type.keys.put(nextKey, list());
+                        // TODO: pass string literal PSI element here
+                        type.addKey(nextKey, null);
                     }
-                    addAssignment(type.keys.get(nextKey), assign, false);
+                    addAssignment(type.keys.get(nextKey).types, assign, false);
                 }
             });
             assign.keys.add(0, nextKey);
@@ -123,7 +127,7 @@ public class DeepTypeResolver extends Lang
             ResolveResult res = references[i];
             opt(res.getElement())
                 .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
-                .fap(toFindParent(AssignmentExpressionImpl.class))
+                .fap(toFindParent(AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression))
                 .fap(ass -> collectKeyAssignment(ass, depth))
                 .thn(ass -> {
                     boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
@@ -169,6 +173,11 @@ public class DeepTypeResolver extends Lang
                     types.addAll(findExprType(paramPsi, depth));
                 }
                 return opt(types);
+            } else if (name.equals("array_intersect_key")) {
+                // do something more clever?
+                return params.length > 0
+                    ? opt(findExprType(params[0], depth))
+                    : opt(list());
             } else {
                 return opt(null);
             }
@@ -221,7 +230,7 @@ public class DeepTypeResolver extends Lang
                 .map(type -> getKey(type.keys, key))
                 .filter(v -> v.has())
                 .map(v -> v.def(null))
-                .flatMap(v -> v.stream())
+                .flatMap(v -> v.types.stream())
                 .collect(Collectors.toList())
             )
             .def(dictTypes.stream()
@@ -234,18 +243,15 @@ public class DeepTypeResolver extends Lang
     {
         DeepType arrayType = new DeepType(expr);
 
-        expr.getHashElements().forEach(keyRec -> {
-            String key = opt(keyRec.getKey())
-                .map(keyPsi -> Tls.cast(StringLiteralExpressionImpl.class, keyPsi)
-                    .map(lit -> lit.getContents())
-                    .def("Error: not literal: " + keyPsi.getText())
-                )
-                .def("Error: no key in expression");
-
-            opt(keyRec.getValue())
-                .map(v -> findExprType(v, depth))
-                .thn(types -> arrayType.keys.put(key, types));
-        });
+        expr.getHashElements().forEach(keyRec -> opt(keyRec.getValue())
+            .map(v -> findExprType(v, depth))
+            .thn(types -> opt(keyRec.getKey())
+                .fap(keyPsi -> Tls.cast(StringLiteralExpressionImpl.class, keyPsi))
+                .map(lit -> lit.getContents())
+                .uni(
+                    key -> arrayType.addKey(key, keyRec).types.addAll(types),
+                    () -> arrayType.indexTypes.addAll(types)
+                )));
 
         return arrayType;
     }
@@ -253,7 +259,6 @@ public class DeepTypeResolver extends Lang
     public static List<DeepType> findExprType(PsiElement expr, int depth)
     {
         if (depth <= 0) {
-            System.out.println("Keys search depth limit reached");
             return new ArrayList<>();
         }
         final int nextDepth = depth - 1;
@@ -286,8 +291,6 @@ public class DeepTypeResolver extends Lang
                     findExprType(tern.getFalseVariant(), nextDepth).stream()
                 ).collect(Collectors.toList()))
             , Tls.cast(BinaryExpressionImpl.class, expr)
-                .flt(bin -> opt(bin.getOperation())
-                    .map(op -> op.getText().equals("??")).def(false))
                 // found this dealing with null coalescing, but
                 // i suppose this rule will apply for all operators
                 .map(bin -> Stream.concat(
@@ -296,8 +299,8 @@ public class DeepTypeResolver extends Lang
                 ).collect(Collectors.toList()))
             , Tls.cast(PhpExpressionImpl.class, expr)
                 .map(mathExpr -> list(new DeepType(mathExpr)))
-//            , Tls.cast(PhpTypedElement.class, expr)
-//                .map(t -> list(new DeepType(t)))
+            , Tls.cast(PhpExpressionImpl.class, expr)
+                .map(t -> list(new DeepType(t)))
         ))
             .els(() -> System.out.println("Unknown expression type " + expr.getText() + " " + expr.getClass()))
             .def(new ArrayList<>());

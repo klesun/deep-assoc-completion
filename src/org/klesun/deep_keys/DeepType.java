@@ -13,17 +13,18 @@ import java.util.List;
  * contains info about associative
  * array key types among other things
  */
-class DeepType
+public class DeepType
 {
     // keys and types of associative array
-    final LinkedHashMap<String, List<DeepType>> keys = new LinkedHashMap<>();
+    public final LinkedHashMap<String, Key> keys = new LinkedHashMap<>();
     // possible types of list element
-    final List<DeepType> indexTypes = new ArrayList<>();
+    public final List<DeepType> indexTypes = new ArrayList<>();
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
-    final List<DeepType> returnTypes = new ArrayList<>();
-    final PsiElement definition;
-    final PhpType briefType;
+    public final List<DeepType> returnTypes = new ArrayList<>();
+    public final PsiElement definition;
+    public final PhpType briefType;
+    DeepType self = this;
 
     DeepType(PhpExpression definition) {
         this(definition, definition.getType());
@@ -32,5 +33,26 @@ class DeepType
     DeepType(PsiElement definition, PhpType briefType) {
         this.definition = definition;
         this.briefType = briefType;
+    }
+
+    public Key addKey(String name, PsiElement definition)
+    {
+        Key keyEntry = new Key(name, definition);
+        keys.put(keyEntry.name, keyEntry);
+        return keyEntry;
+    }
+
+    public static class Key
+    {
+        final public String name;
+        final public List<DeepType> types = new ArrayList<>();
+        // where Go To Definition will lead
+        final public PsiElement definition;
+
+        private Key(String name, PsiElement definition)
+        {
+            this.name = name;
+            this.definition = definition;
+        }
     }
 }

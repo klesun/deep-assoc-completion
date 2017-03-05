@@ -1,5 +1,13 @@
 <?php
 
+class Fp
+{
+    public static function map(callable $f, array $iterable)
+    {
+        return array_map($f, $iterable);
+    }
+}
+
 class DeepKeysTest
 {
     private static function makeRecord()
@@ -38,6 +46,8 @@ class DeepKeysTest
             'occupation' => 'Madao',
         ];
 
+        $record['chosenSubSubjects'][0]['name'];
+
         return $record;
     }
 
@@ -54,6 +64,7 @@ class DeepKeysTest
         print($denya['pass']);
         // should suggest same
         self::makeRecord()[''];
+        print($denya['friends'][0]['name']);
     }
 
     private static function testScopes()
@@ -188,21 +199,9 @@ class DeepKeysTest
         ];
         $lolo = $lala;
         // should suggest asdas
-        $lolo[0][''];
+        $lolo[0]['asdas'][0][''];
         // should suggest id, randomValue, origin, originData
-        $lolo[0]['asdas'][4][''];
-
-        $record = self::makeRecord();
-
-        $subjects = $record['chosenSubSubjects'];
-
-        foreach ($subjects as $subject) {
-            // should suggest name, priority
-            $subject[''];
-        }
-
-        // should suggest name, occupation
-        $record['friends'][123][''];
+        $lolo[0]['asdas'][4]['originData'];
     }
 
     private static function testNullKeyAccess()
@@ -248,12 +247,24 @@ class DeepKeysTest
         ;
 
         // should suggest all from makeRecord() and error
-        $maybeRecord[''];
+        $maybeRecord['pass'];
     }
 
     //============================
     // not implemented follow
     //============================
+
+    private static function testForeachAccess()
+    {
+        $record = self::makeRecord();
+
+        $subjects = $record['chosenSubSubjects'];
+
+        foreach ($subjects as $subject) {
+            // should suggest name, priority
+            $subject[''];
+        }
+    }
 
     private static function testGenericAccess()
     {
@@ -273,6 +284,18 @@ class DeepKeysTest
             $record[''];
             return null;
         }, $records);
+
+
+        $fpMapped = Fp::map(function($i) {
+            return [
+                'id' => $i,
+                'amount' => 10.00,
+                'date' => date('Y-m-d H:i:s'),
+            ];
+        }, range(0,10));
+
+        // should suggest id, amount, date
+        $fpMapped[0][''];
     }
 
     private static function testIndexedArrayCreation()
