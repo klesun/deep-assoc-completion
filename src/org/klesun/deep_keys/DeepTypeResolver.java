@@ -15,6 +15,7 @@ import org.klesun.lang.Tls;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Provides mechanism to determine expression type.
@@ -162,10 +163,15 @@ public class DeepTypeResolver extends Lang
                 return params.length > 0
                     ? opt(findExprType(params[0], depth))
                     : opt(list());
+            } else if (name.equals("array_merge")) {
+                List<DeepType> types = list();
+                for (PsiElement paramPsi: params) {
+                    types.addAll(findExprType(paramPsi, depth));
+                }
+                return opt(types);
             } else {
                 return opt(null);
             }
-
         });
     }
 
@@ -274,6 +280,20 @@ public class DeepTypeResolver extends Lang
                 .map(v -> v.getFirstChild())
                 .fap(toCast(FunctionImpl.class))
                 .map(lambda -> list(findLambdaType(lambda, nextDepth)))
+            , Tls.cast(TernaryExpressionImpl.class, expr)
+                .map(tern -> Stream.concat(
+                    findExprType(tern.getTrueVariant(), nextDepth).stream(),
+                    findExprType(tern.getFalseVariant(), nextDepth).stream()
+                ).collect(Collectors.toList()))
+            , Tls.cast(BinaryExpressionImpl.class, expr)
+                .flt(bin -> opt(bin.getOperation())
+                    .map(op -> op.getText().equals("??")).def(false))
+                // found this dealing with null coalescing, but
+                // i suppose this rule will apply for all operators
+                .map(bin -> Stream.concat(
+                    findExprType(bin.getLeftOperand(), nextDepth).stream(),
+                    findExprType(bin.getRightOperand(), nextDepth).stream()
+                ).collect(Collectors.toList()))
             , Tls.cast(PhpExpressionImpl.class, expr)
                 .map(mathExpr -> list(new DeepType(mathExpr)))
 //            , Tls.cast(PhpTypedElement.class, expr)

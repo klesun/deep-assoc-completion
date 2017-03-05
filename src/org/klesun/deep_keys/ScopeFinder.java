@@ -2,8 +2,7 @@ package org.klesun.deep_keys;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.ElseIfImpl;
-import com.jetbrains.php.lang.psi.elements.impl.GroupStatementImpl;
+import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -53,7 +52,7 @@ public class ScopeFinder extends Lang
         return false;
     }
 
-    private static Opt<ElseIfImpl> isInElseIfCondition(PsiElement varReference)
+    private static Opt<ControlStatementImpl> isInElseIfCondition(PsiElement varReference)
     {
         // you probably want to optimize it cuz now it scans full
         // parent chain when no elseif was found, but correct would
@@ -62,9 +61,14 @@ public class ScopeFinder extends Lang
 
         PsiElement parent = varReference;
         while (parent != null) {
-            Opt<ElseIfImpl> elseIf = Tls.cast(ElseIfImpl.class, parent);
-            if (elseIf.has()) {
-                return elseIf.flt(v -> isPartOf(varReference, v.getCondition()));
+            Opt<ControlStatementImpl> maybeControl = Opt.fst(list(
+                opt(null)
+                , Tls.cast(ElseIfImpl.class, parent).map(v -> v)
+                , Tls.cast(IfImpl.class, parent).flt(v -> opt(v.getParent()).fap(toCast(ElseImpl.class)).has())
+                    .map(v -> v)
+            ));
+            if (maybeControl.has()) {
+                return maybeControl.flt(v -> isPartOf(varReference, v.getCondition()));
             }
             parent = parent.getParent();
         }
@@ -97,7 +101,7 @@ public class ScopeFinder extends Lang
         Opt<PsiElement> refScope = getParentScope(reference);
         List<PsiElement> varScopes = getParentScopes(usage);
 
-        Opt<ElseIfImpl> elseIf = isInElseIfCondition(reference);
+        Opt<ControlStatementImpl> elseIf = isInElseIfCondition(reference);
         if (elseIf.has()) {
             for (PsiElement part: elseIf.def(null).getChildren()) {
                 if (part instanceof GroupStatement) {

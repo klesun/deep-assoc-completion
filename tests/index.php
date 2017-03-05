@@ -41,6 +41,11 @@ class DeepKeysTest
         return $record;
     }
 
+    function makeRecordMaybe()
+    {
+        return rand() < 0.5 ? self::makeRecord() : null;
+    }
+
     private static function testSimple()
     {
         $denya = self::makeRecord();
@@ -83,8 +88,11 @@ class DeepKeysTest
         } elseif ($res = ['c' => 3]) {
             // should suggest only c
             $res[''];
+        } else if ($res = ['d' => 4]) {
+            // should suggest only d
+            $res[''];
         }
-        // should suggest a,b,c
+        // should suggest a,b,c.d
         $res[''];
     }
 
@@ -183,6 +191,18 @@ class DeepKeysTest
         $lolo[0][''];
         // should suggest id, randomValue, origin, originData
         $lolo[0]['asdas'][4][''];
+
+        $record = self::makeRecord();
+
+        $subjects = $record['chosenSubSubjects'];
+
+        foreach ($subjects as $subject) {
+            // should suggest name, priority
+            $subject[''];
+        }
+
+        // should suggest name, occupation
+        $record['friends'][123][''];
     }
 
     private static function testNullKeyAccess()
@@ -197,11 +217,7 @@ class DeepKeysTest
         $record[''];
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
-    private static function testTernarOperator()
+    private static function testTernaryOperator()
     {
         $record = [
             'a' => 5,
@@ -212,9 +228,9 @@ class DeepKeysTest
             ],
         ];
         $record['c'] = rand() > 0.5 ? [
-            'trueKeyB' => 5,
+            'trueKeyC' => 5,
         ] : [
-            'falseKeyB' => 5,
+            'falseKeyC' => 5,
         ];
 
         // should suggest trueKeyB, falseKeyB
@@ -223,16 +239,21 @@ class DeepKeysTest
         $record['c'][''];
     }
 
-    private static function testIndexedArrayCreation()
+    private static function testNullCoalesce()
     {
-        $records = [
-            ['a' => 5, 'b' => 6],
-            ['a' => 5, 'b' => 6],
-            ['a' => 5, 'b' => 6],
-        ];
-        // should suggest a, b
-        $records[0][''];
+        $maybeRecord = null
+            ?? self::makeRecordMaybe()
+            ?? self::makeRecordMaybe()
+            ?? ['error' => 'maybe no']
+        ;
+
+        // should suggest all from makeRecord() and error
+        $maybeRecord[''];
     }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function testGenericAccess()
     {
@@ -254,6 +275,18 @@ class DeepKeysTest
         }, $records);
     }
 
+    private static function testIndexedArrayCreation()
+    {
+        $records = [
+            ['result' => -100],
+            ['error' => 'lox'],
+        ];
+        // should suggest result
+        $records[0][''];
+        // should suggest error
+        $records[1][''];
+    }
+
     private static function testListAccess()
     {
         $mapped = self::testBasisListAccess();
@@ -266,20 +299,6 @@ class DeepKeysTest
         $withTaxCode = array_map($addTaxCode, $mapped);
         // should suggest currency, amount, taxCode
         $withTaxCode[0][''];
-
-        $record = self::makeRecord();
-
-        $subjects = $record['chosenSubSubjects'];
-
-        foreach ($subjects as $subject) {
-            // should suggest name, priority
-            $subject[''];
-        }
-
-        // should suggest friends
-        $record[''];
-        // should suggest name, occupation
-        $record['friends'][123][''];
     }
 
     private static function testUndefinedKeyError()

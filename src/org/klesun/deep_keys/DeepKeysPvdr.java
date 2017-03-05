@@ -65,7 +65,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 .map(index -> index.getParent())
                 .fap(Lang.toCast(ArrayAccessExpressionImpl.class))
                 .map(expr -> expr.getValue())
-                .map(srcExpr -> DeepTypeResolver.findExprType(srcExpr, 30))
+                .map(srcExpr -> DeepTypeResolver.findExprType(srcExpr, 15))
                 .thn(types -> {
                     // TODO: use element type information
                     List<String> options = new ArrayList<>();
