@@ -28,7 +28,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
             // TODO: hardcode type.briefType -> icon mapping and use the icon matching type
             // also it would be really nice to distinct array-lists from array-shapes
-            return new PhpLookupElement(keyEntry.name, PhpClassIndex.KEY, PhpIcons.STATIC_CLASS, type.briefType, project, (insertionContext, lookupElement) -> {
+            return new PhpLookupElement(keyEntry.name, PhpClassIndex.KEY, PhpIcons.CLASS, type.briefType, project, (insertionContext, lookupElement) -> {
 //                System.out.println("you have chosen " + lookupElement);
             });
         } else {
