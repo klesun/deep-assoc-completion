@@ -4,10 +4,14 @@ import com.google.gson.annotations.Expose;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import io.netty.util.internal.StringUtil;
+import org.apache.commons.lang.StringUtils;
+import org.klesun.lang.Lang;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * contains info about associative
@@ -53,6 +57,46 @@ public class DeepType
         {
             this.name = name;
             this.definition = definition;
+        }
+    }
+
+    private static String indent(int level)
+    {
+        return new String(new char[level]).replace("\0", "  ");
+    }
+
+    public static String toJson(List<DeepType> types, int level)
+    {
+        LinkedHashMap<String, List<DeepType>> mergedKeys = new LinkedHashMap<>();
+        List<DeepType> indexTypes = Lang.list();
+        List<PhpType> briefTypes = Lang.list();
+
+        types.forEach(t -> {
+            t.keys.forEach((k,v) -> {
+                if (!mergedKeys.containsKey(k)) {
+                    mergedKeys.put(k, Lang.list());
+                }
+                mergedKeys.get(k).addAll(v.types);
+            });
+            t.indexTypes.forEach(indexTypes::add);
+            briefTypes.add(t.briefType);
+        });
+
+        if (mergedKeys.size() > 0) {
+            String result = "{\n";
+            ++level;
+            for (Map.Entry<String, List<DeepType>> e: mergedKeys.entrySet()) {
+                result += indent(level) + "\"" + e.getKey() + "\"" + ": " + toJson(e.getValue(), level) + "\n";
+            }
+            --level;
+            result += indent(level) + "}";
+            return result;
+        } else if (indexTypes.size() > 0) {
+            return "[" + toJson(indexTypes, level) + "]";
+        } else if (briefTypes.size() > 0) {
+            return "\"" + StringUtils.join(briefTypes, "|") + "\"";
+        } else {
+            return "\"unknown\"";
         }
     }
 }

@@ -11,19 +11,34 @@ import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_keys.DeepTypeResolver;
 import org.klesun.lang.Lang;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * go to declaration functionality for associative array keys
  */
 public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 {
+    // just treating a symptom. i dunno why duplicates appear - they should not
+    private static void removeDuplicates(List<PsiElement> psiTargets)
+    {
+        Set<List<String>> fingerprints = new HashSet<>();
+        int size = psiTargets.size();
+        for (int k = size - 1; k >= 0; --k) {
+            PsiElement psi = psiTargets.get(k);
+            List<String> fingerprint = list(psi.getContainingFile().getName(), psi.getTextOffset() + "");
+            if (fingerprints.contains(fingerprint)) {
+                psiTargets.remove(k);
+            }
+            fingerprints.add(fingerprint);
+        }
+    }
+
     @Nullable
     @Override
     public PsiElement[] getGotoDeclarationTargets(PsiElement psiElement, int i, Editor editor)
     {
-        Collection<PsiElement> psiTargets = new ArrayList<>();
+        List<PsiElement> psiTargets = new ArrayList<>();
         opt(psiElement.getParent())
             .fap(toCast(StringLiteralExpressionImpl.class))
             .thn(literal -> Lang.opt(literal.getParent())
@@ -38,6 +53,8 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                         psiTargets.add(arrayType.keys.get(key).definition);
                     }
                 })));
+
+        removeDuplicates(psiTargets);
 
         return psiTargets.toArray(new PsiElement[psiTargets.size()]);
     }

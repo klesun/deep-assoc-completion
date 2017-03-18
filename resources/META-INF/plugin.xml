@@ -27,4 +27,14 @@
   <depends>com.jetbrains.php</depends>
   <depends>com.intellij.modules.platform</depends>
 
+  <actions>
+    <action
+      id="Show docs"
+      class="org.klesun.deep_keys.entry.ShowDocs" text="Show Docs"
+      description="A shame, looks like lang.documentationProvider does not work for PHP, so i have to implement new action to print var info"
+    >
+      <add-to-group group-id="ToolsMenu" anchor="first"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt Q"/>
+    </action>
+  </actions>
 </idea-plugin>

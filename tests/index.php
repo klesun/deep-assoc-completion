@@ -124,7 +124,7 @@ class DeepKeysTest
         }
 
         // should suggest initialKey, dynamicKey1, dynamicKey2
-        $record[''];
+        $record['dynamicKey1'];
     }
 
     private static function testKeyKeyAccess()
@@ -253,6 +253,27 @@ class DeepKeysTest
     //============================
     // not implemented follow
     //============================
+
+    private static function testTuples()
+    {
+        $musician = ['genre' => 'jass', 'instrument' => 'trumpet'];
+        $programmer = ['language' => 'C#', 'orientation' => 'backend'];
+        $teacher = ['subject' => 'history', 'students' => 98];
+
+        $tuple = [$musician, $programmer, $teacher];
+        // should suggest genre, instrument
+        $tuple['0'][''];
+        // should suggest language, orientation
+        $tuple['1'][''];
+        // should suggest subject, students
+        $tuple['2'][''];
+
+        list($mus, $prog, $tea) = $tuple;
+        // should suggest what should be suggested
+        $mus[''];
+        $prog[''];
+        $tea[''];
+    }
 
     private static function testForeachAccess()
     {

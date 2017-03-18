@@ -3,6 +3,7 @@ package org.klesun.deep_keys;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.ide.TypeIconEP;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
@@ -10,10 +11,12 @@ import com.jetbrains.php.completion.PhpLookupElement;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.stubs.indexes.PhpClassIndex;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.lang.Lang;
 
+import javax.swing.*;
 import java.util.*;
 
 /**
@@ -23,26 +26,23 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
     private static LookupElement makeLookup(DeepType.Key keyEntry, Project project)
     {
+        LookupElementBuilder result = LookupElementBuilder.create(keyEntry.name)
+            .bold()
+            .withIcon(PhpIcons.FIELD);
+
         if (keyEntry.types.size() > 0) {
             DeepType type = keyEntry.types.get(0);
-
-            // TODO: hardcode type.briefType -> icon mapping and use the icon matching type
-            // also it would be really nice to distinct array-lists from array-shapes
-            return new PhpLookupElement(keyEntry.name, PhpClassIndex.KEY, PhpIcons.STATIC_CLASS, type.briefType, project, (insertionContext, lookupElement) -> {
-//                System.out.println("you have chosen " + lookupElement);
-            });
+            result = result.withTypeText(type.briefType.toString());
         } else {
-            return LookupElementBuilder.create(keyEntry.name);
+            result = result.withTypeText("unknown");
         }
+
+        return result;
     }
 
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        // TODO: go to definition
-
-        // TODO: get var/key type info
-
         // TODO: support properties like if they were variables
 
         // TODO: show error when user tries to access not existing
@@ -51,10 +51,6 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // TODO: use phpdocs:
         //   1. Reference to the function that provides such output
         //   2. Relaxed parse of description like ['k1' => 'v1', ...], array('k1' => 'v1', ...)
-
-        // TODO: autocomplete through yield?
-
-        // TODO: autocomplete from XML file with payload example ($xml['body'][0]['main'][0][...])
 
         // TODO: inspect so that type passed to function was compatible with expected type (has used keys)
 

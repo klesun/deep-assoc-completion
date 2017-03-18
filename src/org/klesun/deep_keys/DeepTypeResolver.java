@@ -54,7 +54,7 @@ public class DeepTypeResolver extends Lang
             assign.assignedType.forEach(dest::add);
         } else {
             if (dest.size() == 0) {
-                dest.add(new DeepType(null, PhpType.ARRAY));
+                dest.add(new DeepType(assign.psi, PhpType.ARRAY));
             }
             String nextKey = assign.keys.remove(0);
             dest.forEach(type -> {
@@ -64,8 +64,7 @@ public class DeepTypeResolver extends Lang
                 } else {
                     // associative key
                     if (!type.keys.containsKey(nextKey)) {
-                        // TODO: pass string literal PSI element here
-                        type.addKey(nextKey, null);
+                        type.addKey(nextKey, assign.psi);
                     }
                     addAssignment(type.keys.get(nextKey).types, assign, false);
                 }
@@ -128,15 +127,15 @@ public class DeepTypeResolver extends Lang
             opt(res.getElement())
                 .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
                 .fap(toFindParent(AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression))
-                .fap(ass -> collectKeyAssignment(ass, depth))
-                .thn(ass -> {
-                    boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
-                    reversedAssignments.add(new Assign(ass.a, ass.b, didSurelyHappen));
-                    if (didSurelyHappen && ass.a.size() == 0) {
-                        // direct assignment, everything before it is meaningless
-                        finished.set(true);
-                    }
-                });
+                .fap(ass -> collectKeyAssignment(ass, depth)
+                    .thn(tup -> {
+                        boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
+                        reversedAssignments.add(new Assign(tup.a, tup.b, didSurelyHappen, ass));
+                        if (didSurelyHappen && tup.a.size() == 0) {
+                            // direct assignment, everything before it is meaningless
+                            finished.set(true);
+                        }
+                    }));
         }
 
         List<Assign> assignments = list();
@@ -318,12 +317,14 @@ public class DeepTypeResolver extends Lang
         // when true, that means this assignment happens _always_,
         // i.e. it is not inside an "if" branch or a loop
         final public boolean didSurelyHappen;
+        final public PsiElement psi;
 
-        public Assign(List<String> keys, List<DeepType> assignedType, boolean didSurelyHappen)
+        public Assign(List<String> keys, List<DeepType> assignedType, boolean didSurelyHappen, PsiElement psi)
         {
             this.keys = keys;
             this.assignedType = assignedType;
             this.didSurelyHappen = didSurelyHappen;
+            this.psi = psi;
         }
     }
 }
