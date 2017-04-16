@@ -3,7 +3,6 @@ package org.klesun.deep_keys.entry;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.patterns.PlatformPatterns;
 import com.jetbrains.php.lang.psi.elements.*;
-import org.klesun.deep_keys.DeepKeysPvdr;
 
 /**
  * provides associative array keys autocomplete

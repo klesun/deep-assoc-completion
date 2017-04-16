@@ -3,6 +3,7 @@ package org.klesun.deep_keys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.psi.*;
+import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
@@ -314,6 +315,33 @@ public class DeepTypeResolver extends Lang
         return sw.toString();
     }
 
+    private static List<Method> resolveMethodsNoNs(String clsName, String func)
+    {
+        List<Method> meths = list();
+        L(ProjectManager.getInstance().getOpenProjects()).first()
+            .map(proj -> L(PhpIndex.getInstance(proj).getClassesByName(clsName)).s)
+            .thn(matches -> matches
+                .forEach(cls -> meths.addAll(L(cls.getMethods())
+                    .filter(m -> Objects.equals(m.getName(), func)).s)));
+        return meths;
+    }
+
+    private static Opt<PsiElement> resolveMethod(MethodReferenceImpl call)
+    {
+        return Opt.fst(list(opt(null)
+            , opt(call.resolve())
+            , opt(call.getClassReference())
+                .map(cls -> resolveMethodsNoNs(cls.getName(), call.getName()))
+                .fap(meths -> L(meths).first())
+        ));
+    }
+
+    private static Opt<List<DeepType>> findFieldType(FieldReferenceImpl fieldRef)
+    {
+        // TODO: implement!
+        return opt(null);
+    }
+
     public static List<DeepType> findExprType(PsiElement expr, int depth)
     {
         if (depth <= 0) {
@@ -333,7 +361,7 @@ public class DeepTypeResolver extends Lang
                 .map(call -> call.resolve())
                 .map(func -> findFuncRetType(func, nextDepth))
             , Tls.cast(MethodReferenceImpl.class, expr)
-                .map(call -> call.resolve())
+                .fap(call -> resolveMethod(call))
                 .map(func -> findFuncRetType(func, nextDepth))
             , Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .map(keyAccess -> findKeyType(keyAccess, nextDepth))
@@ -357,10 +385,14 @@ public class DeepTypeResolver extends Lang
                 ).collect(Collectors.toList()))
             , Tls.cast(PhpExpressionImpl.class, expr)
                 .map(mathExpr -> list(new DeepType(mathExpr)))
-            , Tls.cast(PhpExpressionImpl.class, expr)
+            , Tls.cast(FieldReferenceImpl.class, expr)
+                .fap(fieldRef -> findFieldType(fieldRef))
+            , Tls.cast(PhpExpression.class, expr)
                 .map(t -> list(new DeepType(t)))
+//            , Tls.cast(ConstantReferenceImpl.class, expr)
+//                .map(cnst -> list(new DeepType(cnst)))
         ))
-            .els(() -> System.out.println("Unknown expression type " + expr.getText() + " " + expr.getClass() + getStackTrace()))
+            .els(() -> System.out.println("Unknown expression type " + expr.getText() + " " + expr.getClass()))
             .def(list());
     }
 

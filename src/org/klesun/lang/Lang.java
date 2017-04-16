@@ -5,12 +5,12 @@ import com.google.gson.FieldAttributes;
 import com.google.gson.GsonBuilder;
 import com.intellij.psi.PsiElement;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * put here wrappers for things you use extremely
@@ -114,5 +114,40 @@ public class Lang
                 }
             })
             .create().toJson(data));
+    }
+
+    /** L stands for List */
+    public static <T> L L(List<T> source)
+    {
+        return new L(source);
+    }
+
+    public static <T> L<T> L(T[] source)
+    {
+        return new L(new ArrayList<T>(Arrays.asList(source)));
+    }
+
+    public static <T> L<T> L(Collection<T> source)
+    {
+        return new L(new ArrayList(source));
+    }
+
+    public static class L<T>
+    {
+        public final List<T> s;
+
+        private L(List<T> source) {
+            this.s = source;
+        }
+        public Opt<T> first() {
+            return s.size() > 0 ? opt(s.get(0)) : opt(null);
+        }
+        public Opt<T> last() {
+            int len = s.size();
+            return len > 0 ? opt(s.get(len - 1)) : opt(null);
+        }
+        public L<T> filter(Predicate<T> pred) {
+            return L(s.stream().filter(pred).collect(Collectors.toList()));
+        }
     }
 }

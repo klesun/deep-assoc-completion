@@ -272,7 +272,18 @@ class DeepKeysTest
         // should suggest: 'nestedKey1', 'nestedKey2', 'nestedKey3'
         $b['nestedAssoc'][''];
         // should suggest makeRecord keys
-        $c[''];
+        $c['pass'][''];
+    }
+
+    /**
+     * @param array $secondBomb = \DeepTest\KiraYoshikage::sheerHeartAttack()
+     * @param array $thirdBomb = KiraYoshikage::bombTransmutation()
+     */
+    private static function testForeginFileInDoc($secondBomb, $thirdBomb)
+    {
+        $secondBomb['smallCar'];
+        // should suggest all the keys from the function
+        $thirdBomb['touch'][''];
     }
 
     //============================
