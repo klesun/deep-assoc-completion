@@ -7,24 +7,42 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.psi.PsiElement;
 import com.intellij.ui.awt.RelativePoint;
+import com.jetbrains.php.lang.psi.elements.impl.ParameterImpl;
+import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
+import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_keys.DeepType;
 import org.klesun.deep_keys.DeepTypeResolver;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+import static org.klesun.lang.Lang.opt;
+
 public class ShowDocs extends AnAction
 {
-    @Override
+    public static List<DeepType> findPsiType(PsiElement psi)
+    {
+        return Opt.fst(Lang.list(
+            Tls.cast(PhpExpressionImpl.class, psi)
+                .map(expr -> DeepTypeResolver.findExprType(expr, 20)),
+            Tls.cast(ParameterImpl.class, psi)
+                .fap(param -> DeepTypeResolver.findParamType(param, 20))
+                .map(assign -> assign.assignedType)
+        )).def(Lang.list());
+    }
+
     public void actionPerformed(AnActionEvent e)
     {
-        Lang.opt(e.getData(LangDataKeys.PSI_ELEMENT))
+        opt(e.getData(LangDataKeys.PSI_ELEMENT))
             .thn(psi -> {
-                List<DeepType> types = DeepTypeResolver.findExprType(psi, 20);
+                List<DeepType> types = findPsiType(psi);
                 String doc = DeepType.toJson(types, 0);
                 System.out.println(doc);
                 JBPopupFactory.getInstance()

@@ -234,7 +234,7 @@ class DeepKeysTest
 
         // should suggest trueKeyB, falseKeyB
         $record['b'][''];
-        // should suggest trueKeyC, falseKeyC
+        // should suggest trueKeyC, falsephpstormKeyC
         $record['c'][''];
     }
 
@@ -247,7 +247,32 @@ class DeepKeysTest
         ;
 
         // should suggest all from makeRecord() and error
-        $maybeRecord['pass'];
+        $maybeRecord['pass                                                                                                                                                                                      '];
+    }
+
+    /**
+     * @param $a = ['key1' => 5, 'hey2' => 6]
+     * @param $b = [
+     *     'nestedAssoc' => [
+     *         'nestedKey1' => 213,
+     *         'nestedKey2' => 213,
+     *         'nestedKey3' => 213,
+     *     ],
+     *     'numbers' => [1,5,3,6],
+     * ]
+     * @param $c = DeepKeysTest::makeRecord()
+     */
+    private static function testDocHint($a, $b, $c)
+    {
+        // should suggest: 'key1', 'key2'
+        /** @var $a array - hujna */
+        $a[''];
+        // should suggest: 'nestedAssoc', 'numbers'
+        $b[''];
+        // should suggest: 'nestedKey1', 'nestedKey2', 'nestedKey3'
+        $b['nestedAssoc'][''];
+        // should suggest makeRecord keys
+        $c[''];
     }
 
     //============================
@@ -298,6 +323,7 @@ class DeepKeysTest
                 'nestedKey2' => 12,
             ],
         ];
+
         $records[] = ['optionalKey' => 4];
 
         $mapped = array_map(function($record) {

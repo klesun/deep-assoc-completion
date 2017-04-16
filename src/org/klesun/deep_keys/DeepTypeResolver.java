@@ -1,11 +1,9 @@
 package org.klesun.deep_keys;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.ResolveResult;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.psi.*;
+import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
@@ -13,8 +11,12 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -114,6 +116,51 @@ public class DeepTypeResolver extends Lang
             .map(value -> new T2(keys, findExprType(value, depth)));
     }
 
+    private static String dumpPsi(PsiElement psi, Integer level)
+    {
+        String result = "";
+        result += "" + level + " - " + psi.getClass() + "\n";
+        for (PsiElement subPsi: psi.getChildren()) {
+            result += dumpPsi(subPsi, level + 1);
+        }
+        return result;
+    }
+
+    private static Opt<List<DeepType>> parseExpression(String expr, int depth)
+    {
+        expr = "<?php\n" + expr + ";";
+        Project project = ProjectManager.getInstance().getDefaultProject();
+        PsiFile psiFile = PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr);
+
+        return opt(psiFile.getFirstChild())
+            .fap(toCast(GroupStatement.class))
+            .map(gr -> gr.getFirstPsiChild())
+            .fap(toCast(Statement.class))
+            .map(st -> st.getFirstChild())
+            .fap(toCast(PhpExpression.class))
+            .map(ex -> findExprType(ex, depth));
+    }
+
+    private static Opt<List<DeepType>> parseDoc(String descr, int depth)
+    {
+        Pattern pattern = Pattern.compile("^\\s*=\\s*(.+)$", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(descr);
+        if (matcher.matches()) {
+            return parseExpression(matcher.group(1), depth);
+        } else {
+            return opt(null);
+        }
+    }
+
+    public static Opt<Assign> findParamType(ParameterImpl param, int depth)
+    {
+        return opt(param.getDocComment())
+            .map(doc -> doc.getParamTagByName(param.getName()))
+            .fap(doc -> opt(doc.getTagValue())
+                .fap(descr -> parseDoc(descr, depth))
+                .map(parsed -> new Assign(list(), parsed, true, doc)));
+    }
+
     private static List<DeepType> findVarType(Variable variable, int depth)
     {
         List<Assign> reversedAssignments = list();
@@ -125,17 +172,21 @@ public class DeepTypeResolver extends Lang
 
             ResolveResult res = references[i];
             opt(res.getElement())
-                .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
-                .fap(toFindParent(AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression))
-                .fap(ass -> collectKeyAssignment(ass, depth)
-                    .thn(tup -> {
-                        boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
-                        reversedAssignments.add(new Assign(tup.a, tup.b, didSurelyHappen, ass));
-                        if (didSurelyHappen && tup.a.size() == 0) {
-                            // direct assignment, everything before it is meaningless
-                            finished.set(true);
-                        }
-                    }));
+                .thn(refPsi -> opt(refPsi)
+                    .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
+                    .fap(toFindParent(AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression))
+                    .thn(ass -> collectKeyAssignment(ass, depth)
+                        .thn(tup -> {
+                            boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
+                            reversedAssignments.add(new Assign(tup.a, tup.b, didSurelyHappen, ass));
+                            if (didSurelyHappen && tup.a.size() == 0) {
+                                // direct assignment, everything before it is meaningless
+                                finished.set(true);
+                            }
+                        }))
+                    .els(() -> Tls.cast(ParameterImpl.class, refPsi)
+                        .fap(param -> findParamType(param, depth))
+                        .thn(assign -> reversedAssignments.add(assign))));
         }
 
         List<Assign> assignments = list();
@@ -212,7 +263,7 @@ public class DeepTypeResolver extends Lang
 
     private static DeepType findLambdaType(FunctionImpl lambda, int depth)
     {
-        DeepType result = new DeepType(lambda, lambda.getInferredType(false));
+        DeepType result = new DeepType(lambda, lambda.getInferredType());
         findFuncRetType(lambda, depth).forEach(result.returnTypes::add);
         return result;
     }
@@ -253,6 +304,14 @@ public class DeepTypeResolver extends Lang
                 )));
 
         return arrayType;
+    }
+
+    private static String getStackTrace()
+    {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        new Exception().printStackTrace(pw);
+        return sw.toString();
     }
 
     public static List<DeepType> findExprType(PsiElement expr, int depth)
@@ -301,15 +360,15 @@ public class DeepTypeResolver extends Lang
             , Tls.cast(PhpExpressionImpl.class, expr)
                 .map(t -> list(new DeepType(t)))
         ))
-            .els(() -> System.out.println("Unknown expression type " + expr.getText() + " " + expr.getClass()))
-            .def(new ArrayList<>());
+            .els(() -> System.out.println("Unknown expression type " + expr.getText() + " " + expr.getClass() + getStackTrace()))
+            .def(list());
     }
 
     /**
      * contains info related to assignment to a
      * specific associative array variable key
      */
-    private static class Assign
+    public static class Assign
     {
         final public List<String> keys;
         // list?
@@ -317,6 +376,7 @@ public class DeepTypeResolver extends Lang
         // when true, that means this assignment happens _always_,
         // i.e. it is not inside an "if" branch or a loop
         final public boolean didSurelyHappen;
+        // where to look in GO TO navigation
         final public PsiElement psi;
 
         public Assign(List<String> keys, List<DeepType> assignedType, boolean didSurelyHappen, PsiElement psi)

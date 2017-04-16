@@ -49,7 +49,11 @@ public class Opt<T>
         );
     }
 
-    /** run if present */
+    /**
+     * run if present
+     * TODO: it should not return an optional since this causes confusion with nested .thn-s
+     * instead it should return an object with single property - .els()
+     */
     public Opt<T> thn(Lang.C<T> f)
     {
         if (has()) {
@@ -99,5 +103,12 @@ public class Opt<T>
             }
         }
         return new Opt(null);
+    }
+
+    /** returned by .thn() - needed since i want to limit chaining to end
+     * on .thn() cuz else it's very easy to make a mistake with brackets */
+    private static class Then
+    {
+        // TODO: implement!
     }
 }
