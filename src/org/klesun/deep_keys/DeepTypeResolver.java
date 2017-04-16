@@ -28,23 +28,6 @@ import java.util.stream.Stream;
  */
 public class DeepTypeResolver extends Lang
 {
-    private static <T extends PsiElement> F<PsiElement, Opt<T>> toFindParent(Class<T> cls, Predicate<PsiElement> continuePred)
-    {
-        return (psi) -> {
-            PsiElement parent = psi.getParent();
-            while (parent != null) {
-                Opt<T> matching = Tls.cast(cls, parent);
-                if (matching.has()) {
-                    return matching;
-                } else if (!continuePred.test(parent)) {
-                    break;
-                }
-                parent = parent.getParent();
-            }
-            return opt(null);
-        };
-    }
-
     /**
      * extends type with the key assignment information
      */
@@ -142,7 +125,7 @@ public class DeepTypeResolver extends Lang
             .map(ex -> findExprType(ex, depth));
     }
 
-    private static Opt<List<DeepType>> parseDoc(String descr, int depth)
+    public static Opt<List<DeepType>> parseDoc(String descr, int depth)
     {
         Pattern pattern = Pattern.compile("^\\s*=\\s*(.+)$", Pattern.DOTALL);
         Matcher matcher = pattern.matcher(descr);
@@ -175,7 +158,7 @@ public class DeepTypeResolver extends Lang
             opt(res.getElement())
                 .thn(refPsi -> opt(refPsi)
                     .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
-                    .fap(toFindParent(AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression))
+                    .fap(Tls.toFindParent(AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression))
                     .thn(ass -> collectKeyAssignment(ass, depth)
                         .thn(tup -> {
                             boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
@@ -305,14 +288,6 @@ public class DeepTypeResolver extends Lang
                 )));
 
         return arrayType;
-    }
-
-    private static String getStackTrace()
-    {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        new Exception().printStackTrace(pw);
-        return sw.toString();
     }
 
     private static List<Method> resolveMethodsNoNs(String clsName, String func)

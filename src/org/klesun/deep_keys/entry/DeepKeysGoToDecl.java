@@ -4,12 +4,14 @@ import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_keys.DeepTypeResolver;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Tls;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -52,7 +54,12 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                     if (arrayType.keys.containsKey(key)) {
                         psiTargets.add(arrayType.keys.get(key).definition);
                     }
-                })));
+                })))
+            .els(() -> opt(psiElement)
+                .fap(Tls.toFindParent(PhpDocTag.class, psi -> true))
+                .map(tag -> tag.getTagValue())
+                .fap(descr -> DeepTypeResolver.parseDoc(descr, 20))
+                .thn(types -> types.forEach(t -> psiTargets.add(t.definition))));
 
         removeDuplicates(psiTargets);
 
