@@ -3,8 +3,11 @@ package org.klesun.deep_keys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.psi.*;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.searches.ReferencesSearch;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.PhpLanguage;
+import com.jetbrains.php.lang.parser.parsing.classes.ClassField;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
@@ -12,10 +15,7 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -158,7 +158,7 @@ public class DeepTypeResolver extends Lang
             opt(res.getElement())
                 .thn(refPsi -> opt(refPsi)
                     .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
-                    .fap(Tls.toFindParent(AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression))
+                    .fap(v -> Tls.findParent(v, AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression))
                     .thn(ass -> collectKeyAssignment(ass, depth)
                         .thn(tup -> {
                             boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
@@ -293,11 +293,11 @@ public class DeepTypeResolver extends Lang
     private static List<Method> resolveMethodsNoNs(String clsName, String func)
     {
         List<Method> meths = list();
-        L(ProjectManager.getInstance().getOpenProjects()).first()
+        L(ProjectManager.getInstance().getOpenProjects()).fst()
             .map(proj -> L(PhpIndex.getInstance(proj).getClassesByName(clsName)).s)
             .thn(matches -> matches
                 .forEach(cls -> meths.addAll(L(cls.getMethods())
-                    .filter(m -> Objects.equals(m.getName(), func)).s)));
+                    .flt(m -> Objects.equals(m.getName(), func)).s)));
         return meths;
     }
 
@@ -307,14 +307,35 @@ public class DeepTypeResolver extends Lang
             , opt(call.resolve())
             , opt(call.getClassReference())
                 .map(cls -> resolveMethodsNoNs(cls.getName(), call.getName()))
-                .fap(meths -> L(meths).first())
+                .fap(meths -> L(meths).fst())
         ));
     }
 
-    private static Opt<List<DeepType>> findFieldType(FieldReferenceImpl fieldRef)
+    private static Opt<List<DeepType>> findFieldType(FieldReferenceImpl fieldRef, int depth)
     {
-        // TODO: implement!
-        return opt(null);
+        List<DeepType> result = list();
+
+        L(ProjectManager.getInstance().getOpenProjects()).fst()
+            .thn(proj -> opt(fieldRef.resolve())
+                .thn(resolved -> {
+                    Tls.cast(FieldImpl.class, resolved)
+                        .map(fld -> fld.getDefaultValue())
+                        .map(def -> findExprType(def, depth))
+                        .thn(result::addAll);
+
+                    opt(resolved.getOriginalElement())
+                        // TODO: limit to class scope somehow since it probably can cause HUGE performance leak
+                        .map(decl -> ReferencesSearch.search(decl, GlobalSearchScope.allScope(proj), true).findAll())
+                        .map(usages -> L(usages).map(u -> u.getElement()))
+                        .def(L())
+                        .fop(psi -> opt(psi.getParent()))
+                        .fop(toCast(AssignmentExpressionImpl.class))
+                        .fop(ass -> opt(ass.getValue()))
+                        .fap(expr -> findExprType(expr, depth))
+                        .fch(result::add);
+                }));
+
+        return opt(result);
     }
 
     public static List<DeepType> findExprType(PsiElement expr, int depth)
@@ -322,7 +343,7 @@ public class DeepTypeResolver extends Lang
         if (depth <= 0) {
             return new ArrayList<>();
         }
-        final int nextDepth = depth - 1;
+        final int nextDepth = --depth;
 
         return Opt.fst(list(
             opt(null) // for coma formatting
@@ -361,7 +382,7 @@ public class DeepTypeResolver extends Lang
             , Tls.cast(PhpExpressionImpl.class, expr)
                 .map(mathExpr -> list(new DeepType(mathExpr)))
             , Tls.cast(FieldReferenceImpl.class, expr)
-                .fap(fieldRef -> findFieldType(fieldRef))
+                .fap(fieldRef -> findFieldType(fieldRef, nextDepth))
             , Tls.cast(PhpExpression.class, expr)
                 .map(t -> list(new DeepType(t)))
 //            , Tls.cast(ConstantReferenceImpl.class, expr)

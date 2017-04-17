@@ -94,7 +94,7 @@ public class Opt<T>
         }
     }
 
-    /** return result of first successful function in the passed list */
+    /** return result of fst successful function in the passed list */
     public static <Ts> Opt<Ts> fst(Iterable<Opt<Ts>> attempts)
     {
         for (Opt<Ts> a: attempts) {

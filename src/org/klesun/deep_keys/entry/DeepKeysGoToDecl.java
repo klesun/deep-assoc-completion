@@ -14,7 +14,6 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * go to declaration functionality for associative array keys
@@ -56,7 +55,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                     }
                 })))
             .els(() -> opt(psiElement)
-                .fap(Tls.toFindParent(PhpDocTag.class, psi -> true))
+                .fap(v -> Tls.findParent(v, PhpDocTag.class, psi -> true))
                 .map(tag -> tag.getTagValue())
                 .fap(descr -> DeepTypeResolver.parseDoc(descr, 20))
                 .thn(types -> types.forEach(t -> psiTargets.add(t.definition))));

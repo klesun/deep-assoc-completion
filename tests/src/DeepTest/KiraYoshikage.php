@@ -3,6 +3,34 @@ namespace DeepTest;
 
 class KiraYoshikage
 {
+    private $passionCriteria = [
+        'nailLength' => 15,
+        'skinType' => ['smooth', 'soft'],
+        'handCount' => 1,
+    ];
+    private $badassness;
+
+    public function __construct()
+    {
+        $this->characterProps = [
+            'powers' => 'average',
+            'story' => 'good',
+            'personality' => 'topvishkaogonj',
+        ];
+    }
+
+    private function getBadassness()
+    {
+        return $this->badassness
+            ?? $this->badassness = [
+                'randomPeopleKilled' => 50,
+                'goodGuysKilled' => 3,
+                'sufferBrought' => 0.43,
+                'womenSeduced' => 49,
+                'boom' => self::bombTransmutation(),
+            ];
+    }
+
     public static function bombTransmutation()
     {
         return [
@@ -37,5 +65,29 @@ class KiraYoshikage
             'goes' => 1231,
             'back' => 1231,
         ];
+    }
+
+    /**
+     * @param array $woman = [
+     *   'nailLength' => 15,
+     *   'skinType' => ['smooth', 'soft'],
+     *   'handCount' => 1,
+     * ]
+     */
+    public function murder($woman)
+    {
+        if ($woman['nailLength'] > $this->passionCriteria['nailLength'] &&
+            !array_diff($this->passionCriteria['skinType'], $woman['skinType']) &&
+            $woman['handCount'] > $this->passionCriteria['handCount']
+        ) {
+            self::sheerHeartAttack();
+        }
+
+        if ($this->characterProps['personality'] >= 'dio' ||
+            $this->characterProps['powers'] >= 'damon' ||
+            $this->characterProps['story'] >= 'aztecArc'
+        ) {
+            self::bombTransmutation();
+        }
     }
 }

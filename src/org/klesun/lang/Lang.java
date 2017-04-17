@@ -132,22 +132,68 @@ public class Lang
         return new L(new ArrayList(source));
     }
 
+    public static <T> L<T> L()
+    {
+        return new L<T>(new ArrayList<T>());
+    }
+
     public static class L<T>
     {
         public final List<T> s;
 
-        private L(List<T> source) {
+        private L(List<T> source)
+        {
             this.s = source;
         }
-        public Opt<T> first() {
+
+        public Opt<T> fst()
+        {
             return s.size() > 0 ? opt(s.get(0)) : opt(null);
         }
-        public Opt<T> last() {
+
+        public Opt<T> lst()
+        {
             int len = s.size();
             return len > 0 ? opt(s.get(len - 1)) : opt(null);
         }
-        public L<T> filter(Predicate<T> pred) {
+
+        public L<T> flt(Predicate<T> pred)
+        {
             return L(s.stream().filter(pred).collect(Collectors.toList()));
+        }
+
+        public <Tnew> L<Tnew> map(F<T, Tnew> pred)
+        {
+            return L(s.stream().map(pred).collect(Collectors.toList()));
+        }
+
+        /**
+         * "fop" stands for "Filter Optional"
+         * this is a combination of map and filter
+         */
+        public <Tnew> L<Tnew> fop(F<T, Opt<Tnew>> convert)
+        {
+            List<Tnew> result = list();
+            s.forEach(el -> convert.apply(el).thn(result::add));
+            return new L(result);
+        }
+
+        /**
+         * "fap" stands fro flat map - flattens list by lambda
+         */
+        public <Tnew> L<Tnew> fap(F<T, List<Tnew>> flatten)
+        {
+            List<Tnew> result = list();
+            s.forEach(el -> flatten.apply(el).forEach(result::add));
+            return new L(result);
+        }
+
+        /**
+         * "fch" stands for For Each
+         */
+        public void fch(C<T> f)
+        {
+            s.forEach(f);
         }
     }
 }

@@ -34,20 +34,21 @@ public class Tls extends Lang
         return sw.toString();
     }
 
-    public static <T extends PsiElement> Lang.F<PsiElement, Opt<T>> toFindParent(Class<T> cls, Predicate<PsiElement> continuePred)
-    {
-        return (psi) -> {
-            PsiElement parent = psi.getParent();
-            while (parent != null) {
-                Opt<T> matching = Tls.cast(cls, parent);
-                if (matching.has()) {
-                    return matching;
-                } else if (!continuePred.test(parent)) {
-                    break;
-                }
-                parent = parent.getParent();
+    public static <T extends PsiElement> Opt<T> findParent(
+        PsiElement psi,
+        Class<T> cls,
+        Predicate<PsiElement> continuePred
+    ) {
+        PsiElement parent = psi.getParent();
+        while (parent != null) {
+            Opt<T> matching = Tls.cast(cls, parent);
+            if (matching.has()) {
+                return matching;
+            } else if (!continuePred.test(parent)) {
+                break;
             }
-            return opt(null);
-        };
+            parent = parent.getParent();
+        }
+        return opt(null);
     }
 }
