@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.PhpLanguage;
@@ -346,8 +347,10 @@ public class DeepTypeResolver extends Lang
                         .thn(result::addAll);
 
                     opt(resolved.getOriginalElement())
-                        // TODO: limit to class scope somehow since it probably can cause HUGE performance leak
-                        .map(decl -> ReferencesSearch.search(decl, GlobalSearchScope.allScope(proj), true).findAll())
+                        .map(decl -> {
+                            SearchScope scope = GlobalSearchScope.fileScope(proj, decl.getContainingFile().getVirtualFile());
+                            return ReferencesSearch.search(decl, scope, false).findAll();
+                        })
                         .map(usages -> L(usages).map(u -> u.getElement()))
                         .def(L())
                         .fop(psi -> opt(psi.getParent()))
