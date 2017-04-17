@@ -283,7 +283,7 @@ class DeepKeysTest
     {
         $secondBomb['smallCar'];
         // should suggest all the keys from the function
-        $thirdBomb['touch'][''];
+        $thirdBomb['touch'];
     }
 
     private static function testForeachAccess()

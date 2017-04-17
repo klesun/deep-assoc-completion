@@ -71,6 +71,13 @@ public class Opt<T>
         return this;
     }
 
+    /** "elf" stands for "else if"
+     * call f if no value */
+    public Opt<T> elf(Lang.S<Opt<T>> f)
+    {
+        return !has() ? f.get() : this;
+    }
+
     public T def(T defaultValue)
     {
         if (has()) {

@@ -167,29 +167,30 @@ public class DeepTypeResolver extends Lang
         Mutable<Boolean> finished = new Mutable<>(false);
         for (int i = references.length - 1; i >= 0; --i) {
             if (finished.get()) break;
-
             ResolveResult res = references[i];
             opt(res.getElement())
                 .thn(refPsi -> opt(refPsi)
                     .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
-                    .thn(varRef -> {
+                    .fap(varRef -> {
                         boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
-                        Tls.findParent(varRef, AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression)
-                            .thn(ass -> collectKeyAssignment(ass, depth)
-                                .thn(tup -> {
-                                    reversedAssignments.add(new Assign(tup.a, tup.b, didSurelyHappen, ass));
-                                    if (didSurelyHappen && tup.a.size() == 0) {
+                        return Tls.findParent(varRef, AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression)
+                            .fap(ass -> collectKeyAssignment(ass, depth)
+                                .map(tup -> new Assign(tup.a, tup.b, didSurelyHappen, ass))
+                                .thn(assign -> {
+                                    reversedAssignments.add(assign);
+                                    if (didSurelyHappen && assign.keys.size() == 0) {
                                         // direct assignment, everything before it is meaningless
                                         finished.set(true);
                                     }
                                 }))
-                            .els(() -> opt(varRef.getParent())
+                            .elf(() -> opt(varRef.getParent())
                                 .fap(toCast(ForeachImpl.class))
                                 .flt(fch -> fch.getValue().isEquivalentTo(varRef))
                                 .map(fch -> fch.getArray())
                                 .map(arr -> findExprType(arr, depth))
                                 .map(arrTypes -> makeArrElType(arrTypes))
-                                .thn(elTypes -> reversedAssignments.add(new Assign(list(), elTypes, didSurelyHappen, varRef))));
+                                .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, varRef))
+                                .thn(assign -> reversedAssignments.add(assign)));
                     })
                     .els(() -> Tls.cast(ParameterImpl.class, refPsi)
                         .fap(param -> findParamType(param, depth))
