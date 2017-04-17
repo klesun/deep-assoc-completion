@@ -286,6 +286,19 @@ class DeepKeysTest
         $thirdBomb['touch'][''];
     }
 
+    private static function testForeachAccess()
+    {
+        $record = self::makeRecord();
+
+        $subjects = $record['chosenSubSubjects'];
+        $subjects[0][''];
+
+        foreach ($subjects as $subject) {
+            // should suggest name, priority
+            $subject['priority'];
+        }
+    }
+
     //============================
     // not implemented follow
     //============================
@@ -309,18 +322,6 @@ class DeepKeysTest
         $mus[''];
         $prog[''];
         $tea[''];
-    }
-
-    private static function testForeachAccess()
-    {
-        $record = self::makeRecord();
-
-        $subjects = $record['chosenSubSubjects'];
-
-        foreach ($subjects as $subject) {
-            // should suggest name, priority
-            $subject[''];
-        }
     }
 
     private static function testGenericAccess()

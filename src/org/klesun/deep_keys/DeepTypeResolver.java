@@ -145,6 +145,19 @@ public class DeepTypeResolver extends Lang
                 .map(parsed -> new Assign(list(), parsed, true, doc)));
     }
 
+    /**
+     * @return type of array element from array type
+     */
+    private static List<DeepType> makeArrElType(List<DeepType> arrTypes)
+    {
+        List<DeepType> result = list();
+        arrTypes.forEach(arrt -> {
+            result.addAll(arrt.indexTypes);
+            arrt.keys.forEach((k,v) -> result.addAll(v.types));
+        });
+        return result;
+    }
+
     private static List<DeepType> findVarType(Variable variable, int depth)
     {
         List<Assign> reversedAssignments = list();
@@ -158,16 +171,25 @@ public class DeepTypeResolver extends Lang
             opt(res.getElement())
                 .thn(refPsi -> opt(refPsi)
                     .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
-                    .fap(v -> Tls.findParent(v, AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression))
-                    .thn(ass -> collectKeyAssignment(ass, depth)
-                        .thn(tup -> {
-                            boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
-                            reversedAssignments.add(new Assign(tup.a, tup.b, didSurelyHappen, ass));
-                            if (didSurelyHappen && tup.a.size() == 0) {
-                                // direct assignment, everything before it is meaningless
-                                finished.set(true);
-                            }
-                        }))
+                    .thn(varRef -> {
+                        boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
+                        Tls.findParent(varRef, AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression)
+                            .thn(ass -> collectKeyAssignment(ass, depth)
+                                .thn(tup -> {
+                                    reversedAssignments.add(new Assign(tup.a, tup.b, didSurelyHappen, ass));
+                                    if (didSurelyHappen && tup.a.size() == 0) {
+                                        // direct assignment, everything before it is meaningless
+                                        finished.set(true);
+                                    }
+                                }))
+                            .els(() -> opt(varRef.getParent())
+                                .fap(toCast(ForeachImpl.class))
+                                .flt(fch -> fch.getValue().isEquivalentTo(varRef))
+                                .map(fch -> fch.getArray())
+                                .map(arr -> findExprType(arr, depth))
+                                .map(arrTypes -> makeArrElType(arrTypes))
+                                .thn(elTypes -> reversedAssignments.add(new Assign(list(), elTypes, didSurelyHappen, varRef))));
+                    })
                     .els(() -> Tls.cast(ParameterImpl.class, refPsi)
                         .fap(param -> findParamType(param, depth))
                         .thn(assign -> reversedAssignments.add(assign))));

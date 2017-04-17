@@ -26,7 +26,7 @@ public class Tls extends Lang
         }
     }
 
-    private static String getStackTrace()
+    public static String getStackTrace()
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
