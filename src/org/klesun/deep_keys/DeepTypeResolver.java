@@ -8,7 +8,6 @@ import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.PhpLanguage;
-import com.jetbrains.php.lang.parser.parsing.classes.ClassField;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
@@ -314,14 +313,12 @@ public class DeepTypeResolver extends Lang
         return arrayType;
     }
 
-    private static List<Method> resolveMethodsNoNs(String clsName, String func)
+    private static List<Method> resolveMethodsNoNs(String clsName, String func, Project proj)
     {
         List<Method> meths = list();
-        L(ProjectManager.getInstance().getOpenProjects()).fst()
-            .map(proj -> L(PhpIndex.getInstance(proj).getClassesByName(clsName)).s)
-            .thn(matches -> matches
-                .forEach(cls -> meths.addAll(L(cls.getMethods())
-                    .flt(m -> Objects.equals(m.getName(), func)).s)));
+        L(PhpIndex.getInstance(proj).getClassesByName(clsName)).s
+            .forEach(cls -> meths.addAll(L(cls.getMethods())
+                .flt(m -> Objects.equals(m.getName(), func)).s));
         return meths;
     }
 
@@ -330,7 +327,7 @@ public class DeepTypeResolver extends Lang
         return Opt.fst(list(opt(null)
             , opt(call.resolve())
             , opt(call.getClassReference())
-                .map(cls -> resolveMethodsNoNs(cls.getName(), call.getName()))
+                .map(cls -> resolveMethodsNoNs(cls.getName(), call.getName(), call.getProject()))
                 .fap(meths -> L(meths).fst())
         ));
     }
@@ -338,28 +335,29 @@ public class DeepTypeResolver extends Lang
     private static Opt<List<DeepType>> findFieldType(FieldReferenceImpl fieldRef, int depth)
     {
         List<DeepType> result = list();
+        opt(fieldRef.resolve())
+            .thn(resolved -> {
+                Tls.cast(FieldImpl.class, resolved)
+                    .map(fld -> fld.getDefaultValue())
+                    .map(def -> findExprType(def, depth))
+                    .thn(result::addAll);
 
-        L(ProjectManager.getInstance().getOpenProjects()).fst()
-            .thn(proj -> opt(fieldRef.resolve())
-                .thn(resolved -> {
-                    Tls.cast(FieldImpl.class, resolved)
-                        .map(fld -> fld.getDefaultValue())
-                        .map(def -> findExprType(def, depth))
-                        .thn(result::addAll);
-
-                    opt(resolved.getOriginalElement())
-                        .map(decl -> {
-                            SearchScope scope = GlobalSearchScope.fileScope(proj, decl.getContainingFile().getVirtualFile());
-                            return ReferencesSearch.search(decl, scope, false).findAll();
-                        })
-                        .map(usages -> L(usages).map(u -> u.getElement()))
-                        .def(L())
-                        .fop(psi -> opt(psi.getParent()))
-                        .fop(toCast(AssignmentExpressionImpl.class))
-                        .fop(ass -> opt(ass.getValue()))
-                        .fap(expr -> findExprType(expr, depth))
-                        .fch(result::add);
-                }));
+                opt(resolved.getOriginalElement())
+                    .map(decl -> {
+                        SearchScope scope = GlobalSearchScope.fileScope(
+                            fieldRef.getProject(),
+                            decl.getContainingFile().getVirtualFile()
+                        );
+                        return ReferencesSearch.search(decl, scope, false).findAll();
+                    })
+                    .map(usages -> L(usages).map(u -> u.getElement()))
+                    .def(L())
+                    .fop(psi -> opt(psi.getParent()))
+                    .fop(toCast(AssignmentExpressionImpl.class))
+                    .fop(ass -> opt(ass.getValue()))
+                    .fap(expr -> findExprType(expr, depth))
+                    .fch(result::add);
+            });
 
         return opt(result);
     }

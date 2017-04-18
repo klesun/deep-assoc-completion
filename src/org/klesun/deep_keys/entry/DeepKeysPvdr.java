@@ -3,22 +3,17 @@ package org.klesun.deep_keys.entry;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.ide.TypeIconEP;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
-import com.jetbrains.php.completion.PhpLookupElement;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
-import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import com.jetbrains.php.lang.psi.stubs.indexes.PhpClassIndex;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_keys.DeepType;
 import org.klesun.deep_keys.DeepTypeResolver;
 import org.klesun.lang.Lang;
 
-import javax.swing.*;
 import java.util.*;
 
 /**

@@ -3,16 +3,13 @@ package org.klesun.deep_keys.entry;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
-import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.psi.PsiElement;
 import com.intellij.ui.awt.RelativePoint;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ParameterImpl;
-import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
-import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
-import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_keys.DeepType;
 import org.klesun.deep_keys.DeepTypeResolver;
 import org.klesun.lang.Lang;
@@ -30,7 +27,7 @@ public class ShowDocs extends AnAction
     public static List<DeepType> findPsiType(PsiElement psi)
     {
         return Opt.fst(Lang.list(
-            Tls.cast(PhpExpressionImpl.class, psi)
+            Tls.cast(PhpExpression.class, psi)
                 .map(expr -> DeepTypeResolver.findExprType(expr, 20)),
             Tls.cast(ParameterImpl.class, psi)
                 .fap(param -> DeepTypeResolver.findParamType(param, 20))
