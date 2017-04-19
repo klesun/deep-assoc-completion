@@ -299,6 +299,54 @@ class DeepKeysTest
         }
     }
 
+    private static function testBuiltIns()
+    {
+        $records = array_map(function($i){return [
+            'type' => 'generated',
+            'score' => rand(0,100),
+            'student' => 'Vasya',
+            'parsed' => [
+                'id' => $i,
+                'generationTime' => rand(0,10),
+            ],
+        ];}, range(0,10));
+        $records[] = [
+            'type' => 'mostAverage',
+            'score' => 54,
+            'student' => 'Vova',
+            'parsed' => [
+                'comment' => 'two units higher than a dog',
+                'averageness' => 'averagelyAverage',
+            ],
+        ];
+        $records[] = [
+            'type' => 'mostBlonde',
+            'score' => 52,
+            'student' => 'Nastya',
+            'parsed' => [
+                'comment' => 'blonde soul can\'t be dyed',
+                'blondeness' => 'veryBlonde',
+            ],
+        ];
+
+        // all following should suggest: "id", "score", "student"
+        $records[0][''];
+        array_pop($records)[''];
+        array_shift($records)[''];
+        array_reverse($records)[0][''];
+
+        $byType = array_combine(
+            array_column($records, 'type'),
+            array_column($records, 'parsed')
+        );
+        // should suggest: "id", "generationTime"
+        $byType['generated'][''];
+        // should suggest: "averageness"
+        $byType['mostAverage'][''];
+        // should suggest: "blondeness"
+        $byType['mostBlonde'][''];
+    }
+
     //============================
     // not implemented follow
     //============================

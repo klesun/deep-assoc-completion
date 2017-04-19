@@ -179,7 +179,7 @@ public class Lang
         }
 
         /**
-         * "fap" stands fro flat map - flattens list by lambda
+         * "fap" stands for flat map - flattens list by lambda
          */
         public <Tnew> L<Tnew> fap(F<T, List<Tnew>> flatten)
         {
@@ -194,6 +194,13 @@ public class Lang
         public void fch(C<T> f)
         {
             s.forEach(f);
+        }
+
+        /** @debug */
+        public L<T> wth(C<L<T>> f)
+        {
+            f.accept(this);
+            return this;
         }
     }
 }

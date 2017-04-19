@@ -14,6 +14,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
+import org.mozilla.javascript.ast.StringLiteral;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -220,9 +221,23 @@ public class DeepTypeResolver extends Lang
                     }
                 }
                 return opt(list(result));
-            } else if (name.equals("array_filter")) {
+            } else if (name.equals("array_filter") || name.equals("array_reverse")
+                    || name.equals("array_splice") || name.equals("array_slice")
+                    || name.equals("array_values")
+            ) {
                 return params.length > 0
                     ? opt(findExprType(params[0], depth))
+                    : opt(list());
+            } else if (name.equals("array_combine")) {
+                // if we store all literal values of a key, we could even recreate the
+                // associative array here, but for now just merging all possible values together
+                return params.length > 1
+                    ? opt(findExprType(params[1], depth))
+                    : opt(list());
+            } else if (name.equals("array_pop") || name.equals("array_shift")) {
+                return params.length > 0
+                    ? opt(findExprType(params[0], depth))
+                        .map(arrt -> makeArrElType(arrt))
                     : opt(list());
             } else if (name.equals("array_merge")) {
                 List<DeepType> types = list();
@@ -230,6 +245,24 @@ public class DeepTypeResolver extends Lang
                     types.addAll(findExprType(paramPsi, depth));
                 }
                 return opt(types);
+            } else if (name.equals("array_column")) {
+                if (params.length > 1) {
+                    L<DeepType> elType = L(makeArrElType(findExprType(params[0], depth)));
+                    return Tls.cast(StringLiteralExpression.class, params[1])
+                        .map(lit -> lit.getContents())
+                        .map(keyName -> elType
+                            .fop(type -> getKey(type.keys, keyName))
+                            .fap(keyRec -> keyRec.types))
+                            .map(lTypes -> lTypes.s)
+                        .flt(types -> types.size() > 0)
+                        .map(types -> {
+                            DeepType type = new DeepType(call);
+                            type.indexTypes.addAll(types);
+                            return list(type);
+                        });
+                } else {
+                    return opt(list());
+                }
             } else if (name.equals("array_intersect_key")) {
                 // do something more clever?
                 return params.length > 0
@@ -290,6 +323,7 @@ public class DeepTypeResolver extends Lang
                 .flatMap(v -> v.types.stream())
                 .collect(Collectors.toList())
             )
+            .flt(types -> types.size() > 0)
             .def(dictTypes.stream()
                 .map(type -> type.indexTypes)
                 .flatMap(v -> v.stream())
