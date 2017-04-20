@@ -57,7 +57,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
             .els(() -> opt(psiElement)
                 .fap(v -> Tls.findParent(v, PhpDocTag.class, psi -> true))
                 .map(tag -> tag.getTagValue())
-                .fap(descr -> DeepTypeResolver.parseDoc(descr, 20))
+                .fap(descr -> DeepTypeResolver.parseDoc(descr, 20, psiElement.getProject()))
                 .thn(types -> types.forEach(t -> psiTargets.add(t.definition))));
 
         removeDuplicates(psiTargets);

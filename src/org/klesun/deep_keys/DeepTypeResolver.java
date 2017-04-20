@@ -111,10 +111,9 @@ public class DeepTypeResolver extends Lang
         return result;
     }
 
-    private static Opt<List<DeepType>> parseExpression(String expr, int depth)
+    private static Opt<List<DeepType>> parseExpression(String expr, int depth, Project project)
     {
         expr = "<?php\n" + expr + ";";
-        Project project = ProjectManager.getInstance().getDefaultProject();
         PsiFile psiFile = PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr);
 
         return opt(psiFile.getFirstChild())
@@ -126,12 +125,12 @@ public class DeepTypeResolver extends Lang
             .map(ex -> findExprType(ex, depth));
     }
 
-    public static Opt<List<DeepType>> parseDoc(String descr, int depth)
+    public static Opt<List<DeepType>> parseDoc(String descr, int depth, Project project)
     {
         Pattern pattern = Pattern.compile("^\\s*=\\s*(.+)$", Pattern.DOTALL);
         Matcher matcher = pattern.matcher(descr);
         if (matcher.matches()) {
-            return parseExpression(matcher.group(1), depth);
+            return parseExpression(matcher.group(1), depth, project);
         } else {
             return opt(null);
         }
@@ -142,7 +141,7 @@ public class DeepTypeResolver extends Lang
         return opt(param.getDocComment())
             .map(doc -> doc.getParamTagByName(param.getName()))
             .fap(doc -> opt(doc.getTagValue())
-                .fap(descr -> parseDoc(descr, depth))
+                .fap(descr -> parseDoc(descr, depth, param.getProject()))
                 .map(parsed -> new Assign(list(), parsed, true, doc)));
     }
 
