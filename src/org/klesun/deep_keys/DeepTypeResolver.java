@@ -14,7 +14,6 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
-import org.mozilla.javascript.ast.StringLiteral;
 
 import java.util.*;
 import java.util.regex.Matcher;
