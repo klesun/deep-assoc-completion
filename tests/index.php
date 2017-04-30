@@ -347,6 +347,25 @@ class DeepKeysTest
         $byType['mostBlonde'][''];
     }
 
+    private static function testPregMatch(string $line)
+    {
+        $regex =
+            '/^\s*'.
+            '(?P<segmentNumber>\d+)\s+'.
+            '(?P<airline>[A-Z0-9]{2})\s*'.
+            '(?P<flightNumber>\d{1,4})\s*'.
+            '(?P<bookingClass>[A-Z])'.
+            '/';
+
+        if (preg_match($regex, $line, $matches)) {
+            // should suggest: "segmentNumber", "airline", "flightNumber", "bookingClass"
+            $matches[''];
+            return $matches;
+        } else {
+            return null;
+        }
+    }
+
     //============================
     // not implemented follow
     //============================

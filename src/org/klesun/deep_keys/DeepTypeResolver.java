@@ -135,6 +135,31 @@ public class DeepTypeResolver extends Lang
         }
     }
 
+    private static List<String> parseRegexNameCaptures(String regexText)
+    {
+        List<String> result = list();
+        Pattern pattern = Pattern.compile("\\(\\?P<([a-zA-Z_0-9]+)>");
+        Matcher matcher = pattern.matcher(regexText);
+        while (matcher.find()) {
+            result.add(matcher.group(1));
+        }
+        return result;
+    }
+
+    private static List<DeepType> makeRegexNameCaptureTypes(List<DeepType> regexTypes)
+    {
+        return L(regexTypes)
+            .fop(strt -> opt(strt.stringValue)
+                .map(s -> parseRegexNameCaptures(s))
+                .map(names -> {
+                    DeepType t = new DeepType(strt.definition, PhpType.ARRAY);
+                    names.forEach(n -> t.addKey(n, strt.definition)
+                        .types.add(new DeepType(strt.definition, PhpType.STRING)));
+                    return t;
+                }))
+            .s;
+    }
+
     public static Opt<Assign> findParamType(ParameterImpl param, int depth)
     {
         return opt(param.getDocComment())
@@ -157,6 +182,31 @@ public class DeepTypeResolver extends Lang
         return result;
     }
 
+    private static Opt<List<DeepType>> assertForeachElement(PsiElement varRef, int depth)
+    {
+        return opt(varRef.getParent())
+            .fap(toCast(ForeachImpl.class))
+            .flt(fch -> fch.getValue().isEquivalentTo(varRef))
+            .map(fch -> fch.getArray())
+            .map(arr -> findExprType(arr, depth))
+            .map(arrTypes -> makeArrElType(arrTypes));
+    }
+
+    private static Opt<List<DeepType>> assertPregMatchResult(PsiElement varRef, int depth)
+    {
+        return opt(varRef.getParent())
+            .fap(toCast(ParameterListImpl.class))
+            .flt(lst -> L(lst.getParameters()).gat(2)
+                    .map(psi -> psi.isEquivalentTo(varRef))
+                    .def(false))
+            .map(lst -> lst.getParent())
+            .fap(toCast(FunctionReferenceImpl.class))
+            .flt(fun -> fun.getName().equals("preg_match"))
+            .fap(fun -> L(fun.getParameters()).fst())
+            .map(regexPsi -> findExprType(regexPsi, depth))
+            .map(regexTypes -> makeRegexNameCaptureTypes(regexTypes));
+    }
+
     private static List<DeepType> findVarType(Variable variable, int depth)
     {
         List<Assign> reversedAssignments = list();
@@ -173,22 +223,18 @@ public class DeepTypeResolver extends Lang
                         boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
                         return Tls.findParent(varRef, AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression)
                             .fap(ass -> collectKeyAssignment(ass, depth)
-                                .map(tup -> new Assign(tup.a, tup.b, didSurelyHappen, ass))
-                                .thn(assign -> {
-                                    reversedAssignments.add(assign);
-                                    if (didSurelyHappen && assign.keys.size() == 0) {
-                                        // direct assignment, everything before it is meaningless
-                                        finished.set(true);
-                                    }
-                                }))
-                            .elf(() -> opt(varRef.getParent())
-                                .fap(toCast(ForeachImpl.class))
-                                .flt(fch -> fch.getValue().isEquivalentTo(varRef))
-                                .map(fch -> fch.getArray())
-                                .map(arr -> findExprType(arr, depth))
-                                .map(arrTypes -> makeArrElType(arrTypes))
-                                .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, varRef))
-                                .thn(assign -> reversedAssignments.add(assign)));
+                                .map(tup -> new Assign(tup.a, tup.b, didSurelyHappen, ass)))
+                            .elf(() -> assertForeachElement(varRef, depth)
+                                .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, varRef)))
+                            .elf(() -> assertPregMatchResult(varRef, depth)
+                                .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, varRef)))
+                            .thn(assign -> {
+                                reversedAssignments.add(assign);
+                                if (didSurelyHappen && assign.keys.size() == 0) {
+                                    // direct assignment, everything before it is meaningless
+                                    finished.set(true);
+                                }
+                            });
                     })
                     .els(() -> Tls.cast(ParameterImpl.class, refPsi)
                         .fap(param -> findParamType(param, depth))
@@ -301,7 +347,7 @@ public class DeepTypeResolver extends Lang
 
     private static DeepType findLambdaType(FunctionImpl lambda, int depth)
     {
-        DeepType result = new DeepType(lambda, lambda.getInferredType());
+        DeepType result = new DeepType(lambda, lambda.getInferredType(true));
         findFuncRetType(lambda, depth).forEach(result.returnTypes::add);
         return result;
     }
@@ -361,6 +407,7 @@ public class DeepTypeResolver extends Lang
             , opt(call.getClassReference())
                 .map(cls -> resolveMethodsNoNs(cls.getName(), call.getName(), call.getProject()))
                 .fap(meths -> L(meths).fst())
+                .map(v -> v)
         ));
     }
 
@@ -435,10 +482,10 @@ public class DeepTypeResolver extends Lang
                     findExprType(bin.getLeftOperand(), nextDepth).stream(),
                     findExprType(bin.getRightOperand(), nextDepth).stream()
                 ).collect(Collectors.toList()))
-            , Tls.cast(PhpExpressionImpl.class, expr)
-                .map(mathExpr -> list(new DeepType(mathExpr)))
             , Tls.cast(FieldReferenceImpl.class, expr)
                 .fap(fieldRef -> findFieldType(fieldRef, nextDepth))
+            , Tls.cast(StringLiteralExpressionImpl.class, expr)
+                .map(lit -> list(new DeepType(lit)))
             , Tls.cast(PhpExpression.class, expr)
                 .map(t -> list(new DeepType(t)))
 //            , Tls.cast(ConstantReferenceImpl.class, expr)

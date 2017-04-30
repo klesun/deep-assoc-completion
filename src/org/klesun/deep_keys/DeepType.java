@@ -3,15 +3,20 @@ package org.klesun.deep_keys;
 import com.google.gson.annotations.Expose;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
+import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import io.netty.util.internal.StringUtil;
 import org.apache.commons.lang.StringUtils;
 import org.klesun.lang.Lang;
+import org.mozilla.javascript.ast.StringLiteral;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.klesun.lang.Lang.opt;
 
 /**
  * contains info about associative
@@ -26,17 +31,31 @@ public class DeepType
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     public final List<DeepType> returnTypes = new ArrayList<>();
+    public final String stringValue;
     public final PsiElement definition;
     public final PhpType briefType;
     DeepType self = this;
 
-    DeepType(PhpExpression definition) {
+    DeepType(PsiElement definition, PhpType briefType, String stringValue)
+    {
+        this.definition = definition;
+        this.briefType = briefType;
+        this.stringValue = stringValue;
+    }
+
+    DeepType(PsiElement definition, PhpType briefType)
+    {
+        this(definition, briefType, null);
+    }
+
+    DeepType(PhpExpression definition)
+    {
         this(definition, definition.getType());
     }
 
-    DeepType(PsiElement definition, PhpType briefType) {
-        this.definition = definition;
-        this.briefType = briefType;
+    DeepType(StringLiteralExpressionImpl lit)
+    {
+        this(lit, lit.getType(), lit.getContents());
     }
 
     public Key addKey(String name, PsiElement definition)
@@ -69,7 +88,7 @@ public class DeepType
     {
         LinkedHashMap<String, List<DeepType>> mergedKeys = new LinkedHashMap<>();
         List<DeepType> indexTypes = Lang.list();
-        List<PhpType> briefTypes = Lang.list();
+        List<String> briefTypes = Lang.list();
 
         types.forEach(t -> {
             t.keys.forEach((k,v) -> {
@@ -79,7 +98,7 @@ public class DeepType
                 mergedKeys.get(k).addAll(v.types);
             });
             t.indexTypes.forEach(indexTypes::add);
-            briefTypes.add(t.briefType);
+            briefTypes.add(opt(t.stringValue).map(s -> "'" + s + "'").def(t.briefType.toString()));
         });
 
         if (mergedKeys.size() > 0) {

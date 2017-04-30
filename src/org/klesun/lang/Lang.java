@@ -117,9 +117,9 @@ public class Lang
     }
 
     /** L stands for List */
-    public static <T> L L(List<T> source)
+    public static <T> L<T> L(List<T> source)
     {
-        return new L(source);
+        return new L<T>(source);
     }
 
     public static <T> L<T> L(T[] source)
@@ -146,15 +146,23 @@ public class Lang
             this.s = source;
         }
 
+        /** "gat" stands for "get at" */
+        public Opt<T> gat(int index)
+        {
+            if (index < 0) {
+                index = s.size() + index;
+            }
+            return index >= 0 && index < s.size() ? opt(s.get(index)) : opt(null);
+        }
+
         public Opt<T> fst()
         {
-            return s.size() > 0 ? opt(s.get(0)) : opt(null);
+            return gat(0);
         }
 
         public Opt<T> lst()
         {
-            int len = s.size();
-            return len > 0 ? opt(s.get(len - 1)) : opt(null);
+            return gat(-1);
         }
 
         public L<T> flt(Predicate<T> pred)
