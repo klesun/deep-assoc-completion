@@ -9,7 +9,6 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import io.netty.util.internal.StringUtil;
 import org.apache.commons.lang.StringUtils;
 import org.klesun.lang.Lang;
-import org.mozilla.javascript.ast.StringLiteral;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

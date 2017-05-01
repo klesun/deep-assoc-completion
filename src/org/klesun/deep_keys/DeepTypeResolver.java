@@ -307,7 +307,7 @@ public class DeepTypeResolver extends Lang
                 } else {
                     return opt(list());
                 }
-            } else if (name.equals("array_intersect_key")) {
+            } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")) {
                 // do something more clever?
                 return params.length > 0
                     ? opt(findExprType(params[0], depth))
@@ -347,7 +347,7 @@ public class DeepTypeResolver extends Lang
 
     private static DeepType findLambdaType(FunctionImpl lambda, int depth)
     {
-        DeepType result = new DeepType(lambda, lambda.getInferredType(true));
+        DeepType result = new DeepType(lambda, lambda.getInferredType());
         findFuncRetType(lambda, depth).forEach(result.returnTypes::add);
         return result;
     }
