@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
+import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import io.netty.util.internal.StringUtil;
@@ -55,6 +56,11 @@ public class DeepType
     DeepType(StringLiteralExpressionImpl lit)
     {
         this(lit, lit.getType(), lit.getContents());
+    }
+
+    DeepType(PhpExpressionImpl numPsi, Integer number)
+    {
+        this(numPsi, numPsi.getType(), "" + number);
     }
 
     public Key addKey(String name, PsiElement definition)

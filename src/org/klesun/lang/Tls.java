@@ -4,7 +4,10 @@ import com.intellij.psi.PsiElement;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * provides static functions that would
@@ -50,5 +53,20 @@ public class Tls extends Lang
             parent = parent.getParent();
         }
         return opt(null);
+    }
+
+    public static Opt<L<String>> regex(String patternText, String subjectText)
+    {
+        List<String> result = list();
+        Pattern pattern = Pattern.compile(patternText);
+        Matcher matcher = pattern.matcher(subjectText);
+        if (matcher.matches()) {
+            for (int i = 1; i < matcher.groupCount(); ++i) {
+                result.add(matcher.group(i));
+            }
+            return opt(L(result));
+        } else {
+            return opt(null);
+        }
     }
 }

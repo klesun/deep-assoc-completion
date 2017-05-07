@@ -6,10 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.intellij.psi.PsiElement;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Collectors;
 
 /**
@@ -69,7 +66,9 @@ public class Lang
     public interface S<T> extends Supplier<T> {};
     public interface R extends Runnable {};
     public interface F<Tin, Tout> extends Function<Tin, Tout> {};
+    public interface F2<Tin1, Tin2, Tout> extends BiFunction<Tin1, Tin2, Tout> {};
     public interface C<Tin> extends Consumer<Tin> {};
+    public interface C2<Tin1, Tin2> extends BiConsumer<Tin1, Tin2> {};
 
     // following methods are supposed to be used after extending
     // this class to be able to use them without `new ` or `ClassName.`
@@ -130,6 +129,13 @@ public class Lang
     public static <T> L<T> L(Collection<T> source)
     {
         return new L(new ArrayList(source));
+    }
+
+    public static <T> L<T> L(Iterable<T> source)
+    {
+        List<T> list = list();
+        source.forEach(list::add);
+        return new L(list);
     }
 
     public static <T> L<T> L()
@@ -202,6 +208,23 @@ public class Lang
         public void fch(C<T> f)
         {
             s.forEach(f);
+        }
+
+        public void fch(C2<T, Integer> f)
+        {
+            for (int i = 0; i < s.size(); ++i) {
+                f.accept(s.get(i), i);
+            }
+        }
+
+        /** "rdc" stands for "reduce" */
+        public <Tnew> Tnew rdc(F2<Tnew, T, Tnew> f, Tnew initialValue)
+        {
+            Tnew value = initialValue;
+            for (T el: s) {
+                value = f.apply(value, el);
+            }
+            return value;
         }
 
         /** @debug */

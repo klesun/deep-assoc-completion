@@ -11,6 +11,7 @@ import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.apache.commons.lang.StringUtils;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -347,7 +348,7 @@ public class DeepTypeResolver extends Lang
 
     private static DeepType findLambdaType(FunctionImpl lambda, int depth)
     {
-        DeepType result = new DeepType(lambda, lambda.getInferredType());
+        DeepType result = new DeepType(lambda, lambda.getLocalType(true));
         findFuncRetType(lambda, depth).forEach(result.returnTypes::add);
         return result;
     }
@@ -358,8 +359,9 @@ public class DeepTypeResolver extends Lang
 
         return opt(keyAccess.getIndex())
             .map(v -> v.getValue())
-            .fap(toCast(StringLiteralExpressionImpl.class))
-            .map(lit -> lit.getContents())
+            .map(v -> findExprType(v, depth))
+            .fap(keyTypes -> L(keyTypes).fst())
+            .map(t -> t.stringValue)
             .map(key -> dictTypes.stream()
                 .map(type -> getKey(type.keys, key))
                 .filter(v -> v.has())
@@ -378,15 +380,28 @@ public class DeepTypeResolver extends Lang
     {
         DeepType arrayType = new DeepType(expr);
 
-        expr.getHashElements().forEach(keyRec -> opt(keyRec.getValue())
+        // indexed elements
+        L(expr.getChildren())
+            .flt(psi -> !(psi instanceof ArrayHashElement))
+            .fch((valuePsi, i) -> Tls.cast(PhpExpression.class, valuePsi)
+                // currently each value is wrapped into a plane Psi element
+                // i believe this is likely to change in future - so we try both cases
+                .elf(() -> opt(valuePsi.getFirstChild()).fap(toCast(PhpExpression.class)))
+                .thn(val -> arrayType.addKey(i + "", val).types.addAll(findExprType(val, depth))));
+
+        // keyed elements
+        L(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
             .map(v -> findExprType(v, depth))
             .thn(types -> opt(keyRec.getKey())
-                .fap(keyPsi -> Tls.cast(StringLiteralExpressionImpl.class, keyPsi))
-                .map(lit -> lit.getContents())
-                .uni(
-                    key -> arrayType.addKey(key, keyRec).types.addAll(types),
-                    () -> arrayType.indexTypes.addAll(types)
-                )));
+                .map(keyPsi -> findExprType(keyPsi, depth))
+                .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
+                .thn(keyTypes -> {
+                    if (keyTypes.s.size() > 0) {
+                        keyTypes.fch(key -> arrayType.addKey(key, keyRec).types.addAll(types));
+                    } else {
+                        arrayType.indexTypes.addAll(types);
+                    }
+                })));
 
         return arrayType;
     }
@@ -435,7 +450,7 @@ public class DeepTypeResolver extends Lang
                     .fop(toCast(AssignmentExpressionImpl.class))
                     .fop(ass -> opt(ass.getValue()))
                     .fap(expr -> findExprType(expr, depth))
-                    .fch(result::add);
+                    .fch(t -> result.add(t));
             });
 
         return opt(result);
@@ -470,6 +485,11 @@ public class DeepTypeResolver extends Lang
                 .map(v -> v.getFirstChild())
                 .fap(toCast(FunctionImpl.class))
                 .map(lambda -> list(findLambdaType(lambda, nextDepth)))
+            , Tls.cast(PhpExpressionImpl.class, expr)
+                .fap(casted -> opt(casted.getText())
+                    .flt(text -> Tls.regex("^\\d+$", text).has())
+                    .map(Integer::parseInt)
+                    .map(num -> list(new DeepType(casted, num))))
             , Tls.cast(TernaryExpressionImpl.class, expr)
                 .map(tern -> Stream.concat(
                     findExprType(tern.getTrueVariant(), nextDepth).stream(),
@@ -484,8 +504,6 @@ public class DeepTypeResolver extends Lang
                 ).collect(Collectors.toList()))
             , Tls.cast(FieldReferenceImpl.class, expr)
                 .fap(fieldRef -> findFieldType(fieldRef, nextDepth))
-            , Tls.cast(StringLiteralExpressionImpl.class, expr)
-                .map(lit -> list(new DeepType(lit)))
             , Tls.cast(PhpExpression.class, expr)
                 .map(t -> list(new DeepType(t)))
 //            , Tls.cast(ConstantReferenceImpl.class, expr)

@@ -366,6 +366,21 @@ class DeepKeysTest
         }
     }
 
+    private static function testTupleDirectAccess()
+    {
+        $simpleTuple = [
+            ['a' => 5, 'b' => 6],
+            ['a' => 5, 'b' => 6],
+            'huj' => 'asd',
+        ];
+        // should suggest: "0", "1", "huj"
+        $simpleTuple[''];
+        // should suggest: "a", "b"
+        $simpleTuple['0'][''];
+        // should suggest: "a", "b"
+        $simpleTuple[1][''];
+    }
+
     //============================
     // not implemented follow
     //============================
