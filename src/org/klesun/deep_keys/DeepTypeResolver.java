@@ -225,8 +225,8 @@ public class DeepTypeResolver extends Lang
         return opt(varRef.getParent())
             .fap(toCast(ParameterListImpl.class))
             .flt(lst -> L(lst.getParameters()).gat(2)
-                    .map(psi -> psi.isEquivalentTo(varRef))
-                    .def(false))
+                .map(psi -> psi.isEquivalentTo(varRef))
+                .def(false))
             .map(lst -> lst.getParent())
             .fap(toCast(FunctionReferenceImpl.class))
             .flt(fun -> fun.getName().equals("preg_match"))
@@ -363,7 +363,7 @@ public class DeepTypeResolver extends Lang
         return result;
     }
 
-    private static List<DeepType> findFuncRetType(PsiElement meth, int depth)
+    public static List<DeepType> findFuncRetType(PsiElement meth, int depth)
     {
         List<DeepType> possibleTypes = list();
 

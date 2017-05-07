@@ -30,11 +30,15 @@
   <actions>
     <action
       id="Show docs"
-      class="org.klesun.deep_keys.entry.ShowDocs" text="Show Docs"
+      class="org.klesun.deep_keys.entry.ShowDocs" text="Show Deep Type"
       description="A shame, looks like lang.documentationProvider does not work for PHP, so i have to implement new action to print var info"
     >
       <add-to-group group-id="ToolsMenu" anchor="first"/>
       <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt Q"/>
+    </action>
+    <action id="Run Deep Keys Test" class="org.klesun.deep_keys.entry.RunTest" text="Run Deep Keys Test"
+            description="Try to interpret current file as test suite and TESTTESTTEST">
+      <add-to-group group-id="ToolsMenu" anchor="first"/>
     </action>
   </actions>
 </idea-plugin>

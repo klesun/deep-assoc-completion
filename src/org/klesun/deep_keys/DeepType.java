@@ -11,11 +11,9 @@ import io.netty.util.internal.StringUtil;
 import org.apache.commons.lang.StringUtils;
 import org.klesun.lang.Lang;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static org.klesun.lang.Lang.list;
 import static org.klesun.lang.Lang.opt;
 
 /**
@@ -92,13 +90,13 @@ public class DeepType
     public static String toJson(List<DeepType> types, int level)
     {
         LinkedHashMap<String, List<DeepType>> mergedKeys = new LinkedHashMap<>();
-        List<DeepType> indexTypes = Lang.list();
-        List<String> briefTypes = Lang.list();
+        List<DeepType> indexTypes = list();
+        List<String> briefTypes = list();
 
         types.forEach(t -> {
             t.keys.forEach((k,v) -> {
                 if (!mergedKeys.containsKey(k)) {
-                    mergedKeys.put(k, Lang.list());
+                    mergedKeys.put(k, list());
                 }
                 mergedKeys.get(k).addAll(v.types);
             });
@@ -110,7 +108,7 @@ public class DeepType
             String result = "{\n";
             ++level;
             for (Map.Entry<String, List<DeepType>> e: mergedKeys.entrySet()) {
-                result += indent(level) + "\"" + e.getKey() + "\"" + ": " + toJson(e.getValue(), level) + "\n";
+                result += indent(level) + "\"" + e.getKey() + "\"" + ": " + toJson(e.getValue(), level) + ",\n";
             }
             --level;
             result += indent(level) + "}";
@@ -118,9 +116,16 @@ public class DeepType
         } else if (indexTypes.size() > 0) {
             return "[" + toJson(indexTypes, level) + "]";
         } else if (briefTypes.size() > 0) {
-            return "\"" + StringUtils.join(briefTypes, "|") + "\"";
+            List<String> bypes = new ArrayList(new HashSet(briefTypes));
+            return "\"" + StringUtils.join(bypes, "|") + "\"";
         } else {
             return "\"unknown\"";
         }
+    }
+
+    @Override
+    public String toString()
+    {
+        return toJson(list(this), 0);
     }
 }

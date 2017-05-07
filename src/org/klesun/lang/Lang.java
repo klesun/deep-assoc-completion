@@ -187,8 +187,15 @@ public class Lang
          */
         public <Tnew> L<Tnew> fop(F<T, Opt<Tnew>> convert)
         {
+            return fop((el, i) -> convert.apply(el));
+        }
+
+        public <Tnew> L<Tnew> fop(F2<T, Integer, Opt<Tnew>> convert)
+        {
             List<Tnew> result = list();
-            s.forEach(el -> convert.apply(el).thn(result::add));
+            for (int i = 0; i < s.size(); ++i) {
+                convert.apply(s.get(i), i).thn(result::add);
+            }
             return new L(result);
         }
 
@@ -197,8 +204,15 @@ public class Lang
          */
         public <Tnew> L<Tnew> fap(F<T, List<Tnew>> flatten)
         {
+            return fap((el, i) -> flatten.apply(el));
+        }
+
+        public <Tnew> L<Tnew> fap(F2<T, Integer, List<Tnew>> flatten)
+        {
             List<Tnew> result = list();
-            s.forEach(el -> flatten.apply(el).forEach(result::add));
+            for (int i = 0; i < s.size(); ++i) {
+                result.addAll(flatten.apply(s.get(i), i));
+            }
             return new L(result);
         }
 
@@ -207,7 +221,7 @@ public class Lang
          */
         public void fch(C<T> f)
         {
-            s.forEach(f);
+            fch((el, i) -> f.accept(el));
         }
 
         public void fch(C2<T, Integer> f)
