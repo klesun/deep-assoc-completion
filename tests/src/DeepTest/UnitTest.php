@@ -3,7 +3,7 @@ namespace DeepTest;
 
 class UnitTest /** extends \PHPUnit_Framework_Suite */
 {
-    public function provideIoPairs()
+    public static function provideSimpleTest()
     {
         $list = [];
 
@@ -29,13 +29,29 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
-    /**
-     * @test
-     * @dataProvider provideIoPairs
-     */
-    public function testCase($input, $expectedOutput)
+    public static function provideTestScopes()
     {
-        $actualOutput = $input;
-        /** self::assertArraySubset($expectedOutput, $actualOutput) */
+        $list = [];
+
+        $denya = TestData::makeStudentRecord();
+        if (rand() > 0.5) {
+            $denya = ['randomDenya' => -100];
+            // should suggest _only_ randomDenya
+            $list[] = [$denya, ['randomDenya' => []]];
+        } elseif (rand() > 0.5) {
+            $denya = ['randomDenya2' => -100];
+            // should suggest _only_ randomDenya2
+            $list[] = [$denya, ['randomDenya2' => []]];
+        }
+        // should suggest all keys from makeRecord(),
+        // 'randomDenya' and 'randomDenya2'
+        // (preferably highlighted in different collors)
+        $list[] = [$denya, TestData::makeStudentRecord()];
+        $list[] = [$denya, ['randomDenya' => [], 'randomDenya2' => []]];
+
+        $denya = ['thisKeyWillNotBeSuggested' => 1414];
+
+
+        return $list;
     }
 }

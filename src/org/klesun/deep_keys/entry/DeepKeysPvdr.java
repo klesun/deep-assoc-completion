@@ -40,14 +40,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        // TODO: support properties like if they were variables
-
         // TODO: show error when user tries to access not existing
         // key if array definition does not have unknown parts
-
-        // TODO: use phpdocs:
-        //   1. Reference to the function that provides such output
-        //   2. Relaxed parse of description like ['k1' => 'v1', ...], array('k1' => 'v1', ...)
 
         // TODO: inspect so that type passed to function was compatible with expected type (has used keys)
 

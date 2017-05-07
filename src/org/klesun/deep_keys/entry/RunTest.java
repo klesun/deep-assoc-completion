@@ -22,13 +22,8 @@ public class RunTest extends AnAction
         List<Method> meths = list();
 
         L(PhpIndex.getInstance(psiFile.getProject()).getClassesByName("UnitTest")).s
-            .forEach(cls -> {
-                meths.addAll(L(cls.getMethods())
-                    .flt(m -> {
-                        return m.getName().startsWith("provide");
-                    })
-                    .s);
-            });
+            .forEach(cls -> meths.addAll(L(cls.getMethods())
+                .flt(m -> m.getName().startsWith("provide")).s));
 
         return meths.size() > 0 ? opt(meths) : opt(null);
     }
@@ -53,6 +48,7 @@ public class RunTest extends AnAction
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .def(list());
 
+        System.out.println();
         errors.forEach(err -> {
             System.out.println(
                 "Error in " + err.dataProviderName + " #" + err.testNumber + " " +
@@ -78,6 +74,7 @@ public class RunTest extends AnAction
             DeepType expectedt = expected.types.get(0);
             expectedt.keys.forEach((subKey, subExpected) -> opt(actualt.keys.get(subKey))
                 .thn(subActual -> {
+                    System.out.print(".");
                     keyChain.add(subKey);
                     testCase(subActual, subExpected);
                     keyChain.remove(keyChain.size() - 1);
