@@ -193,6 +193,33 @@ public class DeepTypeResolver extends Lang
             .map(arrTypes -> makeArrElType(arrTypes));
     }
 
+    private static Opt<List<DeepType>> assertTupleAssignment(PsiElement varRef, int depth)
+    {
+        return opt(varRef.getParent())
+            .fap(toCast(MultiassignmentExpressionImpl.class))
+            .fap(multi -> opt(multi.getValue())
+                /** array creation is wrapped inside an "expression impl" */
+                .map(v -> v.getFirstPsiChild())
+                .map(val -> findExprType(val, depth))
+                .flt(types -> types.size() > 0)
+                .fap(arrts -> opt(multi.getVariables())
+                    .fap(vars -> {
+                        for (Integer i = 0; i < vars.size(); ++i) {
+                            if (vars.get(i).isEquivalentTo(varRef)) {
+                                return opt(i);
+                            }
+                        }
+                        return opt(null);
+                    })
+                    .map(i -> L(arrts)
+                        .fop(t -> opt(t.keys.get(i + ""))
+                            .map(k -> k.types))
+                        .fap(v -> v).s
+                    )
+                )
+            );
+    }
+
     private static Opt<List<DeepType>> assertPregMatchResult(PsiElement varRef, int depth)
     {
         return opt(varRef.getParent())
@@ -226,6 +253,8 @@ public class DeepTypeResolver extends Lang
                             .fap(ass -> collectKeyAssignment(ass, depth)
                                 .map(tup -> new Assign(tup.a, tup.b, didSurelyHappen, ass)))
                             .elf(() -> assertForeachElement(varRef, depth)
+                                .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, varRef)))
+                            .elf(() -> assertTupleAssignment(varRef, depth)
                                 .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, varRef)))
                             .elf(() -> assertPregMatchResult(varRef, depth)
                                 .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, varRef)))

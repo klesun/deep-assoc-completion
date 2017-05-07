@@ -381,10 +381,6 @@ class DeepKeysTest
         $simpleTuple[1][''];
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     private static function testTuples()
     {
         $musician = ['genre' => 'jass', 'instrument' => 'trumpet'];
@@ -405,6 +401,10 @@ class DeepKeysTest
         $prog[''];
         $tea[''];
     }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function testGenericAccess()
     {
