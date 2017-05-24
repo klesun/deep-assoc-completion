@@ -15,3 +15,28 @@ Steps to compile plugin into a `.jar` follow:
 To build a jar use `Build -> Prepare Plugin ... For Deployment`. To debug use `Run -> Debug`. Since phpstorm project takes about a minute to start, you must find `Run -> Reload Changed Classes` very useful for micro changes.
 
 To use compiled `.jar` in your phpstorm go to `Settings -> Plugins -> Install plugin from disk` and select the `.jar` we compiled earlier.
+
+<hr/>
+
+## Features description
+For more or less complete list of supported completion sources refer to `/tests/src/UnitTest.php` (it's a bit hard to read, though).
+
+### Completion from expression
+When you are going to type an associative key of a variable, like in `$user['']`, put carret between quotes and press `ctrl` + `space`. The plugin will analyze your code, determine what keys does `$user` have and suggest completion. It should become pretty intuitive when plugin can determine keys, and when it can't. It still has some flaws, but i'm working on them.
+
+The suggested completion may clash with phpstorm's built-in completion. In such case plugin keys will always be at the bottom and in **bold** - hit `Page Down` several times to get to them. Built-in completion works not very good - it suggests keys defined further or in other `elseif` branches and never goes deeper than current function/file, but i can't disable them - sorry. 
+
+### Go To Definition
+![Go To Definition](https://cloud.githubusercontent.com/assets/5202330/26428215/284b1988-40e9-11e7-9a44-746145c5393f.png)
+
+To go to the key definition, hover on it and press `ctrl` + `click` or put carret on it and press `ctrl` + `b`.
+
+### Completion from phpdoc
+![Completion from phpdoc](https://cloud.githubusercontent.com/assets/5202330/26426602/0f72f554-40e2-11e7-8873-30b873310746.png)
+
+You can specify function argument type using `@param {optionalType}? $varName = {expression}`, like `@param $anime = ['genre' => 'shounen', 'studio' => 'Shaft']`. `=` is mandatory and expression must be a valid php expression. Class methods can be specified either with complete namespace like `\Very\Long\Namespace\ClassName::funcName()`, or with just `ClassName::funcName()`.
+
+### Describe variable
+![Describe variable](https://cloud.githubusercontent.com/assets/5202330/26427776/ee6d4e54-40e6-11e7-83d5-81a1687a0d7a.png)
+
+To get variable/expression result structure as lousy json, put caret on it and press `ctlr` + `alt` + `q`.
