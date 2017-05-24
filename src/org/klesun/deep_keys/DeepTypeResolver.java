@@ -337,7 +337,9 @@ public class DeepTypeResolver extends Lang
                 } else {
                     return opt(list());
                 }
-            } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")) {
+            } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")
+                    || name.equals("array_intersect_assoc") || name.equals("array_diff_assoc")
+                ) {
                 // do something more clever?
                 return params.length > 0
                     ? opt(findExprType(params[0], depth))
@@ -444,14 +446,17 @@ public class DeepTypeResolver extends Lang
         return meths;
     }
 
-    private static Opt<PsiElement> resolveMethod(MethodReferenceImpl call)
+    private static Opt<L<Method>> resolveMethod(MethodReferenceImpl call)
     {
         return Opt.fst(list(opt(null)
-            , opt(call.resolve())
+            , opt(L(call.multiResolve(false)))
+                .map(l -> l.map(v -> v.getElement()))
+                .map(l -> l.fop(toCast(Method.class)))
+                .flt(l -> l.s.size() > 0)
             , opt(call.getClassReference())
                 .map(cls -> resolveMethodsNoNs(cls.getName(), call.getName(), call.getProject()))
-                .fap(meths -> L(meths).fst())
-                .map(v -> v)
+                .map(meths -> L(meths))
+                .flt(l -> l.s.size() > 0)
         ));
     }
 
@@ -505,7 +510,7 @@ public class DeepTypeResolver extends Lang
                 .map(func -> findFuncRetType(func, nextDepth))
             , Tls.cast(MethodReferenceImpl.class, expr)
                 .fap(call -> resolveMethod(call))
-                .map(func -> findFuncRetType(func, nextDepth))
+                .map(funcs -> funcs.fap(func -> findFuncRetType(func, nextDepth)).s)
             , Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .map(keyAccess -> findKeyType(keyAccess, nextDepth))
             , Tls.cast(StringLiteralExpressionImpl.class, expr)

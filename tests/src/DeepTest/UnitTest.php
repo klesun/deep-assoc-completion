@@ -448,29 +448,52 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
-    private static function makeKonohaCitizen(): IKonohaCitizen
+    private static function makeKonohaCitizen()
     {
         if (rand() % 2) {
-            return Naruto::kageBunshin();
+            $konohanian = Naruto::kageBunshin();
         } else {
-            return new Konohamaru();
+            $konohanian = new Konohamaru();
         }
+        return $konohanian;
     }
 
     public function provideInstanceMethod()
     {
-        $list = [];
-
-        // not implemented yet
 
         $bunshin = Naruto::kageBunshin();
         $money = $bunshin->payForDinner(100);
         // should suggest: "currency", "amount"
         $list[] = [$money, ['currency' => [], 'amount' => []]];
 
-        // it should work. i guess i just return null somewhere
-        // in code when function is resolved in multiple classes
         $konohanian = self::makeKonohaCitizen();
+        $taxBundle = $konohanian->payTaxes();
+        // should suggest from all implementations
+        $list[] = [$taxBundle, ['currency' => [], 'incomeTax' => [], 'gamblingTax' => [], 'familyTax' => []]];
+
+        return $list;
+    }
+
+    private static function makeKonohanianIface(): IKonohaCitizen
+    {
+        return self::makeKonohaCitizen();
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
+
+    public function provideInterfaceMethod()
+    {
+        $list = [];
+
+        // not implemented yet
+
+        // sadly (or maybe not), idea resolves only interface method if you explicitly
+        // say that it is the interface (with a doc or php 7 return type), but not it's implementations
+        // for such cases should manually find implementations (hope that won't affect performance)
+
+        $konohanian = self::makeKonohanianIface();
         $taxBundle = $konohanian->payTaxes();
         // TODO: uncomment!
         // should suggest either from doc in interface or from implementations
@@ -486,8 +509,8 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         // not implemented yet
 
         // ideally, limit should be some ridiculously big number
-        // so you would never reach it in normal circumstances
-        // that requires handling circular references properly
+        // so you would never reach it in normal circumstances,
+        // but that requires handling circular references properly
 
         $addict = [
             'face' => [
