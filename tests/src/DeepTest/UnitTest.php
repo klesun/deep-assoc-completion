@@ -447,4 +447,113 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
 
         return $list;
     }
+
+    private static function makeKonohaCitizen(): IKonohaCitizen
+    {
+        if (rand() % 2) {
+            return Naruto::kageBunshin();
+        } else {
+            return new Konohamaru();
+        }
+    }
+
+    public function provideInstanceMethod()
+    {
+        $list = [];
+
+        // not implemented yet
+
+        $bunshin = Naruto::kageBunshin();
+        $money = $bunshin->payForDinner(100);
+        // should suggest: "currency", "amount"
+        $list[] = [$money, ['currency' => [], 'amount' => []]];
+
+        // it should work. i guess i just return null somewhere
+        // in code when function is resolved in multiple classes
+        $konohanian = self::makeKonohaCitizen();
+        $taxBundle = $konohanian->payTaxes();
+        // TODO: uncomment!
+        // should suggest either from doc in interface or from implementations
+//        $list[] = [$taxBundle, ['currency' => [], 'incomeTax' => [], 'gamblingTax' => [], 'familyTax' => []]];
+
+        return $list;
+    }
+
+    public function provideVeryDeepKey()
+    {
+        $list = [];
+
+        // not implemented yet
+
+        // ideally, limit should be some ridiculously big number
+        // so you would never reach it in normal circumstances
+        // that requires handling circular references properly
+
+        $addict = [
+            'face' => [
+                'eyes' => [
+                    'left' => [
+                        'pupil' => [
+                            'color' => 'red',
+                            'size' => [
+                                'value' => 'veryBig',
+                                'reason' => 'marijuana',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        // should suggest all these keys by the wya
+        $pupilSize = $addict['face']['eyes']['left']['pupil']['size'];
+        // should suggest: "value", "reason"
+        $list[] = [$pupilSize, ['value' => [], 'reason' => []]];
+
+        $policeDepartment = [
+            'evidenceOfTheYear' => $pupilSize,
+            'offices' => [
+                '402' => [
+                    'evidenceOfTheChef' => $pupilSize,
+                    'deskByTheWindow' => [
+                        'dayShift' => [
+                            'favouriteEvidence' => $pupilSize,
+                            'cases' => [
+                                '8469132' => [
+                                    'mainEvidence' => $pupilSize,
+                                    'evidences' => [$pupilSize],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        // should suggest: "value", "reason"
+        $list[] = [
+            $policeDepartment['evidenceOfTheYear'],
+            ['value' => [], 'reason' => []]
+        ];
+        $list[] = [
+            $policeDepartment['offices']['402']['evidenceOfTheChef'],
+            ['value' => [], 'reason' => []]
+        ];
+        // following will fail till i fix circular references
+        // TODO: uncomment!
+//        $list[] = [
+//            $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['favouriteEvidence'],
+//            ['value' => [], 'reason' => []]
+//        ];
+//        $list[] = [
+//            $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['cases']['8469132']['mainEvidence'],
+//            ['value' => [], 'reason' => []]
+//        ];
+//        $list[] = [
+//            $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['cases']['8469132']['evidences'][0],
+//            ['value' => [], 'reason' => []]
+//        ];
+
+        return $list;
+    }
 }
