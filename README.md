@@ -17,6 +17,7 @@ To build a jar use `Build -> Prepare Plugin ... For Deployment`. To debug use `R
 To use compiled `.jar` in your phpstorm go to `Settings -> Plugins -> Install plugin from disk` and select the `.jar` we compiled earlier.
 
 <hr/>
+<hr/>
 
 ## Features description
 For more or less complete list of supported completion sources refer to `/tests/src/UnitTest.php` (it's a bit hard to read, though).
