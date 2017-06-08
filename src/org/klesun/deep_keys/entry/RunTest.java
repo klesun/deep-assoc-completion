@@ -83,6 +83,10 @@ public class RunTest extends AnAction
                     errors.add(new Error(this, "No key - " + subKey, subExpected));
                 } else {
                     System.out.print(".");
+                    if (Math.random() < 1.0 / 60.0) {
+                        // approximately 60 dots per row
+                        System.out.println();
+                    }
                     keyChain.add(subKey);
                     testCase(havingKey.s, subExpected);
                     keyChain.remove(keyChain.size() - 1);

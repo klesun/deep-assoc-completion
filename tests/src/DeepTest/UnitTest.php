@@ -277,17 +277,27 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
     }
 
     /**
-     * @param array $secondBomb = \DeepTest\KiraYoshikage::sheerHeartAttack()
-     * @param array $thirdBomb = KiraYoshikage::bombTransmutation()
+     * @param array $firstBomb = \DeepTest\KiraYoshikage::bombTransmutation()
+     * @param array $secondBomb = KiraYoshikage::sheerHeartAttack()
+     * @param $thirdBomb = [
+     *     'name' => 'Bites The Dust',
+     *     'castRange' => 2.5,
+     *     'power' => 999.99,
+     *     'requirements' => [
+     *         'desperation' => 0.99999,
+     *         'magicArrows' => 1,
+     *         'evilness' => 1.00,
+     *     ],
+     * ]
      */
-    public static function provideForeignFileInDoc($secondBomb, $thirdBomb)
+    public static function provideForeignFileInDoc($firstBomb, $secondBomb, $thirdBomb)
     {
         $list = [];
 
         $list[] = [$secondBomb, ['veryTough' => [], 'smallCar' => ['that' => [], 'follows' => []]]];
 
         // should suggest all the keys from the function
-        $list[] = [$thirdBomb['touch'], ['into' => [], 'a' => [], 'bomb' => []]];
+        $list[] = [$firstBomb['touch'], ['into' => [], 'a' => [], 'bomb' => []]];
 
         return $list;
     }
@@ -468,7 +478,9 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
 
         $konohanian = self::makeKonohaCitizen();
         $taxBundle = $konohanian->payTaxes();
+
         // should suggest from all implementations
+        $taxBundle['incomeTax'];
         $list[] = [$taxBundle, ['currency' => [], 'incomeTax' => [], 'gamblingTax' => [], 'familyTax' => []]];
 
         return $list;
@@ -479,28 +491,23 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return self::makeKonohaCitizen();
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
-    public function provideInterfaceMethod()
+    public function provideInterfaceMethod(IKonohaCitizen $randomGuy)
     {
         $list = [];
 
-        // not implemented yet
-
-        // sadly (or maybe not), idea resolves only interface method if you explicitly
-        // say that it is the interface (with a doc or php 7 return type), but not it's implementations
-        // for such cases should manually find implementations (hope that won't affect performance)
+        $list[] = [$randomGuy->payTaxes(), ['currency' => [], 'incomeTax' => [], 'gamblingTax' => [], 'familyTax' => []]];
 
         $konohanian = self::makeKonohanianIface();
         $taxBundle = $konohanian->payTaxes();
-        // TODO: uncomment!
         // should suggest either from doc in interface or from implementations
-//        $list[] = [$taxBundle, ['currency' => [], 'incomeTax' => [], 'gamblingTax' => [], 'familyTax' => []]];
+        $list[] = [$taxBundle, ['currency' => [], 'incomeTax' => [], 'gamblingTax' => [], 'familyTax' => []]];
 
         return $list;
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     public function provideVeryDeepKey()
     {

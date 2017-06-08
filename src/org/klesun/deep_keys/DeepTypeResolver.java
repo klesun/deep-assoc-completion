@@ -377,6 +377,25 @@ public class DeepTypeResolver extends Lang
         return possibleTypes;
     }
 
+    private static L<Method> findOverridingMethods(Method meth)
+    {
+        return opt(PhpIndex.getInstance(meth.getProject()))
+            .map(idx -> idx.getAllSubclasses(meth.getContainingClass().getFQN()))
+            .map(clses -> L(clses))
+            .def(L())
+            .fop(cls -> opt(cls.findMethodByName(meth.getName())));
+    }
+
+    private static List<DeepType> findMethRetType(Method meth, int depth)
+    {
+        if (meth.isAbstract()) {
+            // return all implementations
+            return findOverridingMethods(meth).fap(m -> findFuncRetType(m, depth)).s;
+        } else {
+            return findFuncRetType(meth, depth);
+        }
+    }
+
     private static DeepType findLambdaType(FunctionImpl lambda, int depth)
     {
         DeepType result = new DeepType(lambda, lambda.getLocalType(true));
@@ -510,7 +529,7 @@ public class DeepTypeResolver extends Lang
                 .map(func -> findFuncRetType(func, nextDepth))
             , Tls.cast(MethodReferenceImpl.class, expr)
                 .fap(call -> resolveMethod(call))
-                .map(funcs -> funcs.fap(func -> findFuncRetType(func, nextDepth)).s)
+                .map(funcs -> funcs.fap(func -> findMethRetType(func, nextDepth)).s)
             , Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .map(keyAccess -> findKeyType(keyAccess, nextDepth))
             , Tls.cast(StringLiteralExpressionImpl.class, expr)
