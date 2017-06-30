@@ -16,16 +16,23 @@ To build a jar use `Build -> Prepare Plugin ... For Deployment`. To debug use `R
 
 To use compiled `.jar` in your phpstorm go to `Settings -> Plugins -> Install plugin from disk` and select the `.jar` we compiled earlier.
 
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 <hr/>
 <hr/>
 
 ## Features description
-For more or less complete list of supported completion sources refer to `/tests/src/UnitTest.php` (it's a bit hard to read, though).
 
 ### Completion from expression
-When you are going to type an associative key of a variable, like in `$user['']`, put carret between quotes and press `ctrl` + `space`. The plugin will analyze your code, determine what keys does `$user` have and suggest completion. It should become pretty intuitive when plugin can determine keys, and when it can't. It still has some flaws, but i'm working on them.
+When you are going to type an associative key of a variable, like in `$user['']`, put caret between quotes and press `ctrl` + `space`. The plugin will analyze your code, determine what keys does `$user` have and suggest completion. It should become pretty intuitive when plugin can determine keys, and when it can't. It still has some unsupported completion sources - i'm working on them.
 
-The suggested completion may clash with phpstorm's built-in completion. In such case plugin keys will always be at the bottom and in **bold** - hit `Page Down` several times to get to them. Built-in completion works not very good - it suggests keys defined further or in other `elseif` branches and never goes deeper than current function/file, but i can't disable them - sorry. 
+The suggested completion may clash with phpstorm's built-in completion. In such case plugin keys will always be at the bottom and in **bold** - hit `Page Down` several times to get to them.
 
 ### Go To Definition
 ![Go To Definition](https://cloud.githubusercontent.com/assets/5202330/26428215/284b1988-40e9-11e7-9a44-746145c5393f.png)

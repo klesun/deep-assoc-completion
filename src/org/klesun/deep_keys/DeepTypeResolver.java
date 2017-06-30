@@ -337,6 +337,15 @@ public class DeepTypeResolver extends Lang
                 } else {
                     return opt(list());
                 }
+            } else if (name.equals("array_chunk")) {
+                if (params.length > 0) {
+                    return opt(findExprType(params[0], depth))
+                        .fap(elType -> opt(new DeepType(call, PhpType.ARRAY))
+                            .thn(arrType -> elType.forEach(arrType.indexTypes::add))
+                            .map(arrType -> list(arrType)));
+                } else {
+                    return opt(list());
+                }
             } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")
                     || name.equals("array_intersect_assoc") || name.equals("array_diff_assoc")
                 ) {

@@ -505,6 +505,24 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    public function provideArrayChunk()
+    {
+        $list = [];
+
+        $vova = ['occupation' => 'salesman', 'salary' => '300'];
+        $nastya = ['occupation' => 'hooker', 'salary' => '900'];
+        $igorj = ['occupation' => 'pudge', 'salary' => '200'];
+        $katja = ['occupation' => 'singer', 'salary' => '900'];
+
+        $workers = [$vova, $nastya, $katja, $igorj];
+        $pairs = array_chunk($workers, 2);
+        foreach ($pairs as $pair) {
+            $list[] = [$pair[0], ['occupation' => [], 'salary' => []]];
+        }
+
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
