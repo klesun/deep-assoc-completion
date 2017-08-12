@@ -116,8 +116,8 @@ public class DeepType
         } else if (indexTypes.size() > 0) {
             return "[" + toJson(indexTypes, level) + "]";
         } else if (briefTypes.size() > 0) {
-            List<String> bypes = new ArrayList(new HashSet(briefTypes));
-            return "\"" + StringUtils.join(bypes, "|") + "\"";
+            List<String> bytes = new ArrayList(new HashSet(briefTypes));
+            return "\"" + StringUtils.join(bytes, "|") + "\"";
         } else {
             return "\"unknown\"";
         }

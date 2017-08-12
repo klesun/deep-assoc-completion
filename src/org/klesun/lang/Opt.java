@@ -78,6 +78,16 @@ public class Opt<T>
         return !has() ? f.get() : this;
     }
 
+    /** stands for "unwrap" - get value or throw exception */
+    public T unw()
+    {
+        if (has()) {
+            return value;
+        } else {
+            throw new RuntimeException("Tried to unwrap when value not present");
+        }
+    }
+
     public T def(T defaultValue)
     {
         if (has()) {

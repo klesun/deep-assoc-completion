@@ -2,6 +2,7 @@ package org.klesun.deep_keys.entry;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.patterns.PlatformPatterns;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
 import com.jetbrains.php.lang.psi.elements.*;
 
 /**
@@ -18,6 +19,12 @@ public class DeepKeysCbtr extends CompletionContributor
             PlatformPatterns.psiElement()
                 .withSuperParent(2, ArrayIndex.class),
             new DeepKeysPvdr()
+        );
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(2, PhpDocParamTag.class),
+            new DocFqnPvdr()
         );
     }
 }

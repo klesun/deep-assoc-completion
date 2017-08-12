@@ -279,6 +279,7 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
     /**
      * @param array $firstBomb = \DeepTest\KiraYoshikage::bombTransmutation()
      * @param array $secondBomb = KiraYoshikage::sheerHeartAttack()
+     * @param array $secondBomb = ReimuHakurei::fantasySeal()
      * @param $thirdBomb = [
      *     'name' => 'Bites The Dust',
      *     'castRange' => 2.5,

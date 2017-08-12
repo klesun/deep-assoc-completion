@@ -55,6 +55,10 @@ public class Tls extends Lang
         return opt(null);
     }
 
+    /**
+     * be careful, java's regex implementation matches WHOLE string, in other
+     * words, it implicitly adds "^" and "$" at beginning and end of your regex
+     */
     public static Opt<L<String>> regex(String patternText, String subjectText)
     {
         List<String> result = list();
@@ -67,6 +71,26 @@ public class Tls extends Lang
             return opt(L(result));
         } else {
             return opt(null);
+        }
+    }
+
+    /** make object string representation _approximately_ resembling json for debug */
+    private String json(Object value)
+    {
+        if (value instanceof List) {
+            List list = (List)value;
+            String result = "[";
+            for (int i = 0; i < list.size(); ++i) {
+                result += json(list.get(i));
+                if (i < list.size() - 1) {
+                    result += ",";
+                }
+            }
+            return result + "]";
+        } else if (value instanceof String) {
+            return "\"" + value + "\"";
+        } else {
+            return value.toString();
         }
     }
 }

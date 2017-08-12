@@ -123,7 +123,7 @@ public class Lang
 
     public static <T> L<T> L(T[] source)
     {
-        return new L(new ArrayList<T>(Arrays.asList(source)));
+        return new L<T>(new ArrayList<T>(Arrays.asList(source)));
     }
 
     public static <T> L<T> L(Collection<T> source)
@@ -143,13 +143,16 @@ public class Lang
         return new L<T>(new ArrayList<T>());
     }
 
-    public static class L<T>
+    /**
+     * shorter names; convenient map(), filter() right inside
+     * the class (yeah, less performance, but easier to read)
+     * some integration with Opt class
+     */
+    public static class L<T> extends ListWrapper<T> implements List<T>
     {
-        public final List<T> s;
-
         private L(List<T> source)
         {
-            this.s = source;
+            super(source);
         }
 
         /** "gat" stands for "get at" */
@@ -247,5 +250,45 @@ public class Lang
             f.accept(this);
             return this;
         }
+    }
+
+    /**
+     * takes a List interface instance, stores it in a
+     * field and implements List interface itself using it
+     *
+     * intended to be extended by a class that would provide
+     * more convenient functions to work with list
+     */
+    private static class ListWrapper<T> implements List<T>
+    {
+        public final List<T> s;
+        private ListWrapper(List<T> source)
+        {
+            this.s = source;
+        }
+
+        public int size() {return s.size();}
+        public boolean isEmpty() {return s.isEmpty();}
+        public boolean contains(Object o) {return s.contains(o);}
+        public Iterator<T> iterator() {return s.iterator();}
+        public Object[] toArray() {return s.toArray();}
+        public <T1> T1[] toArray(T1[] a) {return s.toArray(a);}
+        public boolean add(T t) {return s.add(t);}
+        public boolean remove(Object o) {return s.remove(o);}
+        public boolean containsAll(Collection<?> c) {return s.containsAll(c);}
+        public boolean addAll(Collection<? extends T> c) {return s.addAll(c);}
+        public boolean addAll(int index, Collection<? extends T> c) {return s.addAll(index, c);}
+        public boolean removeAll(Collection<?> c) {return s.removeAll(c);}
+        public boolean retainAll(Collection<?> c) {return s.retainAll(c);}
+        public void clear() {s.clear();}
+        public T get(int index) {return s.get(index);}
+        public T set(int index, T element) {return s.set(index, element);}
+        public void add(int index, T element) {s.add(index, element);}
+        public T remove(int index) {return s.remove(index);}
+        public int indexOf(Object o) {return s.indexOf(o);}
+        public int lastIndexOf(Object o) {return s.lastIndexOf(o);}
+        public ListIterator<T> listIterator() {return s.listIterator();}
+        public ListIterator<T> listIterator(int index) {return s.listIterator(index);}
+        public List<T> subList(int fromIndex, int toIndex) {return s.subList(fromIndex, toIndex);}
     }
 }
