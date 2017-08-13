@@ -32,6 +32,47 @@ class DeepKeysTest
         return \array_map($makeTax, [1,2,3]);
     }
 
+    private static function testIndexedArrayCreation()
+    {
+        $records = [
+            ['result' => -100],
+            ['error' => 'lox'],
+        ];
+        // should suggest result
+        $records[0][''];
+        // should suggest error
+        $records[1][''];
+    }
+
+    private static function testClosureInference()
+    {
+        $func = function($i) {
+            return [
+                'asdad' => 'asda',
+                'qweq' => $i * 2,
+            ];
+        };
+        $record = $func(123);
+        // should suggest asdad, qweq
+        $record[''];
+    }
+
+    private static function testTupleAccess()
+    {
+        $recordA = ['aField1' => 13, 'aField2' => 234.42];
+        $recordB = ['bField1' => [1,2,3], 'bField2' => 'asdasdd'];
+        $tuple = [$recordA, $recordB];
+        // should suggest aField1, aField2
+        $tuple[0][''];
+        // should suggest bField1, bField2
+        $tuple[1][''];
+        list($restoredA, $restoredB) = $tuple;
+        // should suggest aField1, aField2
+        $restoredA[''];
+        // should suggest bField1, bField2
+        $restoredB[''];
+    }
+
     //============================
     // not implemented follow
     //============================
@@ -89,18 +130,6 @@ class DeepKeysTest
         $fpMapped[0][''];
     }
 
-    private static function testIndexedArrayCreation()
-    {
-        $records = [
-            ['result' => -100],
-            ['error' => 'lox'],
-        ];
-        // should suggest result
-        $records[0][''];
-        // should suggest error
-        $records[1][''];
-    }
-
     private static function testListAccess()
     {
         $mapped = self::testBasisListAccess();
@@ -138,35 +167,6 @@ class DeepKeysTest
         // should report error since $records elements
         // don't have 'key3' used in the function
         $mapped = array_map($mapping, $records);
-    }
-
-    private static function testTupleAccess()
-    {
-        $recordA = ['aField1' => 13, 'aField2' => 234.42];
-        $recordB = ['bField1' => [1,2,3], 'bField2' => 'asdasdd'];
-        $tuple = [$recordA, $recordB];
-        // should suggest aField1, aField2
-        $tuple[0][''];
-        // should suggest bField1, bField2
-        $tuple[1][''];
-        list($restoredA, $restoredB) = $tuple;
-        // should suggest aField1, aField2
-        $restoredA[''];
-        // should suggest bField1, bField2
-        $restoredB[''];
-    }
-
-    private static function testClosureInference()
-    {
-        $func = function($i) {
-            return [
-                'asdad' => 'asda',
-                'qweq' => $i * 2,
-            ];
-        };
-        $record = $func(123);
-        // should suggest asdad, qweq
-        $record[''];
     }
 }
 

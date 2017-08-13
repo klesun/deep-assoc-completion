@@ -15,4 +15,12 @@ class ReimuHakurei
         ];
     }
 
+    public static function evilSealingCircle()
+    {
+        return [
+            'missileDensity' => '10 per second',
+            'missileDamage' => '200',
+            'arcDegree' => '45',
+        ];
+    }
 }

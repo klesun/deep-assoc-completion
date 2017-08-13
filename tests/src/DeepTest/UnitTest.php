@@ -1,6 +1,8 @@
 <?php
 namespace DeepTest;
 
+use TouhouNs\ReimuHakurei;
+
 /**
  * TODO: make somehow possible to say that aray
  * must have _only_ the keys from the expected output
@@ -520,6 +522,48 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         foreach ($pairs as $pair) {
             $list[] = [$pair[0], ['occupation' => [], 'salary' => []]];
         }
+
+        return $list;
+    }
+
+    private static function makeBarrel(int $i)
+    {
+        return [
+            'material' => [
+                0 => 'oak',
+                1 => 'christmas tree',
+                2 => 'bamboo',
+            ][rand(0,3)],
+            'radius' => rand(0,10),
+            'daughter' => 'Amane Suzuha',
+        ];
+    }
+
+    public function provideMethByRef()
+    {
+        $list = [];
+
+        // array_map with inline closure
+        $ingredients = array_map(function($name){return [
+            'name' => $name,
+            'amount' => strlen($name),
+        ];}, ['tomato', 'cucumber', 'pepper']);
+        $list[] = [$ingredients[2], ['name' => [], 'amount' => []]];
+
+        // with closure in a variable
+        $makeSnowman = function(){return [
+            'headSize' => rand(0,10),
+            'torsoSize' => rand(10,20),
+            'legsSize' => rand(20,30),
+        ];};
+        $snowmen = array_map($makeSnowman, range(1,10));
+        $list[] = [$snowmen[4], ['headSize' => [], 'torsoSize' => [], 'legsSize' => []]];
+
+        $barrels = array_map([self::class, 'makeBarrel'], [0,1,2,3,4]);
+        $list[] = [$barrels[2], ['material' => [], 'radius' => [], 'daughter' => []]];
+
+        $bombs = array_map([ReimuHakurei::class, 'evilSealingCircle'], [0,1,2,3,4]);
+        $list[] = [$bombs[2], ['missileDensity' => [], 'missileDamage' => [], 'arcDegree' => []]];
 
         return $list;
     }

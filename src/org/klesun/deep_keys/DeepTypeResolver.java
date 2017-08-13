@@ -1,7 +1,6 @@
 package org.klesun.deep_keys;
 
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
@@ -11,7 +10,6 @@ import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.apache.commons.lang.StringUtils;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -289,9 +287,7 @@ public class DeepTypeResolver extends Lang
                     PsiElement callback = params[0];
                     PsiElement array = params[1];
                     for (DeepType callbackType: findExprType(callback, depth)) {
-                        for (DeepType indexType: callbackType.returnTypes) {
-                            result.indexTypes.add(indexType);
-                        }
+                        result.indexTypes.addAll(callbackType.returnTypes);
                     }
                 }
                 return opt(list(result));
@@ -439,9 +435,15 @@ public class DeepTypeResolver extends Lang
     {
         DeepType arrayType = new DeepType(expr);
 
+        L<PsiElement> orderedParams = L(expr.getChildren())
+            .flt(psi -> !(psi instanceof ArrayHashElement));
+
+        resolveMethodFromArray(orderedParams)
+            .map(meth -> findMethRetType(meth, depth))
+            .thn(arrayType.returnTypes::addAll);
+
         // indexed elements
-        L(expr.getChildren())
-            .flt(psi -> !(psi instanceof ArrayHashElement))
+        orderedParams
             .fch((valuePsi, i) -> Tls.cast(PhpExpression.class, valuePsi)
                 // currently each value is wrapped into a plane Psi element
                 // i believe this is likely to change in future - so we try both cases
@@ -474,7 +476,25 @@ public class DeepTypeResolver extends Lang
         return meths;
     }
 
-    private static Opt<L<Method>> resolveMethod(MethodReferenceImpl call)
+    /** like in [Ns\Employee::class, 'getSalary'] */
+    private static Opt<Method> resolveMethodFromArray(L<PsiElement> refParts)
+    {
+        return refParts.gat(1)
+            .map(psi -> psi.getFirstChild())
+            .fap(toCast(StringLiteralExpression.class))
+            .map(lit -> lit.getContents())
+            .fap(met -> refParts.gat(0)
+                .map(psi -> psi.getFirstChild())
+                .fap(toCast(ClassConstantReferenceImpl.class))
+                .flt(cst -> Objects.equals(cst.getName(), "class"))
+                .map(cst -> cst.getClassReference())
+                .fap(toCast(ClassReferenceImpl.class))
+                .map(clsRef -> clsRef.resolve())
+                .fap(toCast(PhpClass.class))
+                .map(cls -> cls.findMethodByName(met)));
+    }
+
+    private static Opt<L<Method>> resolveMethodFromCall(MethodReferenceImpl call)
     {
         return Opt.fst(list(opt(null)
             , opt(L(call.multiResolve(false)))
@@ -537,7 +557,7 @@ public class DeepTypeResolver extends Lang
                 .map(call -> call.resolve())
                 .map(func -> findFuncRetType(func, nextDepth))
             , Tls.cast(MethodReferenceImpl.class, expr)
-                .fap(call -> resolveMethod(call))
+                .fap(call -> resolveMethodFromCall(call))
                 .map(funcs -> funcs.fap(func -> findMethRetType(func, nextDepth)).s)
             , Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .map(keyAccess -> findKeyType(keyAccess, nextDepth))

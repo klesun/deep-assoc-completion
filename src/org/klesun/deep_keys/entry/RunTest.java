@@ -11,6 +11,7 @@ import org.klesun.deep_keys.DeepType;
 import org.klesun.deep_keys.DeepTypeResolver;
 import org.klesun.lang.Opt;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.klesun.lang.Lang.*;
@@ -80,7 +81,7 @@ public class RunTest extends AnAction
 
                 if (havingKey.s.size() == 0) {
                     System.out.print("E");
-                    errors.add(new Error(this, "No key - " + subKey, subExpected));
+                    errors.add(new Error(this, "No such key: " + subKey, subExpected));
                 } else {
                     System.out.print(".");
                     if (Math.random() < 1.0 / 60.0) {
@@ -108,7 +109,7 @@ public class RunTest extends AnAction
         Error(CaseContext ctx, String msg, DeepType.Key key)
         {
             this.dataProviderName = ctx.dataProviderName;
-            this.keyChain = ctx.keyChain.subList(0, ctx.keyChain.size());
+            this.keyChain = new ArrayList(ctx.keyChain);
             this.testNumber = ctx.testNumber;
             this.message = msg;
             this.keyRecord = key;
