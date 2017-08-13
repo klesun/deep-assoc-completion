@@ -181,6 +181,16 @@ public class DeepTypeResolver extends Lang
         return result;
     }
 
+    /**
+     * @return type of array containing multiple instances of passed element
+     */
+    private static DeepType makeElArrType(L<DeepType> elTypes, PsiElement call)
+    {
+        DeepType result = new DeepType(call, PhpType.ARRAY);
+        result.indexTypes.addAll(elTypes);
+        return result;
+    }
+
     private static Opt<List<DeepType>> assertForeachElement(PsiElement varRef, int depth)
     {
         return opt(varRef.getParent())
@@ -277,6 +287,53 @@ public class DeepTypeResolver extends Lang
         return assignmentsToTypes(assignments);
     }
 
+    /**
+     * similar to built-in functions. by "Util" i mean some custom
+     * functions that do general stuff, like map/filter/sort/etc...
+     * currently hardcoded with one of my team project functions, in future
+     * should be customizable either in plugin settings or by a separate plugin
+     */
+    private static List<DeepType> findUtilMethCallTypes(MethodReferenceImpl call, int depth)
+    {
+        List<DeepType> resultTypes = list();
+        PsiElement[] params = call.getParameters();
+        String cls = call.getClassReference().getName();
+        String met = call.getName();
+
+        if (cls.equals("Fp")) {
+            if (met.equals("map")) {
+                if (params.length >= 2) {
+                    DeepType result = new DeepType(call);
+                    PsiElement callback = params[0];
+                    PsiElement array = params[1];
+                    for (DeepType callbackType: findExprType(callback, depth)) {
+                        result.indexTypes.addAll(callbackType.returnTypes);
+                    }
+                    resultTypes.add(result);
+                }
+            } else if (met.equals("filter")) {
+                if (params.length >= 2) {
+                    resultTypes.addAll(findExprType(params[1], depth));
+                }
+            } else if (met.equals("flatten")) {
+                if (params.length >= 1) {
+                    resultTypes.addAll(makeArrElType(findExprType(params[0], depth)));
+                }
+            } else if (met.equals("groupBy")) {
+                if (params.length >= 2) {
+                    resultTypes.add(makeElArrType(findExprType(params[1], depth), call));
+                }
+            }
+        } else if (cls.equals("ArrayUtil")) {
+            if (met.equals("getFirst") || met.equals("getLast")) {
+                if (params.length >= 1) {
+                    resultTypes.addAll(makeArrElType(findExprType(params[0], depth)));
+                }
+            }
+        }
+        return resultTypes;
+    }
+
     private static Opt<List<DeepType>> findBuiltInFuncCallType(FunctionReferenceImpl call, int depth)
     {
         return opt(call.getName()).fap(name -> {
@@ -335,10 +392,7 @@ public class DeepTypeResolver extends Lang
                 }
             } else if (name.equals("array_chunk")) {
                 if (params.length > 0) {
-                    return opt(findExprType(params[0], depth))
-                        .fap(elType -> opt(new DeepType(call, PhpType.ARRAY))
-                            .thn(arrType -> elType.forEach(arrType.indexTypes::add))
-                            .map(arrType -> list(arrType)));
+                    return opt(list(makeElArrType(findExprType(params[0], depth), call)));
                 } else {
                     return opt(list());
                 }
@@ -538,10 +592,10 @@ public class DeepTypeResolver extends Lang
         return opt(result);
     }
 
-    public static List<DeepType> findExprType(PsiElement expr, int depth)
+    public static L<DeepType> findExprType(PsiElement expr, int depth)
     {
         if (depth <= 0) {
-            return new ArrayList<>();
+            return list();
         }
         final int nextDepth = --depth;
 
@@ -557,8 +611,9 @@ public class DeepTypeResolver extends Lang
                 .map(call -> call.resolve())
                 .map(func -> findFuncRetType(func, nextDepth))
             , Tls.cast(MethodReferenceImpl.class, expr)
-                .fap(call -> resolveMethodFromCall(call))
-                .map(funcs -> funcs.fap(func -> findMethRetType(func, nextDepth)).s)
+                .fap(call -> resolveMethodFromCall(call)
+                    .map(funcs -> funcs.fap(func -> findMethRetType(func, nextDepth)))
+                    .map(retTypes -> retTypes.cct(findUtilMethCallTypes(call, nextDepth))))
             , Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .map(keyAccess -> findKeyType(keyAccess, nextDepth))
             , Tls.cast(StringLiteralExpressionImpl.class, expr)
@@ -591,6 +646,7 @@ public class DeepTypeResolver extends Lang
 //            , Tls.cast(ConstantReferenceImpl.class, expr)
 //                .map(cnst -> list(new DeepType(cnst)))
         ))
+            .map(types -> L(types))
             .els(() -> System.out.println("Unknown expression type " + expr.getText() + " " + expr.getClass()))
             .def(list());
     }

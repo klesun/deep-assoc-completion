@@ -88,11 +88,11 @@ public class Lang
         }
     }
 
-    public static <T> ArrayList<T> list(T... args)
+    public static <T> L<T> list(T... args)
     {
         ArrayList<T> result = new ArrayList<>();
         Collections.addAll(result, args);
-        return result;
+        return L(result);
     }
 
     public static <T, Tin extends PsiElement> Lang.F<Tin, Opt<T>> toCast(Class<T> cls)
@@ -248,6 +248,14 @@ public class Lang
         public L<T> wth(C<L<T>> f)
         {
             f.accept(this);
+            return this;
+        }
+
+        /** stands for "concatenate" */
+        public L<T> cct(List<T> more)
+        {
+            // this probably not very concatish approach
+            s.addAll(more);
             return this;
         }
     }

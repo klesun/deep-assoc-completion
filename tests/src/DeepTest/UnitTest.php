@@ -4,7 +4,7 @@ namespace DeepTest;
 use TouhouNs\ReimuHakurei;
 
 /**
- * TODO: make somehow possible to say that aray
+ * TODO: make somehow possible to say that array
  * must have _only_ the keys from the expected output
  */
 class UnitTest /** extends \PHPUnit_Framework_Suite */
