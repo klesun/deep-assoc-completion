@@ -297,7 +297,7 @@ public class DeepTypeResolver extends Lang
     {
         List<DeepType> resultTypes = list();
         PsiElement[] params = call.getParameters();
-        String cls = call.getClassReference().getName();
+        String cls = opt(call.getClassReference()).map(c -> c.getName()).def("");
         String met = call.getName();
 
         if (cls.equals("Fp")) {
