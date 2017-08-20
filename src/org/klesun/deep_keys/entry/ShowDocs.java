@@ -15,6 +15,9 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ParameterImpl;
 import org.klesun.deep_keys.DeepType;
 import org.klesun.deep_keys.DeepTypeResolver;
+import org.klesun.deep_keys.helpers.FuncCtx;
+import org.klesun.deep_keys.helpers.IFuncCtx;
+import org.klesun.deep_keys.helpers.SearchContext;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -23,14 +26,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+import static org.klesun.lang.Lang.L;
 import static org.klesun.lang.Lang.opt;
 
 public class ShowDocs extends AnAction
 {
     public static List<DeepType> findPsiType(PsiElement psi)
     {
+        SearchContext search = new SearchContext().setDepth(20);
+        IFuncCtx funcCtx = new FuncCtx(search, L());
+
         return Tls.cast(PhpExpression.class, psi)
-            .map(expr -> DeepTypeResolver.findExprType(expr, 20))
+            .map(expr -> funcCtx.findExprType(expr).types)
             .def(Lang.list());
     }
 

@@ -15,4 +15,6 @@ public interface IFuncCtx
     public Opt<MultiType> getArg(Integer index);
     public MultiType findExprType(PhpExpression expr);
     public IFuncCtx subCtx(L<S<MultiType>> args);
+    /** @debug */
+    public int getArgCnt();
 }

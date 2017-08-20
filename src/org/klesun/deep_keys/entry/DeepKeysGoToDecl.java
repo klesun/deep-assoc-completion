@@ -4,12 +4,18 @@ import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_keys.DeepTypeResolver;
+import org.klesun.deep_keys.helpers.FuncCtx;
+import org.klesun.deep_keys.helpers.IFuncCtx;
+import org.klesun.deep_keys.helpers.SearchContext;
+import org.klesun.deep_keys.resolvers.var_res.DocParamRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
 
@@ -39,6 +45,9 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
     @Override
     public PsiElement[] getGotoDeclarationTargets(PsiElement psiElement, int i, Editor editor)
     {
+        SearchContext search = new SearchContext().setDepth(20);
+        IFuncCtx funcCtx = new FuncCtx(search, L());
+
         List<PsiElement> psiTargets = new ArrayList<>();
         opt(psiElement.getParent())
             .fap(toCast(StringLiteralExpressionImpl.class))
@@ -47,7 +56,8 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 .map(index -> index.getParent())
                 .fap(Lang.toCast(ArrayAccessExpressionImpl.class))
                 .map(expr -> expr.getValue())
-                .map(srcExpr -> DeepTypeResolver.findExprType(srcExpr, 20))
+                .fap(toCast(PhpExpression.class))
+                .map(srcExpr -> funcCtx.findExprType(srcExpr).types)
                 .thn(arrayTypes -> arrayTypes.forEach(arrayType -> {
                     String key = literal.getContents();
                     if (arrayType.keys.containsKey(key)) {
@@ -55,9 +65,9 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                     }
                 })))
             .els(() -> opt(psiElement)
-                .fap(v -> Tls.findParent(v, PhpDocTag.class, psi -> true))
-                .map(tag -> tag.getTagValue())
-                .fap(descr -> DeepTypeResolver.parseDoc(descr, 20, psiElement.getProject()))
+                .fap(v -> Tls.findParent(v, PhpDocParamTag.class, psi -> true))
+                .fap(tag -> new DocParamRes(funcCtx).resolve(tag))
+                .map(mt -> mt.types)
                 .thn(types -> types.forEach(t -> psiTargets.add(t.definition))));
 
         removeDuplicates(psiTargets);

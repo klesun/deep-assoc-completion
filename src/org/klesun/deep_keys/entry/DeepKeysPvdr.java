@@ -7,14 +7,21 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_keys.DeepType;
 import org.klesun.deep_keys.DeepTypeResolver;
+import org.klesun.deep_keys.helpers.FuncCtx;
+import org.klesun.deep_keys.helpers.IFuncCtx;
+import org.klesun.deep_keys.helpers.SearchContext;
 import org.klesun.lang.Lang;
 
 import java.util.*;
+
+import static org.klesun.lang.Lang.L;
+import static org.klesun.lang.Lang.toCast;
 
 /**
  * contains the completion logic
@@ -40,10 +47,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        // TODO: show error when user tries to access not existing
-        // key if array definition does not have unknown parts
-
-        // TODO: inspect so that type passed to function was compatible with expected type (has used keys)
+        SearchContext search = new SearchContext().setDepth(20);
+        IFuncCtx funcCtx = new FuncCtx(search, L());
 
         Lang.opt(parameters.getPosition().getParent())
             .thn(literal -> Lang.opt(literal.getParent())
@@ -51,7 +56,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 .map(index -> index.getParent())
                 .fap(Lang.toCast(ArrayAccessExpressionImpl.class))
                 .map(expr -> expr.getValue())
-                .map(srcExpr -> DeepTypeResolver.findExprType(srcExpr, 20))
+                .fap(toCast(PhpExpression.class))
+                .map(srcExpr -> funcCtx.findExprType(srcExpr).types)
                 .thn(types -> {
                     // TODO: use element type information
                     List<String> options = new ArrayList<>();

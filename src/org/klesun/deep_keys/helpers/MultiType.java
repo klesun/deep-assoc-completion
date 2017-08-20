@@ -39,4 +39,9 @@ public class MultiType extends Lang
         result.indexTypes.addAll(types);
         return result;
     }
+
+    public String toJson()
+    {
+        return DeepType.toJson(types, 0);
+    }
 }

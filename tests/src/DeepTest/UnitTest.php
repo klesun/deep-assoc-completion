@@ -603,9 +603,76 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    private function addFullDt($passedSeg)
+    {
+        $passedSeg['fullDt'] = date('Y-m-d H:i:s');
+        return $passedSeg;
+    }
+
+    public function provideBasicGenericTyping()
+    {
+        $list = [];
+
+        $seg = ['from' => 'KIV', 'to' => 'RIX'];
+        $fullSeg = self::addFullDt($seg);
+        $fullSeg[''];
+        $list[] = [$fullSeg, ['from' => [], 'to' => [], 'fullDt' => []]];
+
+        // apparently something wrong happens when name is same - should correct
+        // var scope to not include assigned var to passed var resolutions
+        $sfoSeg = ['from' => 'LON', 'to' => 'SFO', 'netPrice' => '240.00'];
+        $sfoSeg = self::addFullDt($sfoSeg);
+        $sfoSeg[''];
+        $list[] = [$sfoSeg, ['from' => [], 'to' => [], 'netPrice' => [], 'fullDt' => []]];
+
+
+        $denis = ['job' => false, 'girlfriend' => false];
+        $denis = ['whiskey' => true, 'dota' => true, 'oldDenis' => $denis];
+        $list[] = [$denis['oldDenis'], ['job' => [], 'girlfriend' => []]];
+
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
+
+    private static function addPax($seg)
+    {
+        $seg['pax'] = 'Marina Libermane';
+        return $seg;
+    }
+
+    public function provideGenericsInFuncVar()
+    {
+        $list = [];
+
+        $addFullDt = function($seg) {
+            $seg['fullDt'] = date('Y-m-d H:i:s');
+            return $seg;
+        };
+
+        $seg = ['from' => 'TYO', 'to' => 'ROB'];
+        $seg = $addFullDt($seg);
+        $seg[''];
+
+        $itinerary = [
+            ['from' => 'MOW', 'to' => 'CDG'],
+            ['from' => 'CDG', 'to' => 'LAX'],
+        ];
+        $datedItin = array_map($addFullDt, $itinerary);
+        $datedItin[0][''];
+
+        $paxedItin = array_map([self::class, 'addPax'], $itinerary);
+        $paxedItin[0][''];
+
+        // TODO: uncomment when i figure out how to pass args to an expression returning a func
+        //$list[] = [$seg, ['from' => [], 'to' => [], 'fullDt' => []]];
+        //$list[] = [$datedItin[0], ['from' => [], 'to' => [], 'fullDt' => []]];
+        //$list[] = [$paxedItin[0], ['from' => [], 'to' => [], 'fullDt' => [], 'pax' => []]];
+
+        return $list;
+    }
 
     public function provideVeryDeepKey()
     {

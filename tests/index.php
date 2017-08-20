@@ -116,18 +116,6 @@ class DeepKeysTest
             $record[''];
             return null;
         }, $records);
-
-
-        $fpMapped = Fp::map(function($i) {
-            return [
-                'id' => $i,
-                'amount' => 10.00,
-                'date' => date('Y-m-d H:i:s'),
-            ];
-        }, range(0,10));
-
-        // should suggest id, amount, date
-        $fpMapped[0][''];
     }
 
     private static function testListAccess()

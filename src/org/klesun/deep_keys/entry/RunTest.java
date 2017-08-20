@@ -10,8 +10,12 @@ import com.intellij.psi.PsiFile;
 import com.intellij.ui.awt.RelativePoint;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.Method;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_keys.DeepType;
-import org.klesun.deep_keys.DeepTypeResolver;
+import org.klesun.deep_keys.helpers.FuncCtx;
+import org.klesun.deep_keys.helpers.IFuncCtx;
+import org.klesun.deep_keys.helpers.SearchContext;
+import org.klesun.deep_keys.resolvers.ClosRes;
 import org.klesun.lang.Opt;
 
 import java.awt.*;
@@ -36,12 +40,19 @@ public class RunTest extends AnAction
     @Override
     public void actionPerformed(AnActionEvent e)
     {
+        SearchContext search = new SearchContext().setDepth(30);
+        IFuncCtx funcCtx = new FuncCtx(search, L());
+
         Logger logger = new Logger();
         logger.logMsg("Searching for \"UnitTest\" class in project...");
         List<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
             .fap(file -> findTestDataPvdrFuncs(file))
             .map(funcs -> L(funcs)
-                .fap(func -> L(DeepTypeResolver.findFuncRetType(func, 30))
+                .fap(func -> ClosRes.findFunctionReturns(func)
+                    .map(ret -> ret.getArgument())
+                    .fop(toCast(PhpExpression.class))
+                    .map(retVal -> funcCtx.findExprType(retVal).types)
+                    .fap(a -> a)
                     .fap(ltype -> L(ltype.indexTypes)
                         .fop((rett, i) -> {
                             CaseContext ctx = new CaseContext(logger);
