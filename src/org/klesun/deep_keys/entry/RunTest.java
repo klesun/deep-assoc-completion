@@ -3,14 +3,18 @@ package org.klesun.deep_keys.entry;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
-import com.intellij.psi.PsiElement;
+import com.intellij.openapi.ui.MessageType;
+import com.intellij.openapi.ui.popup.Balloon;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.psi.PsiFile;
+import com.intellij.ui.awt.RelativePoint;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.Method;
 import org.klesun.deep_keys.DeepType;
 import org.klesun.deep_keys.DeepTypeResolver;
 import org.klesun.lang.Opt;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,14 +36,15 @@ public class RunTest extends AnAction
     @Override
     public void actionPerformed(AnActionEvent e)
     {
-        System.out.println("Searching for \"UnitTest\" class in project...");
+        Logger logger = new Logger();
+        logger.logMsg("Searching for \"UnitTest\" class in project...");
         List<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
             .fap(file -> findTestDataPvdrFuncs(file))
             .map(funcs -> L(funcs)
                 .fap(func -> L(DeepTypeResolver.findFuncRetType(func, 30))
                     .fap(ltype -> L(ltype.indexTypes)
                         .fop((rett, i) -> {
-                            CaseContext ctx = new CaseContext();
+                            CaseContext ctx = new CaseContext(logger);
                             ctx.dataProviderName = func.getName();
                             ctx.testNumber = i;
                             return opt(rett.keys.get("0"))
@@ -51,22 +56,28 @@ public class RunTest extends AnAction
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .def(list());
 
-        System.out.println();
-        errors.forEach(err -> {
-            System.out.println(
-                "Error in " + err.dataProviderName + " #" + err.testNumber + " " +
-                L(err.keyChain).rdc((a,b) -> a + ", " + b, "") + " " + err.message
-            );
-        });
-
-        System.out.println("Done testing with " + errors.size() + " errors\n");
+        logger.logMsg("");
+        errors.forEach(logger::logErr);
+        logger.logMsg("Done testing with " + errors.size() + " errors and " + logger.sucCnt + " OK-s\n");
+        JBPopupFactory.getInstance()
+            .createHtmlTextBalloonBuilder("<pre>" + logger.wholeText + "</pre>", MessageType.INFO, null)
+            .setFadeoutTime(300 * 1000)
+            .createBalloon()
+            .show(RelativePoint.fromScreen(new Point(200, 200)), Balloon.Position.atRight);
     }
 
     private static class CaseContext
     {
+        Logger logger;
+
         String dataProviderName;
         List<String> keyChain = list();
         int testNumber;
+
+        public CaseContext(Logger logger)
+        {
+            this.logger = logger;
+        }
 
         private List<Error> testCase(List<DeepType.Key> actual, DeepType.Key expected)
             throws AssertionError // in case input does not have some of output keys
@@ -80,14 +91,10 @@ public class RunTest extends AnAction
                         .fop(t -> opt(t.keys.get(subKey))).s);
 
                 if (havingKey.s.size() == 0) {
-                    System.out.print("E");
+                    logger.logErrShort();
                     errors.add(new Error(this, "No such key: " + subKey, subExpected));
                 } else {
-                    System.out.print(".");
-                    if (Math.random() < 1.0 / 60.0) {
-                        // approximately 60 dots per row
-                        System.out.println();
-                    }
+                    logger.logSucShort();
                     keyChain.add(subKey);
                     testCase(havingKey.s, subExpected);
                     keyChain.remove(keyChain.size() - 1);
@@ -113,6 +120,52 @@ public class RunTest extends AnAction
             this.testNumber = ctx.testNumber;
             this.message = msg;
             this.keyRecord = key;
+        }
+    }
+
+    private static class Logger
+    {
+        String wholeText = "";
+        int caret = 0;
+        int sucCnt = 0;
+
+        void logMsg(String msg)
+        {
+            System.out.println(msg);
+            wholeText += msg + "\n";
+            caret = 0;
+        }
+
+        void printWrapped(String text)
+        {
+            System.out.print(text);
+            wholeText += text;
+            L<String> lines = L(text.split("/\n/"));
+            if (lines.size() > 1) {
+                caret = 0;
+            }
+            caret += lines.lst().unw().length();
+            if (caret > 90) {
+                logMsg("");
+            }
+        }
+
+        void logErr(Error err)
+        {
+            String msg = "Error in " + err.dataProviderName + " #" + err.testNumber + " " +
+                L(err.keyChain).rdc((a,b) -> a + ", " + b, "") + " " + err.message;
+            logMsg(msg);
+        }
+
+        void logErrShort()
+        {
+            printWrapped("E");
+        }
+
+        void logSucShort()
+        {
+            printWrapped(".");
+            ++sucCnt;
         }
     }
 }
