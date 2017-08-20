@@ -568,6 +568,41 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    /** @return array like [
+     *     ['index' => 1, 'value' => 1, 'time' => 0.002],
+     *     ['index' => 2, 'value' => 1, 'time' => 0.004],
+     *     ['index' => 3, 'value' => 2, 'time' => 0.008],
+     *     ...
+     * ] */
+    private static function fibonacci(int $n)
+    {
+        if ($n <= 0) {
+            $result = [];
+        } elseif ($n === 1) {
+            $result = [];
+            $result[] = ['index' => $n, 'value' => 1, 'time' => 0.00];
+        } else {
+            $startTime = microtime();
+            $result = self::fibonacci($n - 1);
+            $value = $result[$n - 3]['value'] + $result[$n - 2]['value'];
+            $result[] = ['index' => $n, 'value' => $value, 'time' => microtime() - $startTime];
+        }
+        return $result;
+    }
+
+    public function provideRecursiveFunc()
+    {
+        $list = [];
+
+        // it would be perfect if plugin detected
+        // that it is recursive function at once instead
+        // of interrupting after reaching a certain depth
+        $fiboRecs = self::fibonacci(10);
+        $list[] = [$fiboRecs[0], ['index' => [], 'value' => [], 'time' => []]];
+
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
