@@ -1,15 +1,15 @@
 <idea-plugin version="2">
   <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
   <name>deep-keys</name>
-  <version>1.0</version>
-  <vendor email="safronevev@gmail.com" url="http://midiana.lv">Klesun</vendor>
+  <version>2017.08.20.001</version>
+  <vendor email="safronevev@gmail.com" url="http://midiana.lv/phpstorm-deep-keys">Klesun</vendor>
 
   <description><![CDATA[
       A plugin for auto-complete of associative arrays declared inside another function
     ]]></description>
 
   <change-notes><![CDATA[
-      War never changes
+      First release
     ]]>
   </change-notes>
 
