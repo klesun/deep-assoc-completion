@@ -75,6 +75,16 @@ public class ScopeFinder extends Lang
         return opt(null);
     }
 
+    private static boolean isPartOfAssignment(PsiElement assDest, Variable caretVar)
+    {
+        return opt(assDest.getParent())
+            .fap(toCast(AssignmentExpressionImpl.class))
+            .flt(ass -> opt(ass.getVariable()).map(var -> var.isEquivalentTo(assDest)).def(false))
+            .map(ass -> ass.getValue())
+            .map(val -> isPartOf(caretVar, val))
+            .def(false);
+    }
+
     /**
      * // and this will be true
      * $someVar = ['someKey' => 'dsa'];
@@ -92,14 +102,16 @@ public class ScopeFinder extends Lang
      *     print($someVar['someKey']);
      * }
      */
-    public static boolean didSurelyHappen(PsiElement reference, Variable usage)
+    public static boolean didSurelyHappen(PsiElement reference, Variable caretVar)
     {
-        if (usage.getTextOffset() < reference.getTextOffset()) {
+        if (isPartOfAssignment(reference, caretVar)) {
+            return false;
+        } else if (caretVar.getTextOffset() < reference.getTextOffset()) {
             return false;
         }
 
         Opt<PsiElement> refScope = getParentScope(reference);
-        List<PsiElement> varScopes = getParentScopes(usage);
+        List<PsiElement> varScopes = getParentScopes(caretVar);
 
         Opt<ControlStatementImpl> elseIf = isInElseIfCondition(reference);
         if (elseIf.has()) {
@@ -135,14 +147,16 @@ public class ScopeFinder extends Lang
      *     print($someVar['someKey']);
      * }
      */
-    public static boolean didPossiblyHappen(PsiElement reference, Variable usage)
+    public static boolean didPossiblyHappen(PsiElement reference, Variable caretVar)
     {
-        if (usage.getTextOffset() < reference.getTextOffset()) {
+        if (isPartOfAssignment(reference, caretVar)) {
+            return false;
+        } else if (caretVar.getTextOffset() < reference.getTextOffset()) {
             return false;
         }
 
         List<PsiElement> scopesL = getParentScopes(reference);
-        List<PsiElement> scopesR = getParentScopes(usage);
+        List<PsiElement> scopesR = getParentScopes(caretVar);
 
         int l = 0;
         int r = 0;
