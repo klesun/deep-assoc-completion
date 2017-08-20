@@ -56,7 +56,7 @@ public class DeepType
         this(lit, lit.getType(), lit.getContents());
     }
 
-    DeepType(PhpExpressionImpl numPsi, Integer number)
+    public DeepType(PhpExpressionImpl numPsi, Integer number)
     {
         this(numPsi, numPsi.getType(), "" + number);
     }
