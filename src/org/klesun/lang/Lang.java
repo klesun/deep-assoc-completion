@@ -90,9 +90,9 @@ public class Lang
 
     public static <T> L<T> list(T... args)
     {
-        ArrayList<T> result = new ArrayList<>();
+        L<T> result = L();
         Collections.addAll(result, args);
-        return L(result);
+        return result;
     }
 
     public static <T, Tin extends PsiElement> Lang.F<Tin, Opt<T>> toCast(Class<T> cls)
@@ -254,9 +254,7 @@ public class Lang
         /** stands for "concatenate" */
         public L<T> cct(List<T> more)
         {
-            // this probably not very concatish approach
-            s.addAll(more);
-            return this;
+            return list(this.s, more).fap(a -> a);
         }
     }
 

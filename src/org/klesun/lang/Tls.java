@@ -75,7 +75,7 @@ public class Tls extends Lang
     }
 
     /** make object string representation _approximately_ resembling json for debug */
-    private String json(Object value)
+    public static String json(Object value)
     {
         if (value instanceof List) {
             List list = (List)value;
@@ -92,5 +92,18 @@ public class Tls extends Lang
         } else {
             return value.toString();
         }
+    }
+
+    public static <T> S<T> onDemand(S<T> f)
+    {
+        Mutable<T> value = new Mutable<>(null);
+        Mutable<Boolean> demanded = new Mutable<>(false);
+        return () -> {
+            if (!demanded.get()) {
+                demanded.set(true);
+                value.set(f.get());
+            }
+            return value.get();
+        };
     }
 }

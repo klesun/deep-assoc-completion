@@ -41,12 +41,12 @@ public class DeepType
         this.stringValue = stringValue;
     }
 
-    DeepType(PsiElement definition, PhpType briefType)
+    public DeepType(PsiElement definition, PhpType briefType)
     {
         this(definition, briefType, null);
     }
 
-    DeepType(PhpExpression definition)
+    public DeepType(PhpExpression definition)
     {
         this(definition, definition.getType());
     }
