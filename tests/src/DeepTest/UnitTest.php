@@ -646,15 +646,10 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         $segment = ['from' => 'LOS', 'to' => 'MNL'];
         $segment = self::addTripStr($segment);
 
-        // TODO: fix and uncomment
         $list[] = [$segment, ['from' => [], 'to' => [], 'trip' => []]];
 
         return $list;
     }
-
-    //=============================
-    // following are not implemented yet
-    //=============================
 
     private static function callFunc(callable $func)
     {
@@ -669,10 +664,14 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
             'queue' => '100',
         ];};
         $called = self::callFunc($mkJobData);
-        // TODO: fix and uncomment
-        //$list[] = [$called, ['pcc' => [], 'queue' => []]];
+        $called[''];
+        $list[] = [$called, ['pcc' => [], 'queue' => []]];
         return $list;
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     private static function addPax($seg)
     {

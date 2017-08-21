@@ -9,6 +9,7 @@ import org.klesun.deep_keys.DeepType;
 import org.klesun.deep_keys.helpers.IFuncCtx;
 import org.klesun.deep_keys.helpers.MultiType;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 public class NsFuncRes extends Lang
@@ -104,9 +105,15 @@ public class NsFuncRes extends Lang
         IFuncCtx funcCtx = ctx.subCtx(argGetters);
         return new MultiType(list(
             findBuiltInFuncCallType(funcCall),
-            opt(funcCall.resolve())
-                .fap(Tls.toCast(FunctionImpl.class))
-                .map(func -> new ClosRes(funcCtx).resolve(func).returnTypes)
+            Opt.fst(list(opt(null)
+                , opt(funcCall.resolve())
+                    .fap(Tls.toCast(FunctionImpl.class))
+                    .map(func -> new ClosRes(funcCtx).resolve(func).returnTypes)
+                // idea is not able to resolve function passed as arg, but we are thanks to our context
+                , opt(funcCall.getFirstChild())
+                    .fap(toCast(PhpExpression.class))
+                    .map(func -> ctx.findExprType(func).types.fap(t -> t.returnTypes))
+            ))
             .def(list())
         ).fap(a -> a));
     }
