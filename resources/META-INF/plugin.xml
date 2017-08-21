@@ -5,11 +5,15 @@
   <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
   <description><![CDATA[
-      Associative array auto-completion inferenced from outside files;
-      Go To Declaration;
-      Array keys and function output references in phpdoc;
-      <img src="https://raw.githubusercontent.com/klesun/phpstorm-deep-keys/master/imgs/screenshot.png"/>
-      <img src="https://cloud.githubusercontent.com/assets/5202330/26426602/0f72f554-40e2-11e7-8873-30b873310746.png"/>
+<ul>
+  <li>Associative array auto-completion inferenced from outside files</li>
+  <li>Go To Declaration</li>
+  <li>Array keys and function output references in phpdoc</li>
+</ul>
+<br clear="all"/>
+<img style="width: 300px; height: auto;" src="https://raw.githubusercontent.com/klesun/phpstorm-deep-keys/master/imgs/screenshot.png"/>
+<br clear="all"/>
+<img style="width: 300px; height: auto;" src="https://cloud.githubusercontent.com/assets/5202330/26426602/0f72f554-40e2-11e7-8873-30b873310746.png"/>
     ]]></description>
 
   <change-notes><![CDATA[

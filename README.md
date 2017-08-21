@@ -1,6 +1,6 @@
 Autocomplete keys of associative arrays defined in other functions.
 
-![alt tag](/imgs/screenshot.png)
+![alt tag](https://raw.githubusercontent.com/klesun/phpstorm-deep-keys/master/imgs/screenshot.png)
 
 Precompiled `.jar` (may be outdated): [mirror1](http://midiana.lv/Dropbox/web/phpstorm-deep-keys.jar), [mirror2](https://www.dropbox.com/s/5x984zqxw1u32fl/phpstorm-deep-keys.jar?dl=0).
 
@@ -16,11 +16,6 @@ To build a jar use `Build -> Prepare Plugin ... For Deployment`. To debug use `R
 
 To use compiled `.jar` in your phpstorm go to `Settings -> Plugins -> Install plugin from disk` and select the `.jar` we compiled earlier.
 
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
 <br/>
 <br/>
 <br/>
