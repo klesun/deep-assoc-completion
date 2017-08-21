@@ -8,9 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
 import com.jetbrains.php.PhpIndex;
-import com.jetbrains.php.lang.psi.elements.ArrayIndex;
-import com.jetbrains.php.lang.psi.elements.PhpClass;
-import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_keys.DeepType;
@@ -46,6 +44,13 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
         return result;
     }
 
+    private static String makeMethOrderValue(Method meth)
+    {
+        String result = "";
+        result += meth.getAccess() == PhpModifier.Access.PUBLIC ? "+" : "-";
+        return result;
+    }
+
     private Opt<List<String>> extractTypedFqnPart(String docValue, Project project)
     {
         PhpIndex idx = PhpIndex.getInstance(project);
@@ -53,11 +58,15 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
             , Tls.regex(" *= *([A-Z][A-Za-z0-9_]+)::([a-zA-Z0-9_]*?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete method
                 .map(mtch -> {
-                    PrefixMatcher clsMatcher = new CamelHumpMatcher(mtch.gat(0).unw());
+                    String clsName = mtch.gat(0).unw();
+                    PrefixMatcher clsMatcher = new CamelHumpMatcher(clsName);
                     PrefixMatcher metMatcher = new CamelHumpMatcher(mtch.gat(1).unw());
                     return L(idx.getAllClassNames(clsMatcher))
-                        .map(n -> idx.getClassByName(n))
-                        .fap(cls -> L(cls.getMethods())
+                        .fap(n -> L(idx.getClassesByName(n)))
+                        .flt(cls -> clsName.equals(cls.getName()) ||
+                                    clsName.endsWith("\\" + cls.getName()))
+                        .fap(cls -> L(cls.getOwnMethods())
+                            .srt(m -> makeMethOrderValue(m))
                             .map(m -> m.getName())
                             .flt(p -> metMatcher.prefixMatches(p))
                             .map(f -> f + "()"));

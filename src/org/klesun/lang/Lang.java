@@ -256,6 +256,14 @@ public class Lang
         {
             return list(this.s, more).fap(a -> a);
         }
+
+        public L<T> srt(F<T, String> makeValue)
+        {
+            L<String> weights = map(makeValue);
+            L<Integer> indexes = Tls.range(0, size());
+            Collections.sort(indexes, Comparator.comparing(weights::get));
+            return indexes.map(idx -> s.get(idx));
+        }
     }
 
     /**

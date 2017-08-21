@@ -106,4 +106,13 @@ public class Tls extends Lang
             return value.get();
         };
     }
+
+    public static L<Integer> range(int l, int r)
+    {
+        L<Integer> result = L();
+        for (int i = l; i < r; ++i) {
+            result.add(i);
+        }
+        return result;
+    }
 }
