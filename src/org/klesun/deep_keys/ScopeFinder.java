@@ -77,9 +77,8 @@ public class ScopeFinder extends Lang
 
     private static boolean isPartOfAssignment(PsiElement assDest, Variable caretVar)
     {
-        return opt(assDest.getParent())
-            .fap(toCast(AssignmentExpressionImpl.class))
-            .flt(ass -> opt(ass.getVariable()).map(var -> var.isEquivalentTo(assDest)).def(false))
+        return Tls.findParent(assDest, AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression)
+            .flt(ass -> opt(ass.getVariable()).map(var -> isPartOf(assDest, var)).def(false))
             .map(ass -> ass.getValue())
             .map(val -> isPartOf(caretVar, val))
             .def(false);

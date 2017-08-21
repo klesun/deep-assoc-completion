@@ -633,9 +633,46 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    private static function addTripStr($segment)
+    {
+        $segment['trip'] = $segment['from'].'-'.$segment['to'];
+        return $segment;
+    }
+
+    public function providePassedArgInAKey()
+    {
+        $list = [];
+
+        $segment = ['from' => 'LOS', 'to' => 'MNL'];
+        $segment = self::addTripStr($segment);
+
+        // TODO: fix and uncomment
+        $list[] = [$segment, ['from' => [], 'to' => [], 'trip' => []]];
+
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
+
+    private static function callFunc(callable $func)
+    {
+        return $func();
+    }
+
+    public function providePassedFunc()
+    {
+        $list = [];
+        $mkJobData = function(){return [
+            'pcc' => '1O3K',
+            'queue' => '100',
+        ];};
+        $called = self::callFunc($mkJobData);
+        // TODO: fix and uncomment
+        //$list[] = [$called, ['pcc' => [], 'queue' => []]];
+        return $list;
+    }
 
     private static function addPax($seg)
     {

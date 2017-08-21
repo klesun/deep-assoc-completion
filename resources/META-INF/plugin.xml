@@ -2,10 +2,14 @@
   <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
   <name>deep-keys</name>
   <version>2017.08.20.001</version>
-  <vendor email="safronevev@gmail.com" url="http://midiana.lv/phpstorm-deep-keys">Klesun</vendor>
+  <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
   <description><![CDATA[
-      A plugin for auto-complete of associative arrays declared inside another function
+      Associative array auto-completion inferenced from outside files;
+      Go To Declaration;
+      Array keys and function output references in phpdoc;
+      <img src="https://raw.githubusercontent.com/klesun/phpstorm-deep-keys/master/imgs/screenshot.png"/>
+      <img src="https://cloud.githubusercontent.com/assets/5202330/26426602/0f72f554-40e2-11e7-8873-30b873310746.png"/>
     ]]></description>
 
   <change-notes><![CDATA[
