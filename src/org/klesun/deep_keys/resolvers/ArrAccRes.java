@@ -32,18 +32,11 @@ public class ArrAccRes extends Lang
             .map(v -> ctx.findExprType(v).types)
             .fap(keyTypes -> L(keyTypes).fst())
             .map(t -> t.stringValue)
-            .map(key -> dictTypes.stream()
-                .map(type -> getKey(type.keys, key))
-                .filter(v -> v.has())
-                .map(v -> v.def(null))
-                .flatMap(v -> v.types.stream())
-                .collect(Collectors.toList())
-            )
+            .map(key -> dictTypes
+                .fop(type -> getKey(type.keys, key))
+                .fap(v -> v.types))
             .flt(types -> types.size() > 0)
-            .def(dictTypes.stream()
-                .map(type -> type.indexTypes)
-                .flatMap(v -> v.stream())
-                .collect(Collectors.toList()));
+            .def(dictTypes.fap(type -> type.indexTypes));
 
         return new MultiType(L(result));
     }

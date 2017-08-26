@@ -47,7 +47,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        SearchContext search = new SearchContext().setDepth(20);
+        SearchContext search = new SearchContext().setDepth(30);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
         Lang.opt(parameters.getPosition().getParent())
