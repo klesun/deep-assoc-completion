@@ -9,11 +9,8 @@ import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_keys.DeepType;
-import org.klesun.deep_keys.DeepTypeResolver;
-import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
@@ -34,8 +31,8 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
             .bold()
             .withIcon(PhpIcons.FIELD);
 
-        if (keyEntry.types.size() > 0) {
-            DeepType type = keyEntry.types.get(0);
+        if (keyEntry.getTypes().size() > 0) {
+            DeepType type = keyEntry.getTypes().get(0);
             result = result.withTypeText(type.briefType.toString());
         } else {
             result = result.withTypeText("unknown");

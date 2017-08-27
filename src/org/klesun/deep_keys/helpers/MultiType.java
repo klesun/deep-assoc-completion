@@ -5,6 +5,8 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_keys.DeepType;
 import org.klesun.lang.Lang;
 
+import javax.annotation.Nullable;
+
 /**
  * this data structure represents a list of
  * DeepTypes-s that some variable mya have
@@ -12,15 +14,24 @@ import org.klesun.lang.Lang;
  *
  * it also probably could give some handy methods
  * like getKey(), elToArr(), arToEl() - all the
- * static functions that take list of types
+ * static functions that take list of typeGetters
  */
 public class MultiType extends Lang
 {
-    public L<DeepType> types;
+    static enum REASON {OK, CIRCULAR_REFERENCE, FAILED_TO_RESOLVE, DEPTH_LIMIT}
+    public static MultiType CIRCULAR_REFERENCE = new MultiType(L(), REASON.CIRCULAR_REFERENCE);
 
-    public MultiType(L<DeepType> types)
+    private REASON reason;
+    final public L<DeepType> types;
+
+    public MultiType(L<DeepType> types, REASON reason)
     {
         this.types = types;
+        this.reason = reason;
+    }
+    public MultiType(L<DeepType> types)
+    {
+        this(types, REASON.OK);
     }
 
     public MultiType getEl()
@@ -28,7 +39,7 @@ public class MultiType extends Lang
         return new MultiType(types.fap(arrt -> {
             L<DeepType> mixed = L();
             mixed.addAll(arrt.indexTypes);
-            arrt.keys.forEach((k,v) -> mixed.addAll(v.types));
+            arrt.keys.forEach((k,v) -> mixed.addAll(v.getTypes()));
             return mixed;
         }));
     }
@@ -40,8 +51,28 @@ public class MultiType extends Lang
         return result;
     }
 
+    @Nullable
+    public String getStringValue()
+    {
+        return types.fop(t -> opt(t.stringValue)).gat(0).def(null);
+    }
+
+    public MultiType getKey(@Nullable String keyName)
+    {
+        return new MultiType(list(
+            types.fop(type -> Lang.getKey(type.keys, keyName))
+                .fap(v -> v.getTypes()),
+            types.fap(t -> t.indexTypes)
+        ).fap(a -> a));
+    }
+
     public String toJson()
     {
         return DeepType.toJson(types, 0);
+    }
+
+    public MultiType deepCopy()
+    {
+        return new MultiType(types.map(t -> t.deepCopy()));
     }
 }

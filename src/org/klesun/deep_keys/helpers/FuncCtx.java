@@ -1,19 +1,16 @@
 package org.klesun.deep_keys.helpers;
 
-import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import org.jetbrains.annotations.NotNull;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
 
 import java.util.HashMap;
 
 /** a node in called function stack trace with args */
 public class FuncCtx extends Lang implements IFuncCtx
 {
-    // note that this will make things work incorrectly when partial
-    // type resolution (to get only the key requested) is implemented
-    final private static boolean USE_CACHING = true;
+    final private static boolean USE_CACHING = false;
 
     final private SearchContext search;
     final private L<Lang.S<MultiType>> argGetters;
@@ -42,6 +39,7 @@ public class FuncCtx extends Lang implements IFuncCtx
         });
     }
 
+    @NotNull
     public MultiType findExprType(PhpExpression expr)
     {
         if (USE_CACHING) {
@@ -50,7 +48,8 @@ public class FuncCtx extends Lang implements IFuncCtx
             }
             return cachedExprs.get(expr);
         } else {
-            return search.findExprType(expr, this).def(new MultiType(L()));
+            MultiType result = search.findExprType(expr, this).def(new MultiType(L()));
+            return result;
         }
     }
 

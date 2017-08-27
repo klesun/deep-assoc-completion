@@ -100,8 +100,8 @@ public class Tls extends Lang
         Mutable<Boolean> demanded = new Mutable<>(false);
         return () -> {
             if (!demanded.get()) {
-                demanded.set(true);
                 value.set(f.get());
+                demanded.set(true);
             }
             return value.get();
         };

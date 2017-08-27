@@ -9,6 +9,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_keys.*;
 import org.klesun.deep_keys.helpers.IFuncCtx;
+import org.klesun.deep_keys.helpers.MultiType;
 import org.klesun.deep_keys.resolvers.var_res.ArgRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
@@ -29,29 +30,30 @@ public class VarRes extends Lang
 
     /**
      * extends type with the key assignment information
+     * @TODO: make it immutable! Don't rely on side effects... if you remove Tls.onDemand() it will not work
      */
-    private static void addAssignment(List<DeepType> dest, Assign assign, boolean overwritingAssignment)
+    private static void addAssignment(L<S<MultiType>> dest, Assign assign, boolean overwritingAssignment)
     {
         if (assign.keys.size() == 0) {
-            if (assign.didSurelyHappen && !overwritingAssignment) {
-                dest.clear();
-            }
-            assign.assignedType.forEach(dest::add);
+            if (assign.didSurelyHappen && overwritingAssignment) dest.clear();
+            dest.add(assign.assignedType);
         } else {
             if (dest.size() == 0) {
-                dest.add(new DeepType(assign.psi, PhpType.ARRAY));
+                dest.add(Tls.onDemand(() -> new MultiType(list(new DeepType(assign.psi, PhpType.ARRAY)))));
             }
             String nextKey = assign.keys.remove(0);
-            dest.forEach(type -> {
+            dest.fap(g -> g.get().types).fch(type -> {
                 if (nextKey == null) {
                     // index key
-                    addAssignment(type.indexTypes, assign, true);
+                    L<S<MultiType>> getters = list(Tls.onDemand(() -> new MultiType(L(type.indexTypes))));
+                    addAssignment(getters, assign, false);
+                    type.indexTypes = getters.fap(g -> g.get().types);
                 } else {
                     // associative key
                     if (!type.keys.containsKey(nextKey)) {
                         type.addKey(nextKey, assign.psi);
                     }
-                    addAssignment(type.keys.get(nextKey).types, assign, false);
+                    addAssignment(type.keys.get(nextKey).getTypeGetters(), assign, true);
                 }
             });
             assign.keys.add(0, nextKey);
@@ -60,12 +62,12 @@ public class VarRes extends Lang
 
     private static List<DeepType> assignmentsToTypes(List<Assign> assignments)
     {
-        List<DeepType> resultTypes = list();
+        L<S<MultiType>> resultTypes = list();
 
         // assignments are supposedly in chronological order
         assignments.forEach(ass -> addAssignment(resultTypes, ass, true));
 
-        return resultTypes;
+        return resultTypes.fap(g -> g.get().types);
     }
 
     private static List<String> parseRegexNameCaptures(String regexText)
@@ -79,7 +81,7 @@ public class VarRes extends Lang
         return result;
     }
 
-    private static List<DeepType> makeRegexNameCaptureTypes(List<DeepType> regexTypes)
+    private static L<DeepType> makeRegexNameCaptureTypes(List<DeepType> regexTypes)
     {
         return L(regexTypes)
             .fop(strt -> opt(strt.stringValue)
@@ -87,13 +89,13 @@ public class VarRes extends Lang
                 .map(names -> {
                     DeepType t = new DeepType(strt.definition, PhpType.ARRAY);
                     names.forEach(n -> t.addKey(n, strt.definition)
-                        .types.add(new DeepType(strt.definition, PhpType.STRING)));
+                        .addType(() -> new MultiType(list(new DeepType(strt.definition, PhpType.STRING)))));
                     return t;
                 }));
     }
 
     // null in key chain means index (when it is number or variable, not named key)
-    private Opt<T2<List<String>, List<DeepType>>> collectKeyAssignment(AssignmentExpressionImpl ass)
+    private Opt<T2<List<String>, S<MultiType>>> collectKeyAssignment(AssignmentExpressionImpl ass)
     {
         Opt<ArrayAccessExpressionImpl> nextKeyOpt = opt(ass.getVariable())
             .fap(toCast(ArrayAccessExpressionImpl.class));
@@ -103,12 +105,15 @@ public class VarRes extends Lang
         while (nextKeyOpt.has()) {
             ArrayAccessExpressionImpl nextKey = nextKeyOpt.def(null);
 
-            opt(nextKey.getIndex())
+            String name = opt(nextKey.getIndex())
                 .map(index -> index.getValue())
-                .thn(key -> Tls.cast(StringLiteralExpressionImpl.class, key)
-                    .thn(lit -> reversedKeys.add(lit.getContents()))
-                    .els(() -> reversedKeys.add(null))) // index, not named key
-                .els(() -> reversedKeys.add(null));
+                .fap(toCast(PhpExpression.class))
+                .fap(key -> ctx.findExprType(key).types
+                    .map(t -> t.stringValue)
+                    .flt(n -> n != null)
+                    .gat(0))
+                .def(null);
+            reversedKeys.add(name);
 
             nextKeyOpt = opt(nextKey.getValue())
                 .fap(toCast(ArrayAccessExpressionImpl.class));
@@ -121,21 +126,23 @@ public class VarRes extends Lang
 
         return opt(ass.getValue())
             .fap(toCast(PhpExpression.class))
-            .map(value -> new T2(keys, ctx.findExprType(value).types));
+            .map(value -> T2(keys, S(() -> {
+                MultiType mt = ctx.findExprType(value);
+                return mt;
+            })));
     }
 
-    private Opt<L<DeepType>> assertForeachElement(PsiElement varRef)
+    private Opt<S<MultiType>> assertForeachElement(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fap(toCast(ForeachImpl.class))
             .flt(fch -> opt(fch.getValue()).map(v -> v.isEquivalentTo(varRef)).def(false))
             .map(fch -> fch.getArray())
             .fap(toCast(PhpExpression.class))
-            .map(arr -> ctx.findExprType(arr))
-            .map(mt -> mt.getEl().types);
+            .map(arr -> () -> ctx.findExprType(arr).getEl());
     }
 
-    private Opt<List<DeepType>> assertTupleAssignment(PsiElement varRef)
+    private Opt<S<MultiType>> assertTupleAssignment(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fap(toCast(MultiassignmentExpressionImpl.class))
@@ -156,14 +163,15 @@ public class VarRes extends Lang
                     })
                     .map(i -> L(arrts)
                         .fop(t -> opt(t.keys.get(i + ""))
-                            .map(k -> k.types))
-                        .fap(v -> v).s
+                            .map(k -> k.getTypeGetters()))
+                        .fap(v -> v)
                     )
                 )
+                .map(mtgs -> () -> new MultiType(mtgs.fap(g -> g.get().types)))
             );
     }
 
-    private Opt<List<DeepType>> assertPregMatchResult(PsiElement varRef)
+    private Opt<S<MultiType>> assertPregMatchResult(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fap(toCast(ParameterListImpl.class))
@@ -175,8 +183,11 @@ public class VarRes extends Lang
             .flt(fun -> opt(fun.getName()).def("").equals("preg_match"))
             .fap(fun -> L(fun.getParameters()).fst())
             .fap(toCast(PhpExpression.class))
-            .map(regexPsi -> ctx.findExprType(regexPsi))
-            .map(mt -> makeRegexNameCaptureTypes(mt.types));
+            .map(regexPsi -> () -> {
+                MultiType mt = ctx.findExprType(regexPsi);
+                L<DeepType> matchesType = makeRegexNameCaptureTypes(mt.types);
+                return new MultiType(matchesType);
+            });
     }
 
     public List<DeepType> resolve(Variable variable)
@@ -212,8 +223,10 @@ public class VarRes extends Lang
                             });
                     })
                     .els(() -> Tls.cast(ParameterImpl.class, refPsi)
-                        .map(param -> new ArgRes(ctx).resolveArg(param))
-                        .map(parsed -> new Assign(list(), parsed.types, true, refPsi))
+                        .map(param -> {
+                            S<MultiType> mtg = () -> new ArgRes(ctx).resolveArg(param);
+                            return new Assign(list(), mtg, true, refPsi);
+                        })
                         .thn(revAsses::add)));
         }
 

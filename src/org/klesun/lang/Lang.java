@@ -88,6 +88,16 @@ public class Lang
         }
     }
 
+    public static <T> S<T> S(S<T> getter)
+    {
+        return getter;
+    }
+
+    public static <Ta, Tb> T2<Ta, Tb> T2(Ta a, Tb b)
+    {
+        return new T2<Ta, Tb>(a, b);
+    }
+
     public static <T> L<T> list(T... args)
     {
         L<T> result = L();
@@ -179,9 +189,13 @@ public class Lang
             return L(s.stream().filter(pred).collect(Collectors.toList()));
         }
 
-        public <Tnew> L<Tnew> map(F<T, Tnew> pred)
+        public <Tnew> L<Tnew> map(F<T, Tnew> f)
         {
-            return L(s.stream().map(pred).collect(Collectors.toList()));
+            L<Tnew> result = L();
+            for (T el: s) {
+                result.add(f.apply(el));
+            }
+            return result;
         }
 
         /**
