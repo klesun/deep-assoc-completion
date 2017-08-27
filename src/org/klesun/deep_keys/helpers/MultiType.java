@@ -18,8 +18,9 @@ import javax.annotation.Nullable;
  */
 public class MultiType extends Lang
 {
-    static enum REASON {OK, CIRCULAR_REFERENCE, FAILED_TO_RESOLVE, DEPTH_LIMIT}
+    static enum REASON {OK, CIRCULAR_REFERENCE, FAILED_TO_RESOLVE, DEPTH_LIMIT, INVALID_PSI}
     public static MultiType CIRCULAR_REFERENCE = new MultiType(L(), REASON.CIRCULAR_REFERENCE);
+    public static MultiType INVALID_PSI = new MultiType(L(), REASON.INVALID_PSI);
 
     private REASON reason;
     final public L<DeepType> types;
@@ -54,7 +55,11 @@ public class MultiType extends Lang
     @Nullable
     public String getStringValue()
     {
-        return types.fop(t -> opt(t.stringValue)).gat(0).def(null);
+        if (types.size() == 1) {
+            return types.get(0).stringValue;
+        } else {
+            return null;
+        }
     }
 
     public MultiType getKey(@Nullable String keyName)

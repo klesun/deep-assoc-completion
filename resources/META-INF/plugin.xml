@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
   <name>deep-keys</name>
-  <version>2017.08.20.001</version>
+  <version>2017.08.28.001</version>
   <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
   <description><![CDATA[
