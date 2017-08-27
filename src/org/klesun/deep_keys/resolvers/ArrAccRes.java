@@ -8,7 +8,6 @@ import org.klesun.deep_keys.helpers.MultiType;
 import org.klesun.lang.Lang;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ArrAccRes extends Lang
 {
@@ -34,7 +33,7 @@ public class ArrAccRes extends Lang
             .map(t -> t.stringValue)
             .map(key -> dictTypes
                 .fop(type -> getKey(type.keys, key))
-                .fap(v -> v.types))
+                .fap(v -> v.getTypes()))
             .flt(types -> types.size() > 0)
             .def(dictTypes.fap(type -> type.indexTypes));
 

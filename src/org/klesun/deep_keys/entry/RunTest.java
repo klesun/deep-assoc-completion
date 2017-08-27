@@ -95,10 +95,10 @@ public class RunTest extends AnAction
         {
             List<Error> errors = list();
 
-            DeepType expectedt = expected.types.get(0);
+            DeepType expectedt = expected.getTypes().get(0);
             expectedt.keys.forEach((subKey, subExpected) -> {
                 L<DeepType.Key> havingKey = L(actual)
-                    .fap(krecs -> L(krecs.types)
+                    .fap(krecs -> L(krecs.getTypes())
                         .fop(t -> opt(t.keys.get(subKey))).s);
 
                 if (havingKey.s.size() == 0) {

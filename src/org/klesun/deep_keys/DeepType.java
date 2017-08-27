@@ -1,31 +1,27 @@
 package org.klesun.deep_keys;
 
-import com.google.gson.annotations.Expose;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import io.netty.util.internal.StringUtil;
 import org.apache.commons.lang.StringUtils;
+import org.klesun.deep_keys.helpers.MultiType;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Tls;
 
 import java.util.*;
 
-import static org.klesun.lang.Lang.list;
-import static org.klesun.lang.Lang.opt;
-
 /**
  * contains info about associative
- * array key types among other things
+ * array key typeGetters among other things
  */
-public class DeepType
+public class DeepType extends Lang
 {
-    // keys and types of associative array
+    // keys and typeGetters of associative array
     public final LinkedHashMap<String, Key> keys = new LinkedHashMap<>();
-    // possible types of list element
-    public final List<DeepType> indexTypes = new ArrayList<>();
+    // possible typeGetters of list element
+    public List<DeepType> indexTypes = new ArrayList<>();
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     public final List<DeepType> returnTypes = new ArrayList<>();
@@ -71,7 +67,7 @@ public class DeepType
     public static class Key
     {
         final public String name;
-        final public List<DeepType> types = new ArrayList<>();
+        final private L<S<MultiType>> typeGetters = L();
         // where Go To Definition will lead
         final public PsiElement definition;
 
@@ -79,6 +75,21 @@ public class DeepType
         {
             this.name = name;
             this.definition = definition;
+        }
+
+        public void addType(S<MultiType> getter)
+        {
+            typeGetters.add(Tls.onDemand(getter));
+        }
+
+        public L<DeepType> getTypes()
+        {
+            return typeGetters.fap(g -> g.get().types);
+        }
+
+        public L<S<MultiType>> getTypeGetters()
+        {
+            return typeGetters;
         }
     }
 
@@ -98,7 +109,7 @@ public class DeepType
                 if (!mergedKeys.containsKey(k)) {
                     mergedKeys.put(k, list());
                 }
-                mergedKeys.get(k).addAll(v.types);
+                mergedKeys.get(k).addAll(v.getTypes());
             });
             t.indexTypes.forEach(indexTypes::add);
             briefTypes.add(opt(t.stringValue).map(s -> "'" + s + "'").def(t.briefType.toString()));
@@ -127,5 +138,18 @@ public class DeepType
     public String toString()
     {
         return toJson(list(this), 0);
+    }
+
+    /** not sure it works correctly */
+    public DeepType deepCopy()
+    {
+        DeepType self = new DeepType(definition, briefType, stringValue);
+        self.keys.forEach((name, srcKey) -> {
+            Key newKey = self.addKey(name, srcKey.definition);
+            srcKey.typeGetters.fch(newKey::addType);
+        });
+        self.indexTypes.addAll(L(indexTypes).map(t -> t.deepCopy()));
+        self.returnTypes.addAll(L(returnTypes).map(t -> t.deepCopy()));
+        return self;
     }
 }

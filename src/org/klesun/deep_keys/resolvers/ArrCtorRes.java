@@ -58,21 +58,22 @@ public class ArrCtorRes extends Lang
                 // currently each value is wrapped into a plane Psi element
                 // i believe this is likely to change in future - so we try both cases
                 .elf(() -> opt(valuePsi.getFirstChild()).fap(toCast(PhpExpression.class)))
-                .thn(val -> arrayType.addKey(i + "", val).types.addAll(ctx.findExprType(val).types)));
+                .thn(val -> arrayType.addKey(i + "", val)
+                    .addType(() -> ctx.findExprType(val))));
 
         // keyed elements
         L(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
             .fap(toCast(PhpExpression.class))
-            .map(v -> ctx.findExprType(v).types)
-            .thn(types -> opt(keyRec.getKey())
+            .map(v -> S(() -> ctx.findExprType(v)))
+            .thn(getType -> opt(keyRec.getKey())
                 .fap(toCast(PhpExpression.class))
                 .map(keyPsi -> ctx.findExprType(keyPsi).types)
                 .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
                 .thn(keyTypes -> {
                     if (keyTypes.s.size() > 0) {
-                        keyTypes.fch(key -> arrayType.addKey(key, keyRec).types.addAll(types));
+                        keyTypes.fch(key -> arrayType.addKey(key, keyRec).addType(getType));
                     } else {
-                        arrayType.indexTypes.addAll(types);
+                        arrayType.indexTypes.addAll(getType.get().types);
                     }
                 })));
 

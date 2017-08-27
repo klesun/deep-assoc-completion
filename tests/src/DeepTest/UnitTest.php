@@ -167,8 +167,13 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
                 'origin' => 'here',
             ];
         }
+
         // should suggest id, randomValue, origin
         $list[] = [$records[0], ['id' => [], 'randomValue' => [], 'origin' => []]];
+
+        $mugiwaras = [];
+        $mugiwaras['sanji']['cooking'] = 'good';
+        $list[] = [$mugiwaras['sanji'], ['cooking' => []]];
 
         $lala = [];
         $lala[0]['asdas'][] = [
@@ -177,6 +182,7 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
             'origin' => 'there',
             'originData' => [1,2,3],
         ];
+        $lala['0']['asdas'][0][''];
         $lolo = $lala;
         // should suggest asdas
         $list[] = [$lolo[0], ['asdas' => []]];
@@ -668,6 +674,19 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         $list[] = [$called, ['pcc' => [], 'queue' => []]];
         return $list;
     }
+
+	public function provideArrayColumnWithNums()
+	{
+		$list = [];
+		$fcSplit = [
+            ['0' => 5, '1' => ['lo' => 5]],
+            ['0' => 5, '1' => ['lo' => 5]],
+            ['0' => 5, '1' => ['lo' => 5]],
+        ];
+        $values = array_column($fcSplit, 1);
+		$list[] = [$values[0], ['lo' => []]];
+		return $list;
+	}
 
     //=============================
     // following are not implemented yet

@@ -69,12 +69,10 @@ public class NsFuncRes extends Lang
             } else if (name.equals("array_column")) {
                 if (params.length > 1) {
                     MultiType elType = findPsiExprType(params[0]).getEl();
-                    Tls.cast(StringLiteralExpression.class, params[1])
-                        .map(lit -> lit.getContents())
-                        .map(keyName -> elType.types
-                            .fop(type -> getKey(type.keys, keyName))
-                            .fap(keyRec -> keyRec.types))
-                        .map(lTypes -> lTypes.s)
+                    Tls.cast(PhpExpression.class, params[1])
+                        .map(keyNamePsi -> ctx.findExprType(keyNamePsi))
+                        .map(mt -> mt.getStringValue())
+                        .map(keyName -> elType.getKey(keyName).types)
                         .flt(itypes -> itypes.size() > 0)
                         .map(itypes -> {
                             DeepType type = new DeepType(call);

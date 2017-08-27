@@ -1,19 +1,16 @@
 package org.klesun.deep_keys.helpers;
 
-import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.impl.*;
-import org.klesun.deep_keys.DeepType;
 import org.klesun.deep_keys.DeepTypeResolver;
-import org.klesun.deep_keys.resolvers.*;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
 
 public class SearchContext extends Lang
 {
     // parametrized fields
     private int depth = 20;
+    private int initialDepth = depth;
+    private boolean debug = false;
 
     public SearchContext()
     {
@@ -21,7 +18,7 @@ public class SearchContext extends Lang
 
     public SearchContext setDepth(int depth)
     {
-        this.depth = depth;
+        this.depth = initialDepth = depth;
         return this;
     }
 
@@ -34,8 +31,17 @@ public class SearchContext extends Lang
 //            return opt(null);
 //        }
 
-        if (depth <= 0) return opt(null);
+        if (depth <= 0) {
+            return opt(null);
+        }
         --depth;
+
+        if (debug) {
+            for (int i = 0; i < initialDepth - depth; ++i) {
+                System.out.print("| ");
+            }
+            System.out.println(depth + " " + expr.getText().split("\n")[0]);
+        }
 
         Opt<MultiType> result = DeepTypeResolver.resolveIn(expr, funcCtx)
             .map(ts -> new MultiType(ts));
