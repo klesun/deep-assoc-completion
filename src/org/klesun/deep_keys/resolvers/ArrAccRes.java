@@ -36,7 +36,8 @@ public class ArrAccRes extends Lang
                 .fop(type -> getKey(type.keys, key))
                 .fap(v -> v.types))
             .flt(types -> types.size() > 0)
-            .def(dictTypes.fap(type -> type.indexTypes));
+            .def(L())
+            .cct(dictTypes.fap(type -> type.indexTypes));
 
         return new MultiType(L(result));
     }

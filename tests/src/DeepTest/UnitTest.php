@@ -673,6 +673,57 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
     // following are not implemented yet
     //=============================
 
+    public function provideTupleAndArrayMix()
+    {
+        $list = [];
+        $pricingList = [];
+        if ($error = $parsed['error'] ?? null) {
+            return ['error' => $error];
+        } elseif (rand() % 2) {
+            // GDS returned single PTC pricing instantly
+            if (rand() % 2) {
+                $ptcBlock = ['netPrice' => '150.00', 'singlePtcBonus' => '20.00'];
+                $pricingList[] = [
+                    'pricingModifiers' => [],
+                    'pricingBlockList' => [$ptcBlock],
+                    'singlePtcSpecificKey' => -100,
+                ];
+            } else {
+                return ['error' => 'GDS returned output for single PTC even though there were multiple pricing stores in command'];
+            }
+        } elseif (rand() % 2) {
+            // pricing summary with partial data - no FC, carrier, taxes...
+            // need to call a separate command for each PTC
+            $ptcGroups = range(1,5);
+            foreach ($ptcGroups as $i => $ptcInfo) {
+                $storeNum = $ptcInfo['storeNumber'] ?? 1;
+                $ptcBlock = ['netPrice' => '150.00', 'multiPtcPenalty' => '-30.00'];
+                if ($error = $ptcBlock['error'] ?? null) {
+                    return ['error' => 'Failed to fetch '.$ptcInfo['ptc'].' PTC block - '.$error];
+                } else {
+                    $pricingList[$storeNum - 1]['pricingModifiers'] = $cmdStores[$storeNum - 1] ?? [];
+                    $pricingList[$storeNum - 1]['pricingBlockList'][] = $ptcBlock;
+                    $pricingList[$storeNum - 1]['multiPtcSpecificKey'] = -200;
+                }
+            }
+        } else {
+            return ['error' => 'Unexpected pricing type'];
+        }
+        foreach ($pricingList as $store) {
+            // should suggest both "singlePtcBonus" and "multiPtcPenalty"
+            // cuz we can't say for sure that the latter can not be "0"
+            $store['pricingBlockList'][0][''];
+            $list[] = [$store['pricingBlockList'][0], ['singlePtcBonus' => [], 'multiPtcPenalty' => []]];
+            // should not suggest "singlePtcBonus" cuz we know
+            // for sure that it can belong only to "0"-th store
+            $store['pricingBlockList'][1][''];
+            $list[] = [$store['pricingBlockList'][1], ['multiPtcPenalty' => []]];
+        }
+        $pricingList[0][''];
+        $list[] = [$pricingList[0], ['singlePtcSpecificKey' => [], 'multiPtcSpecificKey' => []]];
+        return $list;
+    }
+
     private static function addPax($seg)
     {
         $seg['pax'] = 'Marina Libermane';
