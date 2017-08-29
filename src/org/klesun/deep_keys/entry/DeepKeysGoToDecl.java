@@ -45,7 +45,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
     @Override
     public PsiElement[] getGotoDeclarationTargets(PsiElement psiElement, int i, Editor editor)
     {
-        SearchContext search = new SearchContext().setDepth(40);
+        SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
         List<PsiElement> psiTargets = new ArrayList<>();

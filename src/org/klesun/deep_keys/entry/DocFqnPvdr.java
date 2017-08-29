@@ -25,22 +25,6 @@ import static org.klesun.lang.Lang.opt;
  */
 public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
 {
-    private static LookupElement makeLookup(DeepType.Key keyEntry, Project project)
-    {
-        LookupElementBuilder result = LookupElementBuilder.create(keyEntry.name)
-            .bold()
-            .withIcon(PhpIcons.FIELD);
-
-        if (keyEntry.getTypes().size() > 0) {
-            DeepType type = keyEntry.getTypes().get(0);
-            result = result.withTypeText(type.briefType.toString());
-        } else {
-            result = result.withTypeText("unknown");
-        }
-
-        return result;
-    }
-
     private static String makeMethOrderValue(Method meth)
     {
         String result = "";

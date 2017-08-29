@@ -73,10 +73,6 @@ class DeepKeysTest
         $restoredB[''];
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     private static function testLambdaAccess()
     {
         $subjects = self::makeRecord()['chosenSubSubjects'];
@@ -96,6 +92,32 @@ class DeepKeysTest
         // should suggest name2, priority2
         $mapped[2][''];
     }
+
+    private static function testArrayColumn()
+    {
+        $segments = [
+            ['from' => 'MOW', 'to' => 'LON'],
+            ['from' => 'LON', 'to' => 'PAR'],
+            ['from' => 'PAR', 'to' => 'MOW'],
+        ];
+        // should suggest: "from", "to"
+        $segments[0][''];
+        // should suggest: "from", "to"
+        array_column($segments, '');
+
+        $pnrs = [];
+        $pnrs[] = [
+            'ptcInfo' => ['ptc' => 'C05', 'quantity' => 1],
+            'paxes' => [['name' => 'vova', 'surname' => 'turman']],
+            'itinerary' => $segments,
+        ];
+        array_column($pnrs, '');
+        array_column(array_column($pnrs, 'ptcInfo'), '');
+    }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function testGenericAccess()
     {

@@ -26,5 +26,13 @@ public class DeepKeysCbtr extends CompletionContributor
                 .withSuperParent(2, PhpDocParamTag.class),
             new DocFqnPvdr()
         );
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, StringLiteralExpression.class)
+                //.withSuperParent(2, ParameterList.class)
+                ,
+            new ArrayColumnPvdr()
+        );
     }
 }
