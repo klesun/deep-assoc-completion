@@ -688,9 +688,115 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
 		return $list;
 	}
 
+    public function provideVeryDeepKey()
+    {
+        $list = [];
+
+        // not implemented yet
+
+        // ideally, limit should be some ridiculously big number
+        // so you would never reach it in normal circumstances,
+        // but that requires handling circular references properly
+
+        $addict = [
+            'face' => [
+                'eyes' => [
+                    'left' => [
+                        'pupil' => [
+                            'color' => 'red',
+                            'size' => [
+                                'value' => 'veryBig',
+                                'reason' => 'marijuana',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        // should suggest all these keys by the wya
+        $pupilSize = $addict['face']['eyes']['left']['pupil']['size'];
+        // should suggest: "value", "reason"
+        $list[] = [$pupilSize, ['value' => [], 'reason' => []]];
+
+        $policeDepartment = [
+            'evidenceOfTheYear' => $pupilSize,
+            'offices' => [
+                '402' => [
+                    'evidenceOfTheChef' => $pupilSize,
+                    'deskByTheWindow' => [
+                        'dayShift' => [
+                            'favouriteEvidence' => $pupilSize,
+                            'cases' => [
+                                '8469132' => [
+                                    'mainEvidence' => $pupilSize,
+                                    'evidences' => [$pupilSize],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        // should suggest: "value", "reason"
+        $list[] = [
+            $policeDepartment['evidenceOfTheYear'],
+            ['value' => [], 'reason' => []]
+        ];
+        $list[] = [
+            $policeDepartment['offices']['402']['evidenceOfTheChef'],
+            ['value' => [], 'reason' => []]
+        ];
+        // following will fail till i fix circular references
+        // TODO: uncomment!
+        $list[] = [
+            $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['favouriteEvidence'],
+            ['value' => [], 'reason' => []]
+        ];
+        $list[] = [
+            $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['cases']['8469132']['mainEvidence'],
+            ['value' => [], 'reason' => []]
+        ];
+        $list[] = [
+            $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['cases']['8469132']['evidences'][0],
+            ['value' => [], 'reason' => []]
+        ];
+
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
+
+    private static function transformSegment($seg)
+    {
+        return [
+            'from' => $seg['departure'],
+            'to' => $seg['destination'],
+            'when' => $seg['date'],
+        ];
+    }
+
+    public function provideKeysReturnedByClosure(array $itinerary)
+    {
+        $list = [];
+        $common = array_map([self::class, 'transformSegment'], $itinerary);
+        $common['0'][''];
+
+        // apparently keys assigned to a var without type are not preserved...
+        $transform = function($seg) {
+            //$seg = self::transformSegment($seg);
+            $seg['closured'] = true;
+            return $seg;
+        };
+        $common = array_map($transform, $itinerary);
+        $common['0'][''];
+        // TODO: fix and uncomment
+        //$list[] = [$common['0'], ['closured' => true]];
+        return $list;
+    }
 
     public function provideTupleAndArrayMix()
     {
@@ -778,84 +884,6 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         //$list[] = [$seg, ['from' => [], 'to' => [], 'fullDt' => []]];
         //$list[] = [$datedItin[0], ['from' => [], 'to' => [], 'fullDt' => []]];
         //$list[] = [$paxedItin[0], ['from' => [], 'to' => [], 'fullDt' => [], 'pax' => []]];
-
-        return $list;
-    }
-
-    public function provideVeryDeepKey()
-    {
-        $list = [];
-
-        // not implemented yet
-
-        // ideally, limit should be some ridiculously big number
-        // so you would never reach it in normal circumstances,
-        // but that requires handling circular references properly
-
-        $addict = [
-            'face' => [
-                'eyes' => [
-                    'left' => [
-                        'pupil' => [
-                            'color' => 'red',
-                            'size' => [
-                                'value' => 'veryBig',
-                                'reason' => 'marijuana',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        // should suggest all these keys by the wya
-        $pupilSize = $addict['face']['eyes']['left']['pupil']['size'];
-        // should suggest: "value", "reason"
-        $list[] = [$pupilSize, ['value' => [], 'reason' => []]];
-
-        $policeDepartment = [
-            'evidenceOfTheYear' => $pupilSize,
-            'offices' => [
-                '402' => [
-                    'evidenceOfTheChef' => $pupilSize,
-                    'deskByTheWindow' => [
-                        'dayShift' => [
-                            'favouriteEvidence' => $pupilSize,
-                            'cases' => [
-                                '8469132' => [
-                                    'mainEvidence' => $pupilSize,
-                                    'evidences' => [$pupilSize],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        // should suggest: "value", "reason"
-        $list[] = [
-            $policeDepartment['evidenceOfTheYear'],
-            ['value' => [], 'reason' => []]
-        ];
-        $list[] = [
-            $policeDepartment['offices']['402']['evidenceOfTheChef'],
-            ['value' => [], 'reason' => []]
-        ];
-        // following will fail till i fix circular references
-        // TODO: uncomment!
-//        $list[] = [
-//            $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['favouriteEvidence'],
-//            ['value' => [], 'reason' => []]
-//        ];
-//        $list[] = [
-//            $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['cases']['8469132']['mainEvidence'],
-//            ['value' => [], 'reason' => []]
-//        ];
-//        $list[] = [
-//            $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['cases']['8469132']['evidences'][0],
-//            ['value' => [], 'reason' => []]
-//        ];
 
         return $list;
     }

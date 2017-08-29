@@ -5,6 +5,7 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_keys.DeepType;
 import org.klesun.deep_keys.helpers.IFuncCtx;
+import org.klesun.deep_keys.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
 

@@ -115,10 +115,6 @@ class DeepKeysTest
         array_column(array_column($pnrs, 'ptcInfo'), '');
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     private static function testGenericAccess()
     {
         $records = [];
@@ -139,6 +135,10 @@ class DeepKeysTest
             return null;
         }, $records);
     }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function testListAccess()
     {
