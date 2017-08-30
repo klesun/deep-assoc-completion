@@ -840,10 +840,6 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     private static function transformSegment($seg)
     {
         return [
@@ -853,9 +849,16 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         ];
     }
 
-    public function provideKeysReturnedByClosure(array $itinerary)
+    public function provideKeysReturnedByClosure(array $itinerary, $pokemon)
     {
         $list = [];
+        $pokemon['name'] = 'pikachu';
+        $pokemon[''];
+        $list[] = [$pokemon, ['name' => []]];
+
+        $brejsabtrjsa = [];
+        $brejsabtrjsa['numa']['numa']['ej'] = -100;
+
         $common = array_map([self::class, 'transformSegment'], $itinerary);
         $common['0'][''];
 
@@ -867,10 +870,13 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         };
         $common = array_map($transform, $itinerary);
         $common['0'][''];
-        // TODO: fix and uncomment
-        //$list[] = [$common['0'], ['closured' => true]];
+        $list[] = [$common['0'], ['closured' => []]];
         return $list;
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     private static function addPax($seg)
     {

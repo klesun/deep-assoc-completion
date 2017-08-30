@@ -39,7 +39,7 @@ public class VarRes extends Lang
             if (assign.didSurelyHappen && overwritingAssignment) dest.clear();
             dest.add(assign.assignedType);
         } else {
-            if (dest.size() == 0) {
+            if (dest.fap(g -> g.get().types).size() == 0) {
                 dest.add(Tls.onDemand(() -> new MultiType(list(new DeepType(assign.psi, PhpType.ARRAY)))));
             }
             String nextKey = assign.keys.remove(0);
