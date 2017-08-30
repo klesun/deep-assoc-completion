@@ -16,6 +16,7 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -108,10 +109,8 @@ public class VarRes extends Lang
             String name = opt(nextKey.getIndex())
                 .map(index -> index.getValue())
                 .fap(toCast(PhpExpression.class))
-                .fap(key -> ctx.findExprType(key).types
-                    .map(t -> t.stringValue)
-                    .flt(n -> n != null)
-                    .gat(0))
+                .map(key -> ctx.findExprType(key))
+                .map(t -> t.getStringValue())
                 .def(null);
             reversedKeys.add(name);
 

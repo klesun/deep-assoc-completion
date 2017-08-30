@@ -788,38 +788,6 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
-    private static function transformSegment($seg)
-    {
-        return [
-            'from' => $seg['departure'],
-            'to' => $seg['destination'],
-            'when' => $seg['date'],
-        ];
-    }
-
-    public function provideKeysReturnedByClosure(array $itinerary)
-    {
-        $list = [];
-        $common = array_map([self::class, 'transformSegment'], $itinerary);
-        $common['0'][''];
-
-        // apparently keys assigned to a var without type are not preserved...
-        $transform = function($seg) {
-            //$seg = self::transformSegment($seg);
-            $seg['closured'] = true;
-            return $seg;
-        };
-        $common = array_map($transform, $itinerary);
-        $common['0'][''];
-        // TODO: fix and uncomment
-        //$list[] = [$common['0'], ['closured' => true]];
-        return $list;
-    }
-
     public function provideTupleAndArrayMix()
     {
         $list = [];
@@ -867,9 +835,40 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
             $list[] = [$store['pricingBlockList'][1], ['multiPtcPenalty' => []]];
         }
         $pricingList[0][''];
-        // TODO: fix and uncomment. it recognizes just the "1" from "$store - 1" as
-        // key, but should treat it as `any key`, since $storeNum is not a constant
-        //$list[] = [$pricingList[0], ['singlePtcSpecificKey' => [], 'multiPtcSpecificKey' => []]];
+        // should treat it as `any key`, since $storeNum is not a constant
+        $list[] = [$pricingList[0], ['singlePtcSpecificKey' => [], 'multiPtcSpecificKey' => []]];
+        return $list;
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
+
+    private static function transformSegment($seg)
+    {
+        return [
+            'from' => $seg['departure'],
+            'to' => $seg['destination'],
+            'when' => $seg['date'],
+        ];
+    }
+
+    public function provideKeysReturnedByClosure(array $itinerary)
+    {
+        $list = [];
+        $common = array_map([self::class, 'transformSegment'], $itinerary);
+        $common['0'][''];
+
+        // apparently keys assigned to a var without type are not preserved...
+        $transform = function($seg) {
+            //$seg = self::transformSegment($seg);
+            $seg['closured'] = true;
+            return $seg;
+        };
+        $common = array_map($transform, $itinerary);
+        $common['0'][''];
+        // TODO: fix and uncomment
+        //$list[] = [$common['0'], ['closured' => true]];
         return $list;
     }
 
