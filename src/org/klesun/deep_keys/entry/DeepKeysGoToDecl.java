@@ -27,17 +27,15 @@ import java.util.*;
 public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 {
     // just treating a symptom. i dunno why duplicates appear - they should not
-    private static void removeDuplicates(List<PsiElement> psiTargets)
+    private static void removeDuplicates(L<PsiElement> psiTargets)
     {
-        Set<List<String>> fingerprints = new HashSet<>();
+        Set<PsiElement> fingerprints = new HashSet<>();
         int size = psiTargets.size();
         for (int k = size - 1; k >= 0; --k) {
-            PsiElement psi = psiTargets.get(k);
-            List<String> fingerprint = list(psi.getContainingFile().getName(), psi.getTextOffset() + "");
-            if (fingerprints.contains(fingerprint)) {
+            if (fingerprints.contains(psiTargets.get(k))) {
                 psiTargets.remove(k);
             }
-            fingerprints.add(fingerprint);
+            fingerprints.add(psiTargets.get(k));
         }
     }
 
@@ -48,7 +46,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
-        List<PsiElement> psiTargets = new ArrayList<>();
+        L<PsiElement> psiTargets = L();
         opt(psiElement.getParent())
             .fap(toCast(StringLiteralExpressionImpl.class))
             .thn(literal -> Lang.opt(literal.getParent())
