@@ -71,8 +71,8 @@ public class NsFuncRes extends Lang
                     MultiType elType = findPsiExprType(params[0]).getEl();
                     Tls.cast(PhpExpression.class, params[1])
                         .map(keyNamePsi -> ctx.findExprType(keyNamePsi))
-                        .map(mt -> mt.getStringValue())
-                        .map(keyName -> elType.getKey(keyName).types)
+                        .map(mt -> opt(mt.getStringValue()))
+                        .map(keyName -> elType.getKey(keyName.def(null)).types)
                         .flt(itypes -> itypes.size() > 0)
                         .map(itypes -> {
                             DeepType type = new DeepType(call);

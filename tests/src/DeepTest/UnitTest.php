@@ -766,6 +766,28 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    public function provideUnresolvedVarKey()
+    {
+        $list = [];
+        $ptcBlock = [
+            'ptcInfo' => ['ptc' => 'ADT', 'quantity' => 2],
+            'netPrice' => ['currency' => 'USD', 'amount' => '75.00'],
+        ];
+        $store = ['pricingBlockList' => [], 'pricingModifiers' => []];
+        $store['pricingBlockList'][] = $ptcBlock;
+        $storeInfo = ['pricingList' => []];
+        $storeInfo['pricingList'][] = $store;
+
+        foreach ($storeInfo['pricingList'] as $i => $store) {
+            foreach ($store['pricingBlockList'] as $j => $ptcBlock) {
+                $storeInfo['pricingList'][0][''];
+                $storeInfo['pricingList'][$i][''];
+                $list[] = [$storeInfo['pricingList'][$i], ['pricingBlockList' => [], 'pricingModifiers' => []]];
+            }
+        }
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

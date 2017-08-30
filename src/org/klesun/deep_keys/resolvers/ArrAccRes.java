@@ -25,8 +25,8 @@ public class ArrAccRes extends Lang
         return opt(keyAccess.getIndex())
             .map(v -> v.getValue())
             .fap(toCast(PhpExpression.class))
-            .map(v -> ctx.findExprType(v).getStringValue())
-            .map(keyName -> mt.getKey(keyName))
+            .map(v -> opt(ctx.findExprType(v).getStringValue()))
+            .map(keyName -> mt.getKey(keyName.def(null)))
             .def(MultiType.INVALID_PSI);
     }
 }
