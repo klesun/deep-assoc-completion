@@ -26,6 +26,16 @@ import java.util.*;
  */
 public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 {
+    private static PsiElement truncateOnLineBreak(PsiElement psi)
+    {
+        PsiElement truncated = psi.getFirstChild();
+        while (psi.getText().contains("\n") && truncated != null) {
+            psi = truncated;
+            truncated = psi.getFirstChild();
+        }
+        return psi;
+    }
+
     // just treating a symptom. i dunno why duplicates appear - they should not
     private static void removeDuplicates(L<PsiElement> psiTargets)
     {
@@ -70,7 +80,9 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 
         removeDuplicates(psiTargets);
 
-        return psiTargets.toArray(new PsiElement[psiTargets.size()]);
+        return psiTargets
+            .map(psi -> truncateOnLineBreak(psi))
+            .toArray(new PsiElement[psiTargets.size()]);
     }
 
     @Nullable
