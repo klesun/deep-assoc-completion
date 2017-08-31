@@ -1,53 +1,57 @@
 <idea-plugin version="2">
-  <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
-  <name>deep-keys</name>
-  <version>2017.08.28.001</version>
-  <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
+    <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
+    <name>deep-keys</name>
+    <version>2017.08.31.001</version>
+    <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
-  <description><![CDATA[
+    <description><![CDATA[
 <ul>
-  <li>Associative array auto-completion inferenced from outside files</li>
+  <li>Associative array auto-completion inferred from outside files</li>
   <li>Go To Declaration</li>
   <li>Array keys and function output references in phpdoc</li>
 </ul>
 <br clear="all"/>
-<img style="width: 300px; height: auto;" src="https://raw.githubusercontent.com/klesun/phpstorm-deep-keys/master/imgs/screenshot.png"/>
+<img style="width: 250px; height: auto;" src="https://raw.githubusercontent.com/klesun/phpstorm-deep-keys/master/imgs/screenshot.png"/>
 <br clear="all"/>
-<img style="width: 300px; height: auto;" src="https://cloud.githubusercontent.com/assets/5202330/26426602/0f72f554-40e2-11e7-8873-30b873310746.png"/>
+<img style="width: 250px; height: auto;" src="https://cloud.githubusercontent.com/assets/5202330/26426602/0f72f554-40e2-11e7-8873-30b873310746.png"/>
     ]]></description>
 
-  <change-notes><![CDATA[
-      First release
+    <change-notes><![CDATA[
+    <ul>
+      <li>Completion inside <code>array_column</code></li>
+      <li>Completion inside <code>array_map</code></li>
+      <li>Bug fixes</li>
+    </ul>
     ]]>
-  </change-notes>
+    </change-notes>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="145.0"/>
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+    <idea-version since-build="145.0"/>
 
-  <extensions defaultExtensionNs="com.intellij">
-    <completion.contributor language="PHP" implementationClass="org.klesun.deep_keys.entry.DeepKeysCbtr"/>
-    <gotoDeclarationHandler implementation="org.klesun.deep_keys.entry.DeepKeysGoToDecl"/>
-    <gotoDeclarationHandler implementation="org.klesun.deep_keys.entry.ArrayColumnGoToDecl"/>
-  </extensions>
+    <extensions defaultExtensionNs="com.intellij">
+        <completion.contributor language="PHP" implementationClass="org.klesun.deep_keys.entry.DeepKeysCbtr"/>
+        <gotoDeclarationHandler implementation="org.klesun.deep_keys.entry.DeepKeysGoToDecl"/>
+        <gotoDeclarationHandler implementation="org.klesun.deep_keys.entry.ArrayColumnGoToDecl"/>
+    </extensions>
 
-  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
-       on how to target different products -->
-  <depends>com.intellij.modules.lang</depends>
-  <depends>com.jetbrains.php</depends>
-  <depends>com.intellij.modules.platform</depends>
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.jetbrains.php</depends>
+    <depends>com.intellij.modules.platform</depends>
 
-  <actions>
-    <action
-      id="Show docs"
-      class="org.klesun.deep_keys.entry.ShowDocs" text="Show Deep Type"
-      description="A shame, looks like lang.documentationProvider does not work for PHP, so i have to implement new action to print var info"
-    >
-      <add-to-group group-id="ToolsMenu" anchor="first"/>
-      <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt Q"/>
-    </action>
-    <action id="Run Deep Keys Test" class="org.klesun.deep_keys.entry.RunTest" text="Run Deep Keys Test"
-            description="Try to interpret current file as test suite and TESTTESTTEST">
-      <add-to-group group-id="ToolsMenu" anchor="first"/>
-    </action>
-  </actions>
+    <actions>
+        <action
+                id="Show docs"
+                class="org.klesun.deep_keys.entry.ShowDocs" text="Show Deep Type"
+                description="A shame, looks like lang.documentationProvider does not work for PHP, so i have to implement new action to print var info"
+        >
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt Q"/>
+        </action>
+        <action id="Run Deep Keys Test" class="org.klesun.deep_keys.entry.RunTest" text="Run Deep Keys Test"
+                description="Try to interpret current file as test suite and TESTTESTTEST">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+        </action>
+    </actions>
 </idea-plugin>
