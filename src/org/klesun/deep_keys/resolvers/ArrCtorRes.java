@@ -22,6 +22,17 @@ public class ArrCtorRes extends Lang
         this.ctx = ctx;
     }
 
+    public static Opt<PhpClass> resolveClass(PsiElement clsPsi)
+    {
+        return opt(clsPsi.getFirstChild())
+            .fap(toCast(ClassConstantReferenceImpl.class))
+            .flt(cst -> Objects.equals(cst.getName(), "class"))
+            .map(cst -> cst.getClassReference())
+            .fap(toCast(ClassReferenceImpl.class))
+            .map(clsRef -> clsRef.resolve())
+            .fap(toCast(PhpClass.class));
+    }
+
     /** like in [Ns\Employee::class, 'getSalary'] */
     private static Opt<Method> resolveMethodFromArray(L<PsiElement> refParts)
     {
@@ -30,13 +41,7 @@ public class ArrCtorRes extends Lang
             .fap(toCast(StringLiteralExpression.class))
             .map(lit -> lit.getContents())
             .fap(met -> refParts.gat(0)
-                .map(psi -> psi.getFirstChild())
-                .fap(toCast(ClassConstantReferenceImpl.class))
-                .flt(cst -> Objects.equals(cst.getName(), "class"))
-                .map(cst -> cst.getClassReference())
-                .fap(toCast(ClassReferenceImpl.class))
-                .map(clsRef -> clsRef.resolve())
-                .fap(toCast(PhpClass.class))
+                .fap(clsPsi -> resolveClass(clsPsi))
                 .map(cls -> cls.findMethodByName(met)));
     }
 

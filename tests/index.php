@@ -136,6 +136,12 @@ class DeepKeysTest
         }, $records);
     }
 
+    private static function testArrMethRef()
+    {
+        // should suggest: "bombTransmutation", "sheerHeartAttack", "bitesZaDusto"
+        array_map([\DeepTest\KiraYoshikage::class, ''], [1,2,3]);
+    }
+
     //============================
     // not implemented follow
     //============================

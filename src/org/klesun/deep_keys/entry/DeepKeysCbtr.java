@@ -17,6 +17,7 @@ public class DeepKeysCbtr extends CompletionContributor
         this.extend(
             CompletionType.BASIC,
             PlatformPatterns.psiElement()
+                .withSuperParent(1, StringLiteralExpression.class)
                 .withSuperParent(2, ArrayIndex.class),
             new DeepKeysPvdr()
         );
@@ -30,9 +31,17 @@ public class DeepKeysCbtr extends CompletionContributor
             CompletionType.BASIC,
             PlatformPatterns.psiElement()
                 .withSuperParent(1, StringLiteralExpression.class)
-                //.withSuperParent(2, ParameterList.class)
+                .withSuperParent(2, ParameterList.class)
                 ,
             new ArrayColumnPvdr()
+        );
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, StringLiteralExpression.class)
+                .withSuperParent(3, ArrayCreationExpression.class)
+                ,
+            new ArrFuncRefPvdr()
         );
     }
 }
