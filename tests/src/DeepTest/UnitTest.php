@@ -575,6 +575,12 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         $murderedNumbers = array_map([$kira, 'murder'], [1,2,3]);
         $list[] = [$murderedNumbers[0], ['mood' => [], 'murderMethods' => []]];
 
+        $barrels = array_map(['self', 'makeBarrel'], [0,1,2,3,4]);
+        $list[] = [$barrels[2], ['material' => [], 'radius' => [], 'daughter' => []]];
+
+        $bitesZaDustos = array_map(['\DeepTest\KiraYoshikage', 'bitesZaDusto'], [0,1,2,3,4]);
+        $list[] = [$bitesZaDustos[0], ['time' => [], 'goes' => [], 'back' => []]];
+
         return $list;
     }
 
