@@ -1,6 +1,7 @@
 package org.klesun.deep_keys.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassConstantReferenceImpl;
@@ -22,6 +23,16 @@ public class ArrCtorRes extends Lang
         this.ctx = ctx;
     }
 
+    public static Opt<PhpClass> resolveInstance(PsiElement instExpr)
+    {
+        return opt(instExpr.getFirstChild())
+            .fap(toCast(PhpExpression.class))
+            .map(expr -> expr.getType())
+            .map(type -> PhpIndex.getInstance(instExpr.getProject()).getClassesByFQN(type.toString()))
+            .fap(clses -> L(clses).gat(0))
+            ;
+    }
+
     public static Opt<PhpClass> resolveClass(PsiElement clsPsi)
     {
         return opt(clsPsi.getFirstChild())
@@ -41,7 +52,10 @@ public class ArrCtorRes extends Lang
             .fap(toCast(StringLiteralExpression.class))
             .map(lit -> lit.getContents())
             .fap(met -> refParts.gat(0)
-                .fap(clsPsi -> resolveClass(clsPsi))
+                .fap(clsPsi -> Opt.fst(list(
+                    resolveClass(clsPsi),
+                    resolveInstance(clsPsi))
+                ))
                 .map(cls -> cls.findMethodByName(met)));
     }
 

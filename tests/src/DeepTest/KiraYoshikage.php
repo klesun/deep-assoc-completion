@@ -76,18 +76,24 @@ class KiraYoshikage
      */
     public function murder($woman)
     {
+        $methods = [];
         if ($woman['nailLength'] > $this->passionCriteria['nailLength'] &&
             !array_diff($this->passionCriteria['skinType'], $woman['skinType']) &&
             $woman['handCount'] > $this->passionCriteria['handCount']
         ) {
-            self::sheerHeartAttack();
+            $methods['sheerHeartAttack'] = self::sheerHeartAttack();
         }
 
         if ($this->characterProps['personality'] >= 'dio' ||
             $this->characterProps['powers'] >= 'damon' ||
             $this->characterProps['story'] >= 'aztecArc'
         ) {
-            self::bombTransmutation();
+            $methods['bombTransmutation'] = self::bombTransmutation();
         }
+
+        return [
+            'mood' => rand() % 2 ? 'good' : 'very good',
+            'murderMethods' => $methods,
+        ];
     }
 }

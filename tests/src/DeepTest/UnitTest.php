@@ -571,6 +571,10 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         $bombs = array_map([ReimuHakurei::class, 'evilSealingCircle'], [0,1,2,3,4]);
         $list[] = [$bombs[2], ['missileDensity' => [], 'missileDamage' => [], 'arcDegree' => []]];
 
+        $kira = new \DeepTest\KiraYoshikage();
+        $murderedNumbers = array_map([$kira, 'murder'], [1,2,3]);
+        $list[] = [$murderedNumbers[0], ['mood' => [], 'murderMethods' => []]];
+
         return $list;
     }
 
