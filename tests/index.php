@@ -140,6 +140,10 @@ class DeepKeysTest
     {
         // should suggest: "bombTransmutation", "sheerHeartAttack", "bitesZaDusto"
         array_map([\DeepTest\KiraYoshikage::class, ''], [1,2,3]);
+
+        $kira = new \DeepTest\KiraYoshikage();
+        // should suggest: "murder"
+        $murderedNumbers = array_map([$kira, ''], [1,2,3]);
     }
 
     //============================

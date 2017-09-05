@@ -19,6 +19,7 @@ import org.klesun.deep_keys.helpers.IFuncCtx;
 import org.klesun.deep_keys.helpers.MultiType;
 import org.klesun.deep_keys.helpers.SearchContext;
 import org.klesun.deep_keys.resolvers.ArrCtorRes;
+import org.klesun.lang.Opt;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -50,8 +51,15 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
                 .flt(params -> params.size() == 2)
                 .flt(params -> literal.isEquivalentTo(params.get(1).getFirstChild()))
                 .fap(params -> params.gat(0))
-                .fap(ArrCtorRes::resolveClass)
-                .map(cls -> L(cls.getMethods()).flt(meth -> meth.isStatic())))
+                .fap(clsPsi -> Opt.fst(list(
+                    ArrCtorRes.resolveClass(clsPsi)
+                        .map(cls -> L(cls.getMethods())
+                            .flt(meth -> meth.isStatic())),
+                    ArrCtorRes.resolveInstance(clsPsi)
+                        .map(cls -> L(cls.getMethods())
+                            .flt(meth -> meth.getMethodType(false) != Method.MethodType.CONSTRUCTOR)
+                            .flt(meth -> !meth.isStatic())))
+                )))
             .def(L());
 
         methods.map(m -> makeLookup(m)).fch(result::addElement);
