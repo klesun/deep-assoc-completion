@@ -83,12 +83,17 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                 .fap(toCast(ParameterListImpl.class))
                 .fap(argList -> {
                     int order = L(argList.getParameters()).indexOf(arrCtor);
+                    L<String> alreadyDeclared = L(arrCtor.getHashElements())
+                        .fop(el -> opt(el.getKey()))
+                        .fop(toCast(StringLiteralExpressionImpl.class))
+                        .map(lit -> lit.getContents());
                     return opt(argList.getParent())
                         .fap(toCast(MethodReferenceImpl.class))
                         .flt(call -> order > -1)
                         .map(call -> call.resolve())
                         .fap(toCast(MethodImpl.class))
-                        .map(meth -> resolveArgUsedKeys(meth, order));
+                        .map(meth -> resolveArgUsedKeys(meth, order)
+                            .flt(k -> !alreadyDeclared.contains(k)));
                 }))
             .def(L());
 

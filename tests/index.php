@@ -146,10 +146,6 @@ class DeepKeysTest
         $murderedNumbers = array_map([$kira, ''], [1,2,3]);
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     private static function makeAddSsrCmd($data)
     {
         $cmd = '@:3DOCS'.implode('/', [
@@ -174,7 +170,18 @@ class DeepKeysTest
             // should suggest same
             ''
         ]);
+        self::makeAddSsrCmd([
+            'docType' => 'PASS',
+            'docCountry' => 'US',
+            // should suggest all except "doctType" and "docCountry"
+            'docNumber' => '',
+            '' => '',
+        ]);
     }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function testListAccess()
     {
