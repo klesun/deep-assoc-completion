@@ -55,6 +55,20 @@ public class Tls extends Lang
         return opt(null);
     }
 
+    public static <T extends PsiElement> L<T> findChildren(
+        PsiElement parent,
+        Class<T> cls,
+        Predicate<PsiElement> goDeeperPred
+    ) {
+        if (goDeeperPred.test(parent)) {
+            return L(parent.getChildren())
+                .fap(c -> findChildren(c, cls, goDeeperPred))
+                .cct(list(parent).fop(toCast(cls)));
+        } else {
+            return L();
+        }
+    }
+
     /**
      * be careful, java's regex implementation matches WHOLE string, in other
      * words, it implicitly adds "^" and "$" at beginning and end of your regex

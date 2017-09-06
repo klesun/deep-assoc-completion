@@ -150,6 +150,32 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    private static function makeAddSsrCmd($data)
+    {
+        $cmd = '@:3DOCS'.implode('/', [
+            $data['docType'],
+            $data['docCountry'],
+            $data['docNumber'],
+            $data['gender'],
+            $data['dob'],
+            $data['lastName'],
+            $data['firstName'],
+        ]);
+        return $cmd;
+    }
+
+    private static function testReverseType()
+    {
+        self::makeAddSsrCmd([
+            // should suggest: "docType", "docCountry", "docNumber", "gender", "dob", "lastName", "firstName"
+            '' => 123,
+            // should suggest same
+            //'' => ,
+            // should suggest same
+            ''
+        ]);
+    }
+
     private static function testListAccess()
     {
         $mapped = self::testBasisListAccess();

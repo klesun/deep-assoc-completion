@@ -1,4 +1,4 @@
-package org.klesun.deep_keys.entry;
+package org.klesun.deep_keys.completion_providers;
 
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;

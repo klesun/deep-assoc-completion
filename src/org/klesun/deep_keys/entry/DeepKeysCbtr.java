@@ -4,6 +4,9 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.patterns.PlatformPatterns;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
+import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
+import org.klesun.deep_keys.completion_providers.*;
 
 /**
  * provides associative array keys autocomplete
@@ -42,6 +45,25 @@ public class DeepKeysCbtr extends CompletionContributor
                 .withSuperParent(3, ArrayCreationExpression.class)
                 ,
             new ArrFuncRefPvdr()
+        );
+        // associative key
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, StringLiteralExpression.class)
+                .withSuperParent(3, ArrayHashElementImpl.class)
+                ,
+            new UsedKeysPvdr()
+        );
+        // indexed value (that may become associative key as user continues typing)
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, StringLiteralExpression.class)
+                .withSuperParent(2, PhpPsiElementImpl.class)
+                .withSuperParent(3, ArrayCreationExpression.class)
+                ,
+            new UsedKeysPvdr()
         );
     }
 }

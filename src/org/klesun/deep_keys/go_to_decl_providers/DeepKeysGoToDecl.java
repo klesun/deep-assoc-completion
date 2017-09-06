@@ -1,37 +1,43 @@
-package org.klesun.deep_keys.entry;
+package org.klesun.deep_keys.go_to_decl_providers;
 
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
-import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_keys.DeepTypeResolver;
 import org.klesun.deep_keys.helpers.FuncCtx;
 import org.klesun.deep_keys.helpers.IFuncCtx;
-import org.klesun.deep_keys.helpers.MultiType;
 import org.klesun.deep_keys.helpers.SearchContext;
 import org.klesun.deep_keys.resolvers.var_res.DocParamRes;
 import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
- * go to declaration functionality for key name in `array_column($segments, 'segmentNumber')`
+ * go to declaration functionality for associative array keys
  */
-public class ArrayColumnGoToDecl extends Lang implements GotoDeclarationHandler
+public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 {
+    private static PsiElement truncateOnLineBreak(PsiElement psi)
+    {
+        PsiElement truncated = psi.getFirstChild();
+        while (psi.getText().contains("\n") && truncated != null) {
+            psi = truncated;
+            truncated = psi.getFirstChild();
+        }
+        return psi;
+    }
+
     // just treating a symptom. i dunno why duplicates appear - they should not
-    private static void removeDuplicates(List<PsiElement> psiTargets)
+    private static void removeDuplicates(L<PsiElement> psiTargets)
     {
         Set<PsiElement> fingerprints = new HashSet<>();
         int size = psiTargets.size();
@@ -50,24 +56,33 @@ public class ArrayColumnGoToDecl extends Lang implements GotoDeclarationHandler
         SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
-        L<PsiElement> psiTargets = opt(psiElement.getParent())
+        L<PsiElement> psiTargets = L();
+        opt(psiElement.getParent())
             .fap(toCast(StringLiteralExpressionImpl.class))
-            .map(literal -> opt(literal.getParent())
-                .map(argList -> argList.getParent())
-                .fap(toCast(FunctionReferenceImpl.class))
-                .flt(call -> "array_column".equals(call.getName()))
-                .fap(call -> L(call.getParameters()).gat(0))
+            .thn(literal -> Lang.opt(literal.getParent())
+                .fap(Lang.toCast(ArrayIndex.class))
+                .map(index -> index.getParent())
+                .fap(Lang.toCast(ArrayAccessExpressionImpl.class))
+                .map(expr -> expr.getValue())
                 .fap(toCast(PhpExpression.class))
-                .map(arr -> funcCtx.findExprType(arr).getEl())
+                .map(srcExpr -> funcCtx.findExprType(srcExpr).types)
+                .thn(arrayTypes -> arrayTypes.forEach(arrayType -> {
+                    String key = literal.getContents();
+                    if (arrayType.keys.containsKey(key)) {
+                        psiTargets.add(arrayType.keys.get(key).definition);
+                    }
+                })))
+            .els(() -> opt(psiElement)
+                .fap(v -> Tls.findParent(v, PhpDocParamTag.class, psi -> true))
+                .fap(tag -> new DocParamRes(funcCtx).resolve(tag))
                 .map(mt -> mt.types)
-                .def(L())
-                .fop(arrayType -> getKey(arrayType.keys, literal.getContents()))
-                .map(keyRec -> keyRec.definition))
-            .def(L());
+                .thn(types -> types.forEach(t -> psiTargets.add(t.definition))));
 
         removeDuplicates(psiTargets);
 
-        return psiTargets.toArray(new PsiElement[psiTargets.size()]);
+        return psiTargets
+            .map(psi -> truncateOnLineBreak(psi))
+            .toArray(new PsiElement[psiTargets.size()]);
     }
 
     @Nullable
