@@ -160,6 +160,19 @@ class DeepKeysTest
         return $cmd;
     }
 
+    /**
+     * @param $pq = [
+     *     'gds' => 'apollo',
+     *     'pcc' => 'LFS5',
+     *     'pnrDump' => 'ASD123/WS LAXFS ...',
+     *     'pricingDump' => '>$BN1|2*C05 ...',
+     * ]
+     */
+    private static function sendPqToGoogle($pq)
+    {
+        file_get_contents('http://google.com/accept-pq?'.json_encode($pq));
+    }
+
     private static function testReverseType()
     {
         self::makeAddSsrCmd([
@@ -176,6 +189,10 @@ class DeepKeysTest
             // should suggest all except "doctType" and "docCountry"
             'docNumber' => '',
             '' => '',
+        ]);
+        self::sendPqToGoogle([
+            // should suggest: "gds", "pcc", "pnrDump", "pricingDump"
+            '' => 'sabre',
         ]);
     }
 

@@ -2,10 +2,12 @@ package org.klesun.deep_keys.helpers;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import com.sun.deploy.util.OrderedHashSet;
 import org.klesun.deep_keys.DeepType;
 import org.klesun.lang.Lang;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
 
 /**
  * this data structure represents a list of
@@ -69,6 +71,19 @@ public class MultiType extends Lang
                 .fap(v -> v.getTypes()),
             types.fap(t -> t.indexTypes)
         ).fap(a -> a));
+    }
+
+    public L<String> getKeyNames()
+    {
+        L<String> names = L();
+        HashSet<String> repeations = new HashSet<>();
+        types.fap(t -> L(t.keys.keySet())).fch(name -> {
+            if (!repeations.contains(name)) {
+                repeations.add(name);
+                names.add(name);
+            }
+        });
+        return names;
     }
 
     public String toJson()

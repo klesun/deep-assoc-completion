@@ -13,6 +13,10 @@ import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.jetbrains.annotations.NotNull;
+import org.klesun.deep_keys.helpers.FuncCtx;
+import org.klesun.deep_keys.helpers.SearchContext;
+import org.klesun.deep_keys.resolvers.var_res.ArgRes;
+import org.klesun.deep_keys.resolvers.var_res.DocParamRes;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
@@ -49,14 +53,24 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
 
     private static L<String> resolveArgUsedKeys(Method meth, int argOrder)
     {
+        SearchContext fakeSearch = new SearchContext();
+        FuncCtx fakeCtx = new FuncCtx(fakeSearch, L());
         return L(meth.getParameters()).gat(argOrder)
             .fap(toCast(ParameterImpl.class))
             // TODO: include both keys from the doc and keys from the usage
-            .map(arg -> arg.getName())
-            .map(varName -> findUsedIndexes(meth, varName)
-                .map(idx -> idx.getValue())
-                .fop(toCast(StringLiteralExpressionImpl.class))
-                .map(lit -> lit.getContents()))
+            .map(arg -> {
+                return list(
+                    findUsedIndexes(meth, arg.getName())
+                        .map(idx -> idx.getValue())
+                        .fop(toCast(StringLiteralExpressionImpl.class))
+                        .map(lit -> lit.getContents()),
+                    opt(arg.getDocComment())
+                        .map(doc -> doc.getParamTagByName(arg.getName()))
+                        .fap(doc -> new DocParamRes(fakeCtx).resolve(doc))
+                        .map(mt -> mt.getKeyNames())
+                        .def(L())
+                ).fap(a -> a);
+            })
             .def(L());
     }
 
