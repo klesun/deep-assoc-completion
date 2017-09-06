@@ -191,9 +191,15 @@ public class Lang
 
         public <Tnew> L<Tnew> map(F<T, Tnew> f)
         {
+            return this.map((el, i) -> f.apply(el));
+        }
+
+        public <Tnew> L<Tnew> map(F2<T, Integer, Tnew> f)
+        {
             L<Tnew> result = L();
-            for (T el: s) {
-                result.add(f.apply(el));
+            for (int i = 0; i < s.size(); ++i) {
+                T el = s.get(i);
+                result.add(f.apply(el, i));
             }
             return result;
         }

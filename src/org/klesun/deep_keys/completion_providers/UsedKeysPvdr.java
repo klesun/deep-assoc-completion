@@ -3,6 +3,7 @@ package org.klesun.deep_keys.completion_providers;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
+import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.util.ProcessingContext;
@@ -91,7 +92,10 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                 }))
             .def(L());
 
-        usedKeys.map(m -> makeLookup(m)).fch(result::addElement);
+        usedKeys.map(m -> makeLookup(m))
+            // to preserve order
+            .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - i))
+            .fch(result::addElement);
         result.addLookupAdvertisement("Press <Page Down> few times to skip built-in suggestions");
 
         long elapsed = System.nanoTime() - startTime;

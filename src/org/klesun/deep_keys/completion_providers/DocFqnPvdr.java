@@ -67,7 +67,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
         opt(parameters.getPosition().getParent())
             .thn(literal -> extractTypedFqnPart(literal.getText(), literal.getProject())
                 .thn(options -> L(options)
-                    .map(LookupElementBuilder::create)
+                    .map((lookup) -> LookupElementBuilder.create(lookup))
                     .fch(result::addElement))
                 .els(() -> System.out.println("No FQN-s found with such partial name - " + literal.getText())));
     }
