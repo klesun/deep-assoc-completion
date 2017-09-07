@@ -57,20 +57,17 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         FuncCtx fakeCtx = new FuncCtx(fakeSearch, L());
         return L(meth.getParameters()).gat(argOrder)
             .fap(toCast(ParameterImpl.class))
-            // TODO: include both keys from the doc and keys from the usage
-            .map(arg -> {
-                return list(
-                    findUsedIndexes(meth, arg.getName())
-                        .map(idx -> idx.getValue())
-                        .fop(toCast(StringLiteralExpressionImpl.class))
-                        .map(lit -> lit.getContents()),
-                    opt(arg.getDocComment())
-                        .map(doc -> doc.getParamTagByName(arg.getName()))
-                        .fap(doc -> new DocParamRes(fakeCtx).resolve(doc))
-                        .map(mt -> mt.getKeyNames())
-                        .def(L())
-                ).fap(a -> a);
-            })
+            .map(arg -> list(
+                findUsedIndexes(meth, arg.getName())
+                    .map(idx -> idx.getValue())
+                    .fop(toCast(StringLiteralExpressionImpl.class))
+                    .map(lit -> lit.getContents()),
+                opt(arg.getDocComment())
+                    .map(doc -> doc.getParamTagByName(arg.getName()))
+                    .fap(doc -> new DocParamRes(fakeCtx).resolve(doc))
+                    .map(mt -> mt.getKeyNames())
+                    .def(L())
+            ).fap(a -> a))
             .def(L());
     }
 

@@ -203,7 +203,6 @@ class DeepKeysTest
     private static function testListAccess()
     {
         $mapped = self::testBasisListAccess();
-
         $addTaxCode = function(array $taxRecord) {
             $taxRecord['taxCode'] = 'YQ';
             return $taxRecord;

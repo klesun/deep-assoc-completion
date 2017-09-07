@@ -1,5 +1,6 @@
 package org.klesun.deep_keys.entry;
 
+import com.intellij.json.JsonFileType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
@@ -10,7 +11,11 @@ import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.ui.EditorTextField;
 import com.intellij.ui.awt.RelativePoint;
+import com.intellij.ui.components.JBScrollPane;
+import com.jetbrains.php.lang.PhpFileType;
+import com.jetbrains.php.lang.psi.PhpFile;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ParameterImpl;
 import org.klesun.deep_keys.DeepType;
@@ -24,6 +29,8 @@ import org.klesun.lang.Tls;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.util.List;
 
 import static org.klesun.lang.Lang.L;
@@ -54,10 +61,18 @@ public class ShowDocs extends AnAction
         List<DeepType> types = findPsiType(psi);
         String doc = DeepType.toJson(types, 0);
         System.out.println(doc);
+        // see https://www.jetbrains.org/intellij/sdk/docs/user_interface_components/editor_components.html
+        EditorTextField textArea = new EditorTextField(doc, e.getProject(), JsonFileType.INSTANCE);
+        textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
+        textArea.setEnabled(true); // to make text editable (to navigate with arrows)
+        textArea.setOneLineMode(false);
+        JBScrollPane scroll = new JBScrollPane(textArea);
+        scroll.setPreferredSize(new Dimension(400, 400));
+        scroll.setMaximumSize(new Dimension(800, 800));
+
         JBPopupFactory.getInstance()
-            .createHtmlTextBalloonBuilder("<pre>" + doc + "</pre>", MessageType.INFO, null)
-            .setFadeoutTime(300 * 1000)
-            .createBalloon()
-            .show(RelativePoint.fromScreen(new Point(200, 200)), Balloon.Position.atRight);
+            .createComponentPopupBuilder(scroll, new JLabel("Hello World"))
+            .createPopup()
+            .show(new RelativePoint(MouseInfo.getPointerInfo().getLocation()));
     }
 }
