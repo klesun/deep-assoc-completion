@@ -186,7 +186,7 @@ class DeepKeysTest
         self::makeAddSsrCmd([
             'docType' => 'PASS',
             'docCountry' => 'US',
-            // should suggest all except "doctType" and "docCountry"
+            // should suggest all except "docType" and "docCountry"
             'docNumber' => '',
             '' => '',
         ]);
@@ -199,6 +199,58 @@ class DeepKeysTest
     //============================
     // not implemented follow
     //============================
+
+    private static function testUsedKeysInAVar()
+    {
+        $params = [
+            // should suggest: "docType", "docCountry", "docNumber", "gender", "dob", "lastName", "firstName"
+            '' => 123,
+        ];
+        $cmd = self::makeAddSsrCmd($params);
+    }
+
+    private static function makeCoolOutfit($materials)
+    {
+        return [
+            'hat' => $materials['cardboard'] + $materials['ebony'],
+            'jacket' => $materials['wool'] + $materials['iron'],
+            'boots' => $materials['wood'] + $materials['linenCloth'] + $materials['leather'],
+        ];
+    }
+
+    private static function makeHero($params)
+    {
+        return [
+            'story' => 'Once upon a time there was a here called '.$params['name'].'. '.
+                'After some struggle, he defeated the '.$params['enemyName'].' and saved the world. '.
+                'He then married '.$params['nameOfTheLovedOne'].' and lived a happy live.',
+            'outfit' => self::makeCoolOutfit($params['outfitMaterials']),
+        ];
+    }
+
+    private static function spawnUnderling($params)
+    {
+        return [
+            'characterValue' => rand(0,100),
+            'character' => self::makeHero($params),
+        ];
+    }
+
+    private static function testUsedKeysPassedDeeper()
+    {
+        $hero = self::makeHero([
+            // should suggest: "name", "enemyName", etc...
+            '' => 'Bob',
+            'outfitMaterials' => [
+                // should suggest: "wood", "wool", "iron", etc...
+                '',
+            ],
+            'underling' => self::spawnUnderling([
+                // should suggest: "name", "enemyName", etc...
+                '' => 'Jim',
+            ]),
+        ]);
+    }
 
     private static function testListAccess()
     {

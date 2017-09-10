@@ -884,6 +884,44 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    private static function transformStore($parsed)
+    {
+        return [
+            'pricingBlockList' => array_map(function($ptcBlock){
+                return [
+                    'fareInfo' => [
+                        'baseFare' => $ptcBlock['baseFare'],
+                        'taxAmount' => $ptcBlock['taxAmount'],
+                        'netPrice' => $ptcBlock['netPrice'],
+                        'fareConstructionRaw' => $ptcBlock['fareCalculation']['raw'],
+                    ],
+                ];
+            }, $parsed['pricingBlockList']),
+        ];
+    }
+
+    /**
+     * @param $stores = [UnitTest::transformStore(), ...]
+     * fetches all rule sections, no matter how long they are
+     */
+    private function provideUnknownTypeKeyShouldMeanAny(array $stores, array $ruleRecords)
+    {
+        $list = [];
+
+        $numToStore = array_combine(array_column($stores, 'quoteNumber'), $stores);
+        foreach ($ruleRecords as $ruleRecord) {
+            $storeNum = $ruleRecord['pricingNumber'];
+            $ptcNum = $ruleRecord['subPricingNumber'];
+
+            $numToStore[$storeNum]['']; // should suggest: "pricingBlockList"
+            $list[] = [$numToStore[0], ['pricingBlockList' => []]];
+            $list[] = [$numToStore[$storeNum], ['pricingBlockList' => []]];
+            $list[] = [$numToStore[$storeNum]['pricingBlockList'][$ptcNum - 1], ['fareInfo' => []]];
+        }
+        return $list;
+    }
+
+
     //=============================
     // following are not implemented yet
     //=============================

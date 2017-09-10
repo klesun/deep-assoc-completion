@@ -1,7 +1,7 @@
-<idea-plugin version="2">
+<idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-keys</name>
-    <version>2017.08.31.001</version>
+    <version>2017.09.10.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -18,9 +18,8 @@
 
     <change-notes><![CDATA[
     <ul>
-      <li>Completion inside <code>array_column</code></li>
-      <li>Completion inside <code>array_map</code></li>
-      <li>Bug fixes</li>
+      <li>Key completion in array passed to a function based on keys used inside the function</li>
+      <li>Support some more rare completion sources</li>
     </ul>
     ]]>
     </change-notes>

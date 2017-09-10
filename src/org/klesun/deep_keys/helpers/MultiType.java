@@ -67,7 +67,13 @@ public class MultiType extends Lang
     public MultiType getKey(@Nullable String keyName)
     {
         return new MultiType(list(
-            types.fop(type -> Lang.getKey(type.keys, keyName))
+            // if keyName is a constant string - return type of this key only
+            types.flt(t -> keyName != null)
+                .fop(type -> Lang.getKey(type.keys, keyName))
+                .fap(v -> v.getTypes()),
+            // if keyName is a var - return types of all keys
+            types.flt(t -> keyName == null)
+                .fap(t -> L(t.keys.values()))
                 .fap(v -> v.getTypes()),
             types.fap(t -> t.indexTypes)
         ).fap(a -> a));
