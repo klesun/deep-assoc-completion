@@ -24,6 +24,8 @@ To use compiled `.jar` in your phpstorm go to `Settings -> Plugins -> Install pl
 
 ## Features description
 
+(for detailed usage guide go to the [docs](https://github.com/klesun/phpstorm-deep-keys/blob/master/docs/deep-keys-overview.md)
+
 ### Completion from expression
 When you are going to type an associative key of a variable, like in `$user['']`, put caret between quotes and press `ctrl` + `space`. The plugin will analyze your code, determine what keys does `$user` have and suggest completion. It should become pretty intuitive when plugin can determine keys, and when it can't. It still has some unsupported completion sources - i'm working on them.
 
