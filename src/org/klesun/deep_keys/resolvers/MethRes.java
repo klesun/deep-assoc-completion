@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.Method;
+import com.jetbrains.php.lang.psi.elements.PhpClass;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import org.klesun.deep_keys.DeepType;
@@ -52,13 +53,6 @@ public class MethRes extends Lang
                     DeepType result = new DeepType(call);
                     PsiElement callback = params[0];
                     PsiElement array = params[1];
-
-                    // TODO: think of a way how to pass them to the function
-                    S<MultiType> onDemand = Tls.onDemand(() ->
-                            findPsiExprType(array).getEl());
-                    L<S<MultiType>> argGetters = list(onDemand::get);
-                    IFuncCtx funcCtx = ctx.subCtx(argGetters);
-
                     findPsiExprType(callback).types.map(t -> t.returnTypes)
                         .fch(rts -> result.indexTypes.addAll(rts));
 
@@ -112,11 +106,13 @@ public class MethRes extends Lang
 
     private static List<Method> resolveMethodsNoNs(String clsName, String func, Project proj)
     {
-        List<Method> meths = list();
-        L(PhpIndex.getInstance(proj).getClassesByName(clsName)).s
-            .forEach(cls -> meths.addAll(L(cls.getMethods())
-                .flt(m -> Objects.equals(m.getName(), func)).s));
-        return meths;
+        PhpIndex idx = PhpIndex.getInstance(proj);
+        return new L<PhpClass>()
+            .cct(L(idx.getClassesByName(clsName)))
+            .cct(L(idx.getInterfacesByName(clsName)))
+            .cct(L(idx.getTraitsByName(clsName)))
+            .fap(cls -> L(cls.getMethods()))
+            .flt(m -> Objects.equals(m.getName(), func));
     }
 
     private static Opt<L<Method>> resolveMethodFromCall(MethodReferenceImpl call)

@@ -500,7 +500,8 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return self::makeKonohaCitizen();
     }
 
-    public function provideInterfaceMethod(IKonohaCitizen $randomGuy)
+    /** @param $paidTaxes = IKonohaCitizen::payTaxes() */
+    public function provideInterfaceMethod(IKonohaCitizen $randomGuy, $paidTaxes)
     {
         $list = [];
 
@@ -510,6 +511,8 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         $taxBundle = $konohanian->payTaxes();
         // should suggest either from doc in interface or from implementations
         $list[] = [$taxBundle, ['currency' => [], 'incomeTax' => [], 'gamblingTax' => [], 'familyTax' => []]];
+
+        $list[] = [$paidTaxes, ['currency' => [], 'incomeTax' => [], 'gamblingTax' => [], 'familyTax' => []]];
 
         return $list;
     }

@@ -40,10 +40,10 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 // have to complete method
                 .map(mtch -> {
                     String clsName = mtch.gat(0).unw();
-                    PrefixMatcher clsMatcher = new CamelHumpMatcher(clsName);
                     PrefixMatcher metMatcher = new CamelHumpMatcher(mtch.gat(1).unw());
-                    return L(idx.getAllClassNames(clsMatcher))
-                        .fap(n -> L(idx.getClassesByName(n)))
+                    return L(idx.getClassesByName(clsName))
+                        .cct(L(idx.getInterfacesByName(clsName)))
+                        .cct(L(idx.getTraitsByName(clsName)))
                         .flt(cls -> clsName.equals(cls.getName()) ||
                                     clsName.endsWith("\\" + cls.getName()))
                         .fap(cls -> L(cls.getOwnMethods())

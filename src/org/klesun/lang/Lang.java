@@ -165,6 +165,11 @@ public class Lang
             super(source);
         }
 
+        public L()
+        {
+            super(new ArrayList<>());
+        }
+
         /** "gat" stands for "get at" */
         public Opt<T> gat(int index)
         {

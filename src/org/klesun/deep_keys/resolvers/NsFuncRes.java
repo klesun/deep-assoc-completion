@@ -28,7 +28,6 @@ public class NsFuncRes extends Lang
             .def(new MultiType(L()));
     }
 
-    /** @return - opt<null> if call is not a built-in function */
     private L<DeepType> findBuiltInFuncCallType(FunctionReferenceImpl call)
     {
         return opt(call.getName()).map(name -> {
@@ -39,13 +38,6 @@ public class NsFuncRes extends Lang
                 if (params.length > 1) {
                     PsiElement callback = params[0];
                     PsiElement array = params[1];
-
-                    // TODO: think of a way how to pass them to the function
-                    S<MultiType> onDemand = Tls.onDemand(() ->
-                        findPsiExprType(array).getEl());
-                    L<S<MultiType>> argGetters = list(onDemand::get);
-                    IFuncCtx funcCtx = ctx.subCtx(argGetters);
-
                     findPsiExprType(callback).types.map(t -> t.returnTypes)
                         .fch(rts -> mapRetType.indexTypes.addAll(rts));
                 }
