@@ -2,7 +2,6 @@ package org.klesun.deep_keys.helpers;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import com.sun.deploy.util.OrderedHashSet;
 import org.klesun.deep_keys.DeepType;
 import org.klesun.lang.Lang;
 

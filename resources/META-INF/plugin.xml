@@ -1,12 +1,13 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
-    <name>deep-keys</name>
-    <version>2017.09.10.001</version>
+    <name>assoc-completion</name>
+    <version>2017.09.12.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
+(former name - "deep-keys")<br/>
 <ul>
-  <li>Associative array auto-completion inferred from outside files</li>
+  <li>Associative array auto-completion inferred from other functions (in other files)</li>
   <li>Go To Declaration</li>
   <li>Array keys and function output references in phpdoc</li>
 </ul>
@@ -18,8 +19,7 @@
 
     <change-notes><![CDATA[
     <ul>
-      <li>Key completion in array passed to a function based on keys used inside the function</li>
-      <li>Support some more rare completion sources</li>
+      <li>Rename "deep-keys" to "assoc-completion"</li>
     </ul>
     ]]>
     </change-notes>
