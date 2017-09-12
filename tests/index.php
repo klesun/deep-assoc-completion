@@ -1,13 +1,6 @@
 <?php
 use DeepTest\TestData;
-
-class Fp
-{
-    public static function map(callable $f, array $iterable)
-    {
-        return array_map($f, $iterable);
-    }
-}
+use Lib\Utils\Fp;
 
 class DeepKeysTest
 {
@@ -130,6 +123,11 @@ class DeepKeysTest
         $records[] = ['optionalKey' => 4];
 
         $mapped = array_map(function($record) {
+            // should suggest key1, key2, subAssArray, optionalKey
+            $record[''];
+            return null;
+        }, $records);
+        $mapped = Fp::map(function($record) {
             // should suggest key1, key2, subAssArray, optionalKey
             $record[''];
             return null;

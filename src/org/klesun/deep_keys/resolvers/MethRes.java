@@ -33,6 +33,15 @@ public class MethRes extends Lang
             .def(new MultiType(L()));
     }
 
+    public static boolean nameIs(MethodReferenceImpl call, String cls, String mth)
+    {
+        String callCls = opt(call.getClassReference())
+            .map(clsPsi -> clsPsi.getName()).def("");
+        String callMet = opt(call.getName()).def("");
+
+        return callCls.equals(cls) && callMet.equals(mth);
+    }
+
     /**
      * similar to built-in functions. by "Util" i mean some custom
      * functions that do general stuff, like map/filter/sort/etc...
@@ -43,12 +52,9 @@ public class MethRes extends Lang
     {
         L<DeepType> resultTypes = list();
         PsiElement[] params = call.getParameters();
-        String cls = opt(call.getClassReference())
-            .map(clsPsi -> clsPsi.getName()).def("");
-        String met = opt(call.getName()).def("");
 
-        if (cls.equals("Fp")) {
-            if (met.equals("map")) {
+        if (true) { // TODO: indent
+            if (nameIs(call, "Fp", "map")) {
                 if (params.length >= 2) {
                     DeepType result = new DeepType(call);
                     PsiElement callback = params[0];
@@ -58,21 +64,21 @@ public class MethRes extends Lang
 
                     resultTypes.add(result);
                 }
-            } else if (met.equals("filter")) {
+            } else if (nameIs(call, "Fp", "filter")) {
                 if (params.length >= 2) {
                     resultTypes.addAll(findPsiExprType(params[1]).types);
                 }
-            } else if (met.equals("flatten")) {
+            } else if (nameIs(call, "Fp", "flatten")) {
                 if (params.length >= 1) {
                     resultTypes.addAll(findPsiExprType(params[0]).getEl().types);
                 }
-            } else if (met.equals("groupBy")) {
+            } else if (nameIs(call, "Fp", "groupBy")) {
                 if (params.length >= 2) {
                     resultTypes.add(findPsiExprType(params[1]).getInArray(call));
                 }
-            }
-        } else if (cls.equals("ArrayUtil")) {
-            if (met.equals("getFirst") || met.equals("getLast")) {
+            } else if (nameIs(call, "ArrayUtil", "getFirst")
+                    || nameIs(call, "ArrayUtil", "getLast")
+            ) {
                 if (params.length >= 1) {
                     resultTypes.addAll(findPsiExprType(params[0]).getEl().types);
                 }

@@ -1,13 +1,10 @@
 package org.klesun.deep_keys.resolvers.var_res;
 
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl;
-import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
-import com.jetbrains.php.lang.psi.elements.impl.ParameterImpl;
-import com.jetbrains.php.lang.psi.elements.impl.ParameterListImpl;
-import org.klesun.deep_keys.helpers.FuncCtx;
+import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_keys.helpers.IFuncCtx;
 import org.klesun.deep_keys.helpers.MultiType;
+import org.klesun.deep_keys.resolvers.MethRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -36,9 +33,14 @@ public class ArgRes extends Lang
             .map(clos -> clos.getParent())
             .fap(toCast(ParameterListImpl.class))
             .map(argList -> argList.getParent())
-            .fap(toCast(FunctionReferenceImpl.class))
-            .flt(call -> "array_map".equals(call.getName()))
-            .fap(call -> L(call.getParameters()).gat(1))
+            .fap(parent -> Opt.fst(list(opt(null)
+                , Tls.cast(FunctionReferenceImpl.class, parent)
+                    .flt(call -> "array_map".equals(call.getName()))
+                    .fap(call -> L(call.getParameters()).gat(1))
+                , Tls.cast(MethodReferenceImpl.class, parent)
+                    .flt(call -> MethRes.nameIs(call, "Fp", "map"))
+                    .fap(call -> L(call.getParameters()).gat(1))
+            )))
             .fap(toCast(PhpExpression.class))
             .map(arr -> trace.subCtx(L()).findExprType(arr).getEl())
             .def(MultiType.INVALID_PSI)
