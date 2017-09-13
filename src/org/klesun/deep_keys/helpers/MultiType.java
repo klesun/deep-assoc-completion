@@ -91,6 +91,13 @@ public class MultiType extends Lang
         return names;
     }
 
+    public PhpType getIdeaType()
+    {
+        PhpType ideaType = new PhpType();
+        types.map(t -> t.briefType).fch(ideaType::add);
+        return ideaType;
+    }
+
     public String toJson()
     {
         return DeepType.toJson(types, 0);

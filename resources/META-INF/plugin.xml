@@ -33,6 +33,11 @@
         <gotoDeclarationHandler implementation="org.klesun.deep_keys.go_to_decl_providers.ArrayColumnGoToDecl"/>
     </extensions>
 
+    <extensions defaultExtensionNs="com.jetbrains.php">
+        <typeProvider3 implementation="org.klesun.deep_keys.entry.AssocTypePvdr"/>
+    </extensions>
+
+
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
     <depends>com.intellij.modules.lang</depends>

@@ -936,11 +936,6 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
-
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     private static function provideSimpleFieldKeyAssignment()
     {
         $list = [];
@@ -974,6 +969,24 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
 
         return $list;
     }
+
+    public static function provideObjectInAKey()
+    {
+        $list = [];
+        $storRecord = [
+            'capacity' => '256mb',
+            'path' => '/home/klesun/person_storage.db',
+            'stor' => new PersonStorage(),
+        ];
+        $storRecord['stor']->mainPerson;
+
+        $list[] = [$storRecord['stor']->mainPerson, ['name' => [], 'age' => []]];
+        return $list;
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     private static function addPax($seg)
     {
