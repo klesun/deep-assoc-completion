@@ -65,12 +65,24 @@ public class AssRes extends Lang
             })));
     }
 
+    private static Opt<AssignmentExpressionImpl> findParentAssignment(PsiElement caretVar) {
+        return opt(caretVar.getParent())
+            .fap(parent -> Opt.fst(list(
+                Tls.cast(ArrayAccessExpression.class, parent)
+                    .fap(acc -> findParentAssignment(acc)),
+                Tls.cast(AssignmentExpressionImpl.class, parent)
+                    .flt(ass -> opt(ass.getVariable())
+                        .map(assVar -> caretVar.isEquivalentTo(assVar))
+                        .def(false))
+            )));
+    }
+
     /**
      * @param varRef - `$var` reference or `$this->field` reference
      */
     public Opt<Assign> collectAssignment(PsiElement varRef, Boolean didSurelyHappen)
     {
-        return Tls.findParent(varRef, AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression)
+        return findParentAssignment(varRef)
             .fap(ass -> collectKeyAssignment(ass)
                 .map(tup -> new Assign(tup.a, tup.b, didSurelyHappen, ass)));
     }
