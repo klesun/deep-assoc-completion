@@ -41,6 +41,11 @@ To go to the key definition, hover on it and press `ctrl` + `click` or put carre
 
 You can specify function argument type using `@param {optionalType}? $varName = {expression}`, like `@param $anime = ['genre' => 'shounen', 'studio' => 'Shaft']`. `=` is mandatory and expression must be a valid php expression. Class methods can be specified either with complete namespace like `\Very\Long\Namespace\ClassName::funcName()`, or with just `ClassName::funcName()`.
 
+### Object type info in an associative array
+![Object type info in an associative array](https://user-images.githubusercontent.com/5202330/30355696-9d6aa368-983d-11e7-8b8a-6b4f5afcee0e.png)
+
+Phpstorm does not highlight you method call when object in located in an associative array? Don't be sad, this plugin is exactly what you need!
+
 ### Describe variable
 ![Describe variable](https://cloud.githubusercontent.com/assets/5202330/26427776/ee6d4e54-40e6-11e7-83d5-81a1687a0d7a.png)
 
