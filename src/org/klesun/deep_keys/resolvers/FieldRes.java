@@ -1,15 +1,20 @@
 package org.klesun.deep_keys.resolvers;
 
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_keys.*;
 import org.klesun.deep_keys.helpers.IFuncCtx;
 import org.klesun.deep_keys.helpers.MultiType;
+import org.klesun.deep_keys.resolvers.var_res.AssRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
+
+import java.util.List;
 
 public class FieldRes extends Lang
 {
@@ -18,6 +23,32 @@ public class FieldRes extends Lang
     public FieldRes(IFuncCtx ctx)
     {
         this.ctx = ctx;
+    }
+
+    private static MultiType makeType(L<String> keys, S<MultiType> getType, PsiElement psi)
+    {
+        if (keys.size() == 0) {
+            return getType.get();
+        } else {
+            DeepType arr = new DeepType(psi, PhpType.ARRAY);
+            String nextKey = keys.get(0);
+            L<String> furtherKeys = keys.sub(1);
+            if (nextKey == null) {
+                arr.indexTypes = makeType(furtherKeys, getType, psi).types;
+            } else {
+                arr.addKey(nextKey, psi).addType(() -> makeType(furtherKeys, getType, psi));
+            }
+            return new MultiType(list(arr));
+        }
+    }
+
+    private static List<DeepType> assignmentsToTypes(List<Assign> asses)
+    {
+        List<DeepType> resultTypes = list();
+        for (Assign ass: asses) {
+            resultTypes.addAll(makeType(L(ass.keys), ass.assignedType, ass.psi).types);
+        }
+        return resultTypes;
     }
 
     public MultiType resolve(FieldReferenceImpl fieldRef)
@@ -32,7 +63,7 @@ public class FieldRes extends Lang
                     .map(def -> implCtx.findExprType(def).types)
                     .thn(result::addAll);
 
-                opt(resolved.getOriginalElement())
+                L<Assign> asses = opt(resolved.getOriginalElement())
                     .map(decl -> {
                         SearchScope scope = GlobalSearchScope.fileScope(
                             fieldRef.getProject(),
@@ -42,12 +73,11 @@ public class FieldRes extends Lang
                     })
                     .map(usages -> L(usages).map(u -> u.getElement()))
                     .def(L())
-                    .fop(psi -> opt(psi.getParent()))
-                    .fop(toCast(AssignmentExpressionImpl.class))
-                    .fop(ass -> opt(ass.getValue()))
-                    .fop(toCast(PhpExpression.class))
-                    .fap(expr -> implCtx.findExprType(expr).types)
-                    .fch(t -> result.add(t));
+                    // true, since any function in an object can be called any time
+                    .fop(psi -> (new AssRes(ctx)).collectAssignment(psi, true));
+
+                List<DeepType> types = assignmentsToTypes(asses);
+                result.addAll(types);
             });
 
         return new MultiType(result);

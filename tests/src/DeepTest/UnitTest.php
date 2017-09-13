@@ -1,7 +1,19 @@
 <?php
 namespace DeepTest;
 
+use Rbs\Parsers\Apollo\PricingParser\DataStructureWriters\PricingStructureWriter;
 use TouhouNs\ReimuHakurei;
+
+class PersonStorage {
+    public $mainPerson = ['name' => 'Vasja', 'age' => 21];
+    public $allPersons = [];
+    public function addPerson($name, $age) {
+        $this->allPersons[] = [
+            'name' => $name,
+            'age' => $age,
+        ];
+    }
+}
 
 /**
  * TODO: make somehow possible to say that array
@@ -928,6 +940,40 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
     //=============================
     // following are not implemented yet
     //=============================
+
+    private static function provideSimpleFieldKeyAssignment()
+    {
+        $list = [];
+
+        $stor = new PersonStorage();
+        $list[] = [$stor->mainPerson, ['name' => [], 'age' => []]];
+
+        $first = $stor->allPersons[0];
+        $first['age'];
+        $list[] = [$first, ['name' => [], 'age' => []]];
+
+        return $list;
+    }
+
+    private static function provideFieldKeyAssignment()
+    {
+        $list = [];
+
+        // this test would actually fail if completion was
+        // as smart as executed code, since did not actually
+        // call any writing functions in the writer
+        // so if per chance one day plugin is as smart as
+        // compiler - don't hesitate to correct this test
+
+        $pricingStore = PricingStructureWriter::make()->getStructure();
+        $list[] = [$pricingStore, ['pricingBlockList' => [], 'wholePricingMarkers' => []]];
+
+        $ptcBlock = $pricingStore['pricingBlockList'][0];
+        $ptcBlock[''];
+        $list[] = [$ptcBlock, ['passengerNumbers' => [], 'defaultPlatingCarrier' => [], 'fareConstruction' => []]];
+
+        return $list;
+    }
 
     private static function addPax($seg)
     {

@@ -289,6 +289,21 @@ public class Lang
             Collections.sort(indexes, Comparator.comparing(weights::get));
             return indexes.map(idx -> s.get(idx));
         }
+
+        public L<T> sub(int start, int length)
+        {
+            L<T> subList = new L<>();
+            int ceil = Math.min(start + length, this.size());
+            for (int i = start; i < ceil; ++i) {
+                subList.add(this.get(i));
+            }
+            return subList;
+        }
+
+        public L<T> sub(int start)
+        {
+            return sub(start, this.size() - start);
+        }
     }
 
     /**

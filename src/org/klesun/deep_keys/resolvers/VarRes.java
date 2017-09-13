@@ -11,6 +11,7 @@ import org.klesun.deep_keys.*;
 import org.klesun.deep_keys.helpers.IFuncCtx;
 import org.klesun.deep_keys.helpers.MultiType;
 import org.klesun.deep_keys.resolvers.var_res.ArgRes;
+import org.klesun.deep_keys.resolvers.var_res.AssRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -61,6 +62,11 @@ public class VarRes extends Lang
         }
     }
 
+    /**
+     * this function should be rewritten so that it did
+     * not demand the type of actual variable, cuz it
+     * causes recursion, side effects... such nasty stuff
+     */
     private static List<DeepType> assignmentsToTypes(List<Assign> assignments)
     {
         L<S<MultiType>> resultTypes = list();
@@ -93,42 +99,6 @@ public class VarRes extends Lang
                         .addType(() -> new MultiType(list(new DeepType(strt.definition, PhpType.STRING)))));
                     return t;
                 }));
-    }
-
-    // null in key chain means index (when it is number or variable, not named key)
-    private Opt<T2<List<String>, S<MultiType>>> collectKeyAssignment(AssignmentExpressionImpl ass)
-    {
-        Opt<ArrayAccessExpressionImpl> nextKeyOpt = opt(ass.getVariable())
-            .fap(toCast(ArrayAccessExpressionImpl.class));
-
-        List<String> reversedKeys = list();
-
-        while (nextKeyOpt.has()) {
-            ArrayAccessExpressionImpl nextKey = nextKeyOpt.def(null);
-
-            String name = opt(nextKey.getIndex())
-                .map(index -> index.getValue())
-                .fap(toCast(PhpExpression.class))
-                .map(key -> ctx.findExprType(key))
-                .map(t -> t.getStringValue())
-                .def(null);
-            reversedKeys.add(name);
-
-            nextKeyOpt = opt(nextKey.getValue())
-                .fap(toCast(ArrayAccessExpressionImpl.class));
-        }
-
-        List<String> keys = list();
-        for (int i = reversedKeys.size() - 1; i >= 0; --i) {
-            keys.add(reversedKeys.get(i));
-        }
-
-        return opt(ass.getValue())
-            .fap(toCast(PhpExpression.class))
-            .map(value -> T2(keys, S(() -> {
-                MultiType mt = ctx.findExprType(value);
-                return mt;
-            })));
     }
 
     private Opt<S<MultiType>> assertForeachElement(PsiElement varRef)
@@ -204,9 +174,7 @@ public class VarRes extends Lang
                     .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
                     .fap(varRef -> {
                         boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
-                        return Tls.findParent(varRef, AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression)
-                            .fap(ass -> collectKeyAssignment(ass)
-                                .map(tup -> new Assign(tup.a, tup.b, didSurelyHappen, ass)))
+                        return (new AssRes(ctx)).collectAssignment(varRef, didSurelyHappen)
                             .elf(() -> assertForeachElement(varRef)
                                 .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, varRef)))
                             .elf(() -> assertTupleAssignment(varRef)
