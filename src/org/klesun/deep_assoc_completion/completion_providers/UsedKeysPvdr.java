@@ -97,9 +97,14 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                         .fop(toCast(StringLiteralExpressionImpl.class))
                         .map(lit -> lit.getContents());
                     return opt(argList.getParent())
-                        .fap(toCast(MethodReferenceImpl.class))
                         .flt(call -> order > -1)
-                        .map(call -> call.resolve())
+                        .fap(par -> Opt.fst(list(
+                            Tls.cast(MethodReferenceImpl.class, par)
+                                .map(call -> call.resolve()),
+                            Tls.cast(NewExpressionImpl.class, par)
+                                .map(newEx -> newEx.getClassReference())
+                                .map(ref -> ref.resolve())
+                        )))
                         .fap(toCast(MethodImpl.class))
                         .map(meth -> resolveArgUsedKeys(meth, order)
                             .flt(k -> !alreadyDeclared.contains(k)));

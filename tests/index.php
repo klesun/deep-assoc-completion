@@ -198,6 +198,14 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    public function provideConstructorCompletion()
+    {
+        $marisa = new \TouhouNs\MarisaKirisame([
+            // should suggest: "ability", "bombsLeft", "livesLeft", "power"
+            '' => 'Master Spark',
+        ]);
+    }
+
     private static function testUsedKeysInAVar()
     {
         $params = [
