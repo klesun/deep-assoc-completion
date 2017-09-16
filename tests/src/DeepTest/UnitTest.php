@@ -1000,6 +1000,49 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    public function phpunitProvideSessionTests()
+    {
+        $list = [];
+
+        $sessionData = ['pcc' => '2GF6', 'gds' => 'apollo', 'record_locator' => 'D64GBF'];
+        $expected = [
+            'response_code' => 1,
+            'result' => [
+                'status' => 'executed',
+                'pnrData' => [
+                    'reservation' => [],
+                    'currentPricing' => [],
+                ],
+            ],
+        ];
+        $calledCommands = [
+            ['cmd' => '*R', 'output' => 'ASFASFAFV A F A FA'],
+            ['cmd' => '*SVC', 'output' => 'ASFASFAFV A F A FA'],
+            ['cmd' => '$B', 'output' => 'ASFASFAFV A F A FA'],
+        ];
+
+        $list[] = [$sessionData, $expected, $calledCommands];
+
+        return $list;
+    }
+
+    /**
+     * @test
+     * @dataProvider phpunitProvideSessionTests
+     */
+    public function providePhpunitDataProviderTest($sessionData, $expected, $calledCommands)
+    {
+        $list = [];
+
+        $sessionData['gds'];
+
+        $list[] = [$sessionData, ['pcc' => [], 'gds' => [], 'record_locator' => []]];
+        $list[] = [$expected, ['response_code' => [], 'result' => []]];
+        $list[] = [$calledCommands[0], ['cmd' => [], 'output' => []]];
+
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
