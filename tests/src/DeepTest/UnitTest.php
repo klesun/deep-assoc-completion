@@ -984,6 +984,22 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    public function provideAssignObjectFromArray()
+    {
+        $list = [];
+
+        $rpcResult = [
+            'success' => true,
+            'result' => new PersonStorage(),
+        ];
+        $stor = $rpcResult['result'];
+        $rpcResult['result'] = [];
+        $stor->mainPerson[''];
+        $list[] = [$stor->mainPerson, ['name' => [], 'age' => []]];
+
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

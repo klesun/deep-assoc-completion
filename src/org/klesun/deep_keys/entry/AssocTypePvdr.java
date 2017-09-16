@@ -7,6 +7,7 @@ import com.jetbrains.php.lang.parser.PhpElementTypes;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.PhpNamedElement;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
+import com.jetbrains.php.lang.psi.elements.impl.AssignmentExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.resolve.types.PhpTypeProvider3;
 import org.jetbrains.annotations.Nullable;
@@ -38,9 +39,14 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         boolean isFieldAcc = PlatformPatterns.psiElement(PhpElementTypes.ARRAY_ACCESS_EXPRESSION)
             .withParent(PlatformPatterns.psiElement(PhpElementTypes.FIELD_REFERENCE))
             .accepts(psi);
+        boolean isAssVal = Tls.cast(ArrayAccessExpressionImpl.class, psi)
+            .map(acc -> acc.getParent())
+            .fap(toCast(AssignmentExpressionImpl.class))
+            .map(ass -> psi.isEquivalentTo(ass.getValue()))
+            .def(false);
 
         // we will calculate type only for method or property access
-        if (!isMethCall && !isFieldAcc){
+        if (!isMethCall && !isFieldAcc && !isAssVal){
             return null;
         }
 
