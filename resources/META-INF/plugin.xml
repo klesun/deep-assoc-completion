@@ -37,13 +37,13 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
     <idea-version since-build="145.0"/>
 
     <extensions defaultExtensionNs="com.intellij">
-        <completion.contributor language="PHP" implementationClass="org.klesun.deep_keys.entry.DeepKeysCbtr"/>
-        <gotoDeclarationHandler implementation="org.klesun.deep_keys.go_to_decl_providers.DeepKeysGoToDecl"/>
-        <gotoDeclarationHandler implementation="org.klesun.deep_keys.go_to_decl_providers.ArrayColumnGoToDecl"/>
+        <completion.contributor language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DeepKeysCbtr"/>
+        <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.DeepKeysGoToDecl"/>
+        <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrayColumnGoToDecl"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.jetbrains.php">
-        <typeProvider3 implementation="org.klesun.deep_keys.entry.AssocTypePvdr"/>
+        <typeProvider3 implementation="org.klesun.deep_assoc_completion.entry.AssocTypePvdr"/>
     </extensions>
 
 
@@ -56,13 +56,13 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
     <actions>
         <action
                 id="Show docs"
-                class="org.klesun.deep_keys.entry.ShowDocs" text="Show Deep Type"
+                class="org.klesun.deep_assoc_completion.entry.ShowDocs" text="Show Deep Type"
                 description="A shame, looks like lang.documentationProvider does not work for PHP, so i have to implement new action to print var info"
         >
             <add-to-group group-id="ToolsMenu" anchor="first"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt Q"/>
         </action>
-        <action id="Run Deep Keys Test" class="org.klesun.deep_keys.entry.RunTest" text="Run Deep Keys Test"
+        <action id="Run Deep Keys Test" class="org.klesun.deep_assoc_completion.entry.RunTest" text="Run Deep Keys Test"
                 description="Try to interpret current file as test suite and TESTTESTTEST">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
