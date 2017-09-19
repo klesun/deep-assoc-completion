@@ -5,7 +5,6 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.lang.Lang;
 
-import javax.annotation.Nullable;
 import java.util.HashSet;
 
 /**
@@ -53,7 +52,6 @@ public class MultiType extends Lang
         return result;
     }
 
-    @Nullable
     public String getStringValue()
     {
         if (types.size() == 1) {
@@ -63,7 +61,7 @@ public class MultiType extends Lang
         }
     }
 
-    public MultiType getKey(@Nullable String keyName)
+    public MultiType getKey(String keyName)
     {
         return new MultiType(list(
             // if keyName is a constant string - return type of this key only

@@ -11,6 +11,9 @@ public class SearchContext extends Lang
     private int depth = 20;
     private int initialDepth = depth;
     private boolean debug = false;
+    // max expressions per single search - guard
+    // against memory overflow in circular references
+    private int maxExpressions = 20000;
 
     public SearchContext()
     {
@@ -32,6 +35,10 @@ public class SearchContext extends Lang
 //        }
 
         if (depth <= 0) {
+            return opt(null);
+        } else if (--maxExpressions < 0) {
+            /** @debug */
+            System.out.println("Expression limit guard reached");
             return opt(null);
         }
         --depth;
