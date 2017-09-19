@@ -61,4 +61,9 @@ public class FuncCtx extends Lang implements IFuncCtx
     {
         return argGetters.size();
     }
+
+    public SearchContext getSearch()
+    {
+        return search;
+    }
 }

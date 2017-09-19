@@ -18,4 +18,5 @@ public interface IFuncCtx
     public IFuncCtx subCtx(L<S<MultiType>> args);
     /** @debug */
     public int getArgCnt();
+    public SearchContext getSearch();
 }

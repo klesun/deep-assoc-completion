@@ -3,6 +3,7 @@ namespace DeepTest;
 
 use Rbs\Parsers\Apollo\PricingParser\DataStructureWriters\PricingStructureWriter;
 use TouhouNs\ReimuHakurei;
+use TouhouNs\YakumoRan;
 
 class PersonStorage {
     public $mainPerson = ['name' => 'Vasja', 'age' => 21];
@@ -941,12 +942,26 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         $list = [];
 
         $stor = new PersonStorage();
+        $stor->mainPerson[''];
         $list[] = [$stor->mainPerson, ['name' => [], 'age' => []]];
 
         $first = $stor->allPersons[0];
-        $first['age'];
+        $first[''];
         $list[] = [$first, ['name' => [], 'age' => []]];
 
+        return $list;
+    }
+
+    private static function provideFieldDefinedThroughItself()
+    {
+        $list = [];
+        $ran = new YakumoRan();
+        $ran->acquireJuniorDevelopers([
+            ['name' => 'Vasya', 'power' => 'bridge-jumping'],
+            ['name' => 'Vova', 'power' => 'sneezing'],
+        ]);
+        $ran->getFreeShikigami()[''];
+        $list[] = [$ran->getFreeShikigami(), ['name' => [], 'power' => []]];
         return $list;
     }
 

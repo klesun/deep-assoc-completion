@@ -12,6 +12,7 @@ import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.List;
@@ -51,8 +52,24 @@ public class FieldRes extends Lang
         return resultTypes;
     }
 
+    private boolean isCircularExpr(FieldReferenceImpl fieldRef)
+    {
+        L<PhpExpression> psiTrace = ctx.getSearch().psiTrace;
+        // -1, because last always will be this PSI, not a circular reference
+        for (int i = 0; i < psiTrace.size() - 1; ++i) {
+            if (psiTrace.get(i).isEquivalentTo(fieldRef)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public MultiType resolve(FieldReferenceImpl fieldRef)
     {
+        if (isCircularExpr(fieldRef)) {
+            return MultiType.CIRCULAR_REFERENCE;
+        }
+
         L<DeepType> result = list();
         opt(fieldRef.resolve())
             .thn(resolved -> {

@@ -90,6 +90,5 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 .els(() -> System.out.println("Failed to find declared array keys")));
 
         long elapsed = System.nanoTime() - startTime;
-        System.out.println("Resolved in " + (elapsed / 1000000000.0) + " seconds");
     }
 }

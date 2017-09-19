@@ -1,5 +1,7 @@
 package org.klesun.deep_assoc_completion.helpers;
 
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_assoc_completion.DeepTypeResolver;
 import org.klesun.lang.Lang;
@@ -14,6 +16,7 @@ public class SearchContext extends Lang
     // max expressions per single search - guard
     // against memory overflow in circular references
     private int maxExpressions = 20000;
+    final public L<PhpExpression> psiTrace = L();
 
     public SearchContext()
     {
@@ -42,6 +45,7 @@ public class SearchContext extends Lang
             return opt(null);
         }
         --depth;
+        psiTrace.add(expr);
 
         if (debug) {
             for (int i = 0; i < initialDepth - depth; ++i) {
@@ -53,6 +57,7 @@ public class SearchContext extends Lang
         Opt<MultiType> result = DeepTypeResolver.resolveIn(expr, funcCtx)
             .map(ts -> new MultiType(ts));
 
+        psiTrace.remove(psiTrace.size() - 1);
         ++depth;
         return result;
     }
