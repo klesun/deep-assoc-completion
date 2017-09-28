@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2017.09.14.001</version>
+    <version>2017.09.28.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -25,10 +25,10 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>
-        Hotfix: infinite recursion caused by treating array key assigned to a var as being destination of the assignment.
-        It treated <code>$var = $this->data['key']</code> same as <code>$this->data['key'] = $this->data['key']</code>
-    </li>
+      <li>Inference completion of var assigned from an assoc key object: <code>$obj = $arr['obj']; $obj->...;</code>;</li>
+      <li>Completion from <code>@dataProvider</code> doc in phpunit;</li>
+      <li>Provide used in function keys completion for the constructor too (<code>new SomeClass(['...' => ...])</code>);</li>
+      <li>Bugfixes;</li>
     </ul>
     ]]>
     </change-notes>
