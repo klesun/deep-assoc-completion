@@ -194,10 +194,6 @@ class DeepKeysTest
         ]);
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     public function provideConstructorCompletion()
     {
         $marisa = new \TouhouNs\MarisaKirisame([
@@ -205,6 +201,44 @@ class DeepKeysTest
             '' => 'Master Spark',
         ]);
     }
+
+    public function provideFuncVarUsageBasedCompletion()
+    {
+        $list = [];
+
+        $pccRecords = [
+            ['gds' => 'apollo', 'pcc' => '1O4K'],
+            ['gds' => 'sabre', 'pcc' => '611F'],
+            ['gds' => 'amadeus', 'pcc' => 'RIX123456'],
+        ];
+        $getPcc = function($pccRecord) use (&$list){
+            // should suggest 'pcc' and 'gds' based on what
+            // is passed to this lambda further in array_map
+            $pccRecord[''];
+            $list[] = [$pccRecord, ['pcc' => [], 'gds' => []]];
+            return $pccRecord['pcc'];
+        };
+        $pccs = array_filter($pccRecords, $getPcc);
+
+        return $list;
+    }
+
+    private static function testListAccess()
+    {
+        $mapped = self::testBasisListAccess();
+        $addTaxCode = function(array $taxRecord) {
+            $taxRecord['taxCode'] = 'YQ';
+            return $taxRecord;
+        };
+
+        $withTaxCode = array_map($addTaxCode, $mapped);
+        // should suggest currency, amount, taxCode
+        $withTaxCode[0][''];
+    }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function testUsedKeysInAVar()
     {
@@ -256,19 +290,6 @@ class DeepKeysTest
                 '' => 'Jim',
             ]),
         ]);
-    }
-
-    private static function testListAccess()
-    {
-        $mapped = self::testBasisListAccess();
-        $addTaxCode = function(array $taxRecord) {
-            $taxRecord['taxCode'] = 'YQ';
-            return $taxRecord;
-        };
-
-        $withTaxCode = array_map($addTaxCode, $mapped);
-        // should suggest currency, amount, taxCode
-        $withTaxCode[0][''];
     }
 
     private static function testUndefinedKeyError()
