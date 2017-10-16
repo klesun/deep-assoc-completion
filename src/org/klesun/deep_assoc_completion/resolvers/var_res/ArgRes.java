@@ -41,22 +41,24 @@ public class ArgRes extends Lang
             .flt(varUsage -> caretVar.getName().equals(varUsage.getName()));
     }
 
-    private Opt<MultiType> getArgFromNsFuncCall(FunctionReferenceImpl call, int lambdaArgOrder)
+    private Opt<MultiType> getArgFromNsFuncCall(FunctionReferenceImpl call, int argOrderOfLambda, int argOrderInLambda)
     {
         PsiElement[] params = call.getParameters();
-        if (lambdaArgOrder == 0 && params.length > 1) {
+        if (argOrderOfLambda == 0 && params.length > 1) {
             // functions where array is passed in the second argument
-            if ("array_map".equals(call.getName())) {
+            if (argOrderInLambda == 0 && "array_map".equals(call.getName())) {
                 return L(call.getParameters()).gat(1)
                     .fap(toCast(PhpExpression.class))
                     .map(arr -> trace.subCtx(L()).findExprType(arr).getEl());
             }
-        } else if (lambdaArgOrder == 1 && params.length > 1) {
+        } else if (argOrderOfLambda == 1 && params.length > 1) {
             // functions where array is passed in the first argument
-            if ("array_filter".equals(call.getName()) ||
-                "array_walk".equals(call.getName()) ||
-                "array_walk_recursive".equals(call.getName()) ||
-                "usort".equals(call.getName())
+            if (argOrderInLambda == 0 && "array_filter".equals(call.getName()) ||
+                argOrderInLambda == 0 && "array_walk".equals(call.getName()) ||
+                argOrderInLambda == 0 && "array_walk_recursive".equals(call.getName()) ||
+                argOrderInLambda == 0 && "usort".equals(call.getName()) ||
+                argOrderInLambda == 1 && "usort".equals(call.getName()) ||
+                argOrderInLambda == 1 && "array_reduce".equals(call.getName())
             ) {
                 return L(call.getParameters()).gat(0)
                     .fap(toCast(PhpExpression.class))
@@ -66,20 +68,48 @@ public class ArgRes extends Lang
         return opt(null);
     }
 
-    private Opt<MultiType> getArgPassedTo(VariableImpl variable)
+    private Opt<MultiType> getArgFromMethodCall(MethodReferenceImpl call, int argOrderOfLambda, int argOrderInLambda)
     {
-        return opt(variable.getParent())
+        PsiElement[] params = call.getParameters();
+        if (argOrderOfLambda == 0 && params.length > 1 && argOrderInLambda == 0) {
+            // functions where array is passed in the second argument
+            if (MethRes.nameIs(call, "Fp", "map") ||
+                MethRes.nameIs(call, "Fp", "filter") ||
+                MethRes.nameIs(call, "Fp", "all") ||
+                MethRes.nameIs(call, "Fp", "any") ||
+                MethRes.nameIs(call, "Fp", "sortBy") ||
+                MethRes.nameIs(call, "Fp", "groupBy")
+            ) {
+                return L(call.getParameters()).gat(1)
+                    .fap(toCast(PhpExpression.class))
+                    .map(arr -> trace.subCtx(L()).findExprType(arr).getEl());
+            }
+        }
+        return opt(null);
+    }
+
+    private Opt<MultiType> getArgPassedTo(PhpExpression funcVar, int argOrderInLambda)
+    {
+        return opt(funcVar.getParent())
             .fap(parent -> Opt.fst(list(opt(null)
                 , Tls.cast(ParameterListImpl.class, parent)
                     .fap(parl -> opt(parl.getParent())
-                        .fap(toCast(FunctionReferenceImpl.class))
-                        .fap(func -> getArgFromNsFuncCall(func, L(parl.getParameters()).indexOf(variable))))
+                        .fap(call -> Opt.fst(list(opt(null)
+                            , Tls.cast(FunctionReferenceImpl.class, call)
+                                .fap(func -> getArgFromNsFuncCall(func, L(parl.getParameters()).indexOf(funcVar), argOrderInLambda))
+                            , Tls.cast(MethodReferenceImpl.class, call)
+                                .fap(func -> getArgFromMethodCall(func, L(parl.getParameters()).indexOf(funcVar), argOrderInLambda))
+                        ))))
+                , Tls.cast(FunctionReferenceImpl.class, parent)
+                    .fap(call -> L(call.getParameters()).gat(0))
+                    .fap(toCast(PhpExpression.class))
+                    .map(arg -> trace.subCtx(L()).findExprType(arg))
             )));
     }
 
     // $getAirline = function($seg){return $seg['airline'];};
     // array_map($getAirline, $segments);
-    private Opt<MultiType> getFuncVarUsageArg(FunctionImpl clos, int order)
+    private Opt<MultiType> getFuncVarUsageArg(FunctionImpl clos, int argOrderInLambda)
     {
         return opt(clos.getParent())
             .map(expr -> expr.getParent())
@@ -96,29 +126,17 @@ public class ArgRes extends Lang
                         .fop(res -> opt(res.getElement()))
                         .flt(ref -> ref.getTextOffset() >= startOffset)
                         .fop(toCast(VariableImpl.class))
-                        .fop(ref -> getArgPassedTo(ref));
+                        .fop(ref -> getArgPassedTo(ref, argOrderInLambda));
                 })
                 .map(mts -> new MultiType(mts.fap(mt -> mt.types))));
     }
 
     // array_map(function($seg){return $seg['airline'];}, $segments);
-    private Opt<MultiType> getInlineFuncArg(FunctionImpl clos, int order)
+    private Opt<MultiType> getInlineFuncArg(FunctionImpl clos, int argOrderInLambda)
     {
         return opt(clos.getParent())
-            .flt(expr -> order == 0) //TODO: fix, this is not arg order of lambda, but arg order _in_ lambda
-            .map(expr -> expr.getParent())
-            .fap(toCast(ParameterListImpl.class))
-            .map(argList -> argList.getParent())
-            .fap(parent -> Opt.fst(list(opt(null)
-                , Tls.cast(FunctionReferenceImpl.class, parent)
-                    .flt(call -> "array_map".equals(call.getName()))
-                    .fap(call -> L(call.getParameters()).gat(1))
-                , Tls.cast(MethodReferenceImpl.class, parent)
-                    .flt(call -> MethRes.nameIs(call, "Fp", "map"))
-                    .fap(call -> L(call.getParameters()).gat(1))
-            )))
             .fap(toCast(PhpExpression.class))
-            .map(arr -> trace.subCtx(L()).findExprType(arr).getEl());
+            .fap(call -> getArgPassedTo(call, argOrderInLambda));
     }
 
     private MultiType peekOutside(ParameterImpl param)

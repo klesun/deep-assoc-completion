@@ -223,6 +223,65 @@ class DeepKeysTest
         return $list;
     }
 
+    public function provideFuncVarUsageBasedCompletionDirectCall()
+    {
+        $list = [];
+
+        $getPcc = function($pccRecord) use (&$list){
+            // should suggest 'pcc' and 'gds' based on what
+            // is passed to this lambda further in Fp::map
+            $pccRecord[''];
+            $list[] = [$pccRecord, ['pcc' => [], 'gds' => []]];
+            return $pccRecord['pcc'];
+        };
+        $result = $getPcc(['gds' => 'apollo', 'pcc' => '1O4K']);
+
+        return $list;
+    }
+
+    public function provideFuncVarUsageBasedCompletionFp()
+    {
+        $list = [];
+
+        $pccRecords = [
+            ['gds' => 'apollo', 'pcc' => '1O4K'],
+            ['gds' => 'sabre', 'pcc' => '611F'],
+            ['gds' => 'amadeus', 'pcc' => 'RIX123456'],
+        ];
+        $getPcc = function($pccRecord, $b) use (&$list){
+            // should suggest 'pcc' and 'gds' based on what
+            // is passed to this lambda further in Fp::map
+            $pccRecord[''];
+            $b['']; // should not suggest anything
+            $list[] = [$pccRecord, ['pcc' => [], 'gds' => []]];
+            return $pccRecord['pcc'];
+        };
+        $pccs = Fp::map($getPcc, $pccRecords);
+
+        return $list;
+    }
+
+    public function provideFuncVarUsageBasedCompletionInline()
+    {
+        $list = [];
+
+        $pccRecords = [
+            ['gds' => 'apollo', 'pcc' => '1O4K'],
+            ['gds' => 'sabre', 'pcc' => '611F'],
+            ['gds' => 'amadeus', 'pcc' => 'RIX123456'],
+        ];
+        $pccs = Fp::map(function($pccRecord, $b) use (&$list){
+            // should suggest 'pcc' and 'gds' based on what
+            // is passed to this lambda further in Fp::map
+            $pccRecord[''];
+            $b['']; // should not suggest anything
+            $list[] = [$pccRecord, ['pcc' => [], 'gds' => []]];
+            return $pccRecord['pcc'];
+        }, $pccRecords);
+
+        return $list;
+    }
+
     private static function testListAccess()
     {
         $mapped = self::testBasisListAccess();
@@ -230,10 +289,30 @@ class DeepKeysTest
             $taxRecord['taxCode'] = 'YQ';
             return $taxRecord;
         };
-
         $withTaxCode = array_map($addTaxCode, $mapped);
         // should suggest currency, amount, taxCode
         $withTaxCode[0][''];
+    }
+
+    public function provideFuncVarUsageBasedCompletionMultiArg()
+    {
+        $list = [];
+
+        $pccRecords = [
+            ['gds' => 'apollo', 'pcc' => '1O4K'],
+            ['gds' => 'sabre', 'pcc' => '611F'],
+            ['gds' => 'amadeus', 'pcc' => 'RIX123456'],
+        ];
+        $getPcc = function($a, $b, $c) use (&$list){
+            // should suggest 'pcc' and 'gds' based on what
+            // is passed to this lambda further in usort
+            $a[''];
+            $b[''];
+            $c['']; // should *not* suggest anything
+        };
+        usort($pccRecords, $getPcc);
+
+        return $list;
     }
 
     //============================
