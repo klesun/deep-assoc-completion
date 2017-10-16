@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2017.09.28.001</version>
+    <version>2017.10.16.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -25,10 +25,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>Inference completion of var assigned from an assoc key object: <code>$obj = $arr['obj']; $obj->...;</code>;</li>
-      <li>Completion from <code>@dataProvider</code> doc in phpunit;</li>
-      <li>Provide used in function keys completion for the constructor too (<code>new SomeClass(['...' => ...])</code>);</li>
-      <li>Bugfixes;</li>
+      <li>Completion inside closures assigned to a var based on where this var is passed further</li>
     </ul>
     ]]>
     </change-notes>
