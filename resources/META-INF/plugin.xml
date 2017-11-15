@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2017.10.16.001</version>
+    <version>2017.11.15.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -25,7 +25,11 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>Completion inside closures assigned to a var based on where this var is passed further</li>
+      <li>
+      Hotifx: temporarily disable object Type Provider functionality due to
+
+java.lang.RuntimeException: TypeProvider contract violation? by class org.klesun.deep_assoc_completion.entry.AssocTypePvdr on $variables['container']
+      </li>
     </ul>
     ]]>
     </change-notes>
@@ -39,9 +43,9 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrayColumnGoToDecl"/>
     </extensions>
 
-    <extensions defaultExtensionNs="com.jetbrains.php">
-        <typeProvider3 implementation="org.klesun.deep_assoc_completion.entry.AssocTypePvdr"/>
-    </extensions>
+    <!--<extensions defaultExtensionNs="com.jetbrains.php">-->
+        <!--<typeProvider3 implementation="org.klesun.deep_assoc_completion.entry.AssocTypePvdr"/>-->
+    <!--</extensions>-->
 
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
