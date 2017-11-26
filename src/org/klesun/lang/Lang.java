@@ -73,6 +73,18 @@ public class Lang
     // following methods are supposed to be used after extending
     // this class to be able to use them without `new ` or `ClassName.`
 
+    public static String substr(String str, int startIndex, int endIndex)
+    {
+        return str.length() > 0
+            ? str.substring(startIndex, Math.min(str.length(), endIndex))
+            : "";
+    }
+
+    public static String substr(String str, int startIndex)
+    {
+        return substr(str, startIndex, str.length());
+    }
+
     /** i HATE writing "new " before every usage! */
     public static <T> Opt<T> opt(T value)
     {
