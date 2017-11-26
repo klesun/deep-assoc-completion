@@ -1058,6 +1058,76 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    public function provideTypeLostInElseScope($gds)
+    {
+        $list = [];
+
+        $resultRecord = ['defaultKey' => 'asdsad'];
+        if ($gds === 'apollo') {
+            $resultRecord = ['pricingList' => [
+                ['hop' => 'lej', 'lala' => 'lej'],
+            ]];
+        } elseif ($gds === 'sabre') {
+            $resultRecord = ['pricingList' => [
+                ['gde' => 'vopros', 'agde' => 'otver'],
+            ]];
+        } else if ($gds === 'amadeus') {
+            $resultRecord = ['error' => 'Amadeus not supported yet'];
+            if (rand(0, 15) < 7) {
+                $resultRecord = ['nestedScopeInANestedScope' => [1,2,3]];
+            }
+        } else {
+            throw new \Exception('Unsupported GDS - '.$gds);
+        }
+        if ($error = $resultRecord['error'] ?? null) {
+            // completion works - correct
+            $resultRecord[''];
+            $list[] = [$resultRecord, ['defaultKey' => [], 'pricingList' => [], 'error' => [], 'nestedScopeInANestedScope' => []]];
+            $list[] = [$resultRecord['pricingList'][0], ['hop' => [], 'lala' => [], 'gde' => [], 'agde' => []]];
+        } else if (rand(0,10) > 5) {
+            // completion does not work - incorrect, should fix
+            $resultRecord[''];
+            $list[] = [$resultRecord, ['defaultKey' => [], 'pricingList' => [], 'error' => [], 'nestedScopeInANestedScope' => []]];
+            $list[] = [$resultRecord['pricingList'][0], ['hop' => [], 'lala' => [], 'gde' => [], 'agde' => []]];
+        } elseif (rand(0,10) > 5) {
+            // completion does not work - incorrect, should fix
+            $resultRecord[''];
+            $list[] = [$resultRecord, ['defaultKey' => [], 'pricingList' => [], 'error' => [], 'nestedScopeInANestedScope' => []]];
+            $list[] = [$resultRecord['pricingList'][0], ['hop' => [], 'lala' => [], 'gde' => [], 'agde' => []]];
+        } else {
+            // completion does not work - incorrect, should fix
+            $resultRecord[''];
+            $list[] = [$resultRecord, ['defaultKey' => [], 'pricingList' => [], 'error' => [], 'nestedScopeInANestedScope' => []]];
+            $list[] = [$resultRecord['pricingList'][0], ['hop' => [], 'lala' => [], 'gde' => [], 'agde' => []]];
+        }
+        return $list;
+    }
+
+    public function provideElseIfInALoop()
+    {
+        $list = [];
+        $locations = [
+            ['type' => 'flight', 'departureAirport' => 'KIV', 'airline' => 'BA'],
+            ['type' => 'flight', 'departureAirport' => 'RIX', 'airline' => 'UA'],
+            ['type' => 'ARNK', 'departureAirport' => 'LON'],
+        ];
+        $segments = [];
+        $i = -1;
+        foreach ($locations as $location) {
+            if ($i > -1) {
+                $segments[$i]['destinationAirport'] = $location['departureAirport'];
+            }
+            if ($location['type'] === 'flight') {
+                $segments[$i]['destinationAirport'] = $location['departureAirport'];
+                $segments[++$i] = $location;
+            } elseif ($location['type'] === 'ARNK') {
+                $list[] = [$segments[$i], ['departureAirport' => [], 'airline' => []]];
+                $segments[$i]['destinationAirport'] = $location['departureAirport'];
+            }
+        }
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

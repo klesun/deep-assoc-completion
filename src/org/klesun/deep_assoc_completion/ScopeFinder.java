@@ -85,6 +85,35 @@ public class ScopeFinder extends Lang
     }
 
     /**
+     * if () {...} else {...} - true
+     * if () {...} if () {...} else {...} - false
+     */
+    private static boolean areIfElseChained(PsiElement ifPsi, PsiElement elsePsi)
+    {
+        if (ifPsi instanceof If) {
+            // if () {...} else {...}
+            return ifPsi.isEquivalentTo(elsePsi.getParent());
+        } else if (ifPsi instanceof ElseIf) {
+            // ... elseif () {...} else {...}
+            return opt(ifPsi.getParent())
+                .map(ifPar ->
+                    ifPar.isEquivalentTo(elsePsi.getParent()) &&
+                    ifPar instanceof If)
+                .def(false);
+        } else {
+            return false;
+        }
+    }
+
+    private static boolean isInALoop(PsiElement stmtPsi)
+    {
+        return Tls.findParent(stmtPsi, For.class, psi -> !(psi instanceof Function)).map(a -> true).def(false)
+            || Tls.findParent(stmtPsi, While.class, psi -> !(psi instanceof Function)).map(a -> true).def(false)
+            || Tls.findParent(stmtPsi, ForeachImpl.class, psi -> !(psi instanceof Function)).map(a -> true).def(false)
+            || Tls.findParent(stmtPsi, DoWhile.class, psi -> !(psi instanceof Function)).map(a -> true).def(false);
+    }
+
+    /**
      * // and this will be true
      * $someVar = ['someKey' => 'dsa'];
      * if (...) {
@@ -177,15 +206,17 @@ public class ScopeFinder extends Lang
         // 2. if right inside it are (if|elseif) and (elseif|else) respectively, then false
         if (l < scopesL.size() && r < scopesR.size()) {
             if (l > 0 && r > 0) {
-                boolean lIsIf = opt(scopesL.get(l - 1).getParent())
-                    .map(v -> v instanceof If || v instanceof ElseIf)
-                    .def(false);
-                boolean rIsElse = opt(scopesR.get(r - 1).getParent())
-                    .map(v -> v instanceof Else || v instanceof ElseIf)
-                    .def(false);
-                boolean incompatibleScopes = lIsIf && rIsElse;
-
-                return !incompatibleScopes;
+                PsiElement scopeL = scopesL.get(l - 1);
+                PsiElement scopeR = scopesR.get(r - 1);
+                return opt(scopeL.getParent())
+                    .flt(ifPar -> ifPar instanceof If || ifPar instanceof ElseIf)
+                    .fap(ifPar -> opt(scopeR.getParent())
+                        .flt(elsePar -> elsePar instanceof Else || elsePar instanceof ElseIf)
+                        .map(elsePar -> {
+                            boolean incompatibleScopes = areIfElseChained(ifPar, elsePar) && !isInALoop(ifPar);
+                            return !incompatibleScopes;
+                        }))
+                    .def(true);
             } else {
                 return true;
             }

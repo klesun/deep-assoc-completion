@@ -61,16 +61,10 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
-        try {
-            return Tls.cast(ArrayAccessExpressionImpl.class, psi)
-                .map(acc -> new ArrAccRes(funcCtx).resolve(acc))
-                .map(mt -> mt.getIdeaType())
-                .def(null);
-        } catch (RuntimeException exc) {
-            System.out.println("Caught a runtime exception " + exc.getMessage());
-            exc.printStackTrace(System.out);
-            throw exc;
-        }
+        return Tls.cast(ArrayAccessExpressionImpl.class, psi)
+            .map(acc -> new ArrAccRes(funcCtx).resolve(acc))
+            .map(mt -> mt.getIdeaType())
+            .def(null);
     }
 
     public Collection<? extends PhpNamedElement> getBySignature(String s, Set<String> set, int i, Project project)
