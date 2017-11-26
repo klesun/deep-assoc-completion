@@ -157,42 +157,54 @@ public class VarRes extends Lang
             });
     }
 
+    /**
+     * does same thing as variable::multiResolve(), but apparently multiResolve may trigger
+     * global index for some reason, causing Contract Violation in Type Provider
+     *
+     * @return L<PsiElement> - all references of this variable in the function
+     * this list may include Parameter and Variable instances, I guess simple definition
+     * would be: everything that starts with ${varName} in this function scope
+     */
+    private L<PsiElement> findReferences(Variable variable)
+    {
+        // if this line is still here when you read this, that means I
+        // decided to just do DumbService::isDumb() check in Type Provider
+        return L(variable.multiResolve(false))
+            .fop(res -> opt(res.getElement()));
+    }
+
     public List<DeepType> resolve(Variable variable)
     {
         List<Assign> revAsses = list();
-        ResolveResult[] references = variable.multiResolve(false);
+        L<PsiElement> references = findReferences(variable)
+            .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable));
 
-        Mutable<Boolean> finished = new Mutable<>(false);
-        for (int i = references.length - 1; i >= 0; --i) {
-            if (finished.get()) break;
+        for (int i = references.size() - 1; i >= 0; --i) {
             // TODO: make sure closure `use`-s don't incorrectly use wrong context argument generics
-            ResolveResult res = references[i];
-            opt(res.getElement())
-                .thn(refPsi -> opt(refPsi)
-                    .flt(v -> ScopeFinder.didPossiblyHappen(v, variable))
-                    .fap(varRef -> {
-                        boolean didSurelyHappen = ScopeFinder.didSurelyHappen(res.getElement(), variable);
-                        return (new AssRes(ctx)).collectAssignment(varRef, didSurelyHappen)
-                            .elf(() -> assertForeachElement(varRef)
-                                .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, varRef)))
-                            .elf(() -> assertTupleAssignment(varRef)
-                                .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, varRef)))
-                            .elf(() -> assertPregMatchResult(varRef)
-                                .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, varRef)))
-                            .thn(assign -> {
-                                revAsses.add(assign);
-                                if (didSurelyHappen && assign.keys.size() == 0) {
-                                    // direct assignment, everything before it is meaningless
-                                    finished.set(true);
-                                }
-                            });
+            PsiElement refPsi = references.get(i);
+            boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
+            Opt<Assign> assignOpt = Opt.fst(list(opt(null)
+                , (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
+                , assertForeachElement(refPsi)
+                    .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi))
+                , assertTupleAssignment(refPsi)
+                    .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi))
+                , assertPregMatchResult(refPsi)
+                    .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi))
+                , Tls.cast(ParameterImpl.class, refPsi)
+                    .map(param -> {
+                        S<MultiType> mtg = () -> new ArgRes(ctx).resolveArg(param);
+                        return new Assign(list(), mtg, true, refPsi);
                     })
-                    .els(() -> Tls.cast(ParameterImpl.class, refPsi)
-                        .map(param -> {
-                            S<MultiType> mtg = () -> new ArgRes(ctx).resolveArg(param);
-                            return new Assign(list(), mtg, true, refPsi);
-                        })
-                        .thn(revAsses::add)));
+            ));
+            if (assignOpt.has()) {
+                Assign ass = assignOpt.unw();
+                revAsses.add(ass);
+                if (didSurelyHappen && ass.keys.size() == 0) {
+                    // direct assignment, everything before it is meaningless
+                    break;
+                }
+            }
         }
 
         List<Assign> assignments = list();
@@ -202,5 +214,4 @@ public class VarRes extends Lang
 
         return assignmentsToTypes(assignments);
     }
-
 }
