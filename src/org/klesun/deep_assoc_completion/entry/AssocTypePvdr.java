@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.entry;
 
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
@@ -32,6 +33,14 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
     @Nullable
     public PhpType getType(PsiElement psi)
     {
+        if (DumbService.isDumb(psi.getProject())) {
+            // following code relies on complex reference resolutions
+            // very much, so trying to resolve type during indexing
+            // is pointless and causes Contract Violation exceptions
+            // so let's exit with null
+            return null;
+        }
+
         boolean isMethCall = PlatformPatterns.psiElement(PhpElementTypes.ARRAY_ACCESS_EXPRESSION)
             .withParent(PlatformPatterns.psiElement(PhpElementTypes.METHOD_REFERENCE))
             .accepts(psi);
@@ -52,10 +61,16 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
-        return Tls.cast(ArrayAccessExpressionImpl.class, psi)
-            .map(acc -> new ArrAccRes(funcCtx).resolve(acc))
-            .map(mt -> mt.getIdeaType())
-            .def(null);
+        try {
+            return Tls.cast(ArrayAccessExpressionImpl.class, psi)
+                .map(acc -> new ArrAccRes(funcCtx).resolve(acc))
+                .map(mt -> mt.getIdeaType())
+                .def(null);
+        } catch (RuntimeException exc) {
+            System.out.println("Caught a runtime exception " + exc.getMessage());
+            exc.printStackTrace(System.out);
+            throw exc;
+        }
     }
 
     public Collection<? extends PhpNamedElement> getBySignature(String s, Set<String> set, int i, Project project)

@@ -30,13 +30,6 @@ public class SearchContext extends Lang
 
     public Opt<MultiType> findExprType(PhpExpression expr, FuncCtx funcCtx)
     {
-        // i didn't figure out how to catch circular
-        // references yet, gonna leave it for another time
-//        if (exprTrace.contains(expr)) {
-//            // circular reference
-//            return opt(null);
-//        }
-
         if (depth <= 0) {
             return opt(null);
         } else if (--maxExpressions < 0) {

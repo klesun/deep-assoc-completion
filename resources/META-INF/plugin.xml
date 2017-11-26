@@ -43,9 +43,9 @@ java.lang.RuntimeException: TypeProvider contract violation? by class org.klesun
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrayColumnGoToDecl"/>
     </extensions>
 
-    <!--<extensions defaultExtensionNs="com.jetbrains.php">-->
-        <!--<typeProvider3 implementation="org.klesun.deep_assoc_completion.entry.AssocTypePvdr"/>-->
-    <!--</extensions>-->
+    <extensions defaultExtensionNs="com.jetbrains.php">
+        <typeProvider3 implementation="org.klesun.deep_assoc_completion.entry.AssocTypePvdr"/>
+    </extensions>
 
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
