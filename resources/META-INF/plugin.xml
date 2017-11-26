@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2017.11.15.001</version>
+    <version>2017.11.26.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -26,9 +26,10 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
     <change-notes><![CDATA[
     <ul>
       <li>
-      Hotifx: temporarily disable object Type Provider functionality due to
-
-java.lang.RuntimeException: TypeProvider contract violation? by class org.klesun.deep_assoc_completion.entry.AssocTypePvdr on $variables['container']
+          Fix and re-enable Type Provider functionality.
+          The cause was in it attempting to calc type during project indexing -
+          that resulted in the Contract Violation exception and class being
+          excluded from IDEA index (the "Undefined class" problem)
       </li>
     </ul>
     ]]>
