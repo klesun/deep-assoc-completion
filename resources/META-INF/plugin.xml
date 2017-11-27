@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2017.11.26.001</version>
+    <version>2017.11.27.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -25,12 +25,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>
-          Fix and re-enable Type Provider functionality.
-          The cause was in it attempting to calc type during project indexing -
-          that resulted in the Contract Violation exception and class being
-          excluded from IDEA index (the "Undefined class" problem)
-      </li>
+      <li>Fix #18: add null check in ShowDocs.java in case there is no file opened when action is called</li>
     </ul>
     ]]>
     </change-notes>

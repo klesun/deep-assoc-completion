@@ -24,6 +24,7 @@ import java.awt.*;
 import java.util.List;
 
 import static org.klesun.lang.Lang.L;
+import static org.klesun.lang.Lang.opt;
 
 public class ShowDocs extends AnAction
 {
@@ -39,16 +40,13 @@ public class ShowDocs extends AnAction
 
     public void actionPerformed(AnActionEvent e)
     {
-        PsiFile psiFile = e.getData(LangDataKeys.PSI_FILE);
-        int offset = e.getData(LangDataKeys.CARET).getOffset();
-        PsiElement psi = psiFile.findElementAt(offset);
+        String doc = opt(e.getData(LangDataKeys.PSI_FILE))
+            .fap(psiFile -> opt(e.getData(LangDataKeys.CARET))
+                .map(caret -> psiFile.findElementAt(caret.getOffset())))
+            .map(psi -> psi instanceof LeafPsiElement ? psi.getParent() : psi)
+            .map(psi -> DeepType.toJson(findPsiType(psi), 0))
+            .def("There is no file opened to describe a php variable");
 
-        if (psi instanceof LeafPsiElement) {
-            psi = psi.getParent();
-        }
-
-        List<DeepType> types = findPsiType(psi);
-        String doc = DeepType.toJson(types, 0);
         System.out.println(doc);
         // see https://www.jetbrains.org/intellij/sdk/docs/user_interface_components/editor_components.html
         EditorTextField textArea = new EditorTextField(doc, e.getProject(), JsonFileType.INSTANCE);
@@ -60,7 +58,7 @@ public class ShowDocs extends AnAction
         scroll.setMaximumSize(new Dimension(800, 800));
 
         JBPopupFactory.getInstance()
-            .createComponentPopupBuilder(scroll, new JLabel("Hello World"))
+            .createComponentPopupBuilder(scroll, new JLabel("deep-assoc-completion var description"))
             .createPopup()
             .show(new RelativePoint(MouseInfo.getPointerInfo().getLocation()));
     }
