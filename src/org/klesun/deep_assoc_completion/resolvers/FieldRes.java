@@ -12,7 +12,6 @@ import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.List;

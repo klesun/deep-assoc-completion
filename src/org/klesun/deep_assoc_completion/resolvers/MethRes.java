@@ -53,35 +53,33 @@ public class MethRes extends Lang
         L<DeepType> resultTypes = list();
         PsiElement[] params = call.getParameters();
 
-        if (true) { // TODO: indent
-            if (nameIs(call, "Fp", "map")) {
-                if (params.length >= 2) {
-                    DeepType result = new DeepType(call);
-                    PsiElement callback = params[0];
-                    PsiElement array = params[1];
-                    findPsiExprType(callback).types.map(t -> t.returnTypes)
-                        .fch(rts -> result.indexTypes.addAll(rts));
+        if (nameIs(call, "Fp", "map")) {
+            if (params.length >= 2) {
+                DeepType result = new DeepType(call);
+                PsiElement callback = params[0];
+                PsiElement array = params[1];
+                findPsiExprType(callback).types.map(t -> t.returnTypes)
+                    .fch(rts -> result.indexTypes.addAll(rts));
 
-                    resultTypes.add(result);
-                }
-            } else if (nameIs(call, "Fp", "filter")) {
-                if (params.length >= 2) {
-                    resultTypes.addAll(findPsiExprType(params[1]).types);
-                }
-            } else if (nameIs(call, "Fp", "flatten")) {
-                if (params.length >= 1) {
-                    resultTypes.addAll(findPsiExprType(params[0]).getEl().types);
-                }
-            } else if (nameIs(call, "Fp", "groupBy")) {
-                if (params.length >= 2) {
-                    resultTypes.add(findPsiExprType(params[1]).getInArray(call));
-                }
-            } else if (nameIs(call, "ArrayUtil", "getFirst")
-                    || nameIs(call, "ArrayUtil", "getLast")
-            ) {
-                if (params.length >= 1) {
-                    resultTypes.addAll(findPsiExprType(params[0]).getEl().types);
-                }
+                resultTypes.add(result);
+            }
+        } else if (nameIs(call, "Fp", "filter")) {
+            if (params.length >= 2) {
+                resultTypes.addAll(findPsiExprType(params[1]).types);
+            }
+        } else if (nameIs(call, "Fp", "flatten")) {
+            if (params.length >= 1) {
+                resultTypes.addAll(findPsiExprType(params[0]).getEl().types);
+            }
+        } else if (nameIs(call, "Fp", "groupBy")) {
+            if (params.length >= 2) {
+                resultTypes.add(findPsiExprType(params[1]).getInArray(call));
+            }
+        } else if (nameIs(call, "ArrayUtil", "getFirst")
+                || nameIs(call, "ArrayUtil", "getLast")
+        ) {
+            if (params.length >= 1) {
+                resultTypes.addAll(findPsiExprType(params[0]).getEl().types);
             }
         }
         return resultTypes;

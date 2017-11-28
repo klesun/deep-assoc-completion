@@ -1,7 +1,5 @@
 package org.klesun.deep_assoc_completion.helpers;
 
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Multiset;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_assoc_completion.DeepTypeResolver;
 import org.klesun.lang.Lang;

@@ -63,12 +63,12 @@ public class Lang
         }
     }
 
-    public interface S<T> extends Supplier<T> {};
-    public interface R extends Runnable {};
-    public interface F<Tin, Tout> extends Function<Tin, Tout> {};
-    public interface F2<Tin1, Tin2, Tout> extends BiFunction<Tin1, Tin2, Tout> {};
-    public interface C<Tin> extends Consumer<Tin> {};
-    public interface C2<Tin1, Tin2> extends BiConsumer<Tin1, Tin2> {};
+    public interface S<T> extends Supplier<T> {}
+    public interface R extends Runnable {}
+    public interface F<Tin, Tout> extends Function<Tin, Tout> {}
+    public interface F2<Tin1, Tin2, Tout> extends BiFunction<Tin1, Tin2, Tout> {}
+    public interface C<Tin> extends Consumer<Tin> {}
+    public interface C2<Tin1, Tin2> extends BiConsumer<Tin1, Tin2> {}
 
     // following methods are supposed to be used after extending
     // this class to be able to use them without `new ` or `ClassName.`
@@ -298,7 +298,7 @@ public class Lang
         {
             L<String> weights = map(makeValue);
             L<Integer> indexes = Tls.range(0, size());
-            Collections.sort(indexes, Comparator.comparing(weights::get));
+            indexes.sort(Comparator.comparing(weights::get));
             return indexes.map(idx -> s.get(idx));
         }
 
