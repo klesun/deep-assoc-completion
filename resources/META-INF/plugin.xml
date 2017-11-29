@@ -34,7 +34,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
     <idea-version since-build="145.0"/>
 
     <extensions defaultExtensionNs="com.intellij">
-        <completion.contributor language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DeepKeysCbtr"/>
+        <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DeepKeysCbtr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.DeepKeysGoToDecl"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrayColumnGoToDecl"/>
     </extensions>
