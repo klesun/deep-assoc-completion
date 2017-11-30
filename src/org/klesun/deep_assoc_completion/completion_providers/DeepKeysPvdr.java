@@ -47,6 +47,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
+        L<LookupElement> suggestions = L();
+
         long startTime = System.nanoTime();
         Lang.opt(parameters.getPosition().getParent())
             .thn(literal -> Lang.opt(literal.getParent())
@@ -77,17 +79,28 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                             }
                             Project project = parameters.getPosition().getProject();
                             LookupElement lookup = makeLookup(keyEntry, project);
-                            result.addElement(PrioritizedLookupElement.withPriority(lookup, 3000 - ++i));
+                            suggestions.add(PrioritizedLookupElement.withPriority(lookup, 3000 - ++i));
                         }
                         L(type.indexTypes).gat(0).flt(t -> type.keys.size() == 0).thn(t -> {
                             for (int k = 0; k < 10; ++k) {
-                                result.addElement(makeLookupBase(k + "", t.briefType.toString()));
+                                suggestions.add(makeLookupBase(k + "", t.briefType.toString()));
                             }
                         });
                     }
                     result.addLookupAdvertisement("Press <Page Down> few times to skip built-in suggestions");
                 })
                 .els(() -> System.out.println("Failed to find declared array keys")));
+
+        result.addAllElements(suggestions);
+        Set<String> suggested = new HashSet<>(suggestions.map(l -> l.getLookupString()));
+
+        result.runRemainingContributors(parameters, otherSourceResult -> {
+            // remove dupe buil-in suggestions
+            LookupElement lookup = otherSourceResult.getLookupElement();
+            if (!suggested.contains(lookup.getLookupString())) {
+                result.addElement(lookup);
+            }
+        });
 
         long elapsed = System.nanoTime() - startTime;
     }
