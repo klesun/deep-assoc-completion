@@ -42,50 +42,6 @@ public class MethCallRes extends Lang
         return callCls.equals(cls) && callMet.equals(mth);
     }
 
-    /**
-     * similar to built-in functions. by "Util" i mean some custom
-     * functions that do general stuff, like map/filter/sort/etc...
-     * currently hardcoded with one of my team project functions, in future
-     * should be customizable either in plugin settings or by a separate plugin
-     */
-    private L<DeepType> findUtilMethCallTypes(MethodReferenceImpl call)
-    {
-        L<DeepType> resultTypes = list();
-        PsiElement[] params = call.getParameters();
-
-        if (nameIs(call, "Fp", "map")) {
-            if (params.length >= 2) {
-                DeepType result = new DeepType(call);
-                PsiElement callback = params[0];
-                PsiElement array = params[1];
-                IFuncCtx subCtx = ctx.subCtx(list(() -> findPsiExprType(array).getEl()));
-                findPsiExprType(callback).types
-                    .map(t -> t.getReturnTypes(subCtx))
-                    .fch(rts -> result.indexTypes.addAll(rts));
-                resultTypes.add(result);
-            }
-        } else if (nameIs(call, "Fp", "filter")) {
-            if (params.length >= 2) {
-                resultTypes.addAll(findPsiExprType(params[1]).types);
-            }
-        } else if (nameIs(call, "Fp", "flatten")) {
-            if (params.length >= 1) {
-                resultTypes.addAll(findPsiExprType(params[0]).getEl().types);
-            }
-        } else if (nameIs(call, "Fp", "groupBy")) {
-            if (params.length >= 2) {
-                resultTypes.add(findPsiExprType(params[1]).getInArray(call));
-            }
-        } else if (nameIs(call, "ArrayUtil", "getFirst")
-                || nameIs(call, "ArrayUtil", "getLast")
-        ) {
-            if (params.length >= 1) {
-                resultTypes.addAll(findPsiExprType(params[0]).getEl().types);
-            }
-        }
-        return resultTypes;
-    }
-
     private static L<Method> findOverridingMethods(Method meth)
     {
         return opt(PhpIndex.getInstance(meth.getProject()))
@@ -139,11 +95,9 @@ public class MethCallRes extends Lang
         L<PsiElement> args = L(funcCall.getParameters());
         L<S<MultiType>> argGetters = args.map((psi) -> () -> findPsiExprType(psi));
         IFuncCtx funcCtx = ctx.subCtx(argGetters);
-        return new MultiType(list(
-            findUtilMethCallTypes(funcCall),
-            resolveMethodFromCall(funcCall)
-                .map(funcs -> funcs.fap(func -> findMethRetType(func).apply(funcCtx)))
-            .def(list())
-        ).fap(a -> a));
+        L<DeepType> rtypes = resolveMethodFromCall(funcCall)
+            .map(funcs -> funcs.fap(func -> findMethRetType(func).apply(funcCtx)))
+            .def(list());
+        return new MultiType(rtypes);
     }
 }
