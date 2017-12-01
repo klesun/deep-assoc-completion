@@ -6,6 +6,7 @@ import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringUtils;
+import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
@@ -24,11 +25,12 @@ public class DeepType extends Lang
     public List<DeepType> indexTypes = new ArrayList<>();
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
-    public final List<DeepType> returnTypes = new ArrayList<>();
+    // slowly migrating returnTypes from constant values to a function
+    // list of functions that take arg list and return list of return types
+    public final L<F<IFuncCtx, L<DeepType>>> returnTypeGetters = L();
     public final String stringValue;
     public final PsiElement definition;
     public final PhpType briefType;
-    DeepType self = this;
 
     DeepType(PsiElement definition, PhpType briefType, String stringValue)
     {
@@ -55,6 +57,12 @@ public class DeepType extends Lang
     public DeepType(PhpExpressionImpl numPsi, Integer number)
     {
         this(numPsi, numPsi.getType(), "" + number);
+    }
+
+    public L<DeepType> getReturnTypes(IFuncCtx ctx)
+    {
+        L<DeepType> result = returnTypeGetters.fap(g -> g.apply(ctx));
+        return result;
     }
 
     public Key addKey(String name, PsiElement definition)
@@ -138,18 +146,5 @@ public class DeepType extends Lang
     public String toString()
     {
         return toJson(list(this), 0);
-    }
-
-    /** not sure it works correctly */
-    public DeepType deepCopy()
-    {
-        DeepType self = new DeepType(definition, briefType, stringValue);
-        self.keys.forEach((name, srcKey) -> {
-            Key newKey = self.addKey(name, srcKey.definition);
-            srcKey.typeGetters.fch(newKey::addType);
-        });
-        self.indexTypes.addAll(L(indexTypes).map(t -> t.deepCopy()));
-        self.returnTypes.addAll(L(returnTypes).map(t -> t.deepCopy()));
-        return self;
     }
 }

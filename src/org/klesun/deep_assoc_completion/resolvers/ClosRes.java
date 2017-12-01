@@ -41,8 +41,11 @@ public class ClosRes extends Lang
         findFunctionReturns(func)
             .map(ret -> ret.getArgument())
             .fop(toCast(PhpExpression.class))
-            .map(retVal -> insideCtx.findExprType(retVal).types)
-            .fch(ts -> result.returnTypes.addAll(ts));
+            .fch(retVal -> {
+                F<IFuncCtx, L<DeepType>> rtGetter =
+                    (funcCtx) -> funcCtx.findExprType(retVal).types;
+                result.returnTypeGetters.add(rtGetter);
+            });
         return result;
     }
 

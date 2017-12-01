@@ -17,11 +17,11 @@ import org.klesun.lang.Tls;
 import java.util.List;
 import java.util.Objects;
 
-public class MethRes extends Lang
+public class MethCallRes extends Lang
 {
     private IFuncCtx ctx;
 
-    public MethRes(IFuncCtx ctx)
+    public MethCallRes(IFuncCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -58,9 +58,10 @@ public class MethRes extends Lang
                 DeepType result = new DeepType(call);
                 PsiElement callback = params[0];
                 PsiElement array = params[1];
-                findPsiExprType(callback).types.map(t -> t.returnTypes)
+                IFuncCtx subCtx = ctx.subCtx(list(() -> findPsiExprType(array).getEl()));
+                findPsiExprType(callback).types
+                    .map(t -> t.getReturnTypes(subCtx))
                     .fch(rts -> result.indexTypes.addAll(rts));
-
                 resultTypes.add(result);
             }
         } else if (nameIs(call, "Fp", "filter")) {
@@ -95,12 +96,12 @@ public class MethRes extends Lang
             .fop(cls -> opt(cls.findMethodByName(meth.getName())));
     }
 
-    public static L<DeepType> findMethRetType(Method meth, IFuncCtx funcCtx)
+    public static F<IFuncCtx, L<DeepType>> findMethRetType(Method meth)
     {
         L<Method> impls = meth.isAbstract()
             ? findOverridingMethods(meth)
             : list(meth);
-        return impls
+        return (IFuncCtx funcCtx) -> impls
             .fap(m -> ClosRes.findFunctionReturns(m))
             .map(ret -> ret.getArgument())
             .fop(toCast(PhpExpression.class))
@@ -141,7 +142,7 @@ public class MethRes extends Lang
         return new MultiType(list(
             findUtilMethCallTypes(funcCall),
             resolveMethodFromCall(funcCall)
-                .map(funcs -> funcs.fap(func -> findMethRetType(func, funcCtx)))
+                .map(funcs -> funcs.fap(func -> findMethRetType(func).apply(funcCtx)))
             .def(list())
         ).fap(a -> a));
     }

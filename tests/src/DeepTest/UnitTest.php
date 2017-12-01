@@ -1128,9 +1128,53 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
+    private static function normArrStatFilt($arr)
+    {
+        return array_filter($arr);
+    }
+
+    private static function normArrStat($arr)
+    {
+        return $arr;
+    }
+
+    public function provideLambdaInTernaryOperator()
+    {
+        $list = [];
+        $forClient = rand() % 2 ? true : false;
+
+        $instaNormed = $forClient
+            ? ['dendi' => 1, 'dread' => 2]
+            : ['maddison' => 1, 'hovanskiy' => 2, 'kamikadzed' => 3];
+
+        $instaNormed[''];
+        $list[] = [$instaNormed, ['dendi' => [], 'dread' => [], 'maddison' => [], 'hovanskiy' => [], 'kamikadzed' => []]];
+
+        $noTernar = self::normArrStat(['k' => [], 'v' => []]);
+        $noTernar[''];
+        $list[] = [$noTernar, ['k' => [], 'v' => []]];
+
+        $statInVar = function(array $arr){return $arr;};
+        $fromStatInVar = $statInVar(['z' => [], 'r' => []]);
+        $fromStatInVar[''];
+        $list[] = [$fromStatInVar, ['z' => [], 'r' => []]];
+
+        $normArr = !$forClient
+            ? function(array $arr){return -100;}
+            : function(array $arr){return array_filter($arr);};
+        $normed = $normArr(['a' => 1, 'b' => 2]);
+        $normed[''];
+        $list[] = [$normed, ['a' => [], 'b' => []]];
+
+        $normArrStat = !$forClient
+            ? [self::class, 'normArrStatFilt']
+            : [self::class, 'normArrStat'];
+        $normedStat = $normArrStat(['a' => 1, 'b' => 2]);
+        $normedStat[''];
+        $list[] = [$normedStat, ['a' => [], 'b' => []]];
+
+        return $list;
+    }
 
     private static function addPax($seg)
     {
@@ -1158,14 +1202,17 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         $datedItin = array_map($addFullDt, $itinerary);
         $datedItin[0][''];
 
-        $paxedItin = array_map([self::class, 'addPax'], $itinerary);
+        $paxedItin = array_map([self::class, 'addPax'], $datedItin);
         $paxedItin[0][''];
 
-        // TODO: uncomment when i figure out how to pass args to an expression returning a func
-        //$list[] = [$seg, ['from' => [], 'to' => [], 'fullDt' => []]];
-        //$list[] = [$datedItin[0], ['from' => [], 'to' => [], 'fullDt' => []]];
-        //$list[] = [$paxedItin[0], ['from' => [], 'to' => [], 'fullDt' => [], 'pax' => []]];
+        $list[] = [$seg, ['from' => [], 'to' => [], 'fullDt' => []]];
+        $list[] = [$datedItin[0], ['from' => [], 'to' => [], 'fullDt' => []]];
+        $list[] = [$paxedItin[0], ['from' => [], 'to' => [], 'fullDt' => [], 'pax' => []]];
 
         return $list;
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 }

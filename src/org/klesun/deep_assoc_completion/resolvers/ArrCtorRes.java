@@ -79,8 +79,10 @@ public class ArrCtorRes extends Lang
 
         resolveMethodFromArray(orderedParams)
             // TODO: think of a way how to pass args here
-            .map(meth -> MethRes.findMethRetType(meth, ctx.subCtx(L())))
-            .thn(arrayType.returnTypes::addAll);
+            .map(meth -> MethCallRes.findMethRetType(meth))
+            .thn(retTypeGetter -> {
+                arrayType.returnTypeGetters.add(retTypeGetter);
+            });
 
         // indexed elements
         orderedParams

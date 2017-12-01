@@ -11,11 +11,11 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
-public class NsFuncRes extends Lang
+public class FuncCallRes extends Lang
 {
     private IFuncCtx ctx;
 
-    public NsFuncRes(IFuncCtx ctx)
+    public FuncCallRes(IFuncCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -37,7 +37,9 @@ public class NsFuncRes extends Lang
                 if (params.length > 1) {
                     PsiElement callback = params[0];
                     PsiElement array = params[1];
-                    findPsiExprType(callback).types.map(t -> t.returnTypes)
+                    IFuncCtx subCtx = ctx.subCtx(list(() -> findPsiExprType(array).getEl()));
+                    findPsiExprType(callback).types
+                        .map(t -> t.getReturnTypes(subCtx))
                         .fch(rts -> mapRetType.indexTypes.addAll(rts));
                 }
                 result.add(mapRetType);
@@ -94,16 +96,15 @@ public class NsFuncRes extends Lang
         IFuncCtx funcCtx = ctx.subCtx(argGetters);
         return new MultiType(list(
             findBuiltInFuncCallType(funcCall),
-            Opt.fst(list(opt(null)
-                , opt(funcCall.resolve())
-                    .fap(Tls.toCast(FunctionImpl.class))
-                    .map(func -> new ClosRes(funcCtx).resolve(func).returnTypes)
-                // idea is not able to resolve function passed as arg, but we are thanks to our context
-                , opt(funcCall.getFirstChild())
-                    .fap(toCast(PhpExpression.class))
-                    .map(func -> ctx.findExprType(func).types.fap(t -> t.returnTypes))
-            ))
-            .def(list())
+            opt(funcCall.getFirstChild())
+                .fap(toCast(PhpExpression.class))
+                .map(funcVar -> ctx.findExprType(funcVar))
+                .map(mt -> mt.types.fap(t -> t.getReturnTypes(funcCtx)))
+                .def(L()),
+            opt(funcCall.resolve())
+                .fap(Tls.toCast(FunctionImpl.class))
+                .map(func -> new ClosRes(ctx).resolve(func).getReturnTypes(funcCtx))
+                .def(L())
         ).fap(a -> a));
     }
 }

@@ -100,9 +100,4 @@ public class MultiType extends Lang
     {
         return DeepType.toJson(types, 0);
     }
-
-    public MultiType deepCopy()
-    {
-        return new MultiType(types.map(t -> t.deepCopy()));
-    }
 }

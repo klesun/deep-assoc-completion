@@ -9,7 +9,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
-import org.klesun.deep_assoc_completion.resolvers.MethRes;
+import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -72,12 +72,12 @@ public class ArgRes extends Lang
         PsiElement[] params = call.getParameters();
         if (argOrderOfLambda == 0 && params.length > 1 && argOrderInLambda == 0) {
             // functions where array is passed in the second argument
-            if (MethRes.nameIs(call, "Fp", "map") ||
-                MethRes.nameIs(call, "Fp", "filter") ||
-                MethRes.nameIs(call, "Fp", "all") ||
-                MethRes.nameIs(call, "Fp", "any") ||
-                MethRes.nameIs(call, "Fp", "sortBy") ||
-                MethRes.nameIs(call, "Fp", "groupBy")
+            if (MethCallRes.nameIs(call, "Fp", "map") ||
+                MethCallRes.nameIs(call, "Fp", "filter") ||
+                MethCallRes.nameIs(call, "Fp", "all") ||
+                MethCallRes.nameIs(call, "Fp", "any") ||
+                MethCallRes.nameIs(call, "Fp", "sortBy") ||
+                MethCallRes.nameIs(call, "Fp", "groupBy")
             ) {
                 return L(call.getParameters()).gat(1)
                     .fap(toCast(PhpExpression.class))
