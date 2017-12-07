@@ -89,8 +89,7 @@ public class FieldRes extends Lang
                     })
                     .map(usages -> L(usages).map(u -> u.getElement()))
                     .def(L())
-                    // true, since any function in an object can be called any time
-                    .fop(psi -> (new AssRes(ctx)).collectAssignment(psi, true));
+                    .fop(psi -> (new AssRes(implCtx)).collectAssignment(psi, false));
 
                 List<DeepType> types = assignmentsToTypes(asses);
                 result.addAll(types);

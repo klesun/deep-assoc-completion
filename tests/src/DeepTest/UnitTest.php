@@ -2,6 +2,8 @@
 namespace DeepTest;
 
 use Rbs\Parsers\Apollo\PricingParser\DataStructureWriters\PricingStructureWriter;
+use TestSamples\CmsSessionMemoryOverflow\CmsStatefulSession;
+use TestSamples\CmsSessionMemoryOverflow\ICmsGdsTerminal;
 use TouhouNs\ReimuHakurei;
 use TouhouNs\YakumoRan;
 
@@ -1212,7 +1214,27 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    // got a bug: when resolving a field it used args
+    // passed to func where field was referenced, but
+    // passed them to the function field was declared in!
+    // it caused idea to hang for a long time
+    public function provideArgsFromWrongMethodBug(CmsStatefulSession $session)
+    {
+        $list = [];
+        $cmdRec = $session->logAndRunCommandByGds('asdwqe-12312', '*R');
+        $list[] = [$cmdRec, ['cmd' => [], 'output' => [], 'dt' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
+
+//    public function provideHangingDeepRecursion(CmsStatefulSession $session)
+//    {
+//        $token = $session->getSessionToken();
+//        if (preg_match($token, 'asdasd', $matches)) {
+//            $matches[''];
+//        }
+//    }
 }

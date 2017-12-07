@@ -13,7 +13,7 @@ public class SearchContext extends Lang
     private boolean debug = false;
     // max expressions per single search - guard
     // against memory overflow in circular references
-    private int maxExpressions = 20000;
+    private int maxExpressions = 5000;
     final public L<PhpExpression> psiTrace = L();
 
     public SearchContext()
@@ -32,7 +32,7 @@ public class SearchContext extends Lang
             return opt(null);
         } else if (--maxExpressions < 0) {
             /** @debug */
-            System.out.println("Expression limit guard reached");
+            System.out.println("Expression limit guard reached " + maxExpressions);
             return opt(null);
         }
         --depth;
@@ -40,7 +40,7 @@ public class SearchContext extends Lang
 
         if (debug) {
             for (int i = 0; i < initialDepth - depth; ++i) {
-                System.out.print("| ");
+                System.out.print("  ");
             }
             System.out.println(depth + " " + expr.getText().split("\n")[0]);
         }
