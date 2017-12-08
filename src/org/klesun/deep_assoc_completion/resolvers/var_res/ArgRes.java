@@ -186,11 +186,15 @@ public class ArgRes extends Lang
             .thn(mt -> result.types.addAll(mt.types));
 
         result.types.addAll(resolveFromDataProviderDoc(param).types);
-        result.types.addAll(peekOutside(param).types);
 
-        getArgOrder(param)
-            .fap(i -> trace.getArg(i))
-            .thn(mt -> result.types.addAll(mt.types));
+        // temporary workaround for #19
+        if (trace.getSearch().argInferenceEnabled) {
+            result.types.addAll(peekOutside(param).types);
+
+            getArgOrder(param)
+                    .fap(i -> trace.getArg(i))
+                    .thn(mt -> result.types.addAll(mt.types));
+        }
 
         return result;
     }

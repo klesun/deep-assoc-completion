@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2017.12.01.001</version>
+    <version>2017.12.08.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -25,8 +25,8 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>Fix completion from a function assigned to a var in a ternary operator</li>
-      <li>Show this plugin completion suggestions above phpstorm's built-in (poor) completion</li>
+      <li>Bugfix: type of an object field was resolved as if args passed to the function where field was referenced in were passed to the function it was declared in</li>
+      <li>Temporarily disable inference from passed arguments in Type Provider since it causes IDEA to hang every 10 seconds when it tries to resolve type of expression with circular references</li>
     </ul>
     ]]>
     </change-notes>
