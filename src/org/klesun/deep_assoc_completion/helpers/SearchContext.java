@@ -4,6 +4,7 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_assoc_completion.DeepTypeResolver;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 public class SearchContext extends Lang
 {
@@ -33,6 +34,31 @@ public class SearchContext extends Lang
         return this;
     }
 
+    private <T> boolean endsWith(L<T> superList, L<T> subList)
+    {
+        for (int i = 0; i < subList.size(); ++i) {
+            if (i >= superList.size() || !superList.get(-i - 1).equals(subList.get(-i - 1))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isRecursion()
+    {
+        // imagine sequence: a b c d e f g e f g
+        //                           ^_____^_____
+        // I'm not sure this assumption is right, but I'll try to
+        // treat any case where end repeats pre-end as recursion
+        for (int i = 0; i < psiTrace.size() / 2; ++i) {
+            L<PhpExpression> subList = psiTrace.sub(psiTrace.size() - i * 2 - 2, i + 1);
+            if (endsWith(psiTrace, subList)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Opt<MultiType> findExprType(PhpExpression expr, FuncCtx funcCtx)
     {
         if (depth <= 0) {
@@ -44,6 +70,9 @@ public class SearchContext extends Lang
         }
         --depth;
         psiTrace.add(expr);
+        if (isRecursion()) {
+            return opt(MultiType.CIRCULAR_REFERENCE);
+        }
 
         if (debug) {
             for (int i = 0; i < initialDepth - depth; ++i) {

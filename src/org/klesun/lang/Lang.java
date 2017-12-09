@@ -347,7 +347,13 @@ public class Lang
         public boolean removeAll(Collection<?> c) {return s.removeAll(c);}
         public boolean retainAll(Collection<?> c) {return s.retainAll(c);}
         public void clear() {s.clear();}
-        public T get(int index) {return s.get(index);}
+        public T get(int index) {
+            if (index >= 0) {
+                return s.get(index);
+            } else {
+                return s.get(s.size() + index);
+            }
+        }
         public T set(int index, T element) {return s.set(index, element);}
         public void add(int index, T element) {s.add(index, element);}
         public T remove(int index) {return s.remove(index);}

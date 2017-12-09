@@ -58,8 +58,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
             return null;
         }
 
-        SearchContext search = new SearchContext().setDepth(35)
-            .setArgInferenceEnabled(false); // temporary fix for https://github.com/klesun/deep-assoc-completion/issues/19
+        SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
         return Tls.cast(ArrayAccessExpressionImpl.class, psi)

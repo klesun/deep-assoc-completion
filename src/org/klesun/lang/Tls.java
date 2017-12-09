@@ -4,7 +4,9 @@ import com.intellij.psi.PsiElement;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -106,6 +108,30 @@ public class Tls extends Lang
         } else {
             return value.toString();
         }
+    }
+
+    public static String implode(String delimiter, L<String> values)
+    {
+        String result = "";
+        for (int i = 0; i < values.size(); ++i) {
+            result += values.get(i);
+            if (i < values.size() - 1) {
+                result += delimiter;
+            }
+        }
+        return result;
+    }
+
+    public static L<String> diff(L<String> a, L<String> b)
+    {
+        L<String> result = list();
+        Set<String> bSet = new HashSet<>(b);
+        for (String value: a) {
+            if (!bSet.contains(value)) {
+                result.add(value);
+            }
+        }
+        return result;
     }
 
     public static <T> S<T> onDemand(S<T> f)
