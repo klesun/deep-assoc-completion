@@ -18,11 +18,21 @@ class PersonStorage {
     }
 }
 
+interface IProcessPntQueueAction
+{
+    /** @param $optionalData = [
+     *     'queueNumber' => 123,
+     *     'pcc' => 'KLS2',
+     *     'sessionData' => ['id' => 1234, 'gds' => 'apollo', 'token' => 'asd324-cxv5345-fhfgh345']
+     * ] */
+    public function provideImplementedMethArg($optionalData);
+}
+
 /**
  * TODO: make somehow possible to say that array
  * must have _only_ the keys from the expected output
  */
-class UnitTest /** extends \PHPUnit_Framework_Suite */
+class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_Suite */
 {
     public static function provideSimpleTest()
     {
@@ -1256,6 +1266,16 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         array_unshift($segments, ['from' => 'KIV', 'to' => 'RIX']);
         $segments[0]['from'];
         $list[] = [$segments[0], ['from' => [], 'to' => []]];
+        return $list;
+    }
+
+    public function provideImplementedMethArg($optionalData)
+    {
+        $list = [];
+        // arg type should be taken from interface doc comment
+        $optionalData['queueNumber'];
+        $list[] = [$optionalData, ['pcc' => [], 'queueNumber' => [], 'sessionData' => []]];
+        $list[] = [$optionalData['sessionData'], ['id' => [], 'gds' => [], 'token' => []]];
         return $list;
     }
 

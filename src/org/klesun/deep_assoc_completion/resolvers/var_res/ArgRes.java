@@ -1,9 +1,11 @@
 package org.klesun.deep_assoc_completion.resolvers.var_res;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
+import com.jetbrains.php.lang.psi.elements.Parameter;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
@@ -179,11 +181,26 @@ public class ArgRes extends Lang
     public MultiType resolveArg(ParameterImpl param)
     {
         MultiType result = new MultiType(L());
+        int order = getArgOrder(param).def(-1);
 
-        opt(param.getDocComment())
-            .map(doc -> doc.getParamTagByName(param.getName()))
-            .fap(doc -> new DocParamRes(trace).resolve(doc))
-            .thn(mt -> result.types.addAll(mt.types));
+        // get doc comments from the initial abstract method if any
+        opt(param.getParent())
+            .fap(Tls.toCast(ParameterListImpl.class))
+            .map(lst -> lst.getParent())
+            .fap(Tls.toCast(MethodImpl.class))
+            .fap(meth -> opt(meth.getContainingClass())
+                .map(cls -> L(cls.getImplementedInterfaces())
+                    .fap(ifc -> L(ifc.getMethods()))
+                    .flt(ifcMeth -> meth.getName().equals(ifcMeth.getName()))))
+            .def(list())
+            .fop(meth -> L(meth.getParameters()).gat(order))
+            .fop(Tls.toCast(ParameterImpl.class))
+            .cct(list(param))
+            .fop(arg -> opt(arg.getDocComment()))
+            .fop(doc -> opt(doc.getParamTagByName(param.getName())))
+            .fop(doc -> new DocParamRes(trace).resolve(doc))
+            .fch(mt -> result.types.addAll(mt.types))
+            ;
 
         result.types.addAll(resolveFromDataProviderDoc(param).types);
 
@@ -192,8 +209,8 @@ public class ArgRes extends Lang
             result.types.addAll(peekOutside(param).types);
 
             getArgOrder(param)
-                    .fap(i -> trace.getArg(i))
-                    .thn(mt -> result.types.addAll(mt.types));
+                .fap(i -> trace.getArg(i))
+                .thn(mt -> result.types.addAll(mt.types));
         }
 
         return result;
