@@ -98,6 +98,25 @@ public class VarRes extends Lang
                 }));
     }
 
+    // array_unshift($itin, ['from' => 'KIV', 'to' => 'RIX']);
+    private Opt<Assign> assertArrayUnshift(PsiElement varRef)
+    {
+        L<String> keys = list();
+        keys.add(null);
+        return opt(varRef.getParent())
+            .fap(toCast(ParameterListImpl.class))
+            .map(par -> par.getParent())
+            .fap(toCast(FunctionReferenceImpl.class))
+            .fap(call -> {
+                L<PsiElement> args = L(call.getParameters());
+                boolean isCaretArr = args.gat(0).map(arg -> arg.isEquivalentTo(varRef)).def(false);
+                return args.gat(1)
+                    .flt(asd -> isCaretArr)
+                    .fap(Tls.toCast(PhpExpression.class))
+                    .map(el -> new Assign(keys, () -> ctx.findExprType(el), false, el));
+            });
+    }
+
     private Opt<S<MultiType>> assertForeachElement(PsiElement varRef)
     {
         return opt(varRef.getParent())
@@ -184,6 +203,7 @@ public class VarRes extends Lang
             boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
             Opt<Assign> assignOpt = Opt.fst(list(opt(null)
                 , (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
+                , assertArrayUnshift(refPsi)
                 , assertForeachElement(refPsi)
                     .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi))
                 , assertTupleAssignment(refPsi)

@@ -1248,17 +1248,18 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function provideArrayUnshiftInference()
     {
         $list = [];
         $segments = [];
         array_unshift($segments, ['from' => 'RIX', 'to' => 'LON']);
         array_unshift($segments, ['from' => 'KIV', 'to' => 'RIX']);
-        //$list[] = [$segments[0], ['from' => [], 'to' => []]];
+        $segments[0]['from'];
+        $list[] = [$segments[0], ['from' => [], 'to' => []]];
         return $list;
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 }
