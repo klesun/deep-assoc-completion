@@ -1,10 +1,17 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.psi.elements.GroupStatement;
+import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.Variable;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
+import com.jetbrains.php.lang.psi.elements.impl.MethodImpl;
+import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.ScopeFinder;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
@@ -25,6 +32,14 @@ public class FuncCallRes extends Lang
         return Tls.cast(PhpExpression.class, psi)
             .map(casted -> ctx.findExprType(casted))
             .def(new MultiType(L()));
+    }
+
+    private static L<VariableImpl> findVarRefsInFunc(GroupStatement meth, String varName)
+    {
+        return Tls.findChildren(
+            meth, VariableImpl.class,
+            subPsi -> !(subPsi instanceof FunctionImpl)
+        ).flt(varUsage -> varName.equals(varUsage.getName()));
     }
 
     private L<DeepType> findBuiltInFuncCallType(FunctionReferenceImpl call)
@@ -84,6 +99,24 @@ public class FuncCallRes extends Lang
             ) {
                 // do something more clever?
                 L(params).gat(0).map(p -> findPsiExprType(p).types).thn(result::addAll);
+            } else if (name.equals("compact")) {
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                Tls.findParent(call, GroupStatement.class, a -> true)
+                    .thn(scope -> L(params)
+                        .fch(argPsi -> opt(findPsiExprType(argPsi))
+                            .map(keyt -> keyt.getStringValue())
+                            .thn(varName -> {
+                                L<VariableImpl> refs = findVarRefsInFunc(scope, varName)
+                                    .flt(ref -> ScopeFinder.didPossiblyHappen(ref, call))
+                                    ;
+                                if (refs.size() > 0) {
+                                    arrt.addKey(varName, argPsi)
+                                        .addType(() -> refs
+                                            .fap(ref -> ctx.findExprType(ref).types)
+                                            .wap(MultiType::new));
+                                }
+                            })));
+                result.add(arrt);
             }
             return result;
         }).def(list());

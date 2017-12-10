@@ -7,7 +7,7 @@
     <description><![CDATA[
 <ul>
   <li>PHP associative array auto-completion inferred from other functions (in other files).</li>
-  <li>Go To Declaration.</li>
+  <li>Go To key Definition.</li>
   <li>Specify array keys and reference functions in phpdoc.</li>
   <li>Preserve type info of object placed in an associative array.</li>
 </ul>

@@ -75,7 +75,7 @@ public class ScopeFinder extends Lang
         return opt(null);
     }
 
-    private static boolean isPartOfAssignment(PsiElement assDest, Variable caretVar)
+    private static boolean isPartOfAssignment(PsiElement assDest, PhpExpression caretVar)
     {
         return Tls.findParent(assDest, AssignmentExpressionImpl.class, par -> par instanceof ArrayAccessExpression)
             .flt(ass -> opt(ass.getVariable()).map(var -> isPartOf(assDest, var)).def(false))
@@ -175,7 +175,7 @@ public class ScopeFinder extends Lang
      *     print($someVar['someKey']);
      * }
      */
-    public static boolean didPossiblyHappen(PsiElement reference, Variable caretVar)
+    public static boolean didPossiblyHappen(PsiElement reference, PhpExpression caretVar)
     {
         if (isPartOfAssignment(reference, caretVar)) {
             return false;

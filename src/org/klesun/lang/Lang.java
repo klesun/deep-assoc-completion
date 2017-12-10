@@ -257,6 +257,16 @@ public class Lang
         }
 
         /**
+         * you can read it as "wide map" or "wrap", either  way it does the
+         * opposite of "fap" - it takes this list and makes something else
+         * it is often handy since declaring a var in php is too verbose to be usable
+         */
+        public <Tnew> Tnew wap(F<L<T>, Tnew> wrapper)
+        {
+            return wrapper.apply(this);
+        }
+
+        /**
          * "fch" stands for For Each
          */
         public void fch(C<T> f)

@@ -1234,7 +1234,31 @@ class UnitTest /** extends \PHPUnit_Framework_Suite */
         return $list;
     }
 
+    public function provideCompactInference()
+    {
+        $list = [];
+        $age = 123;
+        $height = 456;
+        $book = ['pages' => 432, 'title' => 'Solaris'];
+        $arr = compact('age', 'height', 'book', 'misspelledVar');
+        $misspelledVar = [123,234];
+        $arr[''];
+        $list[] = [$arr, ['age' => [], 'height' => []]];
+        $list[] = [$arr['book'], ['pages' => [], 'title' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
+
+    public function provideArrayUnshiftInference()
+    {
+        $list = [];
+        $segments = [];
+        array_unshift($segments, ['from' => 'RIX', 'to' => 'LON']);
+        array_unshift($segments, ['from' => 'KIV', 'to' => 'RIX']);
+        //$list[] = [$segments[0], ['from' => [], 'to' => []]];
+        return $list;
+    }
 }
