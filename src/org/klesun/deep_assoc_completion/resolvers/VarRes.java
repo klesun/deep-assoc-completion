@@ -107,6 +107,7 @@ public class VarRes extends Lang
             .fap(toCast(ParameterListImpl.class))
             .map(par -> par.getParent())
             .fap(toCast(FunctionReferenceImpl.class))
+            .flt(call -> "array_unshift".equals(call.getName()))
             .fap(call -> {
                 L<PsiElement> args = L(call.getParameters());
                 boolean isCaretArr = args.gat(0).map(arg -> arg.isEquivalentTo(varRef)).def(false);

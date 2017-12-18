@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2017.12.11.001</version>
+    <version>2017.12.18.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -25,6 +25,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
+      <li>Bugfix: infer `array_unshift` type only from function called `array_unshift` (was any function)</li>
       <li>Infer type from `compact()` built-in function</li>
       <li>Infer type from `array_unshift()` built-in function</li>
       <li>Infer type from method doc comment in the interface</li>

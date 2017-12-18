@@ -2,6 +2,8 @@
 namespace DeepTest;
 
 use Rbs\Parsers\Apollo\PricingParser\DataStructureWriters\PricingStructureWriter;
+use Rbs\Parsers\Sabre\Pricing\PqParserFull;
+use Rbs\Parsers\Sabre\Pricing\PqParserUnshiftOverflow;
 use TestSamples\CmsSessionMemoryOverflow\CmsStatefulSession;
 use TestSamples\CmsSessionMemoryOverflow\ICmsGdsTerminal;
 use TouhouNs\ReimuHakurei;
@@ -1279,7 +1281,29 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    public function providePqParserNotArrayUnshiftMemoryOverflow(string $pqDump)
+    {
+        $list = [];
+        $parsed = PqParserFull::parse($pqDump);
+        $parsed['pqList'][0]['priceInfo']['additionalInfo'][''];
+        $list[] = [
+            $parsed['pqList'][0]['priceInfo']['additionalInfo'],
+            ['privateFareType' => [], 'tourCode' => [], 'commission' => [], 'unparsed' => []],
+        ];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
+
+    public function providePqParserArrayUnshiftMemoryOverflow(string $pqDump)
+    {
+        $list = [];
+        $parsed = PqParserUnshiftOverflow::parse($pqDump);
+        $parsed[0][''];
+        // TODO: fix and uncomment
+        //$list[] = [$parsed[0], ['privateFareType' => [], 'tourCode' => [], 'commission' => [], 'unparsed' => []]];
+        return $list;
+    }
 }
