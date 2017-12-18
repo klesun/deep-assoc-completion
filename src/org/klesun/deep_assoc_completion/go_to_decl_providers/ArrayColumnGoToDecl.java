@@ -37,12 +37,13 @@ public class ArrayColumnGoToDecl extends Lang implements GotoDeclarationHandler
 
     @Nullable
     @Override
-    public PsiElement[] getGotoDeclarationTargets(PsiElement psiElement, int i, Editor editor)
+    public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
         SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
-        L<PsiElement> psiTargets = opt(psiElement.getParent())
+        L<PsiElement> psiTargets = opt(psiElement)
+            .map(psi -> psi.getParent())
             .fap(toCast(StringLiteralExpressionImpl.class))
             .map(literal -> opt(literal.getParent())
                 .map(argList -> argList.getParent())

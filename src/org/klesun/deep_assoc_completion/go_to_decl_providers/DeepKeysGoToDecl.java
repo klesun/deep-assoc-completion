@@ -49,13 +49,14 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 
     @Nullable
     @Override
-    public PsiElement[] getGotoDeclarationTargets(PsiElement psiElement, int i, Editor editor)
+    public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
         SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
         L<PsiElement> psiTargets = L();
-        opt(psiElement.getParent())
+        opt(psiElement)
+            .map(psi -> psi.getParent())
             .fap(toCast(StringLiteralExpressionImpl.class))
             .thn(literal -> Lang.opt(literal.getParent())
                 .fap(Lang.toCast(ArrayIndex.class))
