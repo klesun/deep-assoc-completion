@@ -20,7 +20,7 @@ public class ScopeFinder extends Lang
     {
         PsiElement next = psi.getParent();
         while (next != null) {
-            Opt<PsiElement> scopeMb = Tls.cast(GroupStatementImpl.class, next).map(v -> v);
+            Opt<PsiElement> scopeMb = Tls.cast(GroupStatement.class, next).map(v -> v);
             if (scopeMb.has()) {
                 return scopeMb;
             }
@@ -29,9 +29,9 @@ public class ScopeFinder extends Lang
         return new Opt(null);
     }
 
-    private static List<PsiElement> getParentScopes(PsiElement psi)
+    private static L<PsiElement> getParentScopes(PsiElement psi)
     {
-        List<PsiElement> result = new ArrayList<>();
+        L<PsiElement> result = list();
         Opt<PsiElement> next = getParentScope(psi);
         while (next.has()) {
             next.thn(result::add);
@@ -183,8 +183,8 @@ public class ScopeFinder extends Lang
             return false;
         }
 
-        List<PsiElement> scopesL = getParentScopes(reference);
-        List<PsiElement> scopesR = getParentScopes(caretVar);
+        L<PsiElement> scopesL = getParentScopes(reference);
+        L<PsiElement> scopesR = getParentScopes(caretVar);
 
         int l = 0;
         int r = 0;

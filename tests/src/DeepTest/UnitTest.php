@@ -1293,6 +1293,22 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    public function provideNoNsNoCompletion($srcEmpl)
+    {
+        $list = [];
+        $empl1 = veryveryverylongprefixpromote($srcEmpl);
+        $empl1[''];
+        $list[] = [$empl1, [
+            'salary' => [], 'position' => [], 'fullName' => [],
+        ]];
+        $empl2 = (new \ClassWithoutNameSpace())->promote($srcEmpl);
+        $empl2[''];
+        $list[] = [$empl2, [
+            'salary' => [], 'position' => [], 'fullName' => [],
+        ]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
