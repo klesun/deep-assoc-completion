@@ -221,6 +221,24 @@ public class Lang
             return result;
         }
 
+        public <Tnew> L<Tnew> mop(F<T, Tnew> f)
+        {
+            return this.mop((el, i) -> f.apply(el));
+        }
+
+        /** same as map, but also removes null values from the result */
+        public <Tnew> L<Tnew> mop(F2<T, Integer, Tnew> f)
+        {
+            L<Tnew> result = L();
+            for (int i = 0; i < s.size(); ++i) {
+                Tnew fed = f.apply(s.get(i), i);
+                if (fed != null) {
+                    result.add(fed);
+                }
+            }
+            return result;
+        }
+
         /**
          * "fop" stands for "Filter Optional"
          * this is a combination of map and filter
@@ -310,6 +328,30 @@ public class Lang
             L<Integer> indexes = Tls.range(0, size());
             indexes.sort(Comparator.comparing(weights::get));
             return indexes.map(idx -> s.get(idx));
+        }
+
+        /** for "reverse" */
+        public L<T> rvr()
+        {
+            L<T> reversed = L();
+            for (int i = size() - 1; i >= 0; --i) {
+                reversed.add(get(i));
+            }
+            return reversed;
+        }
+
+        /** for "take away" - take elements that match a predicate and remove them from this list */
+        public <Tnew> L<Tnew> tkw(F<T, Opt<Tnew>> convert)
+        {
+            L<Tnew> takenFromEnd = L();
+            for (int i = size() - 1; i >=0; --i) {
+                Opt<Tnew> converted = convert.apply(get(i));
+                if (converted.has()) {
+                    takenFromEnd.add(converted.unw());
+                    remove(i);
+                }
+            }
+            return takenFromEnd.rvr();
         }
 
         public L<T> sub(int start, int length)

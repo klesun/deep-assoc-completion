@@ -1,6 +1,8 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocVarImpl;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.Variable;
 import com.jetbrains.php.lang.psi.elements.impl.*;
@@ -10,6 +12,7 @@ import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.ArgRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
+import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -64,7 +67,7 @@ public class VarRes extends Lang
      * not demand the type of actual variable, cuz it
      * causes recursion, side effects... such nasty stuff
      */
-    private static List<DeepType> assignmentsToTypes(List<Assign> assignments)
+    private static L<DeepType> assignmentsToTypes(List<Assign> assignments)
     {
         L<S<MultiType>> resultTypes = list();
 
@@ -198,6 +201,15 @@ public class VarRes extends Lang
         L<PsiElement> references = findReferences(variable)
             .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable));
 
+        // @var docs are a special case since they give type
+        // info from any position (above/below/right of/left of the var declaration)
+        L<DeepType> docTypes = references
+            .tkw(toCast(PhpDocVarImpl.class))
+            .mop(varDoc -> varDoc.getParent())
+            .fop(toCast(PhpDocTag.class))
+            .fop(docTag -> new DocParamRes(ctx).resolve(docTag))
+            .fap(mt -> mt.types);
+
         for (int i = references.size() - 1; i >= 0; --i) {
             // TODO: make sure closure `use`-s don't incorrectly use wrong context argument generics
             PsiElement refPsi = references.get(i);
@@ -232,6 +244,7 @@ public class VarRes extends Lang
             assignments.add(revAsses.get(i));
         }
 
-        return assignmentsToTypes(assignments);
+        return assignmentsToTypes(assignments)
+            .cct(docTypes);
     }
 }

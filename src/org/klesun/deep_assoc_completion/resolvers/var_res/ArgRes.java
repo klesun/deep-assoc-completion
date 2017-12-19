@@ -183,8 +183,8 @@ public class ArgRes extends Lang
         MultiType result = new MultiType(L());
         int order = getArgOrder(param).def(-1);
 
-        // get doc comments from the initial abstract method if any
         opt(param.getParent())
+            // get doc comments from the initial abstract method if any
             .fap(Tls.toCast(ParameterListImpl.class))
             .map(lst -> lst.getParent())
             .fap(Tls.toCast(MethodImpl.class))
@@ -195,6 +195,7 @@ public class ArgRes extends Lang
             .def(list())
             .fop(meth -> L(meth.getParameters()).gat(order))
             .fop(Tls.toCast(ParameterImpl.class))
+            // get doc from current method
             .cct(list(param))
             .fop(arg -> opt(arg.getDocComment()))
             .fop(doc -> opt(doc.getParamTagByName(param.getName())))

@@ -9,13 +9,27 @@ use TestSamples\CmsSessionMemoryOverflow\ICmsGdsTerminal;
 use TouhouNs\ReimuHakurei;
 use TouhouNs\YakumoRan;
 
-class PersonStorage {
+class PersonStorage
+{
     public $mainPerson = ['name' => 'Vasja', 'age' => 21];
     public $allPersons = [];
     public function addPerson($name, $age) {
         $this->allPersons[] = [
             'name' => $name,
             'age' => $age,
+        ];
+    }
+}
+
+class MyModuleOptions
+{
+    public static function get()
+    {
+        return [
+            'dependencies' => ['angular5.3', 'jquery3.0', 'bootstrap2.2'],
+            'description' => 'This module is used to demonstrate how inline var phpdoc comment provides assoc type information',
+            'license' => 'MIT',
+            'version' => '00.00.01',
         ];
     }
 }
@@ -1309,17 +1323,41 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function providePqParserArrayUnshiftMemoryOverflow(string $pqDump)
     {
         $list = [];
         $parsed = PqParserUnshiftOverflow::parse($pqDump);
         $parsed[0][''];
-        // TODO: fix and uncomment
-        //$list[] = [$parsed[0], ['privateFareType' => [], 'tourCode' => [], 'commission' => [], 'unparsed' => []]];
+        // should not cause infinite recursion
+        $list[] = [$parsed[0], ['unparsed' => []]];
+        return $list;
+    }
+
+    public function provideInlineVarDoc($db)
+    {
+        $list = [];
+        /** @var array $arr = ['key' => 'val'] */
+        $arr['']; // should suggest: key
+        $list[] = [$arr, ['key' => []]];
+
+        $options = $db->getFromTableById('module_storage', 123);
+        /** @var array $options = MyModuleOptions::get() */
+        $options['']; // should suggest: dependencies, description, license, version
+        $list[] = [$options, ['dependencies' => [], 'description' => [], 'license' => [], 'version' => []]];
+        return $list;
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
+
+    public function provideInlineVarDocAboveVar($db)
+    {
+        $list = [];
+        /** @var array $options = MyModuleOptions::get() */
+        $options = $db->getFromTableById('module_storage', 123);
+        $options['']; // should suggest: dependencies, description, license, version
+        $list[] = [$options, ['dependencies' => [], 'description' => [], 'license' => [], 'version' => []]];
         return $list;
     }
 }

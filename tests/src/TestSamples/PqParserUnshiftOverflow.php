@@ -40,7 +40,7 @@ class PqParserUnshiftOverflow
         $result[] = [
             // if you uncomment this, it will cause memory
             // overflow of infinite array on typeresolution
-            //array_unshift($elements, 1337),
+            array_unshift($elements, 1337),
             array_splice($elements, 1337),
         ];
         $result[] = [$elements, null];

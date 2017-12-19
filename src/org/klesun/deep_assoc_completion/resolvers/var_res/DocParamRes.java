@@ -5,6 +5,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.GroupStatement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.Statement;
@@ -50,7 +51,7 @@ public class DocParamRes extends Lang
         }
     }
 
-    public Opt<MultiType> resolve(PhpDocParamTag doc)
+    public Opt<MultiType> resolve(PhpDocTag doc)
     {
         return opt(doc.getTagValue())
             .fap(descr -> parseDoc(descr, doc.getProject()));
