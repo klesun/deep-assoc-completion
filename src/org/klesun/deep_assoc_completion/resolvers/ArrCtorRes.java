@@ -6,6 +6,7 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassConstantReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.lang.Lang;
@@ -23,13 +24,15 @@ public class ArrCtorRes extends Lang
         this.ctx = ctx;
     }
 
-    public static Opt<PhpClass> resolveInstance(PsiElement instExpr)
+    public Opt<PhpClass> resolveInstance(PsiElement instExpr)
     {
         return opt(instExpr.getFirstChild())
             .fap(toCast(PhpExpression.class))
-            .map(expr -> expr.getType())
-            .map(type -> PhpIndex.getInstance(instExpr.getProject()).getClassesByFQN(type.toString()))
-            .fap(clses -> L(clses).gat(0))
+            .map(xpr -> ctx.findExprType(xpr).getIdeaType())
+            .map(tpe -> L(tpe.getTypes())
+                .fap(clsPath -> L(PhpIndex.getInstance(instExpr.getProject()).getClassesByFQN(clsPath)))
+                .fop(rvd -> opt(rvd)))
+            .fap(clses -> clses.gat(0))
             ;
     }
 
@@ -56,7 +59,7 @@ public class ArrCtorRes extends Lang
     }
 
     /** like in [Ns\Employee::class, 'getSalary'] */
-    private static Opt<Method> resolveMethodFromArray(L<PsiElement> refParts)
+    private Opt<Method> resolveMethodFromArray(L<PsiElement> refParts)
     {
         return refParts.gat(1)
             .map(psi -> psi.getFirstChild())

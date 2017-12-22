@@ -10,6 +10,8 @@ import com.jetbrains.php.PhpIcons;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
 import org.jetbrains.annotations.NotNull;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.Opt;
 
@@ -31,6 +33,8 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        SearchContext search = new SearchContext();
+        FuncCtx funcCtx = new FuncCtx(search, L());
         long startTime = System.nanoTime();
         L<Method> methods = opt(parameters.getPosition().getParent())
             .fap(literal -> opt(literal.getParent())
@@ -44,7 +48,7 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
                     ArrCtorRes.resolveClass(clsPsi)
                         .map(cls -> L(cls.getMethods())
                             .flt(meth -> meth.isStatic())),
-                    ArrCtorRes.resolveInstance(clsPsi)
+                    new ArrCtorRes(funcCtx).resolveInstance(clsPsi)
                         .map(cls -> L(cls.getMethods())
                             .flt(meth -> meth.getMethodType(false) != Method.MethodType.CONSTRUCTOR)
                             .flt(meth -> !meth.isStatic())))

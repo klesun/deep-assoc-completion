@@ -19,6 +19,11 @@ class KiraYoshikage
         ];
     }
 
+    public static function make()
+    {
+        return new self();
+    }
+
     private function getBadassness()
     {
         return $this->badassness

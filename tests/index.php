@@ -142,6 +142,9 @@ class DeepKeysTest
         $kira = new \DeepTest\KiraYoshikage();
         // should suggest: "murder"
         $murderedNumbers = array_map([$kira, ''], [1,2,3]);
+        $kiraFromMake = \DeepTest\KiraYoshikage::make();
+        // should suggest: "murder", "getBadassness"
+        $murderedNumbers = array_map([$kiraFromMake, ''], [1,2,3]);
     }
 
     private static function makeAddSsrCmd($data)
