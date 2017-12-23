@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Tls;
 
 import java.util.HashSet;
 
@@ -94,6 +95,40 @@ public class MultiType extends Lang
         PhpType ideaType = new PhpType();
         types.map(t -> t.briefType).fch(ideaType::add);
         return ideaType;
+    }
+
+    public String getBriefTypeText(int maxLen)
+    {
+        L<String> briefTypes = list();
+        L<String> keyNames = getKeyNames();
+
+        if (keyNames.size() > 0) {
+            if (keyNames.all((k,i) -> (k + "").equals(i + ""))) {
+                briefTypes.add("[" + Tls.implode(", ", keyNames.map(i -> getKey(i + "").getBriefTypeText(15))) + "]");
+            } else {
+                briefTypes.add("{" + Tls.implode(", ", keyNames.map(k -> k + ":")) + "}");
+            }
+        }
+        L<String> strvals = types.fop(t -> opt(t.stringValue));
+        if (strvals.size() > 0) {
+            briefTypes.add(Tls.implode("|", strvals.map(s -> "'" + s + "'")));
+        }
+        if (types.any(t -> t.indexTypes.size() > 0)) {
+            briefTypes.add("[" + getEl().getBriefTypeText() + "]");
+        }
+        if (briefTypes.isEmpty() || briefTypes.all((t,i) -> t.equals(""))) {
+            briefTypes.add(getIdeaType().toString());
+        }
+        String fullStr = Tls.implode("|", briefTypes);
+        fullStr = fullStr.length() == 0 ? "?" : fullStr;
+        String truncated = Tls.substr(fullStr, 0, maxLen);
+        return truncated.length() == fullStr.length()
+            ? truncated : truncated + "...";
+    }
+
+    public String getBriefTypeText()
+    {
+        return getBriefTypeText(50);
     }
 
     public String toJson()

@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.lang.Lang;
 
@@ -37,8 +38,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
     private static LookupElement makeLookup(DeepType.Key keyEntry, Project project)
     {
-        String type = keyEntry.getTypes().gat(0).map(t -> t.briefType.toString()).def("unknown");
-        return makeLookupBase(keyEntry.name, type);
+        return makeLookupBase(keyEntry.name, new MultiType(keyEntry.getTypes()).getBriefTypeText());
     }
 
     @Override
@@ -81,11 +81,12 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                             LookupElement lookup = makeLookup(keyEntry, project);
                             suggestions.add(PrioritizedLookupElement.withPriority(lookup, 3000 - ++i));
                         }
-                        L(type.indexTypes).gat(0).flt(t -> type.keys.size() == 0).thn(t -> {
-                            for (int k = 0; k < 10; ++k) {
-                                suggestions.add(makeLookupBase(k + "", t.briefType.toString()));
+                        if (type.indexTypes.size() > 0) {
+                            String typeText = new MultiType(L(type.indexTypes)).getBriefTypeText();
+                            for (int k = 0; k < 5; ++k) {
+                                suggestions.add(makeLookupBase(k + "", typeText));
                             }
-                        });
+                        }
                     }
                     result.addLookupAdvertisement("Press <Page Down> few times to skip built-in suggestions");
                 })

@@ -274,6 +274,16 @@ public class Lang
             return new L(result);
         }
 
+        public boolean any(Predicate<T> pred)
+        {
+            return flt(pred).size() > 0;
+        }
+
+        public boolean all(F2<T, Integer, Boolean> pred)
+        {
+            return map(pred).flt(b -> b).size() == this.size();
+        }
+
         /**
          * you can read it as "wide map" or "wrap", either  way it does the
          * opposite of "fop" - it takes this list and makes something else
