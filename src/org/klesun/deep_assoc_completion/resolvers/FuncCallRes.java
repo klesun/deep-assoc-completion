@@ -2,12 +2,9 @@ package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.GroupStatement;
-import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.Variable;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
-import com.jetbrains.php.lang.psi.elements.impl.MethodImpl;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
@@ -15,7 +12,6 @@ import org.klesun.deep_assoc_completion.ScopeFinder;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 public class FuncCallRes extends Lang
@@ -130,12 +126,12 @@ public class FuncCallRes extends Lang
         return new MultiType(list(
             findBuiltInFuncCallType(funcCall),
             opt(funcCall.getFirstChild())
-                .fap(toCast(PhpExpression.class))
+                .fop(toCast(PhpExpression.class))
                 .map(funcVar -> ctx.findExprType(funcVar))
                 .map(mt -> mt.types.fap(t -> t.getReturnTypes(funcCtx)))
                 .def(L()),
             opt(funcCall.resolve())
-                .fap(Tls.toCast(FunctionImpl.class))
+                .fop(Tls.toCast(FunctionImpl.class))
                 .map(func -> new ClosRes(ctx).resolve(func).getReturnTypes(funcCtx))
                 .def(L())
         ).fap(a -> a));

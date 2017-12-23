@@ -30,7 +30,7 @@ public class AssRes extends Lang
     private Opt<T2<List<String>, S<MultiType>>> collectKeyAssignment(AssignmentExpressionImpl ass)
     {
         Opt<ArrayAccessExpressionImpl> nextKeyOpt = opt(ass.getVariable())
-            .fap(toCast(ArrayAccessExpressionImpl.class));
+            .fop(toCast(ArrayAccessExpressionImpl.class));
 
         List<String> reversedKeys = list();
 
@@ -39,14 +39,14 @@ public class AssRes extends Lang
 
             String name = opt(nextKey.getIndex())
                 .map(index -> index.getValue())
-                .fap(toCast(PhpExpression.class))
+                .fop(toCast(PhpExpression.class))
                 .map(key -> ctx.findExprType(key))
                 .map(t -> t.getStringValue())
                 .def(null);
             reversedKeys.add(name);
 
             nextKeyOpt = opt(nextKey.getValue())
-                .fap(toCast(ArrayAccessExpressionImpl.class));
+                .fop(toCast(ArrayAccessExpressionImpl.class));
         }
 
         List<String> keys = list();
@@ -55,7 +55,7 @@ public class AssRes extends Lang
         }
 
         return opt(ass.getValue())
-            .fap(toCast(PhpExpression.class))
+            .fop(toCast(PhpExpression.class))
             .map(value -> T2(keys, S(() -> {
                 MultiType mt = ctx.findExprType(value);
                 return mt;
@@ -64,9 +64,9 @@ public class AssRes extends Lang
 
     private static Opt<AssignmentExpressionImpl> findParentAssignment(PsiElement caretVar) {
         return opt(caretVar.getParent())
-            .fap(parent -> Opt.fst(list(
+            .fop(parent -> Opt.fst(list(
                 Tls.cast(ArrayAccessExpression.class, parent)
-                    .fap(acc -> findParentAssignment(acc)),
+                    .fop(acc -> findParentAssignment(acc)),
                 Tls.cast(AssignmentExpressionImpl.class, parent)
                     .flt(ass -> opt(ass.getVariable())
                         .map(assVar -> caretVar.isEquivalentTo(assVar))
@@ -80,7 +80,7 @@ public class AssRes extends Lang
     public Opt<Assign> collectAssignment(PsiElement varRef, Boolean didSurelyHappen)
     {
         return findParentAssignment(varRef)
-            .fap(ass -> collectKeyAssignment(ass)
+            .fop(ass -> collectKeyAssignment(ass)
                 .map(tup -> new Assign(tup.a, tup.b, didSurelyHappen, ass)));
     }
 }

@@ -52,11 +52,11 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         long startTime = System.nanoTime();
         Lang.opt(parameters.getPosition().getParent())
             .thn(literal -> Lang.opt(literal.getParent())
-                .fap(Lang.toCast(ArrayIndex.class))
+                .fop(Lang.toCast(ArrayIndex.class))
                 .map(index -> index.getParent())
-                .fap(Lang.toCast(ArrayAccessExpressionImpl.class))
+                .fop(Lang.toCast(ArrayAccessExpressionImpl.class))
                 .map(expr -> expr.getValue())
-                .fap(toCast(PhpExpression.class))
+                .fop(toCast(PhpExpression.class))
                 .map(srcExpr -> funcCtx.findExprType(srcExpr).types)
                 .thn(types -> {
                     List<String> options = new ArrayList<>();

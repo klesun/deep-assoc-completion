@@ -170,7 +170,7 @@ public class Lang
      * the class (yeah, less performance, but easier to read)
      * some integration with Opt class
      */
-    public static class L<T> extends ListWrapper<T> implements List<T>
+    public static class L<@NonNull T> extends ListWrapper<T> implements List<T>
     {
         private L(List<T> source)
         {
@@ -206,12 +206,12 @@ public class Lang
             return L(s.stream().filter(pred).collect(Collectors.toList()));
         }
 
-        public <Tnew> L<Tnew> map(F<T, Tnew> f)
+        public <@NonNull Tnew> L<Tnew> map(F<T, Tnew> f)
         {
             return this.map((el, i) -> f.apply(el));
         }
 
-        public <Tnew> L<Tnew> map(F2<T, Integer, Tnew> f)
+        public <@NonNull Tnew> L<Tnew> map(F2<T, Integer, Tnew> f)
         {
             L<Tnew> result = L();
             for (int i = 0; i < s.size(); ++i) {
@@ -258,7 +258,7 @@ public class Lang
         }
 
         /**
-         * "fap" stands for flat map - flattens list by lambda
+         * "fop" stands for flat map - flattens list by lambda
          */
         public <Tnew> L<Tnew> fap(F<T, List<Tnew>> flatten)
         {
@@ -276,7 +276,7 @@ public class Lang
 
         /**
          * you can read it as "wide map" or "wrap", either  way it does the
-         * opposite of "fap" - it takes this list and makes something else
+         * opposite of "fop" - it takes this list and makes something else
          * it is often handy since declaring a var in php is too verbose to be usable
          */
         public <Tnew> Tnew wap(F<L<T>, Tnew> wrapper)

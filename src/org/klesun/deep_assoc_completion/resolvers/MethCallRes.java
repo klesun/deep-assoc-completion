@@ -45,7 +45,7 @@ public class MethCallRes extends Lang
     private static L<Method> findOverridingMethods(Method meth)
     {
         return opt(PhpIndex.getInstance(meth.getProject()))
-            .fap(idx -> opt(meth.getContainingClass())
+            .fop(idx -> opt(meth.getContainingClass())
                 .map(cls -> idx.getAllSubclasses(cls.getFQN())))
             .map(clses -> L(clses))
             .def(L())

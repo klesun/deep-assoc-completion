@@ -51,7 +51,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 })
             , Tls.regex(" *= *([A-Z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete class
-                .fap(m -> m.gat(0))
+                .fop(m -> m.gat(0))
                 .map(CamelHumpMatcher::new)
                 .map(p -> L(idx.getAllClassNames(p))
                     .map(cls -> cls + "::"))

@@ -4,7 +4,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.jetbrains.php.lang.PhpLanguage;
-import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.GroupStatement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
@@ -32,11 +31,11 @@ public class DocParamRes extends Lang
         PsiFile psiFile = PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr);
 
         return opt(psiFile.getFirstChild())
-            .fap(toCast(GroupStatement.class))
+            .fop(toCast(GroupStatement.class))
             .map(gr -> gr.getFirstPsiChild())
-            .fap(toCast(Statement.class))
+            .fop(toCast(Statement.class))
             .map(st -> st.getFirstChild())
-            .fap(toCast(PhpExpression.class))
+            .fop(toCast(PhpExpression.class))
             .map(ex -> ctx.findExprType(ex));
     }
 
@@ -54,6 +53,6 @@ public class DocParamRes extends Lang
     public Opt<MultiType> resolve(PhpDocTag doc)
     {
         return opt(doc.getTagValue())
-            .fap(descr -> parseDoc(descr, doc.getProject()));
+            .fop(descr -> parseDoc(descr, doc.getProject()));
     }
 }

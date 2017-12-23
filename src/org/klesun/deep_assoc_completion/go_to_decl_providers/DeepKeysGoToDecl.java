@@ -57,13 +57,13 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         L<PsiElement> psiTargets = L();
         opt(psiElement)
             .map(psi -> psi.getParent())
-            .fap(toCast(StringLiteralExpressionImpl.class))
+            .fop(toCast(StringLiteralExpressionImpl.class))
             .thn(literal -> Lang.opt(literal.getParent())
-                .fap(Lang.toCast(ArrayIndex.class))
+                .fop(Lang.toCast(ArrayIndex.class))
                 .map(index -> index.getParent())
-                .fap(Lang.toCast(ArrayAccessExpressionImpl.class))
+                .fop(Lang.toCast(ArrayAccessExpressionImpl.class))
                 .map(expr -> expr.getValue())
-                .fap(toCast(PhpExpression.class))
+                .fop(toCast(PhpExpression.class))
                 .map(srcExpr -> funcCtx.findExprType(srcExpr).types)
                 .thn(arrayTypes -> arrayTypes.forEach(arrayType -> {
                     String key = literal.getContents();
@@ -72,8 +72,8 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                     }
                 })))
             .els(() -> opt(psiElement)
-                .fap(v -> Tls.findParent(v, PhpDocParamTag.class, psi -> true))
-                .fap(tag -> new DocParamRes(funcCtx).resolve(tag))
+                .fop(v -> Tls.findParent(v, PhpDocParamTag.class, psi -> true))
+                .fop(tag -> new DocParamRes(funcCtx).resolve(tag))
                 .map(mt -> mt.types)
                 .thn(types -> types.forEach(t -> psiTargets.add(t.definition))));
 

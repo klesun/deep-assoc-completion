@@ -44,7 +44,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
             subPsi -> !(subPsi instanceof FunctionImpl)
         )
             .fop(acc -> opt(acc.getValue())
-                .fap(toCast(VariableImpl.class))
+                .fop(toCast(VariableImpl.class))
                 .flt(varUsage -> varName.equals(varUsage.getName()))
                 .map(varUsage -> acc.getIndex()));
     }
@@ -54,7 +54,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         SearchContext fakeSearch = new SearchContext();
         FuncCtx fakeCtx = new FuncCtx(fakeSearch, L());
         return L(meth.getParameters()).gat(argOrder)
-            .fap(toCast(ParameterImpl.class))
+            .fop(toCast(ParameterImpl.class))
             .map(arg -> list(
                 findUsedIndexes(meth, arg.getName())
                     .map(idx -> idx.getValue())
@@ -62,7 +62,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                     .map(lit -> lit.getContents()),
                 opt(arg.getDocComment())
                     .map(doc -> doc.getParamTagByName(arg.getName()))
-                    .fap(doc -> new DocParamRes(fakeCtx).resolve(doc))
+                    .fop(doc -> new DocParamRes(fakeCtx).resolve(doc))
                     .map(mt -> mt.getKeyNames())
                     .def(L())
             ).fap(a -> a))
@@ -74,23 +74,23 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     {
         long startTime = System.nanoTime();
         L<String> usedKeys = opt(parameters.getPosition().getParent())
-            .fap(literal -> opt(literal.getParent())
+            .fop(literal -> opt(literal.getParent())
                 .map(arrKey -> arrKey.getParent())
-                .fap(parent -> Opt.fst(list(
+                .fop(parent -> Opt.fst(list(
                     // assoc key
                     Tls.cast(ArrayHashElementImpl.class, parent)
                         .flt(hash -> literal.isEquivalentTo(hash.getKey()))
                         .map(hash -> hash.getParent())
-                        .fap(toCast(ArrayCreationExpressionImpl.class)),
+                        .fop(toCast(ArrayCreationExpressionImpl.class)),
                     // indexed value (that may become associative key as user continues typing)
                     Tls.cast(ArrayCreationExpressionImpl.class, parent)
                 ))))
             // TODO: handle nested arrays
             // TODO: handle assignments of array to a variable passed to the func further
             // assuming it may be used only in a function call for now
-            .fap(arrCtor -> opt(arrCtor.getParent())
-                .fap(toCast(ParameterListImpl.class))
-                .fap(argList -> {
+            .fop(arrCtor -> opt(arrCtor.getParent())
+                .fop(toCast(ParameterListImpl.class))
+                .fop(argList -> {
                     int order = L(argList.getParameters()).indexOf(arrCtor);
                     L<String> alreadyDeclared = L(arrCtor.getHashElements())
                         .fop(el -> opt(el.getKey()))
@@ -98,14 +98,14 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                         .map(lit -> lit.getContents());
                     return opt(argList.getParent())
                         .flt(call -> order > -1)
-                        .fap(par -> Opt.fst(list(
+                        .fop(par -> Opt.fst(list(
                             Tls.cast(MethodReferenceImpl.class, par)
                                 .map(call -> call.resolve()),
                             Tls.cast(NewExpressionImpl.class, par)
                                 .map(newEx -> newEx.getClassReference())
                                 .map(ref -> ref.resolve())
                         )))
-                        .fap(toCast(MethodImpl.class))
+                        .fop(toCast(MethodImpl.class))
                         .map(meth -> resolveArgUsedKeys(meth, order)
                             .flt(k -> !alreadyDeclared.contains(k)));
                 }))

@@ -107,16 +107,16 @@ public class VarRes extends Lang
         L<String> keys = list();
         keys.add(null);
         return opt(varRef.getParent())
-            .fap(toCast(ParameterListImpl.class))
+            .fop(toCast(ParameterListImpl.class))
             .map(par -> par.getParent())
-            .fap(toCast(FunctionReferenceImpl.class))
+            .fop(toCast(FunctionReferenceImpl.class))
             .flt(call -> "array_unshift".equals(call.getName()))
-            .fap(call -> {
+            .fop(call -> {
                 L<PsiElement> args = L(call.getParameters());
                 boolean isCaretArr = args.gat(0).map(arg -> arg.isEquivalentTo(varRef)).def(false);
                 return args.gat(1)
                     .flt(asd -> isCaretArr)
-                    .fap(Tls.toCast(PhpExpression.class))
+                    .fop(Tls.toCast(PhpExpression.class))
                     .map(el -> new Assign(keys, () -> ctx.findExprType(el), false, el));
             });
     }
@@ -124,25 +124,25 @@ public class VarRes extends Lang
     private Opt<S<MultiType>> assertForeachElement(PsiElement varRef)
     {
         return opt(varRef.getParent())
-            .fap(toCast(ForeachImpl.class))
+            .fop(toCast(ForeachImpl.class))
             .flt(fch -> opt(fch.getValue()).map(v -> v.isEquivalentTo(varRef)).def(false))
             .map(fch -> fch.getArray())
-            .fap(toCast(PhpExpression.class))
+            .fop(toCast(PhpExpression.class))
             .map(arr -> () -> ctx.findExprType(arr).getEl());
     }
 
     private Opt<S<MultiType>> assertTupleAssignment(PsiElement varRef)
     {
         return opt(varRef.getParent())
-            .fap(toCast(MultiassignmentExpressionImpl.class))
-            .fap(multi -> opt(multi.getValue())
+            .fop(toCast(MultiassignmentExpressionImpl.class))
+            .fop(multi -> opt(multi.getValue())
                 /** array creation is wrapped inside an "expression impl" */
                 .map(v -> v.getFirstPsiChild())
-                .fap(toCast(PhpExpression.class))
+                .fop(toCast(PhpExpression.class))
                 .map(val -> ctx.findExprType(val).types)
                 .flt(types -> types.size() > 0)
-                .fap(arrts -> opt(multi.getVariables())
-                    .fap(vars -> {
+                .fop(arrts -> opt(multi.getVariables())
+                    .fop(vars -> {
                         for (Integer i = 0; i < vars.size(); ++i) {
                             if (vars.get(i).isEquivalentTo(varRef)) {
                                 return opt(i);
@@ -163,15 +163,15 @@ public class VarRes extends Lang
     private Opt<S<MultiType>> assertPregMatchResult(PsiElement varRef)
     {
         return opt(varRef.getParent())
-            .fap(toCast(ParameterListImpl.class))
+            .fop(toCast(ParameterListImpl.class))
             .flt(lst -> L(lst.getParameters()).gat(2)
                 .map(psi -> psi.isEquivalentTo(varRef))
                 .def(false))
             .map(lst -> lst.getParent())
-            .fap(toCast(FunctionReferenceImpl.class))
+            .fop(toCast(FunctionReferenceImpl.class))
             .flt(fun -> opt(fun.getName()).def("").equals("preg_match"))
-            .fap(fun -> L(fun.getParameters()).fst())
-            .fap(toCast(PhpExpression.class))
+            .fop(fun -> L(fun.getParameters()).fst())
+            .fop(toCast(PhpExpression.class))
             .map(regexPsi -> () -> {
                 MultiType mt = ctx.findExprType(regexPsi);
                 L<DeepType> matchesType = makeRegexNameCaptureTypes(mt.types);

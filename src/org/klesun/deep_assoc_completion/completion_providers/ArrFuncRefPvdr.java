@@ -37,14 +37,14 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
         FuncCtx funcCtx = new FuncCtx(search, L());
         long startTime = System.nanoTime();
         L<Method> methods = opt(parameters.getPosition().getParent())
-            .fap(literal -> opt(literal.getParent())
+            .fop(literal -> opt(literal.getParent())
                 .map(arrVal -> arrVal.getParent())
-                .fap(toCast(ArrayCreationExpressionImpl.class))
+                .fop(toCast(ArrayCreationExpressionImpl.class))
                 .map(arrCtor -> L(arrCtor.getChildren()))
                 .flt(params -> params.size() == 2)
                 .flt(params -> literal.isEquivalentTo(params.get(1).getFirstChild()))
-                .fap(params -> params.gat(0))
-                .fap(clsPsi -> Opt.fst(list(
+                .fop(params -> params.gat(0))
+                .fop(clsPsi -> Opt.fst(list(
                     ArrCtorRes.resolveClass(clsPsi)
                         .map(cls -> L(cls.getMethods())
                             .flt(meth -> meth.isStatic())),

@@ -6,7 +6,6 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassConstantReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
-import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.lang.Lang;
@@ -27,28 +26,28 @@ public class ArrCtorRes extends Lang
     public Opt<PhpClass> resolveInstance(PsiElement instExpr)
     {
         return opt(instExpr.getFirstChild())
-            .fap(toCast(PhpExpression.class))
+            .fop(toCast(PhpExpression.class))
             .map(xpr -> ctx.findExprType(xpr).getIdeaType())
             .map(tpe -> L(tpe.getTypes())
                 .fap(clsPath -> L(PhpIndex.getInstance(instExpr.getProject()).getClassesByFQN(clsPath)))
                 .fop(rvd -> opt(rvd)))
-            .fap(clses -> clses.gat(0))
+            .fop(clses -> clses.gat(0))
             ;
     }
 
     public static Opt<PhpClass> resolveClass(PsiElement clsPsi)
     {
         return opt(clsPsi.getFirstChild())
-            .fap(expr -> Opt.fst(list(
+            .fop(expr -> Opt.fst(list(
                 Tls.cast(ClassConstantReferenceImpl.class, expr)
                     .flt(cst -> Objects.equals(cst.getName(), "class"))
                     .map(cst -> cst.getClassReference())
-                    .fap(toCast(ClassReferenceImpl.class))
+                    .fop(toCast(ClassReferenceImpl.class))
                     .map(clsRef -> clsRef.resolve())
-                    .fap(toCast(PhpClass.class)),
+                    .fop(toCast(PhpClass.class)),
                 Tls.cast(StringLiteralExpression.class, expr)
                     .map(lit -> lit.getContents())
-                    .fap(clsName -> Opt.fst(list(
+                    .fop(clsName -> Opt.fst(list(
                         "self".equals(clsName)
                             ? Tls.findParent(clsPsi, PhpClass.class, a -> true)
                             : opt(null),
@@ -63,10 +62,10 @@ public class ArrCtorRes extends Lang
     {
         return refParts.gat(1)
             .map(psi -> psi.getFirstChild())
-            .fap(toCast(StringLiteralExpression.class))
+            .fop(toCast(StringLiteralExpression.class))
             .map(lit -> lit.getContents())
-            .fap(met -> refParts.gat(0)
-                .fap(clsPsi -> Opt.fst(list(
+            .fop(met -> refParts.gat(0)
+                .fop(clsPsi -> Opt.fst(list(
                     resolveClass(clsPsi),
                     resolveInstance(clsPsi))
                 ))
@@ -92,16 +91,16 @@ public class ArrCtorRes extends Lang
             .fch((valuePsi, i) -> Tls.cast(PhpExpression.class, valuePsi)
                 // currently each value is wrapped into a plane Psi element
                 // i believe this is likely to change in future - so we try both cases
-                .elf(() -> opt(valuePsi.getFirstChild()).fap(toCast(PhpExpression.class)))
+                .elf(() -> opt(valuePsi.getFirstChild()).fop(toCast(PhpExpression.class)))
                 .thn(val -> arrayType.addKey(i + "", val)
                     .addType(() -> ctx.findExprType(val))));
 
         // keyed elements
         L(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
-            .fap(toCast(PhpExpression.class))
+            .fop(toCast(PhpExpression.class))
             .map(v -> S(() -> ctx.findExprType(v)))
             .thn(getType -> opt(keyRec.getKey())
-                .fap(toCast(PhpExpression.class))
+                .fop(toCast(PhpExpression.class))
                 .map(keyPsi -> ctx.findExprType(keyPsi).types)
                 .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
                 .thn(keyTypes -> {

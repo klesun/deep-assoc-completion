@@ -41,7 +41,7 @@ public class Opt<T>
     }
 
     /** Flat Map - to combine Opt-s */
-    public <T1> Opt<T1> fap(Lang.F<T, Opt<T1>> f)
+    public <T1> Opt<T1> fop(Lang.F<T, Opt<T1>> f)
     {
         return map(f).uni(
             (opt) -> opt,

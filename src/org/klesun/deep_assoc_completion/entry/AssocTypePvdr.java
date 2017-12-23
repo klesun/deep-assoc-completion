@@ -49,7 +49,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
             .accepts(psi);
         boolean isAssVal = Tls.cast(ArrayAccessExpressionImpl.class, psi)
             .map(acc -> acc.getParent())
-            .fap(toCast(AssignmentExpressionImpl.class))
+            .fop(toCast(AssignmentExpressionImpl.class))
             .map(ass -> psi.isEquivalentTo(ass.getValue()))
             .def(false);
 

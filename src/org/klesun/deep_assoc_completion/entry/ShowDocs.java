@@ -40,7 +40,7 @@ public class ShowDocs extends AnAction
     public void actionPerformed(AnActionEvent e)
     {
         String doc = opt(e.getData(LangDataKeys.PSI_FILE))
-            .fap(psiFile -> opt(e.getData(LangDataKeys.CARET))
+            .fop(psiFile -> opt(e.getData(LangDataKeys.CARET))
                 .map(caret -> psiFile.findElementAt(caret.getOffset())))
             .map(psi -> psi instanceof LeafPsiElement ? psi.getParent() : psi)
             .map(psi -> DeepType.toJson(findPsiType(psi), 0))

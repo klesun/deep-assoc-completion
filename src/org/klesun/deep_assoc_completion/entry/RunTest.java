@@ -46,7 +46,7 @@ public class RunTest extends AnAction
         Logger logger = new Logger();
         logger.logMsg("Searching for \"UnitTest\" class in project...");
         List<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
-            .fap(file -> findTestDataPvdrFuncs(file))
+            .fop(file -> findTestDataPvdrFuncs(file))
             .map(funcs -> L(funcs)
                 .fap(func -> ClosRes.findFunctionReturns(func)
                     .map(ret -> ret.getArgument())
@@ -59,7 +59,7 @@ public class RunTest extends AnAction
                             ctx.dataProviderName = func.getName();
                             ctx.testNumber = i;
                             return opt(rett.keys.get("0"))
-                                .fap(input -> opt(rett.keys.get("1"))
+                                .fop(input -> opt(rett.keys.get("1"))
                                     .map(output -> ctx.testCase(list(input), output)));
                         }).fap(v -> v).s
                     ).s

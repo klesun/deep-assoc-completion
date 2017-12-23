@@ -68,10 +68,10 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
         MultiType mt = opt(parameters.getPosition().getParent())
             .map(literal -> literal.getParent())
             .map(literal -> literal.getParent())
-            .fap(toCast(FunctionReferenceImpl.class))
+            .fop(toCast(FunctionReferenceImpl.class))
             .flt(call -> "array_column".equals(call.getName()))
-            .fap(call -> L(call.getParameters()).gat(0))
-            .fap(toCast(PhpExpression.class))
+            .fop(call -> L(call.getParameters()).gat(0))
+            .fop(toCast(PhpExpression.class))
             .map(arr -> funcCtx.findExprType(arr).getEl())
             .def(MultiType.INVALID_PSI);
 

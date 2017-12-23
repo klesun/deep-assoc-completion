@@ -75,7 +75,7 @@ public class FieldRes extends Lang
                 IFuncCtx implCtx = ctx.subCtx(L());
                 Tls.cast(FieldImpl.class, resolved)
                     .map(fld -> fld.getDefaultValue())
-                    .fap(toCast(PhpExpression.class))
+                    .fop(toCast(PhpExpression.class))
                     .map(def -> implCtx.findExprType(def).types)
                     .thn(result::addAll);
 

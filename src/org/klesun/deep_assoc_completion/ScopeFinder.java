@@ -7,7 +7,6 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -64,7 +63,7 @@ public class ScopeFinder extends Lang
             Opt<ControlStatementImpl> maybeControl = Opt.fst(list(
                 opt(null)
                 , Tls.cast(ElseIfImpl.class, parent).map(v -> v)
-                , Tls.cast(IfImpl.class, parent).flt(v -> opt(v.getParent()).fap(toCast(ElseImpl.class)).has())
+                , Tls.cast(IfImpl.class, parent).flt(v -> opt(v.getParent()).fop(toCast(ElseImpl.class)).has())
                     .map(v -> v)
             ));
             if (maybeControl.has()) {
@@ -210,7 +209,7 @@ public class ScopeFinder extends Lang
                 PsiElement scopeR = scopesR.get(r - 1);
                 return opt(scopeL.getParent())
                     .flt(ifPar -> ifPar instanceof If || ifPar instanceof ElseIf)
-                    .fap(ifPar -> opt(scopeR.getParent())
+                    .fop(ifPar -> opt(scopeR.getParent())
                         .flt(elsePar -> elsePar instanceof Else || elsePar instanceof ElseIf)
                         .map(elsePar -> {
                             boolean incompatibleScopes = areIfElseChained(ifPar, elsePar) && !isInALoop(ifPar);

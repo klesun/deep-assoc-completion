@@ -18,13 +18,13 @@ public class ArrAccRes extends Lang
     public MultiType resolve(ArrayAccessExpressionImpl keyAccess)
     {
         MultiType mt = opt(keyAccess.getValue())
-            .fap(toCast(PhpExpression.class))
+            .fop(toCast(PhpExpression.class))
             .map(expr -> ctx.findExprType(expr))
             .def(MultiType.INVALID_PSI);
 
         return opt(keyAccess.getIndex())
             .map(v -> v.getValue())
-            .fap(toCast(PhpExpression.class))
+            .fop(toCast(PhpExpression.class))
             .map(v -> opt(ctx.findExprType(v).getStringValue()))
             .map(keyName -> mt.getKey(keyName.def(null)))
             .def(MultiType.INVALID_PSI);

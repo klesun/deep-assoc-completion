@@ -1,11 +1,9 @@
 package org.klesun.deep_assoc_completion.resolvers.var_res;
 
 import com.intellij.psi.PsiElement;
-import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
-import com.jetbrains.php.lang.psi.elements.Parameter;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
@@ -49,7 +47,7 @@ public class ArgRes extends Lang
             // functions where array is passed in the second argument
             if (argOrderInLambda == 0 && "array_map".equals(call.getName())) {
                 return L(call.getParameters()).gat(1)
-                    .fap(toCast(PhpExpression.class))
+                    .fop(toCast(PhpExpression.class))
                     .map(arr -> trace.subCtx(L()).findExprType(arr).getEl());
             }
         } else if (argOrderOfLambda == 1 && params.length > 1) {
@@ -62,7 +60,7 @@ public class ArgRes extends Lang
                 argOrderInLambda == 1 && "array_reduce".equals(call.getName())
             ) {
                 return L(call.getParameters()).gat(0)
-                    .fap(toCast(PhpExpression.class))
+                    .fop(toCast(PhpExpression.class))
                     .map(arr -> trace.subCtx(L()).findExprType(arr).getEl());
             }
         }
@@ -82,7 +80,7 @@ public class ArgRes extends Lang
                 MethCallRes.nameIs(call, "Fp", "groupBy")
             ) {
                 return L(call.getParameters()).gat(1)
-                    .fap(toCast(PhpExpression.class))
+                    .fop(toCast(PhpExpression.class))
                     .map(arr -> trace.subCtx(L()).findExprType(arr).getEl());
             }
         }
@@ -92,18 +90,18 @@ public class ArgRes extends Lang
     private Opt<MultiType> getArgPassedTo(PhpExpression funcVar, int argOrderInLambda)
     {
         return opt(funcVar.getParent())
-            .fap(parent -> Opt.fst(list(opt(null)
+            .fop(parent -> Opt.fst(list(opt(null)
                 , Tls.cast(ParameterListImpl.class, parent)
-                    .fap(parl -> opt(parl.getParent())
-                        .fap(call -> Opt.fst(list(opt(null)
+                    .fop(parl -> opt(parl.getParent())
+                        .fop(call -> Opt.fst(list(opt(null)
                             , Tls.cast(FunctionReferenceImpl.class, call)
-                                .fap(func -> getArgFromNsFuncCall(func, L(parl.getParameters()).indexOf(funcVar), argOrderInLambda))
+                                .fop(func -> getArgFromNsFuncCall(func, L(parl.getParameters()).indexOf(funcVar), argOrderInLambda))
                             , Tls.cast(MethodReferenceImpl.class, call)
-                                .fap(func -> getArgFromMethodCall(func, L(parl.getParameters()).indexOf(funcVar), argOrderInLambda))
+                                .fop(func -> getArgFromMethodCall(func, L(parl.getParameters()).indexOf(funcVar), argOrderInLambda))
                         ))))
                 , Tls.cast(FunctionReferenceImpl.class, parent)
-                    .fap(call -> L(call.getParameters()).gat(0))
-                    .fap(toCast(PhpExpression.class))
+                    .fop(call -> L(call.getParameters()).gat(0))
+                    .fop(toCast(PhpExpression.class))
                     .map(arg -> trace.subCtx(L()).findExprType(arg))
             )));
     }
@@ -114,14 +112,14 @@ public class ArgRes extends Lang
     {
         return opt(clos.getParent())
             .map(expr -> expr.getParent())
-            .fap(toCast(AssignmentExpressionImpl.class))
-            .fap(ass -> opt(ass.getParent())
-                .fap(toCast(StatementImpl.class))
+            .fop(toCast(AssignmentExpressionImpl.class))
+            .fop(ass -> opt(ass.getParent())
+                .fop(toCast(StatementImpl.class))
                 .map(state -> state.getNextPsiSibling())
                 .map(nextSt -> {
                     int startOffset = nextSt.getTextOffset();
                     return opt(ass.getVariable())
-                        .fap(toCast(VariableImpl.class))
+                        .fop(toCast(VariableImpl.class))
                         .map(variable -> findVarReferences(variable))
                         .def(L())
                         .fop(res -> opt(res.getElement()))
@@ -136,17 +134,17 @@ public class ArgRes extends Lang
     private Opt<MultiType> getInlineFuncArg(FunctionImpl clos, int argOrderInLambda)
     {
         return opt(clos.getParent())
-            .fap(toCast(PhpExpression.class))
-            .fap(call -> getArgPassedTo(call, argOrderInLambda));
+            .fop(toCast(PhpExpression.class))
+            .fop(call -> getArgPassedTo(call, argOrderInLambda));
     }
 
     private MultiType peekOutside(ParameterImpl param)
     {
         return opt(param.getParent())
             .map(paramList -> paramList.getParent())
-            .fap(toCast(FunctionImpl.class)) // closure
-            .fap(clos -> getArgOrder(param)
-                .fap(order -> Opt.fst(list(opt(null)
+            .fop(toCast(FunctionImpl.class)) // closure
+            .fop(clos -> getArgOrder(param)
+                .fop(order -> Opt.fst(list(opt(null)
                     , getInlineFuncArg(clos, order)
                     , getFuncVarUsageArg(clos, order)
                 ))))
@@ -157,15 +155,15 @@ public class ArgRes extends Lang
     private MultiType resolveFromDataProviderDoc(ParameterImpl param)
     {
         return opt(param.getDocComment())
-            .fap(toCast(PhpDocCommentImpl.class))
+            .fop(toCast(PhpDocCommentImpl.class))
             .map(doc -> doc.getDocTagByClass(PhpDocDataProviderImpl.class))
-            .fap(tags -> L(tags).fst())
-            .fap(tag -> L(tag.getChildren())
+            .fop(tags -> L(tags).fst())
+            .fop(tag -> L(tag.getChildren())
                 .fop(toCast(PhpDocRefImpl.class))
                 .fst())
-            .fap(ref -> L(ref.getReferences()).fst())
+            .fop(ref -> L(ref.getReferences()).fst())
             .map(ref -> ref.resolve())
-            .fap(toCast(MethodImpl.class))
+            .fop(toCast(MethodImpl.class))
             .map(met -> ClosRes.findFunctionReturns(met))
             .map(rets -> rets
                 .fop(ret -> opt(ret.getArgument()))
@@ -173,7 +171,7 @@ public class ArgRes extends Lang
                 .map(val -> trace.subCtx(L()).findExprType(val))
                 .fap(mt -> mt.types))
             .map(ts -> new MultiType(ts).getEl())
-            .fap(mt -> getArgOrder(param)
+            .fop(mt -> getArgOrder(param)
                 .map(order -> mt.getKey(order + "")))
             .def(MultiType.INVALID_PSI);
     }
@@ -185,10 +183,10 @@ public class ArgRes extends Lang
 
         opt(param.getParent())
             // get doc comments from the initial abstract method if any
-            .fap(Tls.toCast(ParameterListImpl.class))
+            .fop(Tls.toCast(ParameterListImpl.class))
             .map(lst -> lst.getParent())
-            .fap(Tls.toCast(MethodImpl.class))
-            .fap(meth -> opt(meth.getContainingClass())
+            .fop(Tls.toCast(MethodImpl.class))
+            .fop(meth -> opt(meth.getContainingClass())
                 .map(cls -> L(cls.getImplementedInterfaces())
                     .fap(ifc -> L(ifc.getMethods()))
                     .flt(ifcMeth -> meth.getName().equals(ifcMeth.getName()))))
@@ -210,7 +208,7 @@ public class ArgRes extends Lang
             result.types.addAll(peekOutside(param).types);
 
             getArgOrder(param)
-                .fap(i -> trace.getArg(i))
+                .fop(i -> trace.getArg(i))
                 .thn(mt -> result.types.addAll(mt.types));
         }
 
