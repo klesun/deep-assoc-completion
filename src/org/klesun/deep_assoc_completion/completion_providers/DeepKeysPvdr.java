@@ -36,7 +36,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .withTypeText(type);
     }
 
-    private static LookupElement makeLookup(DeepType.Key keyEntry, Project project)
+    private static LookupElement makeLookup(DeepType.Key keyEntry)
     {
         return makeLookupBase(keyEntry.name, new MultiType(keyEntry.getTypes()).getBriefTypeText());
     }
@@ -59,38 +59,30 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 .fop(toCast(PhpExpression.class))
                 .map(srcExpr -> funcCtx.findExprType(srcExpr).types)
                 .thn(types -> {
-                    List<String> options = new ArrayList<>();
-                    for (DeepType t: types) {
-                        for (String k: t.keys.keySet()) {
-                            options.add(k);
+                    MultiType mt = new MultiType(types);
+                    L<String> keyNames = mt.getKeyNames();
+                    L<DeepType> indexTypes = mt.types.fap(t -> t.indexTypes);
+
+                    /** preliminary keys without type - I think they may be considerably faster in some cases */
+//                    suggestions.addAll(keyNames
+//                        .map(keyName -> makeLookupBase(keyName, "no type info"))
+//                        .map((lookup,i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - ++i)));
+//                    result.addAllElements(suggestions);
+
+                    suggestions.addAll(keyNames
+                        .map(keyName -> makeLookupBase(keyName, mt.getKey(keyName).getBriefTypeText()))
+                        .map((lookup,i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - ++i)));
+
+                    if (indexTypes.size() > 0) {
+                        String typeText = new MultiType(L(indexTypes)).getBriefTypeText();
+                        for (int k = 0; k < 5; ++k) {
+                            suggestions.add(makeLookupBase(k + "", typeText));
                         }
                     }
-
-                    int i = 0;
-                    Set<String> suggested = new HashSet<>();
-                    for (DeepType type: types) {
-                        for (DeepType.Key keyEntry: type.keys.values()) {
-                            String key = keyEntry.name;
-                            if (suggested.contains(key)) continue;
-                            suggested.add(key);
-
-                            if (literal instanceof StringLiteralExpression) {
-                                key = "'" + key + "'";
-                            }
-                            Project project = parameters.getPosition().getProject();
-                            LookupElement lookup = makeLookup(keyEntry, project);
-                            suggestions.add(PrioritizedLookupElement.withPriority(lookup, 3000 - ++i));
-                        }
-                        if (type.indexTypes.size() > 0) {
-                            String typeText = new MultiType(L(type.indexTypes)).getBriefTypeText();
-                            for (int k = 0; k < 5; ++k) {
-                                suggestions.add(makeLookupBase(k + "", typeText));
-                            }
-                        }
-                    }
-                    result.addLookupAdvertisement("Press <Page Down> few times to skip built-in suggestions");
+                    long elapsed = System.nanoTime() - startTime;
+                    result.addLookupAdvertisement("Inferred in " + elapsed + " nanoseconds");
                 })
-                .els(() -> System.out.println("Failed to find declared array keys")));
+                .els(() -> result.addLookupAdvertisement("Failed to find declared array keys")));
 
         result.addAllElements(suggestions);
         Set<String> suggested = new HashSet<>(suggestions.map(l -> l.getLookupString()));
@@ -102,7 +94,5 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 result.addElement(lookup);
             }
         });
-
-        long elapsed = System.nanoTime() - startTime;
     }
 }

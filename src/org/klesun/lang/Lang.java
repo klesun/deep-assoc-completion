@@ -326,6 +326,20 @@ public class Lang
             return this;
         }
 
+        /** group values by passed function. could be used to get read of duplicate values */
+        public L<L<T>> grp(F<T, String> getHash)
+        {
+            LinkedHashMap<String, L<T>> grouped = new LinkedHashMap<>();
+            for (T val: this) {
+                String hash = getHash.apply(val);
+                if (!grouped.containsKey(hash)) {
+                    grouped.put(hash, list());
+                }
+                grouped.get(hash).add(val);
+            }
+            return L(grouped.values());
+        }
+
         /** stands for "concatenate" */
         public L<T> cct(List<T> more)
         {

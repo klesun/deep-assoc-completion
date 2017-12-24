@@ -104,14 +104,16 @@ public class MultiType extends Lang
 
         if (keyNames.size() > 0) {
             if (keyNames.all((k,i) -> (k + "").equals(i + ""))) {
-                briefTypes.add("[" + Tls.implode(", ", keyNames.map(i -> getKey(i + "").getBriefTypeText(15))) + "]");
+                briefTypes.add("(" + Tls.implode(", ", keyNames.map(i -> getKey(i + "").getBriefTypeText(15))) + ")");
             } else {
                 briefTypes.add("{" + Tls.implode(", ", keyNames.map(k -> k + ":")) + "}");
             }
         }
         L<String> strvals = types.fop(t -> opt(t.stringValue));
         if (strvals.size() > 0) {
-            briefTypes.add(Tls.implode("|", strvals.map(s -> "'" + s + "'")));
+            briefTypes.add(Tls.implode("|", strvals
+                .grp(a -> a).fop(g -> g.fst())
+                .map(s -> "'" + s + "'")));
         }
         if (types.any(t -> t.indexTypes.size() > 0)) {
             briefTypes.add("[" + getEl().getBriefTypeText() + "]");
