@@ -25,7 +25,7 @@ public class FieldRes extends Lang
         this.ctx = ctx;
     }
 
-    private static MultiType makeType(L<String> keys, S<MultiType> getType, PsiElement psi)
+    private static MultiType makeType(L<String> keys, S<MultiType> getType, PsiElement psi, PhpType briefType)
     {
         if (keys.size() == 0) {
             return getType.get();
@@ -34,9 +34,9 @@ public class FieldRes extends Lang
             String nextKey = keys.get(0);
             L<String> furtherKeys = keys.sub(1);
             if (nextKey == null) {
-                arr.indexTypes = makeType(furtherKeys, getType, psi).types;
+                arr.indexTypes = makeType(furtherKeys, getType, psi, briefType).types;
             } else {
-                arr.addKey(nextKey, psi).addType(() -> makeType(furtherKeys, getType, psi));
+                arr.addKey(nextKey, psi).addType(() -> makeType(furtherKeys, getType, psi, briefType), briefType);
             }
             return new MultiType(list(arr));
         }
@@ -46,7 +46,7 @@ public class FieldRes extends Lang
     {
         List<DeepType> resultTypes = list();
         for (Assign ass: asses) {
-            resultTypes.addAll(makeType(L(ass.keys), ass.assignedType, ass.psi).types);
+            resultTypes.addAll(makeType(L(ass.keys), ass.assignedType, ass.psi, ass.briefType).types);
         }
         return resultTypes;
     }

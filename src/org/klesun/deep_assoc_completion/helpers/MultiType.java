@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.lang.Lang;
+import org.klesun.lang.NonNull;
 import org.klesun.lang.Tls;
 
 import java.util.HashSet;
@@ -75,6 +76,15 @@ public class MultiType extends Lang
                 .fap(v -> v.getTypes()),
             types.fap(t -> t.indexTypes)
         ).fap(a -> a));
+    }
+
+    public PhpType getKeyBriefType(@NonNull String keyName)
+    {
+        PhpType ideaType = new PhpType();
+        types.fop(t -> Lang.getKey(t.keys, keyName))
+            .fap(k -> k.getBriefTypes())
+            .fch(ideaType::add);
+        return ideaType;
     }
 
     public L<String> getKeyNames()

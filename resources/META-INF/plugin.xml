@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2017.12.18.002</version>
+    <version>2017.12.24.002</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -25,10 +25,9 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>Bugfix: provide phpdoc completion correctly even when code is not in a namespace (or in a recent version of phpstorm)</li>
-      <li>Bugfix: add null-check to the psi passed to GotoDeclarationHandler::getGotoDeclarationTargets()</li>
-      <li>Bugfix: infer `array_unshift` type only from function called `array_unshift` (was any function)</li>
-      <li>Infer type from `array_unshift()` built-in function</li>
+      <li>Show sub-array key names in completion brief type text</li>
+      <li>Fix method name completion in [$obj, ""] method reference - infer object type even if it was declared in other function like SomeClass::make()</li>
+      <li>#24 infer assoc type from @var doc</li>
     </ul>
     ]]>
     </change-notes>

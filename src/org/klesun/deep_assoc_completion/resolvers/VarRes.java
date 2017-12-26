@@ -55,7 +55,9 @@ public class VarRes extends Lang
                     if (!type.keys.containsKey(nextKey)) {
                         type.addKey(nextKey, assign.psi);
                     }
-                    addAssignment(type.keys.get(nextKey).getTypeGetters(), assign, true);
+                    DeepType.Key keyRec = type.keys.get(nextKey);
+                    keyRec.addType(() -> new MultiType(L()), PhpType.ARRAY);
+                    addAssignment(keyRec.getTypeGetters(), assign, true);
                 }
             });
             assign.keys.add(0, nextKey);
@@ -96,7 +98,7 @@ public class VarRes extends Lang
                 .map(names -> {
                     DeepType t = new DeepType(strt.definition, PhpType.ARRAY);
                     names.forEach(n -> t.addKey(n, strt.definition)
-                        .addType(() -> new MultiType(list(new DeepType(strt.definition, PhpType.STRING)))));
+                        .addType(() -> new MultiType(list(new DeepType(strt.definition, PhpType.STRING))), PhpType.STRING));
                     return t;
                 }));
     }
@@ -117,7 +119,7 @@ public class VarRes extends Lang
                 return args.gat(1)
                     .flt(asd -> isCaretArr)
                     .fop(Tls.toCast(PhpExpression.class))
-                    .map(el -> new Assign(keys, () -> ctx.findExprType(el), false, el));
+                    .map(el -> new Assign(keys, () -> ctx.findExprType(el), false, el, el.getType()));
             });
     }
 
@@ -218,15 +220,15 @@ public class VarRes extends Lang
                 , (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
                 , assertArrayUnshift(refPsi)
                 , assertForeachElement(refPsi)
-                    .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi))
+                    .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
                 , assertTupleAssignment(refPsi)
-                    .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi))
+                    .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
                 , assertPregMatchResult(refPsi)
-                    .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi))
+                    .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi, PhpType.ARRAY))
                 , Tls.cast(ParameterImpl.class, refPsi)
                     .map(param -> {
                         S<MultiType> mtg = () -> new ArgRes(ctx).resolveArg(param);
-                        return new Assign(list(), mtg, true, refPsi);
+                        return new Assign(list(), mtg, true, refPsi, param.getType());
                     })
             ));
             if (assignOpt.has()) {

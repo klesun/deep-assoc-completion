@@ -8,6 +8,7 @@ import com.jetbrains.php.lang.psi.elements.impl.ClassConstantReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -93,23 +94,25 @@ public class ArrCtorRes extends Lang
                 // i believe this is likely to change in future - so we try both cases
                 .elf(() -> opt(valuePsi.getFirstChild()).fop(toCast(PhpExpression.class)))
                 .thn(val -> arrayType.addKey(i + "", val)
-                    .addType(() -> ctx.findExprType(val))));
+                    .addType(() -> ctx.findExprType(val), val.getType())));
 
         // keyed elements
         L(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
             .fop(toCast(PhpExpression.class))
-            .map(v -> S(() -> ctx.findExprType(v)))
-            .thn(getType -> opt(keyRec.getKey())
-                .fop(toCast(PhpExpression.class))
-                .map(keyPsi -> ctx.findExprType(keyPsi).types)
-                .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
-                .thn(keyTypes -> {
-                    if (keyTypes.s.size() > 0) {
-                        keyTypes.fch(key -> arrayType.addKey(key, keyRec).addType(getType));
-                    } else {
-                        arrayType.indexTypes.addAll(getType.get().types);
-                    }
-                })));
+            .thn(v -> {
+                S<MultiType> getType = S(() -> ctx.findExprType(v));
+                opt(keyRec.getKey())
+                    .fop(toCast(PhpExpression.class))
+                    .map(keyPsi -> ctx.findExprType(keyPsi).types)
+                    .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
+                    .thn(keyTypes -> {
+                        if (keyTypes.s.size() > 0) {
+                            keyTypes.fch(key -> arrayType.addKey(key, keyRec).addType(getType, v.getType()));
+                        } else {
+                            arrayType.indexTypes.addAll(getType.get().types);
+                        }
+                    });
+            }));
 
         return arrayType;
     }

@@ -63,15 +63,23 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                     L<String> keyNames = mt.getKeyNames();
                     L<DeepType> indexTypes = mt.types.fap(t -> t.indexTypes);
 
-                    /** preliminary keys without type - I think they may be considerably faster in some cases */
-//                    suggestions.addAll(keyNames
-//                        .map(keyName -> makeLookupBase(keyName, "no type info"))
-//                        .map((lookup,i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - ++i)));
-//                    result.addAllElements(suggestions);
-
-                    suggestions.addAll(keyNames
-                        .map(keyName -> makeLookupBase(keyName, mt.getKey(keyName).getBriefTypeText()))
-                        .map((lookup,i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - ++i)));
+                    if (search.getExpressionsResolved() < 200) {
+                        // it didn't take long to collect key names, so getting their deep type should not take much time either
+                        int wasDepth = search.limitDepthLeft(12);
+                        suggestions.addAll(keyNames
+                            .map(keyName -> makeLookupBase(keyName, mt.getKey(keyName).getBriefTypeText()))
+                            .map((lookup,i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - ++i)));
+                        search.setDepth(wasDepth);
+                    } else {
+                        // preliminary keys without type - they may be at least 3 times faster in some cases
+                        suggestions.addAll(keyNames
+                            .map(keyName -> {
+                                String briefType = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
+                                briefType = !briefType.equals("") ? briefType : "?";
+                                return makeLookupBase(keyName, briefType);
+                            })
+                            .map((lookup,i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - ++i)));
+                    }
 
                     if (indexTypes.size() > 0) {
                         String typeText = new MultiType(L(indexTypes)).getBriefTypeText();
@@ -80,7 +88,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                         }
                     }
                     long elapsed = System.nanoTime() - startTime;
-                    result.addLookupAdvertisement("Inferred in " + elapsed + " nanoseconds");
+                    result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
                 })
                 .els(() -> result.addLookupAdvertisement("Failed to find declared array keys")));
 
@@ -94,5 +102,10 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 result.addElement(lookup);
             }
         });
+
+        long elapsed = System.nanoTime() - startTime;
+        if (search.getExpressionsResolved() > 0) {
+            System.out.println("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
+        }
     }
 }

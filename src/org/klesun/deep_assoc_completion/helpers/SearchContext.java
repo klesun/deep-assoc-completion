@@ -15,7 +15,9 @@ public class SearchContext extends Lang
     private boolean debug = false;
     // max expressions per single search - guard
     // against memory overflow in circular references
-    private int maxExpressions = 5000;
+    private int maxExpressions = 10000;
+    // for performance measurement
+    private int expressionsResolved = 0;
     final public L<PhpExpression> psiTrace = L();
 
     public SearchContext()
@@ -26,6 +28,17 @@ public class SearchContext extends Lang
     {
         this.depth = initialDepth = depth;
         return this;
+    }
+
+    /**
+     * temporarily decrease depth to quickly get some
+     * optional info (like type text in completion dialog)
+     */
+    public int limitDepthLeft(int maxDepth)
+    {
+        int wasDepth = this.depth;
+        this.depth = Math.min(this.depth, maxDepth);
+        return wasDepth;
     }
 
     public SearchContext setArgInferenceEnabled(boolean value)
@@ -63,9 +76,9 @@ public class SearchContext extends Lang
     {
         if (depth <= 0) {
             return opt(null);
-        } else if (--maxExpressions < 0) {
+        } else if (++expressionsResolved > maxExpressions) {
             /** @debug */
-            System.out.println("Expression limit guard reached " + maxExpressions);
+            System.out.println("Expression limit guard reached " + expressionsResolved);
             return opt(null);
         }
         --depth;
@@ -87,5 +100,10 @@ public class SearchContext extends Lang
         psiTrace.remove(psiTrace.size() - 1);
         ++depth;
         return result;
+    }
+
+    public int getExpressionsResolved()
+    {
+        return this.expressionsResolved;
     }
 }

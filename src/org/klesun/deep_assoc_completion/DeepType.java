@@ -76,6 +76,8 @@ public class DeepType extends Lang
     {
         final public String name;
         final private L<S<MultiType>> typeGetters = L();
+        // to get quick built-in type info
+        final private L<PhpType> briefTypes = L();
         // where Go To Definition will lead
         final public PsiElement definition;
 
@@ -85,14 +87,20 @@ public class DeepType extends Lang
             this.definition = definition;
         }
 
-        public void addType(S<MultiType> getter)
+        public void addType(S<MultiType> getter, PhpType briefType)
         {
             typeGetters.add(Tls.onDemand(getter));
+            briefTypes.add(briefType);
         }
 
         public L<DeepType> getTypes()
         {
             return typeGetters.fap(g -> g.get().types);
+        }
+
+        public L<PhpType> getBriefTypes()
+        {
+            return briefTypes;
         }
 
         public L<S<MultiType>> getTypeGetters()

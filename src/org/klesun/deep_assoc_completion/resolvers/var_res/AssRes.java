@@ -81,6 +81,6 @@ public class AssRes extends Lang
     {
         return findParentAssignment(varRef)
             .fop(ass -> collectKeyAssignment(ass)
-                .map(tup -> new Assign(tup.a, tup.b, didSurelyHappen, ass)));
+                .map(tup -> new Assign(tup.a, tup.b, didSurelyHappen, ass, ass.getType())));
     }
 }

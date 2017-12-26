@@ -106,10 +106,12 @@ public class FuncCallRes extends Lang
                                     .flt(ref -> ScopeFinder.didPossiblyHappen(ref, call))
                                     ;
                                 if (refs.size() > 0) {
+                                    PhpType briefType = new PhpType();
+                                    refs.map(var -> var.getType()).fch(briefType::add);
                                     arrt.addKey(varName, argPsi)
                                         .addType(() -> refs
                                             .fap(ref -> ctx.findExprType(ref).types)
-                                            .wap(MultiType::new));
+                                            .wap(MultiType::new), briefType);
                                 }
                             })));
                 result.add(arrt);
