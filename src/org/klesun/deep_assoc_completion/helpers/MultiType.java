@@ -129,7 +129,7 @@ public class MultiType extends Lang
             briefTypes.add("[" + getEl().getBriefTypeText() + "]");
         }
         if (briefTypes.isEmpty() || briefTypes.all((t,i) -> t.equals(""))) {
-            briefTypes.add(getIdeaType().toString());
+            briefTypes.add(getIdeaType().filterUnknown().toString());
         }
         String fullStr = Tls.implode("|", briefTypes);
         fullStr = fullStr.length() == 0 ? "?" : fullStr;

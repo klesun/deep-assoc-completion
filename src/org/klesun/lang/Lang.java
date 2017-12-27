@@ -4,6 +4,7 @@ import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.GsonBuilder;
 import com.intellij.psi.PsiElement;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.*;
@@ -75,8 +76,18 @@ public class Lang
 
     public static String substr(String str, int startIndex, int endIndex)
     {
-        return str.length() > 0
-            ? str.substring(startIndex, Math.min(str.length(), endIndex))
+        if (startIndex < 0) {
+            startIndex = str.length() + startIndex;
+        }
+        if (endIndex < 0) {
+            endIndex = str.length() + endIndex;
+        }
+
+        return str.length() > 0 && startIndex < endIndex
+            ? str.substring(
+                Math.max(0, startIndex),
+                Math.min(str.length(), endIndex)
+            )
             : "";
     }
 
@@ -163,6 +174,48 @@ public class Lang
     public static <T> L<T> L()
     {
         return new L<T>(new ArrayList<T>());
+    }
+
+    /** a convenient wrapper to Java's LinkedHashMap - with map/filter/toList/etc... methods */
+    public static class Dict<T> implements Map<String, T>
+    {
+        final LinkedHashMap<String, T> subject;
+
+        public Dict(L<T2<String, T>> entries)
+        {
+            subject = new LinkedHashMap<>();
+            entries.fch(t -> subject.put(t.a, t.b));
+        }
+
+        public <Tnew> Dict<Tnew> map(F<T, Tnew> f)
+        {
+            return new Dict<>(L(entrySet()).map(e -> T2(e.getKey(), f.apply(e.getValue()))));
+        }
+
+        public Opt<T> gat(String key)
+        {
+            if (subject.containsKey(key)) {
+                return opt(subject.get(key));
+            } else {
+                return opt(null);
+            }
+        }
+
+        // following methods implement Java's Map interface
+        public int size() {return subject.size();}
+        public boolean isEmpty() {return subject.isEmpty();}
+        public boolean containsKey(Object key) {return subject.containsKey(key);}
+        public boolean containsValue(Object value) {return subject.containsValue(value);}
+        public T get(Object key) {return subject.get(key);}
+        public void clear() {subject.clear();}
+        @NotNull public Set<String> keySet() {return subject.keySet();}
+        @NotNull public Collection<T> values() {return subject.values();}
+        @NotNull public Set<Entry<String, T>> entrySet() {return subject.entrySet();}
+        // add them only for compatibility with Java's Map interface, but you
+        // should instantly pass all values to the constructor nevertheless
+        @Deprecated public T put(String key, T value) {return subject.put(key, value);}
+        @Deprecated public T remove(Object key) {return subject.remove(key);}
+        @Deprecated public void putAll(@NotNull Map<? extends String, ? extends T> m) {subject.putAll(m);}
     }
 
     /**
@@ -392,6 +445,18 @@ public class Lang
         {
             return sub(start, this.size() - start);
         }
+
+        /** for "dict" - maps each value to a key-value pair using the passed function */
+        public <Tnew> Dict<Tnew> dct(F<T, T2<String, Tnew>> makeKey)
+        {
+            return new Dict<>(this.map(makeKey));
+        }
+
+        /** make dict with same values mapped by key returned by the func */
+        public Dict<T> key(F<T, String> makeKey)
+        {
+            return dct((v) -> T2(makeKey.apply(v), v));
+        }
     }
 
     /**
@@ -412,17 +477,17 @@ public class Lang
         public int size() {return s.size();}
         public boolean isEmpty() {return s.isEmpty();}
         public boolean contains(Object o) {return s.contains(o);}
-        public Iterator<T> iterator() {return s.iterator();}
-        public Object[] toArray() {return s.toArray();}
-        public <T1> T1[] toArray(T1[] a) {return s.toArray(a);}
-        public boolean add(T t) {return s.add(t);}
-        public boolean remove(Object o) {return s.remove(o);}
+        @NotNull public Iterator<T> iterator() {return s.iterator();}
+        @NotNull public Object[] toArray() {return s.toArray();}
+        @NotNull public <T1> T1[] toArray(T1[] a) {return s.toArray(a);}
+        @Deprecated public boolean add(T t) {return s.add(t);}
+        @Deprecated public boolean remove(Object o) {return s.remove(o);}
         public boolean containsAll(Collection<?> c) {return s.containsAll(c);}
-        public boolean addAll(Collection<? extends T> c) {return s.addAll(c);}
-        public boolean addAll(int index, Collection<? extends T> c) {return s.addAll(index, c);}
-        public boolean removeAll(Collection<?> c) {return s.removeAll(c);}
-        public boolean retainAll(Collection<?> c) {return s.retainAll(c);}
-        public void clear() {s.clear();}
+        @Deprecated public boolean addAll(Collection<? extends T> c) {return s.addAll(c);}
+        @Deprecated public boolean addAll(int index, Collection<? extends T> c) {return s.addAll(index, c);}
+        @Deprecated public boolean removeAll(Collection<?> c) {return s.removeAll(c);}
+        @Deprecated public boolean retainAll(Collection<?> c) {return s.retainAll(c);}
+        @Deprecated public void clear() {s.clear();}
         public T get(int index) {
             if (index >= 0) {
                 return s.get(index);
@@ -430,13 +495,13 @@ public class Lang
                 return s.get(s.size() + index);
             }
         }
-        public T set(int index, T element) {return s.set(index, element);}
-        public void add(int index, T element) {s.add(index, element);}
-        public T remove(int index) {return s.remove(index);}
+        @Deprecated public T set(int index, T element) {return s.set(index, element);}
+        @Deprecated public void add(int index, T element) {s.add(index, element);}
+        @Deprecated public T remove(int index) {return s.remove(index);}
         public int indexOf(Object o) {return s.indexOf(o);}
         public int lastIndexOf(Object o) {return s.lastIndexOf(o);}
-        public ListIterator<T> listIterator() {return s.listIterator();}
-        public ListIterator<T> listIterator(int index) {return s.listIterator(index);}
-        public List<T> subList(int fromIndex, int toIndex) {return s.subList(fromIndex, toIndex);}
+        @NotNull public ListIterator<T> listIterator() {return s.listIterator();}
+        @NotNull public ListIterator<T> listIterator(int index) {return s.listIterator(index);}
+        @NotNull public List<T> subList(int fromIndex, int toIndex) {return s.subList(fromIndex, toIndex);}
     }
 }
