@@ -128,10 +128,11 @@ public class MultiType extends Lang
         if (types.any(t -> t.indexTypes.size() > 0)) {
             briefTypes.add("[" + getEl().getBriefTypeText() + "]");
         }
-        if (briefTypes.isEmpty() || briefTypes.all((t,i) -> t.equals(""))) {
-            briefTypes.add(getIdeaType().filterUnknown().toString());
+        if (briefTypes.isEmpty() || briefTypes.all((t,i) -> t.equals("") || t.equals("null"))) {
+            briefTypes.add(getIdeaType().filterUnknown().toStringResolved());
         }
         String fullStr = Tls.implode("|", briefTypes);
+
         fullStr = fullStr.length() == 0 ? "?" : fullStr;
         String truncated = Tls.substr(fullStr, 0, maxLen);
         return truncated.length() == fullStr.length()

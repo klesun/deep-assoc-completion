@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.psi.elements.Function;
 import com.jetbrains.php.lang.psi.elements.GroupStatement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl;
@@ -115,6 +116,12 @@ public class FuncCallRes extends Lang
                                 }
                             })));
                 result.add(arrt);
+            } else {
+                // try to get type info from standard_2.php
+                opt(call.resolve())
+                    .fop(toCast(Function.class))
+                    .thn(func -> result.add(new DeepType(func, func.getDocType())))
+                    ;
             }
             return result;
         }).def(list());

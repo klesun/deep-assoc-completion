@@ -485,14 +485,14 @@ public class Lang
         @NotNull public Iterator<T> iterator() {return s.iterator();}
         @NotNull public Object[] toArray() {return s.toArray();}
         @NotNull public <T1> T1[] toArray(T1[] a) {return s.toArray(a);}
-        @Deprecated public boolean add(T t) {return s.add(t);}
-        @Deprecated public boolean remove(Object o) {return s.remove(o);}
+        public boolean add(T t) {return s.add(t);}
+        public boolean remove(Object o) {return s.remove(o);}
         public boolean containsAll(Collection<?> c) {return s.containsAll(c);}
-        @Deprecated public boolean addAll(Collection<? extends T> c) {return s.addAll(c);}
-        @Deprecated public boolean addAll(int index, Collection<? extends T> c) {return s.addAll(index, c);}
-        @Deprecated public boolean removeAll(Collection<?> c) {return s.removeAll(c);}
-        @Deprecated public boolean retainAll(Collection<?> c) {return s.retainAll(c);}
-        @Deprecated public void clear() {s.clear();}
+        public boolean addAll(Collection<? extends T> c) {return s.addAll(c);}
+        public boolean addAll(int index, Collection<? extends T> c) {return s.addAll(index, c);}
+        public boolean removeAll(Collection<?> c) {return s.removeAll(c);}
+        public boolean retainAll(Collection<?> c) {return s.retainAll(c);}
+        public void clear() {s.clear();}
         public T get(int index) {
             if (index >= 0) {
                 return s.get(index);
@@ -500,9 +500,9 @@ public class Lang
                 return s.get(s.size() + index);
             }
         }
-        @Deprecated public T set(int index, T element) {return s.set(index, element);}
-        @Deprecated public void add(int index, T element) {s.add(index, element);}
-        @Deprecated public T remove(int index) {return s.remove(index);}
+        public T set(int index, T element) {return s.set(index, element);}
+        public void add(int index, T element) {s.add(index, element);}
+        public T remove(int index) {return s.remove(index);}
         public int indexOf(Object o) {return s.indexOf(o);}
         public int lastIndexOf(Object o) {return s.lastIndexOf(o);}
         @NotNull public ListIterator<T> listIterator() {return s.listIterator();}
