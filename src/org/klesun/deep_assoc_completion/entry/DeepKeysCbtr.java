@@ -2,10 +2,12 @@ package org.klesun.deep_assoc_completion.entry;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.patterns.PlatformPatterns;
+import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
 import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
+import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.completion_providers.*;
 
 /**
@@ -65,5 +67,16 @@ public class DeepKeysCbtr extends CompletionContributor
                 ,
             new UsedKeysPvdr()
         );
+    }
+
+    /**
+     * Allow autoPopup to appear after custom symbol
+     */
+    public boolean invokeAutoPopup(@NotNull PsiElement position, char typeChar) {
+        if (typeChar == '\'') {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
