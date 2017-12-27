@@ -187,9 +187,14 @@ public class Lang
             entries.fch(t -> subject.put(t.a, t.b));
         }
 
+        public <Tnew> Dict<Tnew> map(F2<T, String, Tnew> f)
+        {
+            return new Dict<>(L(entrySet()).map(e -> T2(e.getKey(), f.apply(e.getValue(), e.getKey()))));
+        }
+
         public <Tnew> Dict<Tnew> map(F<T, Tnew> f)
         {
-            return new Dict<>(L(entrySet()).map(e -> T2(e.getKey(), f.apply(e.getValue()))));
+            return this.map((v,k) -> f.apply(v));
         }
 
         public Opt<T> gat(String key)

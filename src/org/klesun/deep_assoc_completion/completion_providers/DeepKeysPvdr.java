@@ -67,57 +67,46 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         Set<String> suggested = new HashSet<>();
 
         long startTime = System.nanoTime();
-        Lang.opt(parameters.getPosition().getParent())
-            .thn(literal -> Lang.opt(literal.getParent())
+        MultiType mt = Lang.opt(parameters.getPosition().getParent())
+            .fop(literal -> Lang.opt(literal.getParent())
                 .fop(Lang.toCast(ArrayIndex.class))
                 .map(index -> index.getParent())
                 .fop(Lang.toCast(ArrayAccessExpressionImpl.class))
                 .map(expr -> expr.getValue())
                 .fop(toCast(PhpExpression.class))
-                .map(srcExpr -> funcCtx.findExprType(srcExpr).types)
-                .thn(types -> {
-                    MultiType mt = new MultiType(types);
-                    L<String> keyNames = mt.getKeyNames();
-                    L<DeepType> indexTypes = mt.types.fap(t -> t.indexTypes);
+                .map(srcExpr -> funcCtx.findExprType(srcExpr)))
+            .def(MultiType.INVALID_PSI);
 
-                    if (indexTypes.size() > 0) {
-                        String typeText = new MultiType(L(indexTypes)).getBriefTypeText(BRIEF_TYPE_MAX_LEN);
-                        for (int k = 0; k < 5; ++k) {
-                            result.addElement(makeLookupBase(k + "", typeText));
-                        }
-                    }
+        L<String> keyNames = mt.getKeyNames();
+        L<DeepType> indexTypes = mt.types.fap(t -> t.indexTypes);
 
-                    // preliminary keys without type - they may be at least 3 times faster in some cases
-                    L<MutableLookup> lookups = keyNames
-                        .map(keyName -> {
-                            String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
-                            briefTypeRaw = !briefTypeRaw.equals("") ? briefTypeRaw : "?";
-                            // to define dialog pop-up width
-                            briefTypeRaw = "                                                                  " + briefTypeRaw;
-                            briefTypeRaw = Tls.substr(briefTypeRaw, -BRIEF_TYPE_MAX_LEN);
-                            String briefType = briefTypeRaw;
-                            LookupElement lookup =  LookupElementBuilder.create(keyName)
-                                .bold()
-                                .withIcon(PhpIcons.FIELD)
-                                .withTypeText(briefType, true);
-                            return new MutableLookup(lookup);
-                        });
+        if (indexTypes.size() > 0) {
+            String typeText = new MultiType(L(indexTypes)).getBriefTypeText(BRIEF_TYPE_MAX_LEN);
+            for (int k = 0; k < 5; ++k) {
+                result.addElement(makeLookupBase(k + "", typeText));
+            }
+        }
 
-                    suggested.addAll(lookups.map(l -> l.getLookupString()));
+        // preliminary keys without type - they may be at least 3 times faster in some cases
+        L<MutableLookup> lookups = keyNames
+            .map(keyName -> {
+                String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
+                briefTypeRaw = !briefTypeRaw.equals("") ? briefTypeRaw : "?";
+                // to define dialog pop-up width
+                briefTypeRaw = "                                                                  " + briefTypeRaw;
+                briefTypeRaw = Tls.substr(briefTypeRaw, -BRIEF_TYPE_MAX_LEN);
+                String briefType = briefTypeRaw;
+                LookupElement lookup =  LookupElementBuilder.create(keyName)
+                    .bold()
+                    .withIcon(PhpIcons.FIELD)
+                    .withTypeText(briefType, true);
+                return new MutableLookup(lookup);
+            });
 
-                    result.addAllElements(lookups.map((lookup, i) ->
-                        PrioritizedLookupElement.withPriority(lookup, 2000 - i)));
+        suggested.addAll(lookups.map(l -> l.getLookupString()));
 
-                    Lang.Dict<LookupElement> nameToNewLookup = keyNames
-                        .key(keyName -> keyName)
-                        .map(keyName -> makeLookupBase(keyName, mt.getKey(keyName).getBriefTypeText(BRIEF_TYPE_MAX_LEN)));
-
-                    lookups.fch(l -> nameToNewLookup.gat(l.getLookupString()).thn(newL -> l.lookupData = newL));
-
-                    long elapsed = System.nanoTime() - startTime;
-                    result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
-                })
-                .els(() -> result.addLookupAdvertisement("Failed to find declared array keys")));
+        result.addAllElements(lookups.map((lookup, i) ->
+            PrioritizedLookupElement.withPriority(lookup, 2000 - i)));
 
         result.runRemainingContributors(parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
@@ -127,7 +116,18 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             }
         });
 
+        // following code calculates deeper type info for
+        // completion options and updates them in the dialog
+
+        Lang.Dict<LookupElement> nameToNewLookup = keyNames.key(keyName -> keyName)
+            .map(keyName -> mt.getKey(keyName).getBriefTypeText(BRIEF_TYPE_MAX_LEN))
+            .map((briefText, keyName) -> makeLookupBase(keyName, briefText));
+
+        lookups.fch(l -> nameToNewLookup.gat(l.getLookupString()).thn(newL -> l.lookupData = newL));
+
         long elapsed = System.nanoTime() - startTime;
+        result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
+
         if (search.getExpressionsResolved() > 0) {
             System.out.println("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
         }
