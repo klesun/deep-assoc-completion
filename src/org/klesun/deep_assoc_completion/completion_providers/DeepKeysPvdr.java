@@ -87,6 +87,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                         }
                     }
 
+                    // preliminary keys without type - they may be at least 3 times faster in some cases
                     L<MutableLookup> lookups = keyNames
                         .map(keyName -> {
                             String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
@@ -104,7 +105,6 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
                     suggested.addAll(lookups.map(l -> l.getLookupString()));
 
-                    // preliminary keys without type - they may be at least 3 times faster in some cases
                     result.addAllElements(lookups.map((lookup, i) ->
                         PrioritizedLookupElement.withPriority(lookup, 2000 - i)));
 

@@ -1347,10 +1347,6 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function provideInlineVarDocAboveVar($db)
     {
         $list = [];
@@ -1360,4 +1356,8 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $list[] = [$options, ['dependencies' => [], 'description' => [], 'license' => [], 'version' => []]];
         return $list;
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 }

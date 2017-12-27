@@ -56,7 +56,9 @@ public class VarRes extends Lang
                         type.addKey(nextKey, assign.psi);
                     }
                     DeepType.Key keyRec = type.keys.get(nextKey);
-                    keyRec.addType(() -> new MultiType(L()), PhpType.ARRAY);
+                    PhpType briefType = assign.keys.size() > 0
+                        ? PhpType.ARRAY : assign.briefType;
+                    keyRec.addType(() -> new MultiType(L()), briefType);
                     addAssignment(keyRec.getTypeGetters(), assign, true);
                 }
             });
