@@ -1,5 +1,7 @@
 package org.klesun.lang;
 
+import static org.klesun.lang.Lang.*;
+
 /**
  * very similar stuff to Java-s Optional,
  * but requires less characters to use it
@@ -47,6 +49,12 @@ public class Opt<T>
             (opt) -> opt,
             () -> new Opt(null)
         );
+    }
+
+    /** transform opt to array */
+    public <Tnew> L<Tnew> fap(F<T, L<Tnew>> f)
+    {
+        return uni((val) -> f.apply(val), () -> list());
     }
 
     /**

@@ -259,9 +259,20 @@ public class Lang
             return gat(-1);
         }
 
+        public L<T> flt(F2<T, Integer, Boolean> pred)
+        {
+            L<T> result = list();
+            for (int i = 0; i < size(); ++i) {
+                if (pred.apply(get(i), i)) {
+                    result.add(get(i));
+                }
+            }
+            return result;
+        }
+
         public L<T> flt(Predicate<T> pred)
         {
-            return L(s.stream().filter(pred).collect(Collectors.toList()));
+            return flt((val, i) -> pred.test(val));
         }
 
         public <@NonNull Tnew> L<Tnew> map(F<T, Tnew> f)

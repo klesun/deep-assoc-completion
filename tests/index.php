@@ -318,9 +318,45 @@ class DeepKeysTest
         return $list;
     }
 
+    private static function makeDefaultApolloState()
+    {
+        return [
+            'gds' => 'apollo',
+            'area' => 'A',
+            'pcc' =>  '2G55',
+            'record_locator' => null,
+            'has_pnr' => false,
+            'is_pnr_stored' => false,
+            'can_create_pq' => false,
+
+            'id' => 1,
+            'internal_token' => 'fake123',
+            'agent_id' => 6206,
+            'lead_creator_id' => 6206,
+            'lead_id' => 1,
+        ];
+    }
+
+    private static function provideReplaceCompletion()
+    {
+        $testState = array_merge(self::makeDefaultApolloState(), [
+            '' => true, // should suggest: gds, area, pcc, etc...
+        ]);
+        $destState = array_replace(self::makeDefaultApolloState(), [
+            '' => true, // should suggest: gds, area, pcc, etc...
+        ]);
+    }
+
     //============================
     // not implemented follow
     //============================
+
+    private static function providePlusCompletion()
+    {
+        $testState = self::makeDefaultApolloState() + [
+            '' => true, // should suggest: gds, area, pcc, etc...
+        ];
+    }
 
     private static function testUsedKeysInAVar()
     {
