@@ -81,7 +81,7 @@ public class Tls extends Lang
         Pattern pattern = Pattern.compile(patternText);
         Matcher matcher = pattern.matcher(subjectText);
         if (matcher.matches()) {
-            for (int i = 1; i < matcher.groupCount(); ++i) {
+            for (int i = 1; i < matcher.groupCount() + 1; ++i) {
                 result.add(matcher.group(i));
             }
             return opt(L(result));

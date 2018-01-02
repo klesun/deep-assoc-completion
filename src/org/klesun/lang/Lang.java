@@ -275,7 +275,7 @@ public class Lang
             return flt((val, i) -> pred.test(val));
         }
 
-        public <@NonNull Tnew> L<Tnew> map(F<T, Tnew> f)
+        public <@NonNull Tnew> L<Tnew> map(F<T, @NonNull Tnew> f)
         {
             return this.map((el, i) -> f.apply(el));
         }

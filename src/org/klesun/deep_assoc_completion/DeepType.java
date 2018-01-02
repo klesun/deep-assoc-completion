@@ -6,6 +6,7 @@ import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
@@ -28,7 +29,8 @@ public class DeepType extends Lang
     // slowly migrating returnTypes from constant values to a function
     // list of functions that take arg list and return list of return types
     public final L<F<IFuncCtx, L<DeepType>>> returnTypeGetters = L();
-    public final String stringValue;
+    public final L<DeepType> pdoTypes = L();
+    public final @Nullable String stringValue;
     public final PsiElement definition;
     public final PhpType briefType;
 

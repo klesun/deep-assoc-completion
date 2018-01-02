@@ -1357,6 +1357,26 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    public function providePdoSqlSelect($params)
+    {
+        $list = [];
+        $connection = new \PDO();
+        $sql = 'SELECT id, cmd_performed, dt FROM terminal_command_log ORDER BY id DESC limit 1;';
+        if ($params === null) {
+            $stmt = $connection->query($sql);
+        } else {
+            $stmt = $connection->prepare($sql);
+            $stmt->execute($params);
+        }
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result[''];
+        $list[] = [$result, ['id' => [], 'cmd_performed' => [], 'dt' => []]];
+        $result2 = $stmt->fetch();
+        $result2['']; // should not provide completion
+        $list[] = [$result2, []];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

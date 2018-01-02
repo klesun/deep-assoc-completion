@@ -4,10 +4,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.Method;
+import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.PhpClass;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
@@ -50,6 +53,42 @@ public class MethCallRes extends Lang
             .map(clses -> L(clses))
             .def(L())
             .fop(cls -> opt(cls.findMethodByName(meth.getName())));
+    }
+
+    private static Opt<DeepType> parseSqlSelect(DeepType strType)
+    {
+        DeepType parsedType = new DeepType(strType.definition, PhpType.ARRAY);
+        String regex = "SELECT\\s+(.*?)\\s+FROM.*";
+        Tls.regex(regex, opt(strType.stringValue).def(""))
+            .fop(matches -> matches.gat(0))
+            .fap(fields -> L(fields.split(",", -1)))
+            .map(str -> str.trim())
+            .fch(name -> parsedType.addKey(name, strType.definition)
+                .addType(() -> new MultiType(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
+        return opt(parsedType);
+    }
+
+    private MultiType findBuiltInRetType(Method meth, IFuncCtx argCtx, MethodReference methCall)
+    {
+        L<DeepType> types = L();
+        String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
+        if (clsNme.equals("PDO") && meth.getName().equals("query") ||
+            clsNme.equals("PDO") && meth.getName().equals("prepare")
+        ) {
+            L<DeepType> parsedSql = argCtx.getArg(0)
+                .fap(mt -> mt.types)
+                .fop(type -> parseSqlSelect(type));
+            DeepType type = new DeepType(methCall);
+            type.pdoTypes.addAll(parsedSql);
+            types.add(type);
+        } else if (clsNme.equals("PDOStatement") && meth.getName().equals("fetch")) {
+            L<DeepType> pdoTypes = opt(methCall.getClassReference())
+                .fop(toCast(PhpExpression.class))
+                .map(obj -> ctx.findExprType(obj))
+                .fap(mt -> mt.types.fap(t -> t.pdoTypes));
+            types.addAll(pdoTypes);
+        }
+        return new MultiType(types);
     }
 
     public static F<IFuncCtx, L<DeepType>> findMethRetType(Method meth)
@@ -96,7 +135,10 @@ public class MethCallRes extends Lang
         L<S<MultiType>> argGetters = args.map((psi) -> () -> findPsiExprType(psi));
         IFuncCtx funcCtx = ctx.subCtx(argGetters);
         L<DeepType> rtypes = resolveMethodFromCall(funcCall)
-            .map(funcs -> funcs.fap(func -> findMethRetType(func).apply(funcCtx)))
+            .map(funcs -> list(
+                funcs.fap(func -> findMethRetType(func).apply(funcCtx)),
+                funcs.fap(func -> findBuiltInRetType(func, funcCtx, funcCall).types)
+            ).fap(a -> a))
             .def(list());
         return new MultiType(rtypes);
     }
