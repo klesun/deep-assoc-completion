@@ -347,16 +347,16 @@ class DeepKeysTest
         ]);
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     private static function providePlusCompletion()
     {
         $testState = self::makeDefaultApolloState() + [
             '' => true, // should suggest: gds, area, pcc, etc...
         ];
     }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function testUsedKeysInAVar()
     {

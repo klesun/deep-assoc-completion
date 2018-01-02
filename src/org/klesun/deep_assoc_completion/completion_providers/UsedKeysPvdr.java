@@ -33,7 +33,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         return LookupElementBuilder.create(keyName)
             .bold()
             .withIcon(PhpIcons.PARAMETER)
-            .withTypeText("from usage");
+            .withTypeText("used further");
     }
 
     private static L<String> resolveReplaceKeys(ParameterList argList, int order)
@@ -113,6 +113,9 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        SearchContext fakeSearch = new SearchContext();
+        FuncCtx fakeCtx = new FuncCtx(fakeSearch, L());
+
         long startTime = System.nanoTime();
         L<String> usedKeys = assertArrCtorKey(parameters)
             // TODO: handle nested arrays
@@ -123,20 +126,28 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                     .fop(el -> opt(el.getKey()))
                     .fop(toCast(StringLiteralExpressionImpl.class))
                     .map(lit -> lit.getContents());
-                return opt(arrCtor.getParent())
-                    .fop(toCast(ParameterList.class))
-                    .fap(argList -> {
-                        int order = L(argList.getParameters()).indexOf(arrCtor);
-                        return resolveFunc(argList)
-                            .fap(meth -> list(
-                                resolveArgUsedKeys(meth, order),
-                                opt(meth.getName())
-                                    .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
-                                    .fap(n -> resolveReplaceKeys(argList, order))
-                            ).fap(a -> a));
-                    })
-                    .flt(k -> !alreadyDeclared.contains(k))
-                    ;
+                return list(
+                    opt(arrCtor.getParent())
+                        .fop(toCast(ParameterList.class))
+                        .fap(argList -> {
+                            int order = L(argList.getParameters()).indexOf(arrCtor);
+                            return resolveFunc(argList)
+                                .fap(meth -> list(
+                                    resolveArgUsedKeys(meth, order),
+                                    opt(meth.getName())
+                                        .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
+                                        .fap(n -> resolveReplaceKeys(argList, order))
+                                ).fap(a -> a));
+                        }),
+                    opt(arrCtor.getParent())
+                        .fop(toCast(BinaryExpression.class))
+                        .flt(sum -> arrCtor.isEquivalentTo(sum.getRightOperand()))
+                        .map(sum -> sum.getLeftOperand())
+                        .fop(toCast(PhpExpression.class))
+                        .map(exp -> fakeCtx.findExprType(exp))
+                        .fap(mt -> mt.getKeyNames())
+                ).fap(a -> a)
+                    .flt(k -> !alreadyDeclared.contains(k));
             });
 
         usedKeys.map(m -> makeLookup(m))
