@@ -145,6 +145,13 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                         .map(sum -> sum.getLeftOperand())
                         .fop(toCast(PhpExpression.class))
                         .map(exp -> fakeCtx.findExprType(exp))
+                        .fap(mt -> mt.getKeyNames()),
+                    opt(arrCtor.getParent())
+                        .fop(toCast(AssignmentExpression.class))
+                        .flt(ass -> arrCtor.isEquivalentTo(ass.getValue()))
+                        .map(ass -> ass.getVariable())
+                        .fop(toCast(Variable.class))
+                        .map(exp -> fakeCtx.findExprType(exp))
                         .fap(mt -> mt.getKeyNames())
                 ).fap(a -> a)
                     .flt(k -> !alreadyDeclared.contains(k));

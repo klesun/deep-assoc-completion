@@ -354,6 +354,15 @@ class DeepKeysTest
         ];
     }
 
+    private static function testTypeHintedArrCreation()
+    {
+        /** @var $params = ['asd' => '123', 'dsa' => 456] */
+        $params = [
+            // should suggest: "asd", "dsa"
+            '' => 123,
+        ];
+    }
+
     //============================
     // not implemented follow
     //============================
