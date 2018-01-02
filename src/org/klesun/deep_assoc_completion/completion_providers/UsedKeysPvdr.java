@@ -28,6 +28,15 @@ import static org.klesun.lang.Lang.*;
  */
 public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
 {
+    final SearchContext fakeSearch;
+    final FuncCtx fakeCtx;
+
+    public UsedKeysPvdr()
+    {
+        fakeSearch = new SearchContext();
+        fakeCtx = new FuncCtx(fakeSearch, L());
+    }
+
     private static LookupElement makeLookup(String keyName)
     {
         return LookupElementBuilder.create(keyName)
@@ -60,10 +69,8 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                 .map(varUsage -> acc.getIndex()));
     }
 
-    private static L<String> resolveArgUsedKeys(Function meth, int argOrder)
+    private L<String> resolveArgUsedKeys(Function meth, int argOrder)
     {
-        SearchContext fakeSearch = new SearchContext();
-        FuncCtx fakeCtx = new FuncCtx(fakeSearch, L());
         return L(meth.getParameters()).gat(argOrder)
             .fop(toCast(ParameterImpl.class))
             .map(arg -> list(
@@ -110,50 +117,51 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                 ))));
     }
 
+    private L<String> getKeyNameOptions(ArrayCreationExpression arrCtor)
+    {
+        // TODO: handle nested arrays
+        // TODO: handle assignments of array to a variable passed to the func further
+        return list(
+            opt(arrCtor.getParent())
+                .fop(toCast(ParameterList.class))
+                .fap(argList -> {
+                    int order = L(argList.getParameters()).indexOf(arrCtor);
+                    return resolveFunc(argList)
+                        .fap(meth -> list(
+                            resolveArgUsedKeys(meth, order),
+                            opt(meth.getName())
+                                .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
+                                .fap(n -> resolveReplaceKeys(argList, order))
+                        ).fap(a -> a));
+                }),
+            opt(arrCtor.getParent())
+                .fop(toCast(BinaryExpression.class))
+                .flt(sum -> arrCtor.isEquivalentTo(sum.getRightOperand()))
+                .map(sum -> sum.getLeftOperand())
+                .fop(toCast(PhpExpression.class))
+                .map(exp -> fakeCtx.findExprType(exp))
+                .fap(mt -> mt.getKeyNames()),
+            opt(arrCtor.getParent())
+                .fop(toCast(AssignmentExpression.class))
+                .flt(ass -> arrCtor.isEquivalentTo(ass.getValue()))
+                .map(ass -> ass.getVariable())
+                .fop(toCast(Variable.class))
+                .map(exp -> fakeCtx.findExprType(exp))
+                .fap(mt -> mt.getKeyNames())
+        ).fap(a -> a);
+    }
+
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        SearchContext fakeSearch = new SearchContext();
-        FuncCtx fakeCtx = new FuncCtx(fakeSearch, L());
-
         long startTime = System.nanoTime();
         L<String> usedKeys = assertArrCtorKey(parameters)
-            // TODO: handle nested arrays
-            // TODO: handle assignments of array to a variable passed to the func further
-            // assuming it may be used only in a function call for now
             .fap(arrCtor -> {
                 L<String> alreadyDeclared = L(arrCtor.getHashElements())
                     .fop(el -> opt(el.getKey()))
                     .fop(toCast(StringLiteralExpressionImpl.class))
                     .map(lit -> lit.getContents());
-                return list(
-                    opt(arrCtor.getParent())
-                        .fop(toCast(ParameterList.class))
-                        .fap(argList -> {
-                            int order = L(argList.getParameters()).indexOf(arrCtor);
-                            return resolveFunc(argList)
-                                .fap(meth -> list(
-                                    resolveArgUsedKeys(meth, order),
-                                    opt(meth.getName())
-                                        .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
-                                        .fap(n -> resolveReplaceKeys(argList, order))
-                                ).fap(a -> a));
-                        }),
-                    opt(arrCtor.getParent())
-                        .fop(toCast(BinaryExpression.class))
-                        .flt(sum -> arrCtor.isEquivalentTo(sum.getRightOperand()))
-                        .map(sum -> sum.getLeftOperand())
-                        .fop(toCast(PhpExpression.class))
-                        .map(exp -> fakeCtx.findExprType(exp))
-                        .fap(mt -> mt.getKeyNames()),
-                    opt(arrCtor.getParent())
-                        .fop(toCast(AssignmentExpression.class))
-                        .flt(ass -> arrCtor.isEquivalentTo(ass.getValue()))
-                        .map(ass -> ass.getVariable())
-                        .fop(toCast(Variable.class))
-                        .map(exp -> fakeCtx.findExprType(exp))
-                        .fap(mt -> mt.getKeyNames())
-                ).fap(a -> a)
+                return getKeyNameOptions(arrCtor)
                     .flt(k -> !alreadyDeclared.contains(k));
             });
 
