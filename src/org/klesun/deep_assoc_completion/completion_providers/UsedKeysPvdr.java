@@ -6,7 +6,6 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
 import com.jetbrains.php.lang.psi.elements.*;
@@ -14,6 +13,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.resolvers.VarRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -28,12 +28,11 @@ import static org.klesun.lang.Lang.*;
  */
 public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
 {
-    final SearchContext fakeSearch;
-    final FuncCtx fakeCtx;
+    final private FuncCtx fakeCtx;
 
     public UsedKeysPvdr()
     {
-        fakeSearch = new SearchContext();
+        SearchContext fakeSearch = new SearchContext();
         fakeCtx = new FuncCtx(fakeSearch, L());
     }
 
@@ -42,7 +41,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         return LookupElementBuilder.create(keyName)
             .bold()
             .withIcon(PhpIcons.PARAMETER)
-            .withTypeText("used further");
+            .withTypeText("from usage");
     }
 
     private static L<String> resolveReplaceKeys(ParameterList argList, int order)
@@ -54,6 +53,40 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
             .fop(toCast(PhpExpression.class))
             .fap(exp -> ctx.findExprType(exp).getKeyNames());
 
+    }
+
+    private L<String> findKeysUsedOnExpr(PhpExpression arrCtor)
+    {
+        return opt(arrCtor.getParent())
+            .fop(toCast(ParameterList.class))
+            .fap(argList -> {
+                int order = L(argList.getParameters()).indexOf(arrCtor);
+                return resolveFunc(argList)
+                    .fap(meth -> list(
+                        resolveArgUsedKeys(meth, order),
+                        opt(meth.getName())
+                            .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
+                            .fap(n -> resolveReplaceKeys(argList, order))
+                    ).fap(a -> a));
+            });
+    }
+
+    private L<String> findKeysUsedOnVar(Variable caretVar)
+    {
+        return findVarReferences(caretVar)
+            .flt(ref -> ref.getTextOffset() > caretVar.getTextOffset())
+            .fop(toCast(Variable.class))
+            .fap(refVar -> findKeysUsedOnExpr(refVar));
+    }
+
+    private static L<Variable> findVarReferences(Variable caretVar)
+    {
+        return Tls.findParent(caretVar, Function.class, a -> true)
+            .fap(meth -> Tls.findChildren(
+                meth.getLastChild(),
+                Variable.class,
+                subPsi -> !(subPsi instanceof Function)
+            ).flt(varUsage -> caretVar.getName().equals(varUsage.getName())));
     }
 
     private static L<ArrayIndex> findUsedIndexes(Function meth, String varName)
@@ -122,32 +155,22 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         // TODO: handle nested arrays
         // TODO: handle assignments of array to a variable passed to the func further
         return list(
-            opt(arrCtor.getParent())
-                .fop(toCast(ParameterList.class))
-                .fap(argList -> {
-                    int order = L(argList.getParameters()).indexOf(arrCtor);
-                    return resolveFunc(argList)
-                        .fap(meth -> list(
-                            resolveArgUsedKeys(meth, order),
-                            opt(meth.getName())
-                                .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
-                                .fap(n -> resolveReplaceKeys(argList, order))
-                        ).fap(a -> a));
-                }),
+            findKeysUsedOnExpr(arrCtor),
             opt(arrCtor.getParent())
                 .fop(toCast(BinaryExpression.class))
                 .flt(sum -> arrCtor.isEquivalentTo(sum.getRightOperand()))
                 .map(sum -> sum.getLeftOperand())
                 .fop(toCast(PhpExpression.class))
-                .map(exp -> fakeCtx.findExprType(exp))
-                .fap(mt -> mt.getKeyNames()),
+                .fap(exp -> fakeCtx.findExprType(exp).getKeyNames()),
             opt(arrCtor.getParent())
                 .fop(toCast(AssignmentExpression.class))
                 .flt(ass -> arrCtor.isEquivalentTo(ass.getValue()))
                 .map(ass -> ass.getVariable())
                 .fop(toCast(Variable.class))
-                .map(exp -> fakeCtx.findExprType(exp))
-                .fap(mt -> mt.getKeyNames())
+                .fap(var -> list(
+                    fakeCtx.findExprType(var).getKeyNames(),
+                    findKeysUsedOnVar(var)
+                ).fap(a -> a))
         ).fap(a -> a);
     }
 

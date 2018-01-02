@@ -183,15 +183,7 @@ public class VarRes extends Lang
             });
     }
 
-    /**
-     * does same thing as variable::multiResolve(), but apparently multiResolve may trigger
-     * global index for some reason, causing Contract Violation in Type Provider
-     *
-     * @return L<PsiElement> - all references of this variable in the function
-     * this list may include Parameter and Variable instances, I guess simple definition
-     * would be: everything that starts with ${varName} in this function scope
-     */
-    private L<PsiElement> findReferences(Variable variable)
+    private static L<PsiElement> findDeclarations(Variable variable)
     {
         // if this line is still here when you read this, that means I
         // decided to just do DumbService::isDumb() check in Type Provider
@@ -202,7 +194,7 @@ public class VarRes extends Lang
     public List<DeepType> resolve(Variable variable)
     {
         List<Assign> revAsses = list();
-        L<PsiElement> references = findReferences(variable)
+        L<PsiElement> references = findDeclarations(variable)
             .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable));
 
         // @var docs are a special case since they give type
