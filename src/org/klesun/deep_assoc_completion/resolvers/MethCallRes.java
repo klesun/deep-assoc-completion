@@ -58,11 +58,13 @@ public class MethCallRes extends Lang
     private static Opt<DeepType> parseSqlSelect(DeepType strType)
     {
         DeepType parsedType = new DeepType(strType.definition, PhpType.ARRAY);
-        String regex = "SELECT\\s+(.*?)\\s+FROM.*";
+        String regex = "SELECT\\s+(.*?)(\\s+FROM.*)?";
         Tls.regex(regex, opt(strType.stringValue).def(""))
             .fop(matches -> matches.gat(0))
             .fap(fields -> L(fields.split(",", -1)))
             .map(str -> str.trim())
+            .fop(f -> Tls.regex("(\\S+\\.)?(\\S+\\s+[aA][sS]\\s+)?(\\S+)", f))
+            .fop(m -> m.gat(2))
             .fch(name -> parsedType.addKey(name, strType.definition)
                 .addType(() -> new MultiType(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
         return opt(parsedType);

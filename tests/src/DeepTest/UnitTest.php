@@ -1357,27 +1357,103 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
-    public function providePdoSqlSelect($params)
+    public function providePdoSqlSelect()
     {
         $list = [];
         $connection = new \PDO();
         $sql = 'SELECT id, cmd_performed, dt FROM terminal_command_log ORDER BY id DESC limit 1;';
-        if ($params === null) {
-            $stmt = $connection->query($sql);
-        } else {
-            $stmt = $connection->prepare($sql);
-            $stmt->execute($params);
-        }
+        $stmt = $connection->query($sql);
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
         $result[''];
         $list[] = [$result, ['id' => [], 'cmd_performed' => [], 'dt' => []]];
-        $result2 = $stmt->fetch();
-        $result2['']; // should not provide completion
-        $list[] = [$result2, []];
+        return $list;
+    }
+
+    public function providePdoSqlSelectWithAs($params)
+    {
+        $list = [];
+        $connection = new \PDO();
+        $sql = 'SELECT cmd_performed, COUNT(*) AS cnt, max(dt) as max_dt FROM terminal_command_log ORDER BY id DESC limit 1;';
+        $stmt = $connection->prepare($sql);
+        $stmt->execute($params);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result[''];
+        $list[] = [$result, ['cmd_performed' => [], 'cnt' => [], 'max_dt' => []]];
+        return $list;
+    }
+
+    public function providePdoSqlSelectMultiTable($params)
+    {
+        $list = [];
+        $connection = new \PDO();
+        $sql = 'SELECT tcl.id, tcl.cmd_performed, ts.agent_id FROM terminal_command_log tcl JOIN  terminal_sessions ts ON ts.id = tcl.session_id ORDER BY id DESC limit 1;';
+        $stmt = $connection->prepare($sql);
+        $stmt->execute($params);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result[''];
+        $list[] = [$result, ['id' => [], 'cmd_performed' => [], 'agent_id' => []]];
+        return $list;
+    }
+
+    public function providePdoSqlSelectConcatSql($params)
+    {
+        $list = [];
+        $connection = new \PDO();
+        $sql =
+            'SELECT tcl.id, tcl.cmd_performed, ts.agent_id'.PHP_EOL.
+            'FROM terminal_command_log tcl'.PHP_EOL.
+            'JOIN terminal_sessions ts ON ts.id = tcl.session_id'.PHP_EOL.
+            'ORDER BY id DESC limit 1;'.PHP_EOL;
+        $stmt = $connection->prepare($sql);
+        $stmt->execute($params);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result[''];
+        $list[] = [$result, ['id' => [], 'cmd_performed' => [], 'agent_id' => []]];
         return $list;
     }
 
     //=============================
     // following are not implemented yet
     //=============================
+
+    public function providePdoSqlSelectImplodeSql($params)
+    {
+        $list = [];
+        $connection = new \PDO();
+        $sql = implode(PHP_EOL, [
+            'SELECT tcl.id, tcl.cmd_performed, ts.agent_id',
+            'FROM terminal_command_log tcl',
+            'JOIN terminal_sessions ts ON ts.id = tcl.session_id',
+            'ORDER BY id DESC limit 1;',
+        ]);
+        $stmt = $connection->prepare($sql);
+        $stmt->execute($params);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result[''];
+        //$list[] = [$result, ['id' => [], 'cmd_performed' => [], 'agent_id' => []]];
+        return $list;
+    }
+
+    public function providePdoSqlSelectLongColNamesSql($params)
+    {
+        $list = [];
+        $connection = new \PDO();
+        $sql = implode(PHP_EOL, [
+            'SELECT',
+            '    GROUP_CONCAT(tcl.cmd_performed) AS cmds,',
+            '    ts.agent_id',
+            '    ts.created_dt',
+            '    ts.id AS session_id',
+            'FROM terminal_command_log tcl',
+            'JOIN terminal_sessions ts ON ts.id = tcl.session_id',
+            'GROUP BY ts.id',
+            'ORDER BY id DESC limit 1;',
+        ]);
+        $stmt = $connection->prepare($sql);
+        $stmt->execute($params);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result[''];
+        //$list[] = [$result, ['cmds' => [], 'agent_id' => [], 'created_dt' => [], 'session_id' => []]];
+        return $list;
+    }
 }

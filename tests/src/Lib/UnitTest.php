@@ -76,4 +76,11 @@ class UnitTest
         return $list;
     }
 
+    public function provideDbFetch()
+    {
+        $list = [];
+        $rows = Db::inst()->fetchAll('SELECT id, name, profit FROM teams LIMIT 10;');
+        $list[] = [$rows['0'], ['id' => [], 'name' => [], 'profit' => []]];
+        return $list;
+    }
 }
