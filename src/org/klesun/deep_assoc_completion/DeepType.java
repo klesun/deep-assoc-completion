@@ -34,7 +34,7 @@ public class DeepType extends Lang
     public final PsiElement definition;
     public final PhpType briefType;
 
-    DeepType(PsiElement definition, PhpType briefType, String stringValue)
+    public DeepType(PsiElement definition, PhpType briefType, String stringValue)
     {
         this.definition = definition;
         this.briefType = briefType;

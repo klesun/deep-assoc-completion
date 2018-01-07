@@ -116,6 +116,24 @@ public class FuncCallRes extends Lang
                                 }
                             })));
                 result.add(arrt);
+            } else if (name.equals("implode")) {
+                if (params.length > 1) {
+                    String delim = opt(params[0])
+                        .fop(toCast(PhpExpression.class))
+                        .map(exp -> ctx.findExprType(exp))
+                        .map(mt -> mt.getStringValue())
+                        .def("");
+                    L<String> parts = opt(params[1])
+                        .fop(toCast(PhpExpression.class))
+                        .map(exp -> ctx.findExprType(exp))
+                        .fap(t -> t.types)
+                        .fap(t -> L(t.keys.values()))
+                        .fap(kv -> kv.getTypes())
+                        .fop(t -> opt(t.stringValue));
+                    String joined = Tls.implode(delim, parts);
+                    DeepType type = new DeepType(call, PhpType.STRING, joined);
+                    result.add(type);
+                }
             } else {
                 // try to get type info from standard_2.php
                 opt(call.resolve())

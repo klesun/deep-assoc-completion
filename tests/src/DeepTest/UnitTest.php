@@ -1412,10 +1412,6 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function providePdoSqlSelectImplodeSql($params)
     {
         $list = [];
@@ -1430,9 +1426,13 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $stmt->execute($params);
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
         $result[''];
-        //$list[] = [$result, ['id' => [], 'cmd_performed' => [], 'agent_id' => []]];
+        $list[] = [$result, ['id' => [], 'cmd_performed' => [], 'agent_id' => []]];
         return $list;
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     public function providePdoSqlSelectLongColNamesSql($params)
     {
