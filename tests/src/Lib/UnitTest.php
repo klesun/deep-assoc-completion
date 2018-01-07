@@ -6,12 +6,9 @@ use Lib\Utils\Fp;
 
 class UnitTest
 {
-    public static function provideFpMap()
+    private static function makeNameRecords()
     {
-        $list = [];
-
-        // `Fp::map` is our wrapper to `array_map` and should provide same completion
-        $records = Fp::map(function($ptcToken){
+        return Fp::map(function($ptcToken){
             if (preg_match('/^(\d+\.\d+)(-\d+\.\d+|)$/', $ptcToken, $matches)) {
                 list($_, $from, $to) = $matches;
                 $to = substr($to, 1);
@@ -27,6 +24,14 @@ class UnitTest
                 return null;
             }
         }, explode('/', '1.1-2.2/3.1/4.0'));
+    }
+
+    public static function provideFpMap()
+    {
+        $list = [];
+
+        // `Fp::map` is our wrapper to `array_map` and should provide same completion
+        $records = static::makeNameRecords();
 
         $records[0][''];
         $list[] = [$records[0], [
@@ -66,6 +71,16 @@ class UnitTest
         ];
         $flatHolmes = Fp::flatten($milkyHolmes2d);
         $list[] = [$flatHolmes[0], ['name' => [], 'color' => []]];
+
+        return $list;
+    }
+
+    public static function provideFpMap2()
+    {
+        $list = [];
+
+        // `Fp::map` is our wrapper to `array_map` and should provide same completion
+        $records = static::makeNameRecords();
 
         // `Fp::groupBy`
         $getFieldNum = function($ptc){return $ptc['fieldNumber'];};

@@ -63,7 +63,7 @@ public class MethCallRes extends Lang
             .fop(matches -> matches.gat(0))
             .fap(fields -> L(fields.split(",", -1)))
             .map(str -> str.trim())
-            .fop(f -> Tls.regex("(\\S+\\.)?(\\S+\\s+[aA][sS]\\s+)?(\\S+)", f))
+            .fop(f -> Tls.regex("(\\S+.*?\\.)?(\\S+\\s+[aA][sS]\\s+)?(\\S+)", f))
             .fop(m -> m.gat(2))
             .fch(name -> parsedType.addKey(name, strType.definition)
                 .addType(() -> new MultiType(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));

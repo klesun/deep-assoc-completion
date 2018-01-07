@@ -78,7 +78,7 @@ public class Tls extends Lang
     public static Opt<L<String>> regex(String patternText, String subjectText)
     {
         List<String> result = list();
-        Pattern pattern = Pattern.compile(patternText);
+        Pattern pattern = Pattern.compile(patternText, Pattern.DOTALL);
         Matcher matcher = pattern.matcher(subjectText);
         if (matcher.matches()) {
             for (int i = 1; i < matcher.groupCount() + 1; ++i) {

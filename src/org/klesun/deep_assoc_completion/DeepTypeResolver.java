@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion;
 
 import com.intellij.psi.*;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.resolvers.*;
@@ -34,6 +35,17 @@ public class DeepTypeResolver extends Lang
                 .map(fieldRef -> new FieldRes(ctx).resolve(fieldRef).types)
             , Tls.cast(StringLiteralExpressionImpl.class, expr)
                 .map(lit -> list(new DeepType(lit)))
+            , Tls.cast(ConstantReferenceImpl.class, expr)
+                .flt(cst -> // they are defined through themselves in Core_d.php
+                    !cst.getText().toLowerCase().equals("null") &&
+                    !cst.getText().toLowerCase().equals("true") &&
+                    !cst.getText().toLowerCase().equals("false"))
+                .map(cst -> L(cst.multiResolve(false))
+                    .map(ref -> ref.getElement())
+                    .fop(toCast(PhpDefineImpl.class))
+                    .fop(def -> opt(def.getValue()))
+                    .fop(toCast(PhpExpression.class))
+                    .fap(exp -> ctx.findExprType(exp).types))
             , Tls.cast(PhpExpressionImpl.class, expr)
                 .map(v -> v.getFirstChild())
                 .fop(toCast(FunctionImpl.class))

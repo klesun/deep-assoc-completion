@@ -30,9 +30,9 @@ public class RunTest extends AnAction
     {
         List<Method> meths = list();
 
-        L(PhpIndex.getInstance(psiFile.getProject()).getClassesByName("UnitTest")).s
+        L(PhpIndex.getInstance(psiFile.getProject()).getClassesByName("UnitTest"))
             .forEach(cls -> meths.addAll(L(cls.getMethods())
-                .flt(m -> m.getName().startsWith("provide")).s));
+                .flt(m -> m.getName().startsWith("provide"))));
 
         return meths.size() > 0 ? opt(meths) : opt(null);
     }
@@ -60,10 +60,17 @@ public class RunTest extends AnAction
                             ctx.testNumber = i;
                             return opt(rett.keys.get("0"))
                                 .fop(input -> opt(rett.keys.get("1"))
-                                    .map(output -> ctx.testCase(list(input), output)));
-                        }).fap(v -> v).s
-                    ).s
-                ).s)
+                                    .map(output -> {
+                                        try {
+                                            return ctx.testCase(list(input), output);
+                                        } catch (RuntimeException exc) {
+                                            String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage();
+                                            return list(new Error(ctx, msg));
+                                        }
+                                    }));
+                        }).fap(v -> v)
+                    )
+                ))
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .def(list());
 
@@ -103,7 +110,7 @@ public class RunTest extends AnAction
 
                 if (havingKey.s.size() == 0) {
                     logger.logErrShort();
-                    errors.add(new Error(this, "No such key: " + subKey, subExpected));
+                    errors.add(new Error(this, "No such key: " + subKey));
                 } else {
                     logger.logSucShort();
                     keyChain.add(subKey);
@@ -118,19 +125,17 @@ public class RunTest extends AnAction
 
     private static class Error
     {
-        DeepType.Key keyRecord;
         String message;
         String dataProviderName;
         List<String> keyChain;
         int testNumber;
 
-        Error(CaseContext ctx, String msg, DeepType.Key key)
+        Error(CaseContext ctx, String msg)
         {
             this.dataProviderName = ctx.dataProviderName;
             this.keyChain = new ArrayList(ctx.keyChain);
             this.testNumber = ctx.testNumber;
             this.message = msg;
-            this.keyRecord = key;
         }
     }
 

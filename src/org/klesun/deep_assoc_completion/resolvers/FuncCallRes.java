@@ -8,6 +8,7 @@ import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.ScopeFinder;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
@@ -131,7 +132,9 @@ public class FuncCallRes extends Lang
                         .fap(kv -> kv.getTypes())
                         .fop(t -> opt(t.stringValue));
                     String joined = Tls.implode(delim, parts);
-                    DeepType type = new DeepType(call, PhpType.STRING, joined);
+                    // PHP string is not javascript string, of course, but pretty close
+                    String unescaped = StringEscapeUtils.unescapeJavaScript(joined);
+                    DeepType type = new DeepType(call, PhpType.STRING, unescaped);
                     result.add(type);
                 }
             } else {

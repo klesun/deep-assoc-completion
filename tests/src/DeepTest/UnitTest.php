@@ -1440,10 +1440,10 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $connection = new \PDO();
         $sql = implode(PHP_EOL, [
             'SELECT',
-            '    GROUP_CONCAT(tcl.cmd_performed) AS cmds,',
+            '    GROUP_CONCAT( tcl.cmd_performed) AS cmds,',
+            '    ts.id AS session_id,',
+            '    ts.created_dt,',
             '    ts.agent_id',
-            '    ts.created_dt',
-            '    ts.id AS session_id',
             'FROM terminal_command_log tcl',
             'JOIN terminal_sessions ts ON ts.id = tcl.session_id',
             'GROUP BY ts.id',
@@ -1453,7 +1453,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $stmt->execute($params);
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
         $result[''];
-        //$list[] = [$result, ['cmds' => [], 'agent_id' => [], 'created_dt' => [], 'session_id' => []]];
+        $list[] = [$result, ['cmds' => [], 'agent_id' => [], 'created_dt' => [], 'session_id' => []]];
         return $list;
     }
 }
