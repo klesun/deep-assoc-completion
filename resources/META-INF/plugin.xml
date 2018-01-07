@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.01.02.001</version>
+    <version>2018.01.07.002</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -25,8 +25,9 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>Provide used key completion inside params assigned to a var that will be passed to the function later</li>
-      <li>#24 Provide completion inside array var declaration when there is a type hint above</li>
+      <li>Infer array keys completion from SELECT * if database is configured</li>
+      <li>Infer type of string created by call to implode()</li>
+      <li>Provide completion from PDO SQL SELECT</li>
     </ul>
     ]]>
     </change-notes>
@@ -50,6 +51,9 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
     <depends>com.intellij.modules.lang</depends>
     <depends>com.jetbrains.php</depends>
     <depends>com.intellij.modules.platform</depends>
+
+    <!-- gonna implement array keys inference from SELECT * -->
+    <depends>com.intellij.database</depends>
 
     <actions>
         <action

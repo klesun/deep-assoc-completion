@@ -1430,10 +1430,6 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function providePdoSqlSelectLongColNamesSql($params)
     {
         $list = [];
@@ -1456,4 +1452,22 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $list[] = [$result, ['cmds' => [], 'agent_id' => [], 'created_dt' => [], 'session_id' => []]];
         return $list;
     }
+
+    public function provideSelectAll($params)
+    {
+        $list = [];
+        $connection = new \PDO();
+        // don't forget to run upgrade_sql.sql and setup your DB in _Database_ window
+        $sql = 'SELECT * FROM delete_me;';
+        $stmt = $connection->prepare($sql);
+        $stmt->execute($params);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result[''];
+        $list[] = [$result, ['id' => [], 'name' => [], 'price' => []]];
+        return $list;
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 }

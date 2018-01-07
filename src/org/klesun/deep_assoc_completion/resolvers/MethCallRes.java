@@ -1,5 +1,9 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
+import com.intellij.database.model.ObjectKind;
+import com.intellij.database.psi.DbColumn;
+import com.intellij.database.psi.DbPsiFacade;
+import com.intellij.database.psi.DbTable;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.PhpIndex;
@@ -10,7 +14,6 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
@@ -55,18 +58,39 @@ public class MethCallRes extends Lang
             .fop(cls -> opt(cls.findMethodByName(meth.getName())));
     }
 
-    private static Opt<DeepType> parseSqlSelect(DeepType strType)
+    private static L<String> getTableColumns(String table, Project project)
+    {
+        return L(DbPsiFacade.getInstance(project).getDataSources())
+            .fap(src -> L(src.getModel().getModelRoots()))
+            .fap(das -> L(das.getDbChildren(DbTable.class, ObjectKind.TABLE)))
+            .flt(t -> t.getName().equals(table))
+            .fap(tab -> L(tab.getDbChildren(DbColumn.class, ObjectKind.COLUMN)))
+            .map(col -> col.getName());
+    }
+
+    private static Opt<DeepType> parseSqlSelect(DeepType strType, Project project)
     {
         DeepType parsedType = new DeepType(strType.definition, PhpType.ARRAY);
-        String regex = "SELECT\\s+(.*?)(\\s+FROM.*)?";
-        Tls.regex(regex, opt(strType.stringValue).def(""))
-            .fop(matches -> matches.gat(0))
-            .fap(fields -> L(fields.split(",", -1)))
-            .map(str -> str.trim())
-            .fop(f -> Tls.regex("(\\S+.*?\\.)?(\\S+\\s+[aA][sS]\\s+)?(\\S+)", f))
-            .fop(m -> m.gat(2))
-            .fch(name -> parsedType.addKey(name, strType.definition)
-                .addType(() -> new MultiType(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
+        String sql = opt(strType.stringValue).def("");
+        Opt<L<String>> matched = Opt.fst(list(
+            Tls.regex("SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql),
+            Tls.regex("SELECT\\s+(\\S.*)", sql) // partial SQL without FROM
+        ));
+        matched.fap(matches -> {
+            L<String> fields = L(matches.gat(0).def("").split(",", -1));
+            String table = matches.gat(1).def("");
+            return fields.map(str -> str.trim())
+                .fap(f -> {
+                    if (f.equals("*")) {
+                        return getTableColumns(table, project);
+                    } else {
+                        return Tls.regex("(\\S+.*?\\.)?(\\S+\\s+[aA][sS]\\s+)?(\\S+)", f)
+                            .fop(m -> m.gat(2))
+                            .fap(a -> list(a));
+                    }
+                });
+        }).fch(name -> parsedType.addKey(name, strType.definition)
+            .addType(() -> new MultiType(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
         return opt(parsedType);
     }
 
@@ -79,7 +103,7 @@ public class MethCallRes extends Lang
         ) {
             L<DeepType> parsedSql = argCtx.getArg(0)
                 .fap(mt -> mt.types)
-                .fop(type -> parseSqlSelect(type));
+                .fop(type -> parseSqlSelect(type, meth.getProject()));
             DeepType type = new DeepType(methCall);
             type.pdoTypes.addAll(parsedSql);
             types.add(type);
