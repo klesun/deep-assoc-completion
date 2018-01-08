@@ -63,6 +63,11 @@ public class MultiType extends Lang
         }
     }
 
+    public L<String> getStringValues()
+    {
+        return types.fop(t -> opt(t.stringValue));
+    }
+
     public MultiType getKey(String keyName)
     {
         return new MultiType(list(

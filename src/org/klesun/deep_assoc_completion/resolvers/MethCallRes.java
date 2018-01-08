@@ -62,9 +62,9 @@ public class MethCallRes extends Lang
     {
         return L(DbPsiFacade.getInstance(project).getDataSources())
             .fap(src -> L(src.getModel().getModelRoots()))
-            .fap(das -> L(das.getDbChildren(DbTable.class, ObjectKind.TABLE)))
+            .fap(root -> L(root.getDasChildren(ObjectKind.TABLE)))
             .flt(t -> t.getName().equals(table))
-            .fap(tab -> L(tab.getDbChildren(DbColumn.class, ObjectKind.COLUMN)))
+            .fap(tab -> L(tab.getDasChildren(ObjectKind.COLUMN)))
             .map(col -> col.getName());
     }
 

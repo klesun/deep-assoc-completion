@@ -122,8 +122,8 @@ public class FuncCallRes extends Lang
                     String delim = opt(params[0])
                         .fop(toCast(PhpExpression.class))
                         .map(exp -> ctx.findExprType(exp))
-                        .map(mt -> mt.getStringValue())
-                        .def("");
+                        .fop(mt -> mt.getStringValues().gat(0))
+                        .def(" ");
                     L<String> parts = opt(params[1])
                         .fop(toCast(PhpExpression.class))
                         .map(exp -> ctx.findExprType(exp))
@@ -132,8 +132,8 @@ public class FuncCallRes extends Lang
                         .fap(kv -> kv.getTypes())
                         .fop(t -> opt(t.stringValue));
                     String joined = Tls.implode(delim, parts);
-                    // PHP string is not javascript string, of course, but pretty close
-                    String unescaped = StringEscapeUtils.unescapeJavaScript(joined);
+                    // PHP string is not java string, of course, but pretty close
+                    String unescaped = StringEscapeUtils.unescapeJava(joined);
                     DeepType type = new DeepType(call, PhpType.STRING, unescaped);
                     result.add(type);
                 }

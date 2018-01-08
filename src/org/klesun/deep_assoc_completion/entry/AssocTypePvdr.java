@@ -41,6 +41,8 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
             return null;
         }
 
+        long startTime = System.nanoTime();
+
         boolean isMethCall = PlatformPatterns.psiElement(PhpElementTypes.ARRAY_ACCESS_EXPRESSION)
             .withParent(PlatformPatterns.psiElement(PhpElementTypes.METHOD_REFERENCE))
             .accepts(psi);
@@ -61,10 +63,19 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
-        return Tls.cast(ArrayAccessExpressionImpl.class, psi)
+
+        @Nullable PhpType result = Tls.cast(ArrayAccessExpressionImpl.class, psi)
             .map(acc -> new ArrAccRes(funcCtx).resolve(acc))
             .map(mt -> mt.getIdeaType())
             .def(null);
+
+        long elapsed = System.nanoTime() - startTime;
+        double seconds = elapsed / 1000000000.0;
+        if (search.getExpressionsResolved() > 0 && seconds > 0.1) {
+            System.out.println("Resolved " + search.getExpressionsResolved() + " expressions in " + seconds + " seconds");
+        }
+
+        return result;
     }
 
     public Collection<? extends PhpNamedElement> getBySignature(String s, Set<String> set, int i, Project project)
