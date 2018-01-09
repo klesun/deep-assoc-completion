@@ -5,6 +5,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.parser.PhpElementTypes;
+import com.jetbrains.php.lang.psi.elements.PhpClass;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.PhpNamedElement;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.AssignmentExpressionImpl;
@@ -16,6 +18,7 @@ import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrAccRes;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.Collection;
@@ -43,29 +46,33 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
 
         long startTime = System.nanoTime();
 
-        boolean isMethCall = PlatformPatterns.psiElement(PhpElementTypes.ARRAY_ACCESS_EXPRESSION)
+        boolean isMethCall = PlatformPatterns.psiElement()
             .withParent(PlatformPatterns.psiElement(PhpElementTypes.METHOD_REFERENCE))
             .accepts(psi);
-        boolean isFieldAcc = PlatformPatterns.psiElement(PhpElementTypes.ARRAY_ACCESS_EXPRESSION)
+        boolean isFieldAcc = PlatformPatterns.psiElement()
             .withParent(PlatformPatterns.psiElement(PhpElementTypes.FIELD_REFERENCE))
             .accepts(psi);
-        boolean isAssVal = Tls.cast(ArrayAccessExpressionImpl.class, psi)
-            .map(acc -> acc.getParent())
-            .fop(toCast(AssignmentExpressionImpl.class))
-            .map(ass -> psi.isEquivalentTo(ass.getValue()))
-            .def(false);
 
         // we will calculate type only for method or property access
-        if (!isMethCall && !isFieldAcc && !isAssVal){
+        if (!isMethCall && !isFieldAcc){
+            return null;
+        }
+
+        Opt<PhpType> ideaClass = Tls.cast(PhpExpression.class, psi)
+            .map(exp -> exp.getType().filter(PhpType.OBJECT))
+            .flt(objType -> !objType.isEmpty());
+
+        if (ideaClass.has()) {
+            // idea already knows the class of this object,
+            // no need to perform complex calculations
             return null;
         }
 
         SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
-
-        @Nullable PhpType result = Tls.cast(ArrayAccessExpressionImpl.class, psi)
-            .map(acc -> new ArrAccRes(funcCtx).resolve(acc))
+        @Nullable PhpType result = Tls.cast(PhpExpression.class, psi)
+            .map(exp -> funcCtx.findExprType(exp))
             .map(mt -> mt.getIdeaType())
             .def(null);
 
