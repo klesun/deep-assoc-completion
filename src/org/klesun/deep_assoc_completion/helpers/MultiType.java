@@ -112,41 +112,42 @@ public class MultiType extends Lang
         return ideaType;
     }
 
-    public String getBriefTypeText(int maxLen)
+    public String getBriefValueText(int maxLen)
     {
-        L<String> briefTypes = list();
+        L<String> briefValues = list();
         L<String> keyNames = getKeyNames();
 
         if (keyNames.size() > 0) {
             if (keyNames.all((k,i) -> (k + "").equals(i + ""))) {
-                briefTypes.add("(" + Tls.implode(", ", keyNames.map(i -> getKey(i + "").getBriefTypeText(15))) + ")");
+                briefValues.add("(" + Tls.implode(", ", keyNames.map(i -> getKey(i + "").getBriefValueText(15))) + ")");
             } else {
-                briefTypes.add("{" + Tls.implode(", ", keyNames.map(k -> k + ":")) + "}");
+                briefValues.add("{" + Tls.implode(", ", keyNames.map(k -> k + ":")) + "}");
             }
         }
         L<String> strvals = types.fop(t -> opt(t.stringValue));
         if (strvals.size() > 0) {
-            briefTypes.add(Tls.implode("|", strvals
+            briefValues.add(Tls.implode("|", strvals
                 .grp(a -> a).fop(g -> g.fst())
-                .map(s -> "'" + s + "'")));
+                .map(s -> (types.all((t,i) -> t.definition.getText().equals(s)))
+                    ? s : "'" + s + "'")));
         }
         if (types.any(t -> t.indexTypes.size() > 0)) {
-            briefTypes.add("[" + getEl().getBriefTypeText() + "]");
+            briefValues.add("[" + getEl().getBriefValueText() + "]");
         }
-        if (briefTypes.isEmpty() || briefTypes.all((t,i) -> t.equals("") || t.equals("null"))) {
-            briefTypes.add(getIdeaType().filterUnknown().toStringResolved());
+        if (briefValues.isEmpty() && types.size() > 0) {
+            L<String> psiParts = types.map(t -> Tls.substr(t.definition.getText(), 0, 40));
+            briefValues.add(Tls.implode("|", psiParts.grp(a -> a).fop(g -> g.fst())));
         }
-        String fullStr = Tls.implode("|", briefTypes);
+        String fullStr = Tls.implode("|", briefValues);
 
-        fullStr = fullStr.length() == 0 ? "?" : fullStr;
         String truncated = Tls.substr(fullStr, 0, maxLen);
         return truncated.length() == fullStr.length()
             ? truncated : truncated + "...";
     }
 
-    public String getBriefTypeText()
+    public String getBriefValueText()
     {
-        return getBriefTypeText(50);
+        return getBriefValueText(50);
     }
 
     public String toJson()

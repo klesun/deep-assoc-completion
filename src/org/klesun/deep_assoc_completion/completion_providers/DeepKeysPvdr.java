@@ -2,7 +2,6 @@ package org.klesun.deep_assoc_completion.completion_providers;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
-import com.intellij.ui.JBColor;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
@@ -31,12 +30,13 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     final private static int BRIEF_TYPE_MAX_LEN = 45;
     final private static Color KEY_NAME_COLOR = new Color(60, 120, 40);
 
-    private static LookupElement makeLookupBase(String keyName, String type)
+    private static LookupElement makeLookupBase(String keyName, String tailText, String type)
     {
         return LookupElementBuilder.create(keyName)
             .bold()
+            .withTailText(tailText.equals("") ? "" : " = " + tailText, true)
             .withIcon(PhpIcons.FIELD)
-            .withTypeText(type);
+            .withTypeText(type.equals("") ? "?" : type);
     }
 
     /**
@@ -81,9 +81,9 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         L<DeepType> indexTypes = mt.types.fap(t -> t.indexTypes);
 
         if (indexTypes.size() > 0) {
-            String typeText = new MultiType(L(indexTypes)).getBriefTypeText(BRIEF_TYPE_MAX_LEN);
+            String typeText = new MultiType(L(indexTypes)).getBriefValueText(BRIEF_TYPE_MAX_LEN);
             for (int k = 0; k < 5; ++k) {
-                result.addElement(makeLookupBase(k + "", typeText));
+                result.addElement(makeLookupBase(k + "", "", typeText));
             }
         }
 
@@ -120,8 +120,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // completion options and updates them in the dialog
 
         Lang.Dict<LookupElement> nameToNewLookup = keyNames.key(keyName -> keyName)
-            .map(keyName -> mt.getKey(keyName).getBriefTypeText(BRIEF_TYPE_MAX_LEN))
-            .map((briefText, keyName) -> makeLookupBase(keyName, briefText));
+            .map(keyName -> mt.getKey(keyName))
+            .map((keyMt, keyName) -> makeLookupBase(keyName, keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN), keyMt.getIdeaType().filterUnknown().toStringResolved()));
 
         lookups.fch(l -> nameToNewLookup.gat(l.getLookupString()).thn(newL -> l.lookupData = newL));
 
