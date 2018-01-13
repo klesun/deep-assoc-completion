@@ -239,8 +239,8 @@ public class VarRes extends Lang
         for (int i = revAsses.size() - 1; i >= 0; --i) {
             assignments.add(revAsses.get(i));
         }
-
+        DeepType typeFromIdea = new DeepType(variable);
         return assignmentsToTypes(assignments)
-            .cct(docTypes);
+            .cct(docTypes).cct(list(typeFromIdea));
     }
 }

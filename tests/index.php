@@ -1,4 +1,6 @@
 <?php
+
+use DeepTest\KiraYoshikage;
 use DeepTest\TestData;
 use Lib\Utils\Fp;
 
@@ -134,7 +136,7 @@ class DeepKeysTest
         }, $records);
     }
 
-    private static function testArrMethRef()
+    private static function testArrMethRef(KiraYoshikage $argObj)
     {
         // should suggest: "bombTransmutation", "sheerHeartAttack", "bitesZaDusto"
         array_map([\DeepTest\KiraYoshikage::class, ''], [1,2,3]);
@@ -145,6 +147,7 @@ class DeepKeysTest
         $kiraFromMake = \DeepTest\KiraYoshikage::make();
         // should suggest: "murder", "getBadassness"
         $murderedNumbers = array_map([$kiraFromMake, ''], [1,2,3]);
+        $murderedNumbers = array_map([$argObj, ''], [1,2,3]);
     }
 
     private static function makeAddSsrCmd($data)

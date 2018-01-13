@@ -6,6 +6,7 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassConstantReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
@@ -29,7 +30,7 @@ public class ArrCtorRes extends Lang
         return opt(instExpr.getFirstChild())
             .fop(toCast(PhpExpression.class))
             .map(xpr -> ctx.findExprType(xpr).getIdeaType())
-            .map(tpe -> L(tpe.getTypes())
+            .map(tpe -> L(tpe.filter(PhpType.OBJECT).getTypes())
                 .fap(clsPath -> L(PhpIndex.getInstance(instExpr.getProject()).getClassesByFQN(clsPath)))
                 .fop(rvd -> opt(rvd)))
             .fop(clses -> clses.gat(0))

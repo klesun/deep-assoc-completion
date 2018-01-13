@@ -27,7 +27,7 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
         return LookupElementBuilder.create(method.getName())
             .bold()
             .withIcon(PhpIcons.METHOD)
-            .withTypeText(method.getLocalType(false).toString());
+            .withTypeText(method.getLocalType(false).filterUnknown().toString());
     }
 
     @Override
@@ -56,9 +56,10 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
             .def(L());
 
         methods.map(m -> makeLookup(m)).fch(result::addElement);
-        result.addLookupAdvertisement("Press <Page Down> few times to skip built-in suggestions");
-
         long elapsed = System.nanoTime() - startTime;
-        System.out.println("Resolved in " + (elapsed / 1000000000.0) + " seconds");
+        String msg = "Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds";
+        result.addLookupAdvertisement(msg);
+
+        System.out.println(msg);
     }
 }
