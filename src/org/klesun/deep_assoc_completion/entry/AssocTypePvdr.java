@@ -58,16 +58,6 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
             return null;
         }
 
-        Opt<PhpType> ideaClass = Tls.cast(PhpExpression.class, psi)
-            .map(exp -> exp.getType().filter(PhpType.OBJECT))
-            .flt(objType -> !objType.isEmpty());
-
-        if (ideaClass.has()) {
-            // idea already knows the class of this object,
-            // no need to perform complex calculations
-            return null;
-        }
-
         SearchContext search = new SearchContext().setDepth(35);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
