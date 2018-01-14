@@ -86,28 +86,34 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 result.addElement(makeLookupBase(k + "", "", typeText));
             }
         }
-
+        L<MutableLookup> lookups = L();
         // preliminary keys without type - they may be at least 3 times faster in some cases
-        L<MutableLookup> lookups = keyNames
-            .map(keyName -> {
-                String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
-                briefTypeRaw = !briefTypeRaw.equals("") ? briefTypeRaw : "?";
-                // to define dialog pop-up width
-                briefTypeRaw = "                                                                  " + briefTypeRaw;
-                briefTypeRaw = Tls.substr(briefTypeRaw, -BRIEF_TYPE_MAX_LEN);
-                String briefType = briefTypeRaw;
-                LookupElement lookup =  LookupElementBuilder.create(keyName)
-                    .bold()
-                    .withIcon(PhpIcons.FIELD)
-                    .withTypeText(briefType, true);
-                return new MutableLookup(lookup);
-            });
+        keyNames.fch((keyName, i) -> {
+            String justNameType = "                                                                  resolving...";
+            justNameType = Tls.substr(justNameType, -BRIEF_TYPE_MAX_LEN);
+            LookupElement justName =  LookupElementBuilder.create(keyName)
+                .bold()
+                .withIcon(PhpIcons.FIELD)
+                .withTypeText(justNameType, true);
+            MutableLookup mutLookup = new MutableLookup(justName);
+            result.addElement(PrioritizedLookupElement.withPriority(mutLookup, 2000 - i));
+            lookups.add(mutLookup);
+
+            String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
+            briefTypeRaw = !briefTypeRaw.equals("") ? briefTypeRaw : "?";
+            // to define dialog pop-up width
+            briefTypeRaw = "                                                                  " + briefTypeRaw;
+            briefTypeRaw = Tls.substr(briefTypeRaw, -BRIEF_TYPE_MAX_LEN);
+            String briefType = briefTypeRaw;
+            LookupElement lookup =  LookupElementBuilder.create(keyName)
+                .bold()
+                .withIcon(PhpIcons.FIELD)
+                .withTypeText(briefType, true);
+
+            mutLookup.lookupData = lookup;
+        });
 
         suggested.addAll(lookups.map(l -> l.getLookupString()));
-
-        result.addAllElements(lookups.map((lookup, i) ->
-            PrioritizedLookupElement.withPriority(lookup, 2000 - i)));
-
         result.runRemainingContributors(parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
             LookupElement lookup = otherSourceResult.getLookupElement();
@@ -119,11 +125,16 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // following code calculates deeper type info for
         // completion options and updates them in the dialog
 
-        Lang.Dict<LookupElement> nameToNewLookup = keyNames.key(keyName -> keyName)
-            .map(keyName -> mt.getKey(keyName))
-            .map((keyMt, keyName) -> makeLookupBase(keyName, keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN), keyMt.getIdeaType().filterUnknown().toStringResolved()));
+        try {
+            Lang.Dict<LookupElement> nameToNewLookup = keyNames.key(keyName -> keyName)
+                .map(keyName -> mt.getKey(keyName))
+                .map((keyMt, keyName) -> makeLookupBase(keyName, keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN), keyMt.getIdeaType().filterUnknown().toStringResolved()));
 
-        lookups.fch(l -> nameToNewLookup.gat(l.getLookupString()).thn(newL -> l.lookupData = newL));
+            lookups.fch(l -> nameToNewLookup.gat(l.getLookupString()).thn(newL -> l.lookupData = newL));
+        } catch (OutOfMemoryError exc) {
+            // TODO: fix properly, looks like it doubles size of type
+            // array with each level causing there to be 7k+ types
+        }
 
         long elapsed = System.nanoTime() - startTime;
         result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
