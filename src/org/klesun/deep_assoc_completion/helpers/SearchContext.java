@@ -6,6 +6,10 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import java.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public class SearchContext extends Lang
 {
     // parametrized fields
@@ -15,10 +19,13 @@ public class SearchContext extends Lang
     private boolean debug = false;
     // max expressions per single search - guard
     // against memory overflow in circular references
-    private int maxExpressions = 10000;
+    private int maxExpressions = 2000;
     // for performance measurement
     private int expressionsResolved = 0;
     final public L<PhpExpression> psiTrace = L();
+
+    /** @debug */
+    Map<PhpExpression, Map<FuncCtx, Opt<MultiType>>> cachedResults = new LinkedHashMap<>();
 
     public SearchContext()
     {
@@ -72,8 +79,42 @@ public class SearchContext extends Lang
         return false;
     }
 
+    private Opt<Opt<MultiType>> getFromCacheIfAny(PhpExpression expr, FuncCtx funcCtx)
+    {
+        if (!cachedResults.containsKey(expr)) {
+            return opt(null);
+        }
+        if (!cachedResults.get(expr).containsKey(funcCtx)) {
+            return opt(null);
+        }
+        return opt(cachedResults.get(expr).get(funcCtx));
+    }
+
+    private void putIntoCache(PhpExpression expr, FuncCtx funcCtx, Opt<MultiType> resolved)
+    {
+        if (!cachedResults.containsKey(expr)) {
+            cachedResults.put(expr, new LinkedHashMap<>());
+        }
+        if (cachedResults.get(expr).containsKey(funcCtx)) {
+            cachedResults.get(expr).remove(funcCtx);
+        }
+        cachedResults.get(expr).put(funcCtx, resolved);
+    }
+
     public Opt<MultiType> findExprType(PhpExpression expr, FuncCtx funcCtx)
     {
+        String indent = "";
+        for (int i = 0; i < initialDepth - depth; ++i) {
+            indent += " ";
+        }
+        if (debug) {
+            System.out.print(indent);
+            String fileText = expr.getContainingFile().getText();
+            int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
+            StackTraceElement caller = new Exception().getStackTrace()[2];
+            System.out.println(depth + " " + expr.getText().split("\n")[0] + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber());
+        }
+
         if (depth <= 0) {
             return opt(null);
         } else if (++expressionsResolved > maxExpressions) {
@@ -84,21 +125,26 @@ public class SearchContext extends Lang
         --depth;
         psiTrace.add(expr);
         if (isRecursion()) {
+            if (debug) {
+                System.out.println(indent + "** CIRCULAR REFERENCE DETECTED");
+            }
+            psiTrace.remove(psiTrace.size() - 1);
+            ++depth;
             return opt(MultiType.CIRCULAR_REFERENCE);
         }
-
-        if (debug) {
-            for (int i = 0; i < initialDepth - depth; ++i) {
-                System.out.print("  ");
-            }
-            System.out.println(depth + " " + expr.getText().split("\n")[0]);
-        }
+        long startTime = System.nanoTime();
 
         Opt<MultiType> result = DeepTypeResolver.resolveIn(expr, funcCtx)
             .map(ts -> new MultiType(ts));
 
         psiTrace.remove(psiTrace.size() - 1);
         ++depth;
+
+        if (debug) {
+            long elapsed = System.nanoTime() - startTime;
+            System.out.println(indent + "* " + result.fap(a -> a.types).size() + " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()));
+        }
+
         return result;
     }
 
