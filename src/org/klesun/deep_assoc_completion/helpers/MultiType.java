@@ -7,7 +7,7 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.NonNull;
 import org.klesun.lang.Tls;
 
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * this data structure represents a list of
@@ -86,9 +86,13 @@ public class MultiType extends Lang
     public PhpType getKeyBriefType(@NonNull String keyName)
     {
         PhpType ideaType = new PhpType();
-        types.fop(t -> Lang.getKey(t.keys, keyName))
-            .fap(k -> k.getBriefTypes())
-            .fch(ideaType::add);
+        Map<PsiElement, L<PhpType>> psiToType = new LinkedHashMap<>();
+        L<DeepType.Key> keyObjs = types.fop(t -> Lang.getKey(t.keys, keyName));
+        // getting rid of duplicates, temporary solution
+        // TODO: 7681 types!!! and only 2 of them are actually unique. should do something
+        keyObjs.fch(k -> psiToType.put(k.definition, k.getBriefTypes()));
+
+        L(psiToType.values()).fap(a -> a).fch(ideaType::add);
         return ideaType;
     }
 
