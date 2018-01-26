@@ -340,7 +340,7 @@ public class Lang
             for (int i = 0; i < s.size(); ++i) {
                 result.addAll(flatten.apply(s.get(i), i));
             }
-            return new L(result);
+            return new L<>(result);
         }
 
         public boolean any(Predicate<T> pred)

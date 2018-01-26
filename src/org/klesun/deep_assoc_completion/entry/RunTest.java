@@ -17,6 +17,7 @@ import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -40,9 +41,6 @@ public class RunTest extends AnAction
     @Override
     public void actionPerformed(AnActionEvent e)
     {
-        SearchContext search = new SearchContext().setDepth(30);
-        IFuncCtx funcCtx = new FuncCtx(search, L());
-
         Logger logger = new Logger();
         logger.logMsg("Searching for \"UnitTest\" class in project...");
         List<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
@@ -51,7 +49,11 @@ public class RunTest extends AnAction
                 .fap(func -> ClosRes.findFunctionReturns(func)
                     .map(ret -> ret.getArgument())
                     .fop(toCast(PhpExpression.class))
-                    .map(retVal -> funcCtx.findExprType(retVal).types)
+                    .map(retVal -> {
+                        SearchContext search = new SearchContext().setDepth(30);
+                        IFuncCtx funcCtx = new FuncCtx(search, L());
+                        return funcCtx.findExprType(retVal).types;
+                    })
                     .fap(a -> a)
                     .fap(ltype -> L(ltype.indexTypes)
                         .fop((rett, i) -> {
@@ -64,7 +66,9 @@ public class RunTest extends AnAction
                                         try {
                                             return ctx.testCase(list(input), output);
                                         } catch (RuntimeException exc) {
-                                            String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage();
+                                            String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
+                                                // + "\n" + Tls.getStackTrace(exc)
+                                                ;
                                             return list(new Error(ctx, msg));
                                         }
                                     }));

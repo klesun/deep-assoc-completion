@@ -58,7 +58,9 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
             return null;
         }
 
-        SearchContext search = new SearchContext().setDepth(35);
+        // Type Provider is called at random points of time breaking
+        // my recursive formatting in STDOUT, so always setDebug(false)
+        SearchContext search = new SearchContext().setDepth(35).setDebug(false);
         IFuncCtx funcCtx = new FuncCtx(search, L());
 
         @Nullable PhpType result = Tls.cast(PhpExpression.class, psi)
@@ -68,7 +70,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
 
         long elapsed = System.nanoTime() - startTime;
         double seconds = elapsed / 1000000000.0;
-        if (search.getExpressionsResolved() > 0 && seconds > 0.1) {
+        if (search.getExpressionsResolved() > 0 && seconds > 0.5) {
             System.out.println("Resolved " + search.getExpressionsResolved() + " expressions in " + seconds + " seconds");
         }
 

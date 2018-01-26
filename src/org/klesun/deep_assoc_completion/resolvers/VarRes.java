@@ -30,55 +30,30 @@ public class VarRes extends Lang
         this.ctx = ctx;
     }
 
-    /**
-     * extends type with the key assignment information
-     * @TODO: make it immutable! Don't rely on side effects... if you remove Tls.onDemand() it will not work
-     */
-    private static void addAssignment(L<S<MultiType>> dest, Assign assign, boolean overwritingAssignment)
+    private static MultiType makeType(L<String> keys, S<MultiType> getType, PsiElement psi, PhpType briefType)
     {
-        if (assign.keys.size() == 0) {
-            if (assign.didSurelyHappen && overwritingAssignment) dest.clear();
-            dest.add(assign.assignedType);
+        if (keys.size() == 0) {
+            return getType.get();
         } else {
-            if (dest.fap(g -> g.get().types).size() == 0) {
-                dest.add(Tls.onDemand(() -> new MultiType(list(new DeepType(assign.psi, PhpType.ARRAY)))));
+            DeepType arr = new DeepType(psi, PhpType.ARRAY);
+            String nextKey = keys.get(0);
+            L<String> furtherKeys = keys.sub(1);
+            if (nextKey == null) {
+                arr.indexTypes = makeType(furtherKeys, getType, psi, briefType).types;
+            } else {
+                arr.addKey(nextKey, psi).addType(() -> makeType(furtherKeys, getType, psi, briefType), briefType);
             }
-            String nextKey = assign.keys.remove(0);
-            dest.fap(g -> g.get().types).fch(type -> {
-                if (nextKey == null) {
-                    // index key
-                    L<S<MultiType>> getters = list(Tls.onDemand(() -> new MultiType(L(type.indexTypes))));
-                    addAssignment(getters, assign, false);
-                    type.indexTypes = getters.fap(g -> g.get().types);
-                } else {
-                    // associative key
-                    if (!type.keys.containsKey(nextKey)) {
-                        type.addKey(nextKey, assign.psi);
-                    }
-                    DeepType.Key keyRec = type.keys.get(nextKey);
-                    PhpType briefType = assign.keys.size() > 0
-                        ? PhpType.ARRAY : assign.briefType;
-                    keyRec.addType(() -> new MultiType(L()), briefType);
-                    addAssignment(keyRec.getTypeGetters(), assign, true);
-                }
-            });
-            assign.keys.add(0, nextKey);
+            return new MultiType(list(arr));
         }
     }
 
-    /**
-     * this function should be rewritten so that it did
-     * not demand the type of actual variable, cuz it
-     * causes recursion, side effects... such nasty stuff
-     */
-    private static L<DeepType> assignmentsToTypes(List<Assign> assignments)
+    private static L<DeepType> assignmentsToTypes(List<Assign> asses)
     {
-        L<S<MultiType>> resultTypes = list();
-
-        // assignments are supposedly in chronological order
-        assignments.forEach(ass -> addAssignment(resultTypes, ass, true));
-
-        return resultTypes.fap(g -> g.get().types);
+        L<DeepType> resultTypes = list();
+        for (Assign ass: asses) {
+            resultTypes.addAll(makeType(L(ass.keys), ass.assignedType, ass.psi, ass.briefType).types);
+        }
+        return resultTypes;
     }
 
     private static List<String> parseRegexNameCaptures(String regexText)

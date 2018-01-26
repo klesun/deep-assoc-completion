@@ -812,6 +812,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
             $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['cases']['8469132']['mainEvidence'],
             ['value' => [], 'reason' => []]
         ];
+        $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['cases']['8469132']['evidences'][0][''];
         $list[] = [
             $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['cases']['8469132']['evidences'][0],
             ['value' => [], 'reason' => []]

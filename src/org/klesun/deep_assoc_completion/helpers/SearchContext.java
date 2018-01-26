@@ -37,6 +37,12 @@ public class SearchContext extends Lang
         return this;
     }
 
+    public SearchContext setDebug(boolean debug)
+    {
+        this.debug = debug;
+        return this;
+    }
+
     /**
      * temporarily decrease depth to quickly get some
      * optional info (like type text in completion dialog)

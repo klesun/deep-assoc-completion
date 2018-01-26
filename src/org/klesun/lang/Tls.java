@@ -31,12 +31,17 @@ public class Tls extends Lang
         }
     }
 
-    public static String getStackTrace()
+    public static String getStackTrace(Throwable exc)
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        new Exception().printStackTrace(pw);
+        exc.printStackTrace(pw);
         return sw.toString();
+    }
+
+    public static String getStackTrace()
+    {
+        return getStackTrace(new Exception());
     }
 
     public static <T extends PsiElement> Opt<T> findParent(
