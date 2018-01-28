@@ -57,7 +57,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         SearchContext search = new SearchContext();
-        FuncCtx funcCtx = new FuncCtx(search, L());
+        FuncCtx funcCtx = new FuncCtx(search);
 
         long startTime = System.nanoTime();
         L<String> usedKeys = assertArrCtorKey(parameters)

@@ -7,6 +7,7 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,13 +20,11 @@ public class SearchContext extends Lang
     private boolean debug = false;
     // max expressions per single search - guard
     // against memory overflow in circular references
-    private int maxExpressions = 2000;
+    private int maxExpressions = 10000;
     // for performance measurement
     private int expressionsResolved = 0;
     final public L<PhpExpression> psiTrace = L();
-
-    /** @debug */
-    Map<PhpExpression, Map<FuncCtx, Opt<MultiType>>> cachedResults = new LinkedHashMap<>();
+    final private Map<FuncCtx, Map<PhpExpression, MultiType>> ctxToExprToResult = new HashMap<>();
 
     public SearchContext()
     {
@@ -41,17 +40,6 @@ public class SearchContext extends Lang
     {
         this.debug = debug;
         return this;
-    }
-
-    /**
-     * temporarily decrease depth to quickly get some
-     * optional info (like type text in completion dialog)
-     */
-    public int limitDepthLeft(int maxDepth)
-    {
-        int wasDepth = this.depth;
-        this.depth = Math.min(this.depth, maxDepth);
-        return wasDepth;
     }
 
     public SearchContext setArgInferenceEnabled(boolean value)
@@ -85,26 +73,26 @@ public class SearchContext extends Lang
         return false;
     }
 
-    private Opt<Opt<MultiType>> getFromCacheIfAny(PhpExpression expr, FuncCtx funcCtx)
+    private Opt<MultiType> takeFromCache(FuncCtx ctx, PhpExpression expr)
     {
-        if (!cachedResults.containsKey(expr)) {
+        if (!ctxToExprToResult.containsKey(ctx)) {
             return opt(null);
         }
-        if (!cachedResults.get(expr).containsKey(funcCtx)) {
+        if (!ctxToExprToResult.get(ctx).containsKey(expr)) {
             return opt(null);
         }
-        return opt(cachedResults.get(expr).get(funcCtx));
+        return opt(ctxToExprToResult.get(ctx).get(expr));
     }
 
-    private void putIntoCache(PhpExpression expr, FuncCtx funcCtx, Opt<MultiType> resolved)
+    private void putToCache(FuncCtx ctx, PhpExpression expr, MultiType result)
     {
-        if (!cachedResults.containsKey(expr)) {
-            cachedResults.put(expr, new LinkedHashMap<>());
+        if (!ctxToExprToResult.containsKey(ctx)) {
+            ctxToExprToResult.put(ctx, new HashMap<>());
         }
-        if (cachedResults.get(expr).containsKey(funcCtx)) {
-            cachedResults.get(expr).remove(funcCtx);
+        if (ctxToExprToResult.get(ctx).containsKey(expr)) {
+            ctxToExprToResult.get(ctx).remove(expr);
         }
-        cachedResults.get(expr).put(funcCtx, resolved);
+        ctxToExprToResult.get(ctx).put(expr, result);
     }
 
     public Opt<MultiType> findExprType(PhpExpression expr, FuncCtx funcCtx)
@@ -125,7 +113,7 @@ public class SearchContext extends Lang
             return opt(null);
         } else if (++expressionsResolved > maxExpressions) {
             /** @debug */
-            System.out.println("Expression limit guard reached " + expressionsResolved);
+            System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
             return opt(null);
         }
         --depth;
@@ -140,8 +128,16 @@ public class SearchContext extends Lang
         }
         long startTime = System.nanoTime();
 
-        Opt<MultiType> result = DeepTypeResolver.resolveIn(expr, funcCtx)
-            .map(ts -> new MultiType(ts));
+        Opt<MultiType> result = takeFromCache(funcCtx, expr);
+        if (result.has()) {
+            if (debug) {
+                System.out.println(indent + "<< TAKING RESULT FROM CACHE");
+            }
+        } else {
+            result = DeepTypeResolver.resolveIn(expr, funcCtx)
+                .map(ts -> new MultiType(ts));
+            result.thn(mt -> putToCache(funcCtx, expr, mt));
+        }
 
         psiTrace.remove(psiTrace.size() - 1);
         ++depth;

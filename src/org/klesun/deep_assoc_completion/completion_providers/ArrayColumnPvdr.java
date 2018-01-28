@@ -10,7 +10,6 @@ import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 
@@ -62,7 +61,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         SearchContext search = new SearchContext().setDepth(35);
-        IFuncCtx funcCtx = new FuncCtx(search, L());
+        FuncCtx funcCtx = new FuncCtx(search);
 
         long startTime = System.nanoTime();
         MultiType mt = opt(parameters.getPosition().getParent())

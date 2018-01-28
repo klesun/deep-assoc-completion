@@ -8,7 +8,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.GroupStatement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.Statement;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
@@ -18,9 +18,9 @@ import java.util.regex.Pattern;
 
 public class DocParamRes extends Lang
 {
-    private IFuncCtx ctx;
+    private FuncCtx ctx;
 
-    public DocParamRes(IFuncCtx ctx)
+    public DocParamRes(FuncCtx ctx)
     {
         this.ctx = ctx;
     }

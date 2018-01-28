@@ -25,7 +25,7 @@ public class KeyUsageResolver extends Lang
     private static L<String> resolveReplaceKeys(ParameterList argList, int order)
     {
         SearchContext search = new SearchContext();
-        FuncCtx ctx = new FuncCtx(search, list());
+        FuncCtx ctx = new FuncCtx(search);
         return L(argList.getParameters())
             .flt((psi, i) -> i < order)
             .fop(toCast(PhpExpression.class))
@@ -115,7 +115,7 @@ public class KeyUsageResolver extends Lang
     public L<String> resolve(ArrayCreationExpression arrCtor)
     {
         SearchContext fakeSearch = new SearchContext();
-        FuncCtx fakeCtx = new FuncCtx(fakeSearch, L());
+        FuncCtx fakeCtx = new FuncCtx(fakeSearch);
 
         // TODO: handle nested arrays
         return list(

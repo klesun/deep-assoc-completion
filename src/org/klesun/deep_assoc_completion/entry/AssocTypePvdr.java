@@ -14,7 +14,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.resolve.types.PhpTypeProvider3;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrAccRes;
 import org.klesun.lang.Lang;
@@ -61,7 +61,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         // Type Provider is called at random points of time breaking
         // my recursive formatting in STDOUT, so always setDebug(false)
         SearchContext search = new SearchContext().setDepth(35).setDebug(false);
-        IFuncCtx funcCtx = new FuncCtx(search, L());
+        FuncCtx funcCtx = new FuncCtx(search);
 
         @Nullable PhpType result = Tls.cast(PhpExpression.class, psi)
             .map(exp -> funcCtx.findExprType(exp))

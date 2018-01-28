@@ -6,7 +6,8 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
@@ -16,9 +17,9 @@ import org.klesun.lang.Tls;
 
 public class ArgRes extends Lang
 {
-    private IFuncCtx trace;
+    private FuncCtx trace;
 
-    public ArgRes(IFuncCtx trace)
+    public ArgRes(FuncCtx trace)
     {
         this.trace = trace;
     }
@@ -48,7 +49,7 @@ public class ArgRes extends Lang
             if (argOrderInLambda == 0 && "array_map".equals(call.getName())) {
                 return L(call.getParameters()).gat(1)
                     .fop(toCast(PhpExpression.class))
-                    .map(arr -> trace.subCtx(L()).findExprType(arr).getEl());
+                    .map(arr -> new FuncCtx(trace.getSearch()).findExprType(arr).getEl());
             }
         } else if (argOrderOfLambda == 1 && params.length > 1) {
             // functions where array is passed in the first argument
@@ -61,7 +62,7 @@ public class ArgRes extends Lang
             ) {
                 return L(call.getParameters()).gat(0)
                     .fop(toCast(PhpExpression.class))
-                    .map(arr -> trace.subCtx(L()).findExprType(arr).getEl());
+                    .map(arr -> new FuncCtx(trace.getSearch()).findExprType(arr).getEl());
             }
         }
         return opt(null);
@@ -81,7 +82,7 @@ public class ArgRes extends Lang
             ) {
                 return L(call.getParameters()).gat(1)
                     .fop(toCast(PhpExpression.class))
-                    .map(arr -> trace.subCtx(L()).findExprType(arr).getEl());
+                    .map(arr -> new FuncCtx(trace.getSearch()).findExprType(arr).getEl());
             }
         }
         return opt(null);
@@ -102,7 +103,7 @@ public class ArgRes extends Lang
                 , Tls.cast(FunctionReferenceImpl.class, parent)
                     .fop(call -> L(call.getParameters()).gat(0))
                     .fop(toCast(PhpExpression.class))
-                    .map(arg -> trace.subCtx(L()).findExprType(arg))
+                    .map(arg -> new FuncCtx(trace.getSearch()).findExprType(arg))
             )));
     }
 
@@ -168,7 +169,7 @@ public class ArgRes extends Lang
             .map(rets -> rets
                 .fop(ret -> opt(ret.getArgument()))
                 .fop(toCast(PhpExpression.class))
-                .map(val -> trace.subCtx(L()).findExprType(val))
+                .map(val -> new FuncCtx(trace.getSearch()).findExprType(val))
                 .fap(mt -> mt.types))
             .map(ts -> new MultiType(ts).getEl())
             .fop(mt -> getArgOrder(param)

@@ -8,7 +8,7 @@ import com.jetbrains.php.lang.psi.elements.Variable;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.ArgRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
@@ -23,9 +23,9 @@ import java.util.regex.Pattern;
 
 public class VarRes extends Lang
 {
-    final private IFuncCtx ctx;
+    final private FuncCtx ctx;
 
-    public VarRes(IFuncCtx ctx)
+    public VarRes(FuncCtx ctx)
     {
         this.ctx = ctx;
     }

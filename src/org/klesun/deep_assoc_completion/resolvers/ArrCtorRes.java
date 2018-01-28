@@ -8,7 +8,7 @@ import com.jetbrains.php.lang.psi.elements.impl.ClassConstantReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
@@ -18,9 +18,9 @@ import java.util.Objects;
 
 public class ArrCtorRes extends Lang
 {
-    final private IFuncCtx ctx;
+    final private FuncCtx ctx;
 
-    public ArrCtorRes(IFuncCtx ctx)
+    public ArrCtorRes(FuncCtx ctx)
     {
         this.ctx = ctx;
     }

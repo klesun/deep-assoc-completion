@@ -14,7 +14,8 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
@@ -25,9 +26,9 @@ import java.util.Objects;
 
 public class MethCallRes extends Lang
 {
-    private IFuncCtx ctx;
+    private FuncCtx ctx;
 
-    public MethCallRes(IFuncCtx ctx)
+    public MethCallRes(FuncCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -94,7 +95,7 @@ public class MethCallRes extends Lang
         return opt(parsedType);
     }
 
-    private MultiType findBuiltInRetType(Method meth, IFuncCtx argCtx, MethodReference methCall)
+    private MultiType findBuiltInRetType(Method meth, FuncCtx argCtx, MethodReference methCall)
     {
         L<DeepType> types = L();
         String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
@@ -117,12 +118,12 @@ public class MethCallRes extends Lang
         return new MultiType(types);
     }
 
-    public static F<IFuncCtx, L<DeepType>> findMethRetType(Method meth)
+    public static F<FuncCtx, L<DeepType>> findMethRetType(Method meth)
     {
         L<Method> impls = meth.isAbstract()
             ? findOverridingMethods(meth)
             : list(meth);
-        return (IFuncCtx funcCtx) -> impls
+        return (FuncCtx funcCtx) -> impls
             .fap(m -> ClosRes.findFunctionReturns(m))
             .map(ret -> ret.getArgument())
             .fop(toCast(PhpExpression.class))
@@ -157,9 +158,7 @@ public class MethCallRes extends Lang
 
     public MultiType resolveCall(MethodReferenceImpl funcCall)
     {
-        L<PsiElement> args = L(funcCall.getParameters());
-        L<S<MultiType>> argGetters = args.map((psi) -> () -> findPsiExprType(psi));
-        IFuncCtx funcCtx = ctx.subCtx(argGetters);
+        FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
         L<DeepType> rtypes = resolveMethodFromCall(funcCall)
             .map(funcs -> list(
                 funcs.fap(func -> findMethRetType(func).apply(funcCtx)),

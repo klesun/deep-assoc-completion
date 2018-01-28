@@ -13,7 +13,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
@@ -30,7 +30,7 @@ public class ShowDocs extends AnAction
     public static List<DeepType> findPsiType(PsiElement psi)
     {
         SearchContext search = new SearchContext().setDepth(20);
-        IFuncCtx funcCtx = new FuncCtx(search, L());
+        FuncCtx funcCtx = new FuncCtx(search);
 
         return Tls.cast(PhpExpression.class, psi)
             .map(expr -> funcCtx.findExprType(expr).types)

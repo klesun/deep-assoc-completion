@@ -5,7 +5,7 @@ import com.jetbrains.php.lang.psi.elements.ArrayAccessExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.Assign;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
@@ -19,9 +19,9 @@ import java.util.List;
  */
 public class AssRes extends Lang
 {
-    private IFuncCtx ctx;
+    private FuncCtx ctx;
 
-    public AssRes(IFuncCtx ctx)
+    public AssRes(FuncCtx ctx)
     {
         this.ctx = ctx;
     }

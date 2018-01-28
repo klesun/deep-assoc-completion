@@ -34,7 +34,7 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         SearchContext search = new SearchContext();
-        FuncCtx funcCtx = new FuncCtx(search, L());
+        FuncCtx funcCtx = new FuncCtx(search);
         long startTime = System.nanoTime();
         L<Method> methods = opt(parameters.getPosition().getParent())
             .fop(literal -> opt(literal.getParent())

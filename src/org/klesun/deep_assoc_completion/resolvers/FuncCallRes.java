@@ -11,16 +11,17 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.ScopeFinder;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
 
 public class FuncCallRes extends Lang
 {
-    private IFuncCtx ctx;
+    private FuncCtx ctx;
 
-    public FuncCallRes(IFuncCtx ctx)
+    public FuncCallRes(FuncCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -50,7 +51,10 @@ public class FuncCallRes extends Lang
                 if (params.length > 1) {
                     PsiElement callback = params[0];
                     PsiElement array = params[1];
-                    IFuncCtx subCtx = ctx.subCtx(list(() -> findPsiExprType(array).getEl()));
+                    FuncCtx subCtx = Tls.cast(PhpExpression.class, array)
+                        .uni(argArr -> ctx.subCtxArgArr(argArr),
+                            () -> new FuncCtx(ctx.getSearch())
+                        );
                     findPsiExprType(callback).types
                         .map(t -> t.getReturnTypes(subCtx))
                         .fch(rts -> mapRetType.indexTypes.addAll(rts));
@@ -150,9 +154,7 @@ public class FuncCallRes extends Lang
 
     public MultiType resolve(FunctionReferenceImpl funcCall)
     {
-        L<PsiElement> args = L(funcCall.getParameters());
-        L<S<MultiType>> argGetters = args.map((psi) -> () -> findPsiExprType(psi));
-        IFuncCtx funcCtx = ctx.subCtx(argGetters);
+        FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
         return new MultiType(list(
             findBuiltInFuncCallType(funcCall),
             opt(funcCall.getFirstChild())

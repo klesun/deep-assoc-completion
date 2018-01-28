@@ -4,15 +4,15 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
 
 public class ClosRes extends Lang
 {
-    final private IFuncCtx ctx;
+    final private FuncCtx ctx;
 
-    public ClosRes(IFuncCtx ctx)
+    public ClosRes(FuncCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -34,15 +34,12 @@ public class ClosRes extends Lang
 
     public DeepType resolve(FunctionImpl func)
     {
-        // TODO: think of a way how to pass arguments here
-        IFuncCtx insideCtx = ctx.subCtx(L());
-
         DeepType result = new DeepType(func, func.getLocalType(true));
         findFunctionReturns(func)
             .map(ret -> ret.getArgument())
             .fop(toCast(PhpExpression.class))
             .fch(retVal -> {
-                F<IFuncCtx, L<DeepType>> rtGetter =
+                F<FuncCtx, L<DeepType>> rtGetter =
                     (funcCtx) -> funcCtx.findExprType(retVal).types;
                 result.returnTypeGetters.add(rtGetter);
             });

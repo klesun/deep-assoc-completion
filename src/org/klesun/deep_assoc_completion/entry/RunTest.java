@@ -13,7 +13,7 @@ import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.lang.Opt;
@@ -51,7 +51,7 @@ public class RunTest extends AnAction
                     .fop(toCast(PhpExpression.class))
                     .map(retVal -> {
                         SearchContext search = new SearchContext().setDepth(30);
-                        IFuncCtx funcCtx = new FuncCtx(search, L());
+                        FuncCtx funcCtx = new FuncCtx(search);
                         return funcCtx.findExprType(retVal).types;
                     })
                     .fap(a -> a)

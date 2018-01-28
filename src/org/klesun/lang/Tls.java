@@ -160,4 +160,14 @@ public class Tls extends Lang
         }
         return result;
     }
+
+    /**
+     * removes line breaks from string - useful sometimes
+     * if you want to preserve formatting in debug
+     */
+    public static String singleLine(String text, int length)
+    {
+        L<String> lines = L(text.split("\n"));
+        return Tls.substr(Tls.implode(" ", lines), 0, length);
+    }
 }

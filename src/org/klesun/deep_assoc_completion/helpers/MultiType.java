@@ -29,7 +29,13 @@ public class MultiType extends Lang
 
     public MultiType(L<DeepType> types, REASON reason)
     {
-        this.types = types;
+        // there sometimes appear thousands of duplicates
+        // I'm not sure I'm good mathematician enough to find
+        // out the algorithm that would not produce them with
+        // all these recursions, so I'm just removing dupes here
+        LinkedHashSet distinct = new LinkedHashSet<>(types);
+
+        this.types = L(distinct);
         this.reason = reason;
     }
     public MultiType(L<DeepType> types)

@@ -8,7 +8,7 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.lang.Lang;
@@ -18,9 +18,9 @@ import java.util.List;
 
 public class FieldRes extends Lang
 {
-    final private IFuncCtx ctx;
+    final private FuncCtx ctx;
 
-    public FieldRes(IFuncCtx ctx)
+    public FieldRes(FuncCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -72,7 +72,7 @@ public class FieldRes extends Lang
         L<DeepType> result = list();
         opt(fieldRef.resolve())
             .thn(resolved -> {
-                IFuncCtx implCtx = ctx.subCtx(L());
+                FuncCtx implCtx = new FuncCtx(ctx.getSearch());
                 Tls.cast(FieldImpl.class, resolved)
                     .map(fld -> fld.getDefaultValue())
                     .fop(toCast(PhpExpression.class))

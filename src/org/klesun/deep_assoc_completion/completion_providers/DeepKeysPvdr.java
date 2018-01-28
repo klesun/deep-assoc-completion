@@ -10,7 +10,6 @@ import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.lang.Lang;
@@ -62,7 +61,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         SearchContext search = new SearchContext().setDepth(35);
-        IFuncCtx funcCtx = new FuncCtx(search, L());
+        FuncCtx funcCtx = new FuncCtx(search);
 
         Set<String> suggested = new HashSet<>();
 
@@ -125,16 +124,15 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // following code calculates deeper type info for
         // completion options and updates them in the dialog
 
-        try {
-            Lang.Dict<LookupElement> nameToNewLookup = keyNames.key(keyName -> keyName)
-                .map(keyName -> mt.getKey(keyName))
-                .map((keyMt, keyName) -> makeLookupBase(keyName, keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN), keyMt.getIdeaType().filterUnknown().toStringResolved()));
+        Lang.Dict<LookupElement> nameToNewLookup = keyNames.key(keyName -> keyName)
+            .map(keyName -> mt.getKey(keyName))
+            .map((keyMt, keyName) -> {
+                String briefValue = keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
+                String ideaTypeStr = keyMt.getIdeaType().filterUnknown().toStringResolved();
+                return makeLookupBase(keyName, briefValue, ideaTypeStr);
+            });
 
-            lookups.fch(l -> nameToNewLookup.gat(l.getLookupString()).thn(newL -> l.lookupData = newL));
-        } catch (OutOfMemoryError exc) {
-            // TODO: fix properly, looks like it doubles size of type
-            // array with each level causing there to be 7k+ types
-        }
+        lookups.fch(l -> nameToNewLookup.gat(l.getLookupString()).thn(newL -> l.lookupData = newL));
 
         long elapsed = System.nanoTime() - startTime;
         result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");

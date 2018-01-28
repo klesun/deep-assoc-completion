@@ -5,7 +5,7 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.TernaryExpressionImpl;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
@@ -17,9 +17,9 @@ import java.util.stream.Stream;
 
 public class MiscRes extends Lang
 {
-    final private IFuncCtx ctx;
+    final private FuncCtx ctx;
 
-    public MiscRes(IFuncCtx ctx)
+    public MiscRes(FuncCtx ctx)
     {
         this.ctx = ctx;
     }

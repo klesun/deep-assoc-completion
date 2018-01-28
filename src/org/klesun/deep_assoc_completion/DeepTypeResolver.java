@@ -3,7 +3,7 @@ package org.klesun.deep_assoc_completion;
 import com.intellij.psi.*;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.resolvers.*;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
@@ -17,7 +17,7 @@ import org.klesun.lang.Tls;
 public class DeepTypeResolver extends Lang
 {
     /** @debug */
-    public static Opt<L<DeepType>> resolveIn(PsiElement expr, IFuncCtx ctx)
+    public static Opt<L<DeepType>> resolveIn(PsiElement expr, FuncCtx ctx)
     {
         return Opt.fst(list(
             opt(null) // for coma formatting

@@ -2,15 +2,15 @@ package org.klesun.deep_assoc_completion.resolvers;
 
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 
 public class ArrAccRes extends Lang
 {
-    final private IFuncCtx ctx;
+    final private FuncCtx ctx;
 
-    public ArrAccRes(IFuncCtx ctx)
+    public ArrAccRes(FuncCtx ctx)
     {
         this.ctx = ctx;
     }

@@ -7,7 +7,7 @@ import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
@@ -28,7 +28,7 @@ public class DeepType extends Lang
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
     // list of functions that take arg list and return list of return types
-    public final L<F<IFuncCtx, L<DeepType>>> returnTypeGetters = L();
+    public final L<F<FuncCtx, L<DeepType>>> returnTypeGetters = L();
     public final L<DeepType> pdoTypes = L();
     public final @Nullable String stringValue;
     public final PsiElement definition;
@@ -61,7 +61,7 @@ public class DeepType extends Lang
         this(numPsi, numPsi.getType(), "" + number);
     }
 
-    public L<DeepType> getReturnTypes(IFuncCtx ctx)
+    public L<DeepType> getReturnTypes(FuncCtx ctx)
     {
         L<DeepType> result = returnTypeGetters.fap(g -> g.apply(ctx));
         return result;
