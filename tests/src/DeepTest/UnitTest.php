@@ -1482,6 +1482,16 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $provided = $this->providePrivatePeekOutside($pax);
     }
 
+    public function provideAssignmentOfAssignment()
+    {
+        $list = [];
+        $whatToDrink = $booze = ['name' => 'Rum', 'spiritage' => '37.5%', 'taste' => 'normal'];
+        $booze[''];
+        $whatToDrink[''];
+        $list[] = [$whatToDrink, ['name' => [], 'spiritage' => [], 'taste' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

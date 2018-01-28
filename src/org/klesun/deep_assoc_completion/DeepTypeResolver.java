@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion;
 
 import com.intellij.psi.*;
+import com.jetbrains.php.lang.psi.elements.AssignmentExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
@@ -46,6 +47,10 @@ public class DeepTypeResolver extends Lang
                     .fop(def -> opt(def.getValue()))
                     .fop(toCast(PhpExpression.class))
                     .fap(exp -> ctx.findExprType(exp).types))
+            , Tls.cast(AssignmentExpression.class, expr)
+                .map(ass -> ass.getValue())
+                .fop(toCast(PhpExpression.class))
+                .map(val -> ctx.findExprType(val).types)
             , Tls.cast(PhpExpressionImpl.class, expr)
                 .map(v -> v.getFirstChild())
                 .fop(toCast(FunctionImpl.class))
