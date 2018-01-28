@@ -1,12 +1,14 @@
 package org.klesun.deep_assoc_completion.resolvers.var_res;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.PhpModifier;
 import com.jetbrains.php.lang.psi.elements.impl.*;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
@@ -131,6 +133,31 @@ public class ArgRes extends Lang
                 .map(mts -> new MultiType(mts.fap(mt -> mt.types))));
     }
 
+    private Opt<MultiType> getPrivateFuncUsageArg(FunctionImpl func, int argOrderInLambda)
+    {
+        return Tls.cast(MethodImpl.class, func)
+            // if caret is inside this function, when passed args are unknown
+            .flt(a -> trace.getArgCnt() == 0)
+            .flt(meth -> meth.getAccess() == PhpModifier.Access.PRIVATE)
+            .map(meth -> {
+                PsiFile file = func.getContainingFile();
+                return L(PsiTreeUtil.findChildrenOfType(file, MethodReferenceImpl.class))
+                    .flt(call -> meth.getName().equals(call.getName()));
+            })
+            // Only if func is used just once. This whole logic is
+            // intended just to cover moments when you chunk code just
+            // to not have hundreds of lines in single function.
+            // I don't even want to think of nasty recursive results we could
+            // get if it is some utility function like ArrayUtil::getFirst()
+            .flt(calls -> calls.size() == 1)
+            .map(calls -> calls
+                .fop(call -> L(call.getParameters()).gat(argOrderInLambda))
+                .fop(toCast(PhpExpression.class))
+                .map(arg -> new FuncCtx(trace.getSearch()).findExprType(arg))
+                .fap(mt -> mt.types)
+                .wap(types -> new MultiType(types)));
+    }
+
     // array_map(function($seg){return $seg['airline'];}, $segments);
     private Opt<MultiType> getInlineFuncArg(FunctionImpl clos, int argOrderInLambda)
     {
@@ -148,6 +175,7 @@ public class ArgRes extends Lang
                 .fop(order -> Opt.fst(list(opt(null)
                     , getInlineFuncArg(clos, order)
                     , getFuncVarUsageArg(clos, order)
+                    , getPrivateFuncUsageArg(clos, order)
                 ))))
             .def(MultiType.INVALID_PSI)
             ;
@@ -201,18 +229,15 @@ public class ArgRes extends Lang
             .fop(doc -> new DocParamRes(trace).resolve(doc))
             .fch(mt -> result.types.addAll(mt.types))
             ;
-
         result.types.addAll(resolveFromDataProviderDoc(param).types);
-
-        // temporary workaround for #19
-        if (trace.getSearch().argInferenceEnabled) {
+        if (trace.getArgCnt() == 0) {
+            // passed args not known - if caret was inside this function
             result.types.addAll(peekOutside(param).types);
-
+        } else {
             getArgOrder(param)
                 .fop(i -> trace.getArg(i))
                 .thn(mt -> result.types.addAll(mt.types));
         }
-
         return result;
     }
 }

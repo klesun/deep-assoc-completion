@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.01.15.001</version>
+    <version>2018.01.29.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -28,8 +28,8 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>#28 Temporary workaround for memory overflow caused by circular references: set expression limit guards to 2000 for now; catch and ignore memory overflow exception; hackishly remove duplicates before resolving IDEA type so that it was just 2 types instead of 7536 duplicates</li>
-      <li>Fix method name completion in [$someObj, ''] - $someObj was unresolved whet it was arg with a type hint</li>
+      <li>Feature: provide completion from arguments inside a private function based on what is passed to it further</li>
+      <li>#28 Infinite recursion fix: cache same PSI resolution and remove duplicate types</li>
     </ul>
     ]]>
     </change-notes>

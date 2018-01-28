@@ -16,7 +16,6 @@ public class SearchContext extends Lang
     // parametrized fields
     private int depth = 20;
     private int initialDepth = depth;
-    public boolean argInferenceEnabled = true;
     private boolean debug = false;
     // max expressions per single search - guard
     // against memory overflow in circular references
@@ -39,12 +38,6 @@ public class SearchContext extends Lang
     public SearchContext setDebug(boolean debug)
     {
         this.debug = debug;
-        return this;
-    }
-
-    public SearchContext setArgInferenceEnabled(boolean value)
-    {
-        this.argInferenceEnabled = value;
         return this;
     }
 
