@@ -27,7 +27,8 @@ public class DocParamRes extends Lang
 
     private Opt<MultiType> parseExpression(String expr, Project project)
     {
-        expr = "<?php\n" + expr + ";";
+        // adding "$arg = " so anonymous functions were parsed as expressions
+        expr = "<?php\n$arg = " + expr + ";";
         PsiFile psiFile = PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr);
 
         return opt(psiFile.getFirstChild())

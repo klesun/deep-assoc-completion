@@ -1492,6 +1492,18 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    /** @param $getAreaData = function($letter){
+     *     return ['id' => 1234, 'cmd' => '$BB', 'output' => 'ASD ASD'];
+     * } */
+    public static function provideAnonFuncInADoc(callable $getAreaData)
+    {
+        $list = [];
+        $areaData = $getAreaData();
+        $areaData[''];
+        $list[] = [$areaData, ['id' => [], 'cmd' => [], 'output' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
