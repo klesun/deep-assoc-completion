@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.completion_providers;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
@@ -28,6 +29,22 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
     final private static int BRIEF_TYPE_MAX_LEN = 50;
 
+    private static InsertHandler<LookupElement> makeInsertHandler()
+    {
+        return (ctx, lookup) -> {
+            int from = ctx.getStartOffset();
+            int to = ctx.getTailOffset();
+            if (Tls.regex("^\\d+$", lookup.getLookupString()).has() && from != to) {
+                if (ctx.getEditor().getDocument().getText(TextRange.create(from - 1, from)).equals("'") &&
+                    ctx.getEditor().getDocument().getText(TextRange.create(to, to + 1)).equals("'")
+                ) {
+                    ctx.getEditor().getDocument().deleteString(to, to + 1);
+                    ctx.getEditor().getDocument().deleteString(from - 1, from);
+                }
+            }
+        };
+    }
+
     private static LookupElement makePaddedLookup(String keyName, String ideaType, String briefVal)
     {
         ideaType = !ideaType.equals("") ? ideaType : "?";
@@ -37,6 +54,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         briefVal = Tls.substr(briefVal, 0, BRIEF_TYPE_MAX_LEN);
         return LookupElementBuilder.create(keyName)
             .bold()
+            .withInsertHandler(makeInsertHandler())
             .withTailText(briefVal, true)
             .withIcon(PhpIcons.FIELD)
             .withTypeText(ideaType, false);
@@ -49,6 +67,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     static class MutableLookup extends LookupElement
     {
         public LookupElement lookupData;
+        private InsertHandler<LookupElement> onInsert = makeInsertHandler();
+
         public MutableLookup(LookupElement lookupData)
         {
             this.lookupData = lookupData;
@@ -58,6 +78,10 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         }
         public void renderElement(LookupElementPresentation presentation) {
             lookupData.renderElement(presentation);
+        }
+        public void handleInsert(InsertionContext ctx)
+        {
+            onInsert.handleInsert(ctx, this);
         }
     }
 
