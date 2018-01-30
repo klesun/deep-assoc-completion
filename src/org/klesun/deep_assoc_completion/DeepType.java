@@ -134,7 +134,7 @@ public class DeepType extends Lang
                 mergedKeys.get(k).addAll(v.getTypes());
             });
             t.indexTypes.forEach(indexTypes::add);
-            briefTypes.add(opt(t.stringValue).map(s -> "'" + s + "'").def(t.briefType.toString()));
+            briefTypes.add(opt(t.stringValue).map(s -> "'" + s + "'").def(t.briefType.filterUnknown().toString()));
         });
 
         if (mergedKeys.size() > 0) {
