@@ -172,6 +172,6 @@ public class MultiType extends Lang
 
     public boolean isInt()
     {
-        return types.any(t -> t.isInt());
+        return types.any(t -> t.isNumber());
     }
 }

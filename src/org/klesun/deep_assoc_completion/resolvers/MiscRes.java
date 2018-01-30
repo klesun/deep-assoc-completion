@@ -4,6 +4,8 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.TernaryExpressionImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
@@ -40,12 +42,34 @@ public class MiscRes extends Lang
                     findPsiExprType(tern.getFalseVariant()).types.stream()
                 ).collect(Collectors.toList()))
             , Tls.cast(BinaryExpressionImpl.class, expr)
-                // found this dealing with null coalescing, but
-                // i suppose this rule will apply for all operators
-                .map(bin -> Stream.concat(
-                    findPsiExprType(bin.getLeftOperand()).types.stream(),
-                    findPsiExprType(bin.getRightOperand()).types.stream()
-                ).collect(Collectors.toList()))
+                .fop(bin -> opt(bin.getOperation())
+                    .flt(op -> op.getText().equals("??") || op.getText().equals("?:"))
+                    .map(op -> Stream.concat(
+                        findPsiExprType(bin.getLeftOperand()).types.stream(),
+                        findPsiExprType(bin.getRightOperand()).types.stream()
+                    ).collect(Collectors.toList())))
+            , Tls.cast(BinaryExpressionImpl.class, expr)
+                .fop(bin -> opt(bin.getOperation())
+                    .flt(op -> op.getText().equals("+") || op.getText().equals("-")
+                        || op.getText().equals("*") || op.getText().equals("/")
+                        || op.getText().equals("%") || op.getText().equals("**")
+                    )
+                    .map(op -> {
+                        DeepType type = new DeepType(bin, PhpType.NUMBER);
+                        type.isNumber = true;
+                        return list(type);
+                    }))
+            , Tls.cast(BinaryExpressionImpl.class, expr)
+                .fop(bin -> opt(bin.getOperation())
+                    .flt(op -> op.getText().equals("."))
+                    .map(op -> {
+                        MultiType lmt = findPsiExprType(bin.getLeftOperand());
+                        MultiType rmt = findPsiExprType(bin.getRightOperand());
+                        String ccted = opt(lmt.getStringValue()).def("") + opt(rmt.getStringValue()).def("");
+                        String unescaped = StringEscapeUtils.unescapeJava(ccted); // PHP ~ java
+                        DeepType type = new DeepType(bin, PhpType.STRING, unescaped);
+                        return list(type);
+                    }))
             , Tls.cast(PhpExpression.class, expr)
                 .map(t -> list(new DeepType(t)))
 //            , Tls.cast(ConstantReferenceImpl.class, expr)

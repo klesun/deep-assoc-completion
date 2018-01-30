@@ -69,7 +69,6 @@ public class AssRes extends Lang
         while (nextKeyOpt.has()) {
             ArrayAccessExpressionImpl nextKey = nextKeyOpt.def(null);
 
-            // TODO: handle when key is a var resolved to multiple strings
             KeyType name = opt(nextKey.getIndex())
                 .map(index -> index.getValue())
                 .fop(toCast(PhpExpression.class))
