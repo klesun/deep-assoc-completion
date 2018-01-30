@@ -135,21 +135,20 @@ public class ArgRes extends Lang
 
     private Opt<MultiType> getPrivateFuncUsageArg(FunctionImpl func, int argOrderInLambda)
     {
+        // it would be nice to also infer arg type when function is
+        // called with array_map([$this, 'doStuff'], $args) one day...
+        // would just Ctrl+F-ing the file for function name be slower?
+
         return Tls.cast(MethodImpl.class, func)
             // if caret is inside this function, when passed args are unknown
             .flt(a -> trace.getArgCnt() == 0)
+            .flt(a -> func.getParameters().length > 0)
             .flt(meth -> meth.getAccess() == PhpModifier.Access.PRIVATE)
             .map(meth -> {
                 PsiFile file = func.getContainingFile();
                 return L(PsiTreeUtil.findChildrenOfType(file, MethodReferenceImpl.class))
                     .flt(call -> meth.getName().equals(call.getName()));
             })
-            // Only if func is used just once. This whole logic is
-            // intended just to cover moments when you chunk code just
-            // to not have hundreds of lines in single function.
-            // I don't even want to think of nasty recursive results we could
-            // get if it is some utility function like ArrayUtil::getFirst()
-            .flt(calls -> calls.size() == 1)
             .map(calls -> calls
                 .fop(call -> L(call.getParameters()).gat(argOrderInLambda))
                 .fop(toCast(PhpExpression.class))
