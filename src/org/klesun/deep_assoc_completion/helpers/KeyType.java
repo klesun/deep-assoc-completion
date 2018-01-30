@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion.helpers;
 
 import org.jetbrains.annotations.NotNull;
+import org.klesun.lang.Lang;
 
 import javax.annotation.Nullable;
 
@@ -9,15 +10,15 @@ public class KeyType
     public enum EKeyType {STRING, INTEGER, UNKNOWN}
 
     final public EKeyType keyType;
-    final public @Nullable String name;
+    final public @Nullable Lang.L<String> names;
 
-    private KeyType(EKeyType keyType, @Nullable String name)
+    private KeyType(EKeyType keyType, @Nullable Lang.L<String> name)
     {
         this.keyType = keyType;
-        this.name = name;
+        this.names = name;
     }
 
-    public static KeyType string(@NotNull  String name)
+    public static KeyType string(@NotNull  Lang.L<String> name)
     {
         return new KeyType(EKeyType.STRING, name);
     }

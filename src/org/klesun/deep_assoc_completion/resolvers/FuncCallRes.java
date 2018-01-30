@@ -141,6 +141,15 @@ public class FuncCallRes extends Lang
                     DeepType type = new DeepType(call, PhpType.STRING, unescaped);
                     result.add(type);
                 }
+            } else if (name.equals("array_keys")) {
+                if (params.length > 1) {
+                    L<DeepType> keyTypes = opt(params[0])
+                        .fop(toCast(PhpExpression.class))
+                        .map(exp -> ctx.findExprType(exp))
+                        .fap(mt -> mt.getKeyNames())
+                        .map(keyName -> new DeepType(call, PhpType.STRING, keyName));
+                    result.addAll(keyTypes);
+                }
             } else {
                 // try to get type info from standard_2.php
                 opt(call.resolve())

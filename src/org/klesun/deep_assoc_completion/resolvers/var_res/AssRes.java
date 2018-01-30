@@ -41,7 +41,9 @@ public class AssRes extends Lang
                 arr.hasIntKeys = nextKey.keyType == KeyType.EKeyType.INTEGER;
                 arr.indexTypes = makeType(furtherKeys, getType, psi, briefType).types;
             } else {
-                arr.addKey(nextKey.name, psi).addType(() -> makeType(furtherKeys, getType, psi, briefType), briefType);
+                nextKey.names.fch(name ->
+                    arr.addKey(name, psi).addType(() ->
+                        makeType(furtherKeys, getType, psi, briefType), briefType));
             }
             return new MultiType(list(arr));
         }
@@ -72,8 +74,8 @@ public class AssRes extends Lang
                 .map(index -> index.getValue())
                 .fop(toCast(PhpExpression.class))
                 .map(key -> ctx.findExprType(key))
-                .map(mt -> mt.getStringValue() != null
-                    ? KeyType.string(mt.getStringValue())
+                .map(mt -> mt.getStringValues().size() > 0
+                    ? KeyType.string(mt.getStringValues())
                     : (mt.isInt()
                         ? KeyType.integer()
                         : KeyType.unknown()))
