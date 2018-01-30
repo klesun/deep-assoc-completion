@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
@@ -14,7 +15,7 @@ import java.util.List;
  */
 public class Assign extends Lang
 {
-    final public List<String> keys;
+    final public List<KeyType> keys;
     // list?
     final public S<MultiType> assignedType;
     // when true, that means this assignment happens _always_,
@@ -24,7 +25,7 @@ public class Assign extends Lang
     final public PsiElement psi;
     final public PhpType briefType;
 
-    public Assign(List<String> keys, S<MultiType> assignedType, boolean didSurelyHappen, PsiElement psi, PhpType briefType)
+    public Assign(List<KeyType> keys, S<MultiType> assignedType, boolean didSurelyHappen, PsiElement psi, PhpType briefType)
     {
         this.keys = keys;
         this.assignedType = Tls.onDemand(assignedType);

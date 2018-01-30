@@ -1,12 +1,10 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
-import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
@@ -23,32 +21,6 @@ public class FieldRes extends Lang
     public FieldRes(FuncCtx ctx)
     {
         this.ctx = ctx;
-    }
-
-    private static MultiType makeType(L<String> keys, S<MultiType> getType, PsiElement psi, PhpType briefType)
-    {
-        if (keys.size() == 0) {
-            return getType.get();
-        } else {
-            DeepType arr = new DeepType(psi, PhpType.ARRAY);
-            String nextKey = keys.get(0);
-            L<String> furtherKeys = keys.sub(1);
-            if (nextKey == null) {
-                arr.indexTypes = makeType(furtherKeys, getType, psi, briefType).types;
-            } else {
-                arr.addKey(nextKey, psi).addType(() -> makeType(furtherKeys, getType, psi, briefType), briefType);
-            }
-            return new MultiType(list(arr));
-        }
-    }
-
-    private static List<DeepType> assignmentsToTypes(List<Assign> asses)
-    {
-        List<DeepType> resultTypes = list();
-        for (Assign ass: asses) {
-            resultTypes.addAll(makeType(L(ass.keys), ass.assignedType, ass.psi, ass.briefType).types);
-        }
-        return resultTypes;
     }
 
     private boolean isCircularExpr(FieldReferenceImpl fieldRef)
@@ -91,7 +63,7 @@ public class FieldRes extends Lang
                     .def(L())
                     .fop(psi -> (new AssRes(implCtx)).collectAssignment(psi, false));
 
-                List<DeepType> types = assignmentsToTypes(asses);
+                List<DeepType> types = AssRes.assignmentsToTypes(asses);
                 result.addAll(types);
             });
 

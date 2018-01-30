@@ -9,6 +9,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.ArgRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
@@ -28,32 +29,6 @@ public class VarRes extends Lang
     public VarRes(FuncCtx ctx)
     {
         this.ctx = ctx;
-    }
-
-    private static MultiType makeType(L<String> keys, S<MultiType> getType, PsiElement psi, PhpType briefType)
-    {
-        if (keys.size() == 0) {
-            return getType.get();
-        } else {
-            DeepType arr = new DeepType(psi, PhpType.ARRAY);
-            String nextKey = keys.get(0);
-            L<String> furtherKeys = keys.sub(1);
-            if (nextKey == null) {
-                arr.indexTypes = makeType(furtherKeys, getType, psi, briefType).types;
-            } else {
-                arr.addKey(nextKey, psi).addType(() -> makeType(furtherKeys, getType, psi, briefType), briefType);
-            }
-            return new MultiType(list(arr));
-        }
-    }
-
-    private static L<DeepType> assignmentsToTypes(List<Assign> asses)
-    {
-        L<DeepType> resultTypes = list();
-        for (Assign ass: asses) {
-            resultTypes.addAll(makeType(L(ass.keys), ass.assignedType, ass.psi, ass.briefType).types);
-        }
-        return resultTypes;
     }
 
     private static List<String> parseRegexNameCaptures(String regexText)
@@ -83,8 +58,8 @@ public class VarRes extends Lang
     // array_unshift($itin, ['from' => 'KIV', 'to' => 'RIX']);
     private Opt<Assign> assertArrayUnshift(PsiElement varRef)
     {
-        L<String> keys = list();
-        keys.add(null);
+        L<KeyType> keys = list();
+        keys.add(KeyType.integer());
         return opt(varRef.getParent())
             .fop(toCast(ParameterListImpl.class))
             .map(par -> par.getParent())
@@ -215,7 +190,7 @@ public class VarRes extends Lang
             assignments.add(revAsses.get(i));
         }
         DeepType typeFromIdea = new DeepType(variable);
-        return assignmentsToTypes(assignments)
+        return AssRes.assignmentsToTypes(assignments)
             .cct(docTypes).cct(list(typeFromIdea));
     }
 }

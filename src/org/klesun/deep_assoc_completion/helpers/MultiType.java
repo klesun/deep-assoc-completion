@@ -164,4 +164,14 @@ public class MultiType extends Lang
     {
         return DeepType.toJson(types, 0);
     }
+
+    public boolean hasNumberIndexes()
+    {
+        return types.any(t -> t.hasNumberIndexes());
+    }
+
+    public boolean isInt()
+    {
+        return types.any(t -> t.isInt());
+    }
 }

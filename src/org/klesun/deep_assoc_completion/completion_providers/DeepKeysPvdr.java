@@ -26,16 +26,20 @@ import static org.klesun.lang.Lang.toCast;
  */
 public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
-    final private static int BRIEF_TYPE_MAX_LEN = 45;
-    final private static Color KEY_NAME_COLOR = new Color(60, 120, 40);
+    final private static int BRIEF_TYPE_MAX_LEN = 50;
 
-    private static LookupElement makeLookupBase(String keyName, String tailText, String type)
+    private static LookupElement makePaddedLookup(String keyName, String ideaType, String briefVal)
     {
+        ideaType = !ideaType.equals("") ? ideaType : "?";
+
+        briefVal = briefVal.trim().equals("") ? "" : " = " + briefVal;
+        briefVal = briefVal + "                                                                ";
+        briefVal = Tls.substr(briefVal, 0, BRIEF_TYPE_MAX_LEN);
         return LookupElementBuilder.create(keyName)
             .bold()
-            .withTailText(tailText.equals("") ? "" : " = " + tailText, true)
+            .withTailText(briefVal, true)
             .withIcon(PhpIcons.FIELD)
-            .withTypeText(type.equals("") ? "?" : type);
+            .withTypeText(ideaType, false);
     }
 
     /**
@@ -77,41 +81,30 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .def(MultiType.INVALID_PSI);
 
         L<String> keyNames = mt.getKeyNames();
-        L<DeepType> indexTypes = mt.types.fap(t -> t.indexTypes);
-
-        if (indexTypes.size() > 0) {
-            String typeText = new MultiType(L(indexTypes)).getBriefValueText(BRIEF_TYPE_MAX_LEN);
-            for (int k = 0; k < 5; ++k) {
-                result.addElement(makeLookupBase(k + "", "", typeText));
-            }
-        }
         L<MutableLookup> lookups = L();
         // preliminary keys without type - they may be at least 3 times faster in some cases
         keyNames.fch((keyName, i) -> {
-            String justNameType = "                                                                  resolving...";
-            justNameType = Tls.substr(justNameType, -BRIEF_TYPE_MAX_LEN);
-            LookupElement justName =  LookupElementBuilder.create(keyName)
-                .bold()
-                .withIcon(PhpIcons.FIELD)
-                .withTypeText(justNameType, true);
+            LookupElement justName = makePaddedLookup(keyName, "resolving...", "");
             MutableLookup mutLookup = new MutableLookup(justName);
             result.addElement(PrioritizedLookupElement.withPriority(mutLookup, 2000 - i));
             lookups.add(mutLookup);
 
             String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
-            briefTypeRaw = !briefTypeRaw.equals("") ? briefTypeRaw : "?";
-            // to define dialog pop-up width
-            briefTypeRaw = "                                                                  " + briefTypeRaw;
-            briefTypeRaw = Tls.substr(briefTypeRaw, -BRIEF_TYPE_MAX_LEN);
-            String briefType = briefTypeRaw;
-            LookupElement lookup =  LookupElementBuilder.create(keyName)
-                .bold()
-                .withIcon(PhpIcons.FIELD)
-                .withTypeText(briefType, true);
-
-            mutLookup.lookupData = lookup;
+            mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "");
         });
-
+        L<DeepType> indexTypes = mt.types.fap(t -> t.indexTypes);
+        if (indexTypes.size() > 0) {
+            String typeText = new MultiType(indexTypes).getBriefValueText(BRIEF_TYPE_MAX_LEN);
+            String ideaType = new MultiType(indexTypes).getIdeaType().filterUnknown().toStringResolved();
+            if (mt.hasNumberIndexes()) {
+                for (int k = 0; k < 5; ++k) {
+                    result.addElement(makePaddedLookup(k + "", ideaType, typeText));
+                }
+            } else {
+                // string key, but key name unknown
+                result.addElement(makePaddedLookup("", ideaType, typeText));
+            }
+        }
         suggested.addAll(lookups.map(l -> l.getLookupString()));
         result.runRemainingContributors(parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
@@ -129,7 +122,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .map((keyMt, keyName) -> {
                 String briefValue = keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
                 String ideaTypeStr = keyMt.getIdeaType().filterUnknown().toStringResolved();
-                return makeLookupBase(keyName, briefValue, ideaTypeStr);
+                return makePaddedLookup(keyName, ideaTypeStr, briefValue);
             });
 
         lookups.fch(l -> nameToNewLookup.gat(l.getLookupString()).thn(newL -> l.lookupData = newL));

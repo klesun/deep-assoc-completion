@@ -49,7 +49,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
                 result.add(makeLookup(keyEntry));
             }
             L(type.indexTypes).gat(0).flt(t -> type.keys.size() == 0).thn(t -> {
-                for (int k = 0; k < 10; ++k) {
+                for (int k = 0; k < 5; ++k) {
                     result.add(makeLookupBase(k + "", t.briefType.toString()));
                 }
             });

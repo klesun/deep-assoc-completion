@@ -4,8 +4,11 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.ArrayAccessExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.Assign;
+import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
@@ -26,30 +29,62 @@ public class AssRes extends Lang
         this.ctx = ctx;
     }
 
+    private static MultiType makeType(L<KeyType> keys, S<MultiType> getType, PsiElement psi, PhpType briefType)
+    {
+        if (keys.size() == 0) {
+            return getType.get();
+        } else {
+            DeepType arr = new DeepType(psi, PhpType.ARRAY);
+            KeyType nextKey = keys.get(0);
+            L<KeyType> furtherKeys = keys.sub(1);
+            if (nextKey.keyType != KeyType.EKeyType.STRING) {
+                arr.hasIntKeys = nextKey.keyType == KeyType.EKeyType.INTEGER;
+                arr.indexTypes = makeType(furtherKeys, getType, psi, briefType).types;
+            } else {
+                arr.addKey(nextKey.name, psi).addType(() -> makeType(furtherKeys, getType, psi, briefType), briefType);
+            }
+            return new MultiType(list(arr));
+        }
+    }
+
+    public static L<DeepType> assignmentsToTypes(List<Assign> asses)
+    {
+        L<DeepType> resultTypes = list();
+        for (Assign ass: asses) {
+            resultTypes.addAll(makeType(L(ass.keys), ass.assignedType, ass.psi, ass.briefType).types);
+        }
+        return resultTypes;
+    }
+
     // null in key chain means index (when it is number or variable, not named key)
-    private Opt<T2<List<String>, S<MultiType>>> collectKeyAssignment(AssignmentExpressionImpl ass)
+    private Opt<T2<List<KeyType>, S<MultiType>>> collectKeyAssignment(AssignmentExpressionImpl ass)
     {
         Opt<ArrayAccessExpressionImpl> nextKeyOpt = opt(ass.getVariable())
             .fop(toCast(ArrayAccessExpressionImpl.class));
 
-        List<String> reversedKeys = list();
+        List<KeyType> reversedKeys = list();
 
         while (nextKeyOpt.has()) {
             ArrayAccessExpressionImpl nextKey = nextKeyOpt.def(null);
 
-            String name = opt(nextKey.getIndex())
+            // TODO: handle when key is a var resolved to multiple strings
+            KeyType name = opt(nextKey.getIndex())
                 .map(index -> index.getValue())
                 .fop(toCast(PhpExpression.class))
                 .map(key -> ctx.findExprType(key))
-                .map(t -> t.getStringValue())
-                .def(null);
+                .map(mt -> mt.getStringValue() != null
+                    ? KeyType.string(mt.getStringValue())
+                    : (mt.isInt()
+                        ? KeyType.integer()
+                        : KeyType.unknown()))
+                .def(KeyType.integer());
             reversedKeys.add(name);
 
             nextKeyOpt = opt(nextKey.getValue())
                 .fop(toCast(ArrayAccessExpressionImpl.class));
         }
 
-        List<String> keys = list();
+        List<KeyType> keys = list();
         for (int i = reversedKeys.size() - 1; i >= 0; --i) {
             keys.add(reversedKeys.get(i));
         }

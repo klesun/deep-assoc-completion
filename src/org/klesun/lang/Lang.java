@@ -496,7 +496,7 @@ public class Lang
         @NotNull public Iterator<T> iterator() {return s.iterator();}
         @NotNull public Object[] toArray() {return s.toArray();}
         @NotNull public <T1> T1[] toArray(T1[] a) {return s.toArray(a);}
-        public boolean add(T t) {return s.add(t);}
+        public boolean add(@NotNull T t) {return s.add(t);}
         public boolean remove(Object o) {return s.remove(o);}
         public boolean containsAll(Collection<?> c) {return s.containsAll(c);}
         public boolean addAll(Collection<? extends T> c) {return s.addAll(c);}

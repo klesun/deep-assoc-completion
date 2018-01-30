@@ -33,6 +33,8 @@ public class DeepType extends Lang
     public final @Nullable String stringValue;
     public final PsiElement definition;
     public final PhpType briefType;
+    public boolean isInt = false;
+    public boolean hasIntKeys = false;
 
     public DeepType(PsiElement definition, PhpType briefType, String stringValue)
     {
@@ -44,6 +46,7 @@ public class DeepType extends Lang
     public DeepType(PsiElement definition, PhpType briefType)
     {
         this(definition, briefType, null);
+        this.isInt = briefType.getTypes().contains("\\int");
     }
 
     public DeepType(PhpExpression definition)
@@ -59,6 +62,7 @@ public class DeepType extends Lang
     public DeepType(PhpExpressionImpl numPsi, Integer number)
     {
         this(numPsi, numPsi.getType(), "" + number);
+        this.isInt = true;
     }
 
     public L<DeepType> getReturnTypes(FuncCtx ctx)
@@ -156,5 +160,21 @@ public class DeepType extends Lang
     public String toString()
     {
         return toJson(list(this), 0);
+    }
+
+    public boolean hasNumberIndexes()
+    {
+        return hasIntKeys || L(keys.values()).any(k -> Tls.regex("^\\d+$", k.name).has());
+    }
+
+    public boolean isInt()
+    {
+        if (stringValue != null &&
+            Tls.regex("^\\d+$", stringValue).has()
+        ) {
+            return true;
+        } else {
+            return isInt;
+        }
     }
 }
