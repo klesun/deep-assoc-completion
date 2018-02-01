@@ -450,6 +450,25 @@ class DeepKeysTest
         // don't have 'key3' used in the function
         $mapped = array_map($mapping, $records);
     }
+
+    private static function testEqualsStringValues()
+    {
+        if (rand() % 1) {
+            $type = 'DOCO';
+        } elseif (rand() % 1) {
+            $type = 'DOCA';
+        } elseif (rand() % 1) {
+            $type = 'DOCS';
+        } elseif (rand() % 1) {
+            $type = 'FQTV';
+        }
+        // should suggest: DOCO, DOCA, DOCS, FQTV
+        if ($type === '') {
+
+        }
+        $arr = ['asd' => 'lol'];
+        $arr['asd'] === '';
+    }
 }
 
 function main()

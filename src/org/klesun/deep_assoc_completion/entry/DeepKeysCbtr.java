@@ -67,6 +67,15 @@ public class DeepKeysCbtr extends CompletionContributor
                 ,
             new UsedKeysPvdr()
         );
+        // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
+        // should suggest possible values of 'type'
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, StringLiteralExpression.class)
+                ,
+            new EqStrValsPvdr()
+        );
     }
 
     /**
