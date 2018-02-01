@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.01.31.001</version>
+    <version>2018.02.01.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -28,9 +28,11 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
+      <li>Hotfix: StackOverflowException - check for circular references on complete structure descriptions</li>
       <li>Suggest completion when multiple keys were assigned from single var</li>
       <li>#29 Do not suggest number keys on non-number keys</li>
       <li>Feature: provide completion from arguments inside a private function based on what is passed to it further</li>
+      <li>#28 Infinite recursion fix: cache same PSI resolution and remove duplicate types</li>
     </ul>
     ]]>
     </change-notes>

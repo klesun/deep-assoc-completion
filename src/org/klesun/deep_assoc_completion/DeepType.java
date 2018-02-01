@@ -122,6 +122,17 @@ public class DeepType extends Lang
 
     public static String toJson(List<DeepType> types, int level)
     {
+        Set<DeepType> circularRefs = new HashSet<>();
+        return toJson(types, level, circularRefs);
+    }
+
+    public static String toJson(List<DeepType> types, int level, Set<DeepType> circularRefs)
+    {
+        if (L(types).any(circularRefs::contains)) {
+            return "\"*circ*\"";
+        }
+        circularRefs.addAll(types);
+
         LinkedHashMap<String, List<DeepType>> mergedKeys = new LinkedHashMap<>();
         List<DeepType> indexTypes = list();
         List<String> briefTypes = list();
@@ -137,23 +148,23 @@ public class DeepType extends Lang
             briefTypes.add(opt(t.stringValue).map(s -> "'" + s + "'").def(t.briefType.filterUnknown().toString()));
         });
 
+        String result = "unknown";
         if (mergedKeys.size() > 0) {
-            String result = "{\n";
+            result = "{\n";
             ++level;
             for (Map.Entry<String, List<DeepType>> e: mergedKeys.entrySet()) {
-                result += indent(level) + "\"" + e.getKey() + "\"" + ": " + toJson(e.getValue(), level) + ",\n";
+                result += indent(level) + "\"" + e.getKey() + "\"" + ": " + toJson(e.getValue(), level, circularRefs) + ",\n";
             }
             --level;
             result += indent(level) + "}";
-            return result;
         } else if (indexTypes.size() > 0) {
-            return "[" + toJson(indexTypes, level) + "]";
+            result = "[" + toJson(indexTypes, level, circularRefs) + "]";
         } else if (briefTypes.size() > 0) {
             List<String> bytes = new ArrayList(new HashSet(briefTypes));
-            return "\"" + StringUtils.join(bytes, "|") + "\"";
-        } else {
-            return "\"unknown\"";
+            result = "\"" + StringUtils.join(bytes, "|") + "\"";
         }
+        circularRefs.removeAll(types);
+        return result;
     }
 
     @Override

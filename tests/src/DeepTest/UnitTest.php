@@ -1504,6 +1504,34 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function provideCircularRefsSub()
+    {
+        return [
+            static::provideCircularRefs(),
+            static::provideCircularRefs(),
+            'asdsad',
+        ];
+    }
+
+    // after recent feature of caching expression resolutions,
+    // we may get two types that point to each other like here
+    // this causes infinite recursion on attempt to describe whole structure
+    public static function provideCircularRefs()
+    {
+        $list = [];
+        $duct = [
+//            'asd' => 123,
+//            'dsa' => 123,
+        ];
+        $duct[] = static::provideCircularRefsSub();
+        // should not cause Stack Overflow exception
+        $duct['asd'][''];
+        // _Ctrl + Alt + Q_ should not cause Stack Overflow exception
+        $duct;
+        $list[] = [$duct, []];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

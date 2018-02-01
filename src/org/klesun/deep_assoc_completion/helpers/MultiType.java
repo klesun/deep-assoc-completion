@@ -122,14 +122,20 @@ public class MultiType extends Lang
         return ideaType;
     }
 
-    public String getBriefValueText(int maxLen)
+    public String getBriefValueText(int maxLen, Set<DeepType> circularRefs)
     {
+        if (types.any(circularRefs::contains)) {
+            return "*circ*";
+        }
+        circularRefs.addAll(types);
+
         L<String> briefValues = list();
         L<String> keyNames = getKeyNames();
 
         if (keyNames.size() > 0) {
             if (keyNames.all((k,i) -> (k + "").equals(i + ""))) {
-                briefValues.add("(" + Tls.implode(", ", keyNames.map(i -> getKey(i + "").getBriefValueText(15))) + ")");
+                briefValues.add("(" + Tls.implode(", ", keyNames.map(i -> getKey(i + "")
+                    .getBriefValueText(15, circularRefs))) + ")");
             } else {
                 briefValues.add("{" + Tls.implode(", ", keyNames.map(k -> k + ":")) + "}");
             }
@@ -142,7 +148,7 @@ public class MultiType extends Lang
                     ? s : "'" + s + "'")));
         }
         if (types.any(t -> t.indexTypes.size() > 0)) {
-            briefValues.add("[" + getEl().getBriefValueText() + "]");
+            briefValues.add("[" + getEl().getBriefValueText(maxLen, circularRefs) + "]");
         }
         if (briefValues.isEmpty() && types.size() > 0) {
             L<String> psiParts = types.map(t -> Tls.substr(t.definition.getText(), 0, 40));
@@ -150,14 +156,16 @@ public class MultiType extends Lang
         }
         String fullStr = Tls.implode("|", briefValues);
 
+        circularRefs.removeAll(types);
         String truncated = Tls.substr(fullStr, 0, maxLen);
         return truncated.length() == fullStr.length()
             ? truncated : truncated + "...";
     }
 
-    public String getBriefValueText()
+    public String getBriefValueText(int maxLen)
     {
-        return getBriefValueText(50);
+        Set<DeepType> circularRefs = new HashSet<>();
+        return getBriefValueText(maxLen, circularRefs);
     }
 
     public String toJson()
