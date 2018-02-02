@@ -3,24 +3,28 @@ package org.klesun.deep_assoc_completion.completion_providers;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
+import com.jetbrains.php.lang.psi.elements.ArrayAccessExpression;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.awt.*;
 import java.util.*;
 
-import static org.klesun.lang.Lang.L;
-import static org.klesun.lang.Lang.toCast;
+import static org.klesun.lang.Lang.*;
 
 /**
  * contains the completion logic
@@ -29,12 +33,17 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
     final private static int BRIEF_TYPE_MAX_LEN = 50;
 
+    private static boolean isNum(String str)
+    {
+        return Tls.regex("^\\d+$", str).has();
+    }
+
     private static InsertHandler<LookupElement> makeInsertHandler()
     {
         return (ctx, lookup) -> {
             int from = ctx.getStartOffset();
             int to = ctx.getTailOffset();
-            if (Tls.regex("^\\d+$", lookup.getLookupString()).has() && from != to) {
+            if (isNum(lookup.getLookupString()) && from != to) {
                 if (ctx.getEditor().getDocument().getText(TextRange.create(from - 1, from)).equals("'") &&
                     ctx.getEditor().getDocument().getText(TextRange.create(to, to + 1)).equals("'")
                 ) {
@@ -67,17 +76,23 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     static class MutableLookup extends LookupElement
     {
         public LookupElement lookupData;
+        private boolean includeQuotes;
         private InsertHandler<LookupElement> onInsert = makeInsertHandler();
 
-        public MutableLookup(LookupElement lookupData)
-        {
+        public MutableLookup(LookupElement lookupData, boolean includeQuotes) {
             this.lookupData = lookupData;
+            this.includeQuotes = includeQuotes;
         }
         @NotNull public String getLookupString() {
-            return lookupData.getLookupString();
+            return includeQuotes && !isNum(lookupData.getLookupString())
+                ? "'" + lookupData.getLookupString() + "'"
+                : lookupData.getLookupString();
         }
         public void renderElement(LookupElementPresentation presentation) {
             lookupData.renderElement(presentation);
+            if (includeQuotes && !isNum(lookupData.getLookupString())) {
+                presentation.setItemText("'" + lookupData.getLookupString() + "'");
+            }
         }
         public void handleInsert(InsertionContext ctx)
         {
@@ -92,16 +107,21 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         FuncCtx funcCtx = new FuncCtx(search);
 
         Set<String> suggested = new HashSet<>();
+        PsiElement caretPsi = parameters.getPosition(); // usually leaf element
+        Opt<PsiElement> firstParent = opt(caretPsi.getParent());
+        boolean includeQuotes = firstParent
+            .fop(toCast(StringLiteralExpression.class)) // inside ['']
+            .uni(l -> false, () -> true); // else just inside []
 
         long startTime = System.nanoTime();
-        MultiType mt = Lang.opt(parameters.getPosition().getParent())
-            .fop(literal -> Lang.opt(literal.getParent())
-                .fop(Lang.toCast(ArrayIndex.class))
-                .map(index -> index.getParent())
-                .fop(Lang.toCast(ArrayAccessExpressionImpl.class))
-                .map(expr -> expr.getValue())
-                .fop(toCast(PhpExpression.class))
-                .map(srcExpr -> funcCtx.findExprType(srcExpr)))
+        MultiType mt = firstParent
+            .map(litRaw -> litRaw.getParent())
+            .fop(toCast(ArrayIndex.class))
+            .map(index -> index.getParent())
+            .fop(toCast(ArrayAccessExpression.class))
+            .map(expr -> expr.getValue())
+            .fop(toCast(PhpExpression.class))
+            .map(srcExpr -> funcCtx.findExprType(srcExpr))
             .def(MultiType.INVALID_PSI);
 
         L<String> keyNames = mt.getKeyNames();
@@ -109,7 +129,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // preliminary keys without type - they may be at least 3 times faster in some cases
         keyNames.fch((keyName, i) -> {
             LookupElement justName = makePaddedLookup(keyName, "resolving...", "");
-            MutableLookup mutLookup = new MutableLookup(justName);
+            MutableLookup mutLookup = new MutableLookup(justName, includeQuotes);
             result.addElement(PrioritizedLookupElement.withPriority(mutLookup, 2000 - i));
             lookups.add(mutLookup);
 

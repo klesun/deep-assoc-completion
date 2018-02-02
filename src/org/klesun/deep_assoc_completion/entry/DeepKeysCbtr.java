@@ -19,11 +19,21 @@ public class DeepKeysCbtr extends CompletionContributor
 {
     public DeepKeysCbtr()
     {
+        // $arr[''];
         this.extend(
             CompletionType.BASIC,
             PlatformPatterns.psiElement()
                 .withSuperParent(1, StringLiteralExpression.class)
                 .withSuperParent(2, ArrayIndex.class),
+            new DeepKeysPvdr()
+        );
+        // $arr[];
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, ConstantReference.class) // I dunno why
+                .withSuperParent(2, ArrayIndex.class)
+                ,
             new DeepKeysPvdr()
         );
         this.extend(
@@ -82,7 +92,7 @@ public class DeepKeysCbtr extends CompletionContributor
      * Allow autoPopup to appear after custom symbol
      */
     public boolean invokeAutoPopup(@NotNull PsiElement position, char typeChar) {
-        if (typeChar == '\'') {
+        if (typeChar == '\'' || typeChar == '\"' || typeChar == '[') {
             return true;
         } else {
             return false;

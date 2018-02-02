@@ -425,7 +425,8 @@ class DeepKeysTest
     private static function testUndefinedKeyError()
     {
         $record = ['a' => 6, 'b' => 8];
-        $record[''];
+        $records = [$record, $record];
+        $records[0]['a'];
 
         // should show error like "Key 'someNotExistingKey' is not defined"
         print($record['someNotExistingKey']);
