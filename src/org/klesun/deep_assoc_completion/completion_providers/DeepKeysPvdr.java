@@ -10,9 +10,7 @@ import com.jetbrains.php.lang.psi.elements.ArrayAccessExpression;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
-import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
@@ -21,7 +19,6 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
-import java.awt.*;
 import java.util.*;
 
 import static org.klesun.lang.Lang.*;
@@ -33,17 +30,12 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
     final private static int BRIEF_TYPE_MAX_LEN = 50;
 
-    private static boolean isNum(String str)
-    {
-        return Tls.regex("^\\d+$", str).has();
-    }
-
     private static InsertHandler<LookupElement> makeInsertHandler()
     {
         return (ctx, lookup) -> {
             int from = ctx.getStartOffset();
             int to = ctx.getTailOffset();
-            if (isNum(lookup.getLookupString()) && from != to) {
+            if (Tls.isNum(lookup.getLookupString()) && from != to) {
                 if (ctx.getEditor().getDocument().getText(TextRange.create(from - 1, from)).equals("'") &&
                     ctx.getEditor().getDocument().getText(TextRange.create(to, to + 1)).equals("'")
                 ) {
@@ -84,13 +76,13 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             this.includeQuotes = includeQuotes;
         }
         @NotNull public String getLookupString() {
-            return includeQuotes && !isNum(lookupData.getLookupString())
+            return includeQuotes && !Tls.isNum(lookupData.getLookupString())
                 ? "'" + lookupData.getLookupString() + "'"
                 : lookupData.getLookupString();
         }
         public void renderElement(LookupElementPresentation presentation) {
             lookupData.renderElement(presentation);
-            if (includeQuotes && !isNum(lookupData.getLookupString())) {
+            if (includeQuotes && !Tls.isNum(lookupData.getLookupString())) {
                 presentation.setItemText("'" + lookupData.getLookupString() + "'");
             }
         }
@@ -136,7 +128,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
             mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "");
         });
-        L<DeepType> indexTypes = mt.types.fap(t -> t.indexTypes);
+        L<DeepType> indexTypes = mt.types.fap(t -> t.getElemTypes());
         if (indexTypes.size() > 0) {
             String typeText = new MultiType(indexTypes).getBriefValueText(BRIEF_TYPE_MAX_LEN);
             String ideaType = new MultiType(indexTypes).getIdeaType().filterUnknown().toStringResolved();

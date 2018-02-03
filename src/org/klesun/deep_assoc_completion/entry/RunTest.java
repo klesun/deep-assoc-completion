@@ -41,6 +41,7 @@ public class RunTest extends AnAction
     @Override
     public void actionPerformed(AnActionEvent e)
     {
+        long startTime = System.nanoTime();
         Logger logger = new Logger();
         logger.logMsg("Searching for \"UnitTest\" class in project...");
         List<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
@@ -55,7 +56,7 @@ public class RunTest extends AnAction
                         return funcCtx.findExprType(retVal).types;
                     })
                     .fap(a -> a)
-                    .fap(ltype -> L(ltype.indexTypes)
+                    .fap(ltype -> L(ltype.getElemTypes())
                         .fop((rett, i) -> {
                             CaseContext ctx = new CaseContext(logger);
                             ctx.dataProviderName = func.getName();
@@ -78,9 +79,10 @@ public class RunTest extends AnAction
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .def(list());
 
+        double seconds = (System.nanoTime() - startTime) / 1000000000.0;
         logger.logMsg("");
         errors.forEach(logger::logErr);
-        logger.logMsg("Done testing with " + errors.size() + " errors and " + logger.sucCnt + " OK-s\n");
+        logger.logMsg("Done testing with " + errors.size() + " errors and " + logger.sucCnt + " OK-s in " + seconds + " s. \n");
         JBPopupFactory.getInstance()
             .createHtmlTextBalloonBuilder("<pre>" + logger.wholeText + "</pre>", MessageType.INFO, null)
             .setFadeoutTime(300 * 1000)

@@ -23,7 +23,8 @@ public class DeepType extends Lang
     // keys and typeGetters of associative array
     public final LinkedHashMap<String, Key> keys = new LinkedHashMap<>();
     // possible typeGetters of list element
-    public List<DeepType> indexTypes = new ArrayList<>();
+    public L<DeepType> anyKeyElTypes = new L<>();
+    public L<DeepType> listElTypes = new L<>();
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
@@ -69,6 +70,11 @@ public class DeepType extends Lang
     {
         L<DeepType> result = returnTypeGetters.fap(g -> g.apply(ctx));
         return result;
+    }
+
+    public L<DeepType> getElemTypes()
+    {
+        return listElTypes.cct(anyKeyElTypes);
     }
 
     public Key addKey(String name, PsiElement definition)
@@ -144,7 +150,7 @@ public class DeepType extends Lang
                 }
                 mergedKeys.get(k).addAll(v.getTypes());
             });
-            t.indexTypes.forEach(indexTypes::add);
+            t.getElemTypes().forEach(indexTypes::add);
             briefTypes.add(opt(t.stringValue).map(s -> "'" + s + "'").def(t.briefType.filterUnknown().toString()));
         });
 

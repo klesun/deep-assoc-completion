@@ -37,13 +37,15 @@ public class AssRes extends Lang
             DeepType arr = new DeepType(psi, PhpType.ARRAY);
             KeyType nextKey = keys.get(0);
             L<KeyType> furtherKeys = keys.sub(1);
-            if (nextKey.keyType != KeyType.EKeyType.STRING) {
-                arr.hasIntKeys = nextKey.keyType == KeyType.EKeyType.INTEGER;
-                arr.indexTypes = makeType(furtherKeys, getType, psi, briefType).types;
-            } else {
+            if (nextKey.keyType == KeyType.EKeyType.STRING) {
                 nextKey.names.fch(name ->
                     arr.addKey(name, psi).addType(() ->
                         makeType(furtherKeys, getType, psi, briefType), briefType));
+            } else  if (nextKey.keyType == KeyType.EKeyType.INTEGER) {
+                arr.hasIntKeys = true;
+                arr.listElTypes = makeType(furtherKeys, getType, psi, briefType).types;
+            } else {
+                arr.anyKeyElTypes = makeType(furtherKeys, getType, psi, briefType).types;
             }
             return new MultiType(list(arr));
         }

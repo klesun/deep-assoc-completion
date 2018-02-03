@@ -46,7 +46,7 @@ public class MultiType extends Lang
     public DeepType getInArray(PsiElement call)
     {
         DeepType result = new DeepType(call, PhpType.ARRAY);
-        result.indexTypes.addAll(types);
+        result.listElTypes.addAll(types);
         return result;
     }
 
@@ -71,21 +71,29 @@ public class MultiType extends Lang
 
     public MultiType getKey(String keyName)
     {
-        return new MultiType(list(
+        L<DeepType> keyTypes = list();
+        if (keyName != null) {
             // if keyName is a constant string - return type of this key only
-            types.flt(t -> keyName != null)
-                .fop(type -> Lang.getKey(type.keys, keyName))
-                .fap(v -> v.getTypes()),
+            types.fop(type -> Lang.getKey(type.keys, keyName))
+                .fap(v -> v.getTypes())
+                .fch(t -> keyTypes.add(t));
+            if (Tls.isNum(keyName)) {
+                types.fap(t -> t.listElTypes).fch(t -> keyTypes.add(t));
+            }
+        } else {
             // if keyName is a var - return types of all keys
-            types.flt(t -> keyName == null)
-                .fap(t -> L(t.keys.values()))
-                .fap(v -> v.getTypes()),
-            types.fap(t -> t.indexTypes),
-            /** @param Segment{} $segment */
-            types.fop(t -> opt(t.briefType.elementType().filterUnknown())
-                .flt(it -> !it.isEmpty())
-                .map(it -> new DeepType(t.definition, it)))
-        ).fap(a -> a));
+            types.fap(t -> L(t.keys.values()))
+                .fap(v -> v.getTypes())
+                .fch(t -> keyTypes.add(t));
+            types.fap(t -> t.listElTypes).fch(t -> keyTypes.add(t));
+        }
+        types.fap(t -> t.anyKeyElTypes).fch(t -> keyTypes.add(t));
+        /** @param Segment{} $segment */
+        types.fop(t -> opt(t.briefType.elementType().filterUnknown())
+            .flt(it -> !it.isEmpty())
+            .map(it -> new DeepType(t.definition, it)))
+            .fch(t -> keyTypes.add(t));
+        return new MultiType(keyTypes);
     }
 
     public PhpType getKeyBriefType(@NonNull String keyName)
@@ -146,7 +154,7 @@ public class MultiType extends Lang
                 .map(s -> (types.all((t,i) -> t.definition.getText().equals(s)))
                     ? s : "'" + s + "'")));
         }
-        if (types.any(t -> t.indexTypes.size() > 0)) {
+        if (types.any(t -> t.getElemTypes().size() > 0)) {
             briefValues.add("[" + getEl().getBriefValueText(maxLen, circularRefs) + "]");
         }
         if (briefValues.isEmpty() && types.size() > 0) {
@@ -174,7 +182,7 @@ public class MultiType extends Lang
 
     public boolean hasNumberIndexes()
     {
-        return types.any(t -> t.hasNumberIndexes());
+        return types.any(t -> t.hasNumberIndexes() || t.listElTypes.size() > 0);
     }
 
     public boolean isInt()

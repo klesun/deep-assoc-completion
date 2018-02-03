@@ -488,6 +488,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
             array_column($records, 'type'),
             array_column($records, 'parsed')
         );
+        $byType[''];
         // should suggest: "id", "generationTime"
         $list[] = [
             $byType['generated'],
@@ -1520,7 +1521,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
     {
         $list = [];
         $duct = [
-//            'asd' => 123,
+//            'asd' => ['a' => 5, 'b' => 6],
 //            'dsa' => 123,
         ];
         $duct[] = static::provideCircularRefsSub();

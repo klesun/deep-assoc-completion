@@ -12,7 +12,6 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.ScopeFinder;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
@@ -51,13 +50,22 @@ public class FuncCallRes extends Lang
                 if (params.length > 1) {
                     PsiElement callback = params[0];
                     PsiElement array = params[1];
+                    MultiType arrMt = Tls.cast(PhpExpression.class, array)
+                        .map(exp -> ctx.findExprType(exp))
+                        .def(MultiType.INVALID_PSI);
                     FuncCtx subCtx = Tls.cast(PhpExpression.class, array)
                         .uni(argArr -> ctx.subCtxArgArr(argArr),
                             () -> new FuncCtx(ctx.getSearch())
                         );
                     findPsiExprType(callback).types
                         .map(t -> t.getReturnTypes(subCtx))
-                        .fch(rts -> mapRetType.indexTypes.addAll(rts));
+                        .fch(rts -> {
+                            if (arrMt.hasNumberIndexes()) {
+                                mapRetType.listElTypes.addAll(rts);
+                            } else {
+                                mapRetType.anyKeyElTypes.addAll(rts);
+                            }
+                        });
                 }
                 result.add(mapRetType);
             } else if (name.equals("array_filter") || name.equals("array_reverse")
@@ -67,9 +75,20 @@ public class FuncCallRes extends Lang
                 // array type unchanged
                 L(params).gat(0).map(p -> findPsiExprType(p).types).thn(result::addAll);
             } else if (name.equals("array_combine")) {
-                // if we store all literal values of a key, we could even recreate the
-                // associative array here, but for now just merging all possible values together
-                L(params).gat(1).map(p -> findPsiExprType(p).types).thn(result::addAll);
+                DeepType combine = new DeepType(call, PhpType.ARRAY);
+                L<String> keyNames = L(params).gat(0)
+                    .map(p -> findPsiExprType(p))
+                    .map(mt -> mt.getEl())
+                    .fap(mt -> mt.getStringValues());
+                MultiType elMt = L(params).gat(1)
+                    .map(p -> findPsiExprType(p))
+                    .def(MultiType.INVALID_PSI)
+                    .getEl();
+                keyNames.fch(keyName -> combine
+                    .addKey(keyName, call)
+                        .addType(() -> elMt, elMt.getIdeaType()));
+                combine.anyKeyElTypes.addAll(elMt.types);
+                result.add(combine);
             } else if (name.equals("array_pop") || name.equals("array_shift")) {
                 L(params).gat(0).map(p -> findPsiExprType(p).getEl().types).thn(result::addAll);
             } else if (name.equals("array_merge")) {
@@ -86,7 +105,7 @@ public class FuncCallRes extends Lang
                         .flt(itypes -> itypes.size() > 0)
                         .map(itypes -> {
                             DeepType type = new DeepType(call);
-                            type.indexTypes.addAll(itypes);
+                            type.listElTypes.addAll(itypes);
                             return list(type);
                         })
                         .thn(result::addAll);

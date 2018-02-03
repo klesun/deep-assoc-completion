@@ -170,4 +170,9 @@ public class Tls extends Lang
         L<String> lines = L(text.split("\n"));
         return Tls.substr(Tls.implode(" ", lines), 0, length);
     }
+
+    public static boolean isNum(String str)
+    {
+        return regex("^\\d+$", str).has();
+    }
 }

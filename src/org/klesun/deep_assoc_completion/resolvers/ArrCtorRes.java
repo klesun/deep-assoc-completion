@@ -106,11 +106,11 @@ public class ArrCtorRes extends Lang
                     .fop(toCast(PhpExpression.class))
                     .map(keyPsi -> ctx.findExprType(keyPsi).types)
                     .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
-                    .thn(keyTypes -> {
-                        if (keyTypes.s.size() > 0) {
-                            keyTypes.fch(key -> arrayType.addKey(key, keyRec).addType(getType, v.getType()));
+                    .thn(keyStrValues -> {
+                        if (keyStrValues.size() > 0) {
+                            keyStrValues.fch(key -> arrayType.addKey(key, keyRec).addType(getType, v.getType()));
                         } else {
-                            arrayType.indexTypes.addAll(getType.get().types);
+                            arrayType.anyKeyElTypes.addAll(getType.get().types);
                         }
                     });
             }));
