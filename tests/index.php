@@ -479,3 +479,8 @@ function main()
 }
 
 main();
+
+$sql = [];
+// you should not get completion when you type 'dzhigurda'
+$sql['dzigurasdv'][] = 123;
+

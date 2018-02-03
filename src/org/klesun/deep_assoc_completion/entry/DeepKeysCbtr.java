@@ -92,7 +92,10 @@ public class DeepKeysCbtr extends CompletionContributor
      * Allow autoPopup to appear after custom symbol
      */
     public boolean invokeAutoPopup(@NotNull PsiElement position, char typeChar) {
-        if (typeChar == '\'' || typeChar == '\"' || typeChar == '[') {
+        if (typeChar == '\'' || typeChar == '\"' ||
+            // typeChar == '[' || // causes lags since idea shows thousands of global vars
+            false
+        ) {
             return true;
         } else {
             return false;

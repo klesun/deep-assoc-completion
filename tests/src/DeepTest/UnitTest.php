@@ -1532,6 +1532,24 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function getLast(array $values)
+    {
+        return $values[count($values) - 1];
+    }
+
+    /**
+     * @param PersonStorage[] $storages
+     */
+    public static function provideIdeaObjArrPhpDoc($storages)
+    {
+        $list = [];
+        $storages[0]->mainPerson[''];
+        $list[] = [$storages[0]->mainPerson, ['name' => [], 'age' => []]];
+        static::getLast($storages)->mainPerson[''];
+        $list[] = [static::getLast($storages)->mainPerson, ['name' => [], 'age' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

@@ -43,16 +43,6 @@ public class MultiType extends Lang
         this(types, REASON.OK);
     }
 
-    public MultiType getEl()
-    {
-        return new MultiType(types.fap(arrt -> {
-            L<DeepType> mixed = L();
-            mixed.addAll(arrt.indexTypes);
-            arrt.keys.forEach((k,v) -> mixed.addAll(v.getTypes()));
-            return mixed;
-        }));
-    }
-
     public DeepType getInArray(PsiElement call)
     {
         DeepType result = new DeepType(call, PhpType.ARRAY);
@@ -74,6 +64,11 @@ public class MultiType extends Lang
         return types.fop(t -> opt(t.stringValue));
     }
 
+    public MultiType getEl()
+    {
+        return getKey(null);
+    }
+
     public MultiType getKey(String keyName)
     {
         return new MultiType(list(
@@ -85,7 +80,11 @@ public class MultiType extends Lang
             types.flt(t -> keyName == null)
                 .fap(t -> L(t.keys.values()))
                 .fap(v -> v.getTypes()),
-            types.fap(t -> t.indexTypes)
+            types.fap(t -> t.indexTypes),
+            /** @param Segment{} $segment */
+            types.fop(t -> opt(t.briefType.elementType().filterUnknown())
+                .flt(it -> !it.isEmpty())
+                .map(it -> new DeepType(t.definition, it)))
         ).fap(a -> a));
     }
 
