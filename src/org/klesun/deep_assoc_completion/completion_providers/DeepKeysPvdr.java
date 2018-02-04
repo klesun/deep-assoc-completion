@@ -6,10 +6,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
-import com.jetbrains.php.lang.psi.elements.ArrayAccessExpression;
-import com.jetbrains.php.lang.psi.elements.ArrayIndex;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
@@ -141,11 +138,22 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 result.addElement(makePaddedLookup("", ideaType, typeText));
             }
         }
+
+        // I enabled auto-popup for it, but I want it to show
+        // only my options, not 100500k built-in suggestions
+        boolean isEmptySquareBracket = firstParent
+            .fop(toCast(ConstantReference.class))
+            .map(cst -> cst.getName())
+            .map(n -> n.equals("")|| n.equals("IntellijIdeaRulezzz"))
+            .def(false);
+
         suggested.addAll(lookups.map(l -> l.getLookupString()));
         result.runRemainingContributors(parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
             LookupElement lookup = otherSourceResult.getLookupElement();
-            if (!suggested.contains(lookup.getLookupString())) {
+            if (!suggested.contains(lookup.getLookupString()) &&
+                !isEmptySquareBracket // no auto-popup is needed here
+            ) {
                 result.addElement(lookup);
             }
         });

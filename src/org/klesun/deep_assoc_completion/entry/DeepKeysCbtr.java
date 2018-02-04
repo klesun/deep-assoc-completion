@@ -93,8 +93,7 @@ public class DeepKeysCbtr extends CompletionContributor
      */
     public boolean invokeAutoPopup(@NotNull PsiElement position, char typeChar) {
         if (typeChar == '\'' || typeChar == '\"' ||
-            // typeChar == '[' || // causes lags since idea shows thousands of global vars
-            false
+             typeChar == '['
         ) {
             return true;
         } else {
