@@ -1554,4 +1554,31 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
     //=============================
     // following are not implemented yet
     //=============================
+
+    private static function openFile(string $fileName)
+    {
+        return [
+            'resourceId' => rand(0,1000),
+            'bytes' => [112,535,756,23423,3463],
+            'createdDt' => '2018-01-13',
+            'modifiedDt' => '2018-01-18',
+        ];
+    }
+
+    private static function processFile(string $fileName, callable $processor)
+    {
+        $file = static::openFile($fileName);
+        $processor($file);
+        closeFile($fileName);
+    }
+
+    private static function provideLambdaArgCompletion()
+    {
+        $list = [];
+        static::processFile('anime_list.dat', function($file) use (&$list){
+            $file[''];
+            $list[] = [$file, ['resourceId' => [], 'bytes' => [], 'createdDt' => [], 'modifiedDt' => []]];
+        });
+        return $list;
+    }
 }

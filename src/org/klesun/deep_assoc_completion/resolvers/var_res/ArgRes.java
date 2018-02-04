@@ -90,20 +90,24 @@ public class ArgRes extends Lang
         return opt(null);
     }
 
-    private Opt<MultiType> getArgPassedTo(PhpExpression funcVar, int argOrderInLambda)
+    private Opt<MultiType> getArgPassedTo(PhpExpression funcVar, int caretArgOrder)
     {
         return opt(funcVar.getParent())
             .fop(parent -> Opt.fst(list(opt(null)
+                // like array_map($mapper, ['a' => 5, 'b' => 6])
                 , Tls.cast(ParameterListImpl.class, parent)
                     .fop(parl -> opt(parl.getParent())
                         .fop(call -> Opt.fst(list(opt(null)
                             , Tls.cast(FunctionReferenceImpl.class, call)
-                                .fop(func -> getArgFromNsFuncCall(func, L(parl.getParameters()).indexOf(funcVar), argOrderInLambda))
+                                .fop(func -> getArgFromNsFuncCall(func, L(parl.getParameters())
+                                    .indexOf(funcVar), caretArgOrder))
                             , Tls.cast(MethodReferenceImpl.class, call)
-                                .fop(func -> getArgFromMethodCall(func, L(parl.getParameters()).indexOf(funcVar), argOrderInLambda))
+                                .fop(func -> getArgFromMethodCall(func, L(parl.getParameters())
+                                    .indexOf(funcVar), caretArgOrder))
                         ))))
+                // like $mapper(['a' => 5, 'b' => 6])
                 , Tls.cast(FunctionReferenceImpl.class, parent)
-                    .fop(call -> L(call.getParameters()).gat(0))
+                    .fop(call -> L(call.getParameters()).gat(caretArgOrder))
                     .fop(toCast(PhpExpression.class))
                     .map(arg -> new FuncCtx(trace.getSearch()).findExprType(arg))
             )));

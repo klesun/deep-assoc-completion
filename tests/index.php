@@ -321,6 +321,22 @@ class DeepKeysTest
         return $list;
     }
 
+    public function provideFuncVarDirectCallPeekOutside()
+    {
+        $list = [];
+
+        $mapper = function($id, $phone){
+            // should suggest: model, price, ram, cores
+            $phone[''];
+        };
+        $mapper(123, [
+            'model' => 'Siemens A35',
+            'price' => '123.50',
+            'ram' => '512 MiB',
+            'cores' => 2,
+        ]);
+    }
+
     private static function makeDefaultApolloState()
     {
         return [
