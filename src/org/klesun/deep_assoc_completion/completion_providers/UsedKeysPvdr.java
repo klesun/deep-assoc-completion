@@ -66,7 +66,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                     .fop(el -> opt(el.getKey()))
                     .fop(toCast(StringLiteralExpressionImpl.class))
                     .map(lit -> lit.getContents());
-                return new KeyUsageResolver(funcCtx).resolve(arrCtor)
+                return new KeyUsageResolver(funcCtx, 3).resolve(arrCtor)
                     .flt(k -> !alreadyDeclared.contains(k));
             });
 

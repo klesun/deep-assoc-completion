@@ -366,9 +366,53 @@ class DeepKeysTest
         ];
     }
 
-    //============================
-    // not implemented follow
-    //============================
+
+    private static function testEqualsStringValues()
+    {
+        if (rand() % 1) {
+            $type = 'DOCO';
+        } elseif (rand() % 1) {
+            $type = 'DOCA';
+        } elseif (rand() % 1) {
+            $type = 'DOCS';
+        } elseif (rand() % 1) {
+            $type = 'FQTV';
+        }
+        // should suggest: DOCO, DOCA, DOCS, FQTV
+        if ($type === '') {
+
+        }
+        $arr = ['asd' => 'lol'];
+        $arr['asd'] === '';
+    }
+
+    private static function testGoToIntKey()
+    {
+        $pair = [
+            ['from' => 'KIV', 'to' => 'NYC'],
+            ['name' => 'Vasya', 'age' => 24],
+        ];
+        $pair['0']; // _Ctrl + B_ should work
+        $pair[0]; // _Ctrl + B_ should still work
+
+        $values = [];
+        $values['asdsad'] = 1;
+        $values['qweqwe'] = 2;
+        $values[] = 4;
+        $values[1];
+    }
+
+    private static function testBriefValueBuiltInFuncBug($split)
+    {
+        $result = [
+            'type' => 'flight',
+            'couponNumber' => intval($split['D']),
+            'from' => intval($split['F']),
+            'to' => intval($split['T']),
+        ];
+        $result[];
+        $result[]; // 'couponNumber' brief value should be `intval($split['D'])`, not `function intval($var, $base = null) {}`
+    }
 
     private static function testUsedKeysInAVar()
     {
@@ -378,6 +422,33 @@ class DeepKeysTest
         ];
         $cmd = self::makeAddSsrCmd($params);
     }
+
+    private static function transformAvailabilityParams($params)
+    {
+        return [
+            'Id' => $params['id'],
+            'From' => $params['from'],
+            'To' => $params['to'],
+        ];
+    }
+
+    private static function getAvailability($params)
+    {
+        $soapParams = self::transformAvailabilityParams($params);
+        return callSoap($soapParams);
+    }
+
+    private static function testDeepUsageCompletion()
+    {
+        $availability = self::getAvailability([
+            // should suggest: id, from, to
+            '' => 123,
+        ]);
+    }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function makeCoolOutfit($materials)
     {
@@ -450,52 +521,6 @@ class DeepKeysTest
         // should report error since $records elements
         // don't have 'key3' used in the function
         $mapped = array_map($mapping, $records);
-    }
-
-    private static function testEqualsStringValues()
-    {
-        if (rand() % 1) {
-            $type = 'DOCO';
-        } elseif (rand() % 1) {
-            $type = 'DOCA';
-        } elseif (rand() % 1) {
-            $type = 'DOCS';
-        } elseif (rand() % 1) {
-            $type = 'FQTV';
-        }
-        // should suggest: DOCO, DOCA, DOCS, FQTV
-        if ($type === '') {
-
-        }
-        $arr = ['asd' => 'lol'];
-        $arr['asd'] === '';
-    }
-
-    private static function testGoToIntKey()
-    {
-        $pair = [
-            ['from' => 'KIV', 'to' => 'NYC'],
-            ['name' => 'Vasya', 'age' => 24],
-        ];
-        $pair['0']; // _Ctrl + B_ should work
-        $pair[0]; // _Ctrl + B_ should still work
-
-        $values = [];
-        $values['asdsad'] = 1;
-        $values['qweqwe'] = 2;
-        $values[] = 4;
-        $values[1];
-    }
-
-    private static function testBriefValueBuiltInFuncBug($split)
-    {
-        $result = [
-            'type' => 'flight',
-            'couponNumber' => intval($split['D']),
-            'from' => intval($split['F']),
-            'to' => intval($split['T']),
-        ];
-        $result['']; // 'couponNumber' brief value should be `intval($split['D'])`, not `function intval($var, $base = null) {}`
     }
 }
 

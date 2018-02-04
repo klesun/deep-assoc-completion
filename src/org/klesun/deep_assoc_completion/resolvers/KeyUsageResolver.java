@@ -16,10 +16,12 @@ import org.klesun.lang.Tls;
 public class KeyUsageResolver extends Lang
 {
     final private FuncCtx fakeCtx;
+    final private int depthLeft;
 
-    public KeyUsageResolver(FuncCtx fakeCtx)
+    public KeyUsageResolver(FuncCtx fakeCtx, int depthLeft)
     {
         this.fakeCtx = fakeCtx;
+        this.depthLeft = depthLeft;
     }
 
     private static L<String> resolveReplaceKeys(ParameterList argList, int order)
@@ -59,7 +61,8 @@ public class KeyUsageResolver extends Lang
                     .map(doc -> doc.getParamTagByName(arg.getName()))
                     .fop(doc -> new DocParamRes(fakeCtx).resolve(doc))
                     .map(mt -> mt.getKeyNames())
-                    .def(L())
+                    .def(L()),
+                new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnVar(arg)
             ).fap(a -> a))
             .def(L());
     }
@@ -106,6 +109,9 @@ public class KeyUsageResolver extends Lang
 
     private L<String> findKeysUsedOnVar(PhpNamedElement caretVar)
     {
+        if (depthLeft < 1) {
+            return list();
+        }
         return findVarReferences(caretVar)
             .flt(ref -> ref.getTextOffset() > caretVar.getTextOffset())
             .fop(toCast(Variable.class))
