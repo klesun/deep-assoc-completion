@@ -35,19 +35,31 @@ public class DeepType extends Lang
     public final PsiElement definition;
     public final PhpType briefType;
     public boolean isNumber = false;
+    final public boolean isExactPsi;
     public boolean hasIntKeys = false;
 
-    public DeepType(PsiElement definition, PhpType briefType, String stringValue)
+    public DeepType(PsiElement definition, PhpType briefType, String stringValue, boolean isExactPsi)
     {
         this.definition = definition;
         this.briefType = briefType;
         this.stringValue = stringValue;
+        this.isExactPsi = isExactPsi;
+    }
+
+    public DeepType(PsiElement definition, PhpType briefType, String stringValue)
+    {
+        this(definition, briefType, stringValue, true);
+    }
+
+    public DeepType(PsiElement definition, PhpType briefType, boolean isExactPsi)
+    {
+        this(definition, briefType, null, isExactPsi);
+        this.isNumber = briefType.getTypes().contains("\\int");
     }
 
     public DeepType(PsiElement definition, PhpType briefType)
     {
-        this(definition, briefType, null);
-        this.isNumber = briefType.getTypes().contains("\\int");
+        this(definition, briefType, true);
     }
 
     public DeepType(PhpExpression definition)

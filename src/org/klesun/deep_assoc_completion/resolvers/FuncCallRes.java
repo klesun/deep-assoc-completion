@@ -173,7 +173,7 @@ public class FuncCallRes extends Lang
                 // try to get type info from standard_2.php
                 opt(call.resolve())
                     .fop(toCast(Function.class))
-                    .thn(func -> result.add(new DeepType(func, func.getDocType())))
+                    .thn(func -> result.add(new DeepType(call, func.getDocType())))
                     ;
             }
             return result;

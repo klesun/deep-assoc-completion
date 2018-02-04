@@ -486,6 +486,15 @@ class DeepKeysTest
         $values[] = 4;
         $values[1];
     }
+
+    private static function testBriefValueBuiltInFuncBug($split)
+    {
+        $result = [
+            'type' => 'flight',
+            'couponNumber' => intval($split['D']),
+        ];
+        $result['']; // 'couponNumber' brief value should be `intval($split['D'])`, not `function intval($var, $base = null) {}`
+    }
 }
 
 function main()

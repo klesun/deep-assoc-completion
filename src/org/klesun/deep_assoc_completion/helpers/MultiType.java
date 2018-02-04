@@ -91,7 +91,7 @@ public class MultiType extends Lang
         /** @param Segment{} $segment */
         types.fop(t -> opt(t.briefType.elementType().filterUnknown())
             .flt(it -> !it.isEmpty())
-            .map(it -> new DeepType(t.definition, it)))
+            .map(it -> new DeepType(t.definition, it, false)))
             .fch(t -> keyTypes.add(t));
         return new MultiType(keyTypes);
     }
@@ -158,7 +158,7 @@ public class MultiType extends Lang
             briefValues.add("[" + getEl().getBriefValueText(maxLen, circularRefs) + "]");
         }
         if (briefValues.isEmpty() && types.size() > 0) {
-            L<String> psiParts = types.map(t -> Tls.substr(t.definition.getText(), 0, 40));
+            L<String> psiParts = types.flt(t -> t.isExactPsi).map(t -> Tls.singleLine(t.definition.getText(), 40));
             briefValues.add(Tls.implode("|", psiParts.grp(a -> a).fop(g -> g.fst())));
         }
         String fullStr = Tls.implode("|", briefValues);
