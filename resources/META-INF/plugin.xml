@@ -44,6 +44,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
         <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DeepKeysCbtr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.DeepKeysGoToDecl"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrayColumnGoToDecl"/>
+        <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrFuncRefGoToDecl"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.jetbrains.php">

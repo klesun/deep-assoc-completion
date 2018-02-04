@@ -410,8 +410,8 @@ class DeepKeysTest
             'from' => intval($split['F']),
             'to' => intval($split['T']),
         ];
-        $result[];
-        $result[]; // 'couponNumber' brief value should be `intval($split['D'])`, not `function intval($var, $base = null) {}`
+        $result[''];
+        $result['']; // 'couponNumber' brief value should be `intval($split['D'])`, not `function intval($var, $base = null) {}`
     }
 
     private static function testUsedKeysInAVar()
@@ -444,6 +444,19 @@ class DeepKeysTest
             // should suggest: id, from, to
             '' => 123,
         ]);
+    }
+
+    private static function wrapClosure(callable $func)
+    {
+        return function(...$args) use ($func) {return $func(...$args);};
+    }
+
+    private function testFuncArrGoToDecl()
+    {
+        $funcs = [static::class, 'getAvailability'];
+        $funcs = [self::class, 'makeCoolOutfit'];
+        $funcs = [$this, 'provideFuncVarUsageBasedCompletionFp'];
+        static::wrapClosure([$this, 'makeRecordMaybe']);
     }
 
     //============================
