@@ -470,6 +470,16 @@ class DeepKeysTest
         $arr = ['asd' => 'lol'];
         $arr['asd'] === '';
     }
+
+    private static function testGoToIntKey()
+    {
+        $pair = [
+            ['from' => 'KIV', 'to' => 'NYC'],
+            ['name' => 'Vasya', 'age' => 24],
+        ];
+        $pair['0']; // _Ctrl + B_ should work
+        $pair[0]; // _Ctrl + B_ should still work
+    }
 }
 
 function main()

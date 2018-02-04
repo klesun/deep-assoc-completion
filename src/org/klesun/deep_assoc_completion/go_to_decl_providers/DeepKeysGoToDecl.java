@@ -56,7 +56,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         L<PsiElement> psiTargets = L();
         opt(psiElement)
             .map(psi -> psi.getParent())
-            .fop(toCast(StringLiteralExpressionImpl.class))
+            .fop(toCast(PhpExpression.class))
             .thn(literal -> Lang.opt(literal.getParent())
                 .fop(Lang.toCast(ArrayIndex.class))
                 .map(index -> index.getParent())
@@ -65,7 +65,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 .fop(toCast(PhpExpression.class))
                 .map(srcExpr -> funcCtx.findExprType(srcExpr).types)
                 .thn(arrayTypes -> arrayTypes.forEach(arrayType -> {
-                    String key = literal.getContents();
+                    String key = funcCtx.findExprType(literal).getStringValue();
                     if (arrayType.keys.containsKey(key)) {
                         psiTargets.add(arrayType.keys.get(key).definition);
                     }
