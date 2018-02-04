@@ -1,14 +1,19 @@
 package org.klesun.deep_assoc_completion.entry;
 
 import com.intellij.codeInsight.completion.*;
+import com.intellij.patterns.ElementPattern;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
 import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.completion_providers.*;
+
+import static org.klesun.lang.Lang.opt;
+import static org.klesun.lang.Lang.toCast;
 
 /**
  * provides associative array keys autocomplete
@@ -92,10 +97,14 @@ public class DeepKeysCbtr extends CompletionContributor
      * Allow autoPopup to appear after custom symbol
      */
     public boolean invokeAutoPopup(@NotNull PsiElement position, char typeChar) {
-        if (typeChar == '\'' || typeChar == '\"' ||
-             typeChar == '['
-        ) {
+        if (typeChar == '\'' || typeChar == '\"') {
             return true;
+        } else if (typeChar == '[') {
+            return opt(position.getParent())
+                .fop(toCast(PhpExpression.class))
+                .map(par -> par.getLastChild())
+                .flt(lst -> lst.isEquivalentTo(position))
+                .uni(var -> true, () -> false);
         } else {
             return false;
         }
