@@ -71,6 +71,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                     }
                 })))
             .els(() -> opt(psiElement)
+                // is following still necessary?
                 .fop(v -> Tls.findParent(v, PhpDocParamTag.class, psi -> true))
                 .fop(tag -> new DocParamRes(funcCtx).resolve(tag))
                 .map(mt -> mt.types)

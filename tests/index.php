@@ -479,6 +479,12 @@ class DeepKeysTest
         ];
         $pair['0']; // _Ctrl + B_ should work
         $pair[0]; // _Ctrl + B_ should still work
+
+        $values = [];
+        $values['asdsad'] = 1;
+        $values['qweqwe'] = 2;
+        $values[] = 4;
+        $values[1];
     }
 }
 
