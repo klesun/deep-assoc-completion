@@ -47,9 +47,11 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     {
         ideaType = !ideaType.equals("") ? ideaType : "?";
 
+        // (keyName + briefVal) length must be constant for all keys, or you'll
+        // get nasty broken position of type when you highlight an option
         briefVal = briefVal.trim().equals("") ? "" : " = " + briefVal;
         briefVal = briefVal + "                                                                ";
-        briefVal = Tls.substr(briefVal, 0, BRIEF_TYPE_MAX_LEN);
+        briefVal = Tls.substr(briefVal, 0, BRIEF_TYPE_MAX_LEN - keyName.length());
         return LookupElementBuilder.create(keyName)
             .bold()
             .withInsertHandler(makeInsertHandler())
