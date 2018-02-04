@@ -492,6 +492,8 @@ class DeepKeysTest
         $result = [
             'type' => 'flight',
             'couponNumber' => intval($split['D']),
+            'from' => intval($split['F']),
+            'to' => intval($split['T']),
         ];
         $result['']; // 'couponNumber' brief value should be `intval($split['D'])`, not `function intval($var, $base = null) {}`
     }

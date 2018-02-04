@@ -46,7 +46,7 @@ public class KeyUsageResolver extends Lang
                 .map(varUsage -> acc.getIndex()));
     }
 
-    private L<String> resolveArgUsedKeys(Function meth, int argOrder)
+    public L<String> resolveArgUsedKeys(Function meth, int argOrder)
     {
         return L(meth.getParameters()).gat(argOrder)
             .fop(toCast(ParameterImpl.class))
@@ -78,7 +78,7 @@ public class KeyUsageResolver extends Lang
             ))  .fop(toCast(Function.class)));
     }
 
-    private static L<Variable> findVarReferences(Variable caretVar)
+    private static L<Variable> findVarReferences(PhpNamedElement caretVar)
     {
         return Tls.findParent(caretVar, Function.class, a -> true)
             .fap(meth -> Tls.findChildren(
@@ -104,7 +104,7 @@ public class KeyUsageResolver extends Lang
             });
     }
 
-    private L<String> findKeysUsedOnVar(Variable caretVar)
+    private L<String> findKeysUsedOnVar(PhpNamedElement caretVar)
     {
         return findVarReferences(caretVar)
             .flt(ref -> ref.getTextOffset() > caretVar.getTextOffset())
