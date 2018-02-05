@@ -74,6 +74,9 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             this.lookupData = lookupData;
             this.includeQuotes = includeQuotes;
         }
+        public String getKeyName() {
+            return lookupData.getLookupString();
+        }
         @NotNull public String getLookupString() {
             return includeQuotes && !Tls.isNum(lookupData.getLookupString())
                 ? "'" + lookupData.getLookupString() + "'"
@@ -171,7 +174,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 return makePaddedLookup(keyName, ideaTypeStr, briefValue);
             });
 
-        lookups.fch(l -> nameToNewLookup.gat(l.getLookupString()).thn(newL -> l.lookupData = newL));
+        lookups.fch(l -> nameToNewLookup.gat(l.getKeyName()).thn(newL -> l.lookupData = newL));
 
         long elapsed = System.nanoTime() - startTime;
         result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
