@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.02.01.001</version>
+    <version>2018.02.05.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -10,6 +10,7 @@
   <li>Go To key Definition.</li>
   <li>Specify array keys and reference functions in phpdoc.</li>
   <li>Preserve type info of object placed in an associative array.</li>
+  <li>Infer argument types inside closures from array_map, array_filter, etc...</li>
 </ul>
 This plugin greatly extends phpstorm's associative array completion and typing<br/>
 
@@ -28,11 +29,13 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>Hotfix: StackOverflowException - check for circular references on complete structure descriptions</li>
-      <li>Suggest completion when multiple keys were assigned from single var</li>
-      <li>#29 Do not suggest number keys on non-number keys</li>
-      <li>Feature: provide completion from arguments inside a private function based on what is passed to it further</li>
-      <li>#28 Infinite recursion fix: cache same PSI resolution and remove duplicate types</li>
+      <li>Suggest completion in a lambda based what is passed to it even when it is passed somewhere itself</li>
+      <li>Make it possible to Go Yo method from anything resembling [$this, "doSomething"]</li>
+      <li>Show used keys when you ask for arg description inside func declaration with _Ctrl + Alt + Q_</li>
+      <li>Fix: do not show definition of built-in function in brief type</li>
+      <li>Show completion options inside [], not only ['']</li>
+      <li>Separate list element types from unknown key element types</li>
+      <li>Provide completion of string values in $type === ""</li>
     </ul>
     ]]>
     </change-notes>

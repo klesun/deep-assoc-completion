@@ -507,7 +507,7 @@ class DeepKeysTest
         static::processFile('anime_list.dat', $processor);
         return $list;
     }
-    
+
     private static function testFpAnyAllPeekOutside()
     {
         $isGood = function($val){
