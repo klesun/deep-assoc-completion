@@ -176,7 +176,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         long elapsed = System.nanoTime() - startTime;
         result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
 
-        if (search.getExpressionsResolved() > 0) {
+        if (search.getExpressionsResolved() > 100) {
             System.out.println("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
         }
     }

@@ -89,7 +89,7 @@ public class MultiType extends Lang
         }
         types.fap(t -> t.anyKeyElTypes).fch(t -> keyTypes.add(t));
         /** @param Segment{} $segment */
-        types.fop(t -> opt(t.briefType.elementType().filterUnknown())
+        types.fop(t -> opt(t.briefType.elementType().filterUnknown().filterMixed())
             .flt(it -> !it.isEmpty())
             .map(it -> new DeepType(t.definition, it, false)))
             .fch(t -> keyTypes.add(t));

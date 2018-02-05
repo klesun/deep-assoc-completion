@@ -475,6 +475,56 @@ class DeepKeysTest
         static::wrapClosure([$this, 'makeRecordMaybe']);
     }
 
+    private static function openFile(string $fileName)
+    {
+        return [
+            'process' => 'OPEN_FILE',
+            'resourceId' => rand(0,1000),
+            'bytes' => [112,535,756,23423,3463],
+            'createdDt' => '2018-01-13',
+            'modifiedDt' => '2018-01-18',
+        ];
+    }
+
+    private static function processFile(string $fileName, callable $processor)
+    {
+        $file = static::openFile($fileName);
+        $processor($file);
+        closeFile($fileName);
+        $processor([
+            'process' => 'CLOSE_FILE',
+            'fileName' => $fileName,
+        ]);
+    }
+
+    private static function provideLambdaArgCompletion()
+    {
+        $list = [];
+        $processor = function($file) use (&$list){
+            $file[''];
+            $list[] = [$file, ['resourceId' => [], 'bytes' => [], 'createdDt' => [], 'modifiedDt' => []]];
+        };
+        static::processFile('anime_list.dat', $processor);
+        return $list;
+    }
+    
+    private static function testFpAnyAllPeekOutside()
+    {
+        $isGood = function($val){
+            return $val[''] > 9;
+        };
+        $isCheep = function($val){
+            return $val[''] < 2.00;
+        };
+        $books = [
+            ['score' => 5, 'price' => 1.50],
+            ['score' => 9.8, 'price' => 19.50],
+            ['score' => 7.5, 'price' => 7.50],
+        ];
+        $gotGoodBooks = Fp::any($isGood, $books);
+        $allBooksAreCheap = Fp::all($isCheep, $books);
+    }
+
     //============================
     // not implemented follow
     //============================

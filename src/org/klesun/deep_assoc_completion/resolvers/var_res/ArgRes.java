@@ -6,12 +6,17 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
+import com.jetbrains.php.lang.psi.elements.Function;
+import com.jetbrains.php.lang.psi.elements.FunctionReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.PhpModifier;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
+import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
@@ -74,13 +79,10 @@ public class ArgRes extends Lang
     {
         PsiElement[] params = call.getParameters();
         if (argOrderOfLambda == 0 && params.length > 1 && argOrderInLambda == 0) {
-            // functions where array is passed in the second argument
+            // TODO: remove Fp-specific functions once resolveArgCallArrKeys() supports built-ins
             if (MethCallRes.nameIs(call, "Fp", "map") ||
                 MethCallRes.nameIs(call, "Fp", "filter") ||
-                MethCallRes.nameIs(call, "Fp", "all") ||
-                MethCallRes.nameIs(call, "Fp", "any") ||
-                MethCallRes.nameIs(call, "Fp", "sortBy") ||
-                MethCallRes.nameIs(call, "Fp", "groupBy")
+                MethCallRes.nameIs(call, "Fp", "sortBy")
             ) {
                 return L(call.getParameters()).gat(1)
                     .fop(toCast(PhpExpression.class))
@@ -97,14 +99,25 @@ public class ArgRes extends Lang
                 // like array_map($mapper, ['a' => 5, 'b' => 6])
                 , Tls.cast(ParameterListImpl.class, parent)
                     .fop(parl -> opt(parl.getParent())
-                        .fop(call -> Opt.fst(list(opt(null)
-                            , Tls.cast(FunctionReferenceImpl.class, call)
-                                .fop(func -> getArgFromNsFuncCall(func, L(parl.getParameters())
-                                    .indexOf(funcVar), caretArgOrder))
-                            , Tls.cast(MethodReferenceImpl.class, call)
-                                .fop(func -> getArgFromMethodCall(func, L(parl.getParameters())
-                                    .indexOf(funcVar), caretArgOrder))
-                        ))))
+                        .fop(toCast(FunctionReference.class))
+                        .fop(call -> {
+                            FuncCtx subCtx = trace.subCtxDirect(call);
+                            int funcVarOrder = L(parl.getParameters()).indexOf(funcVar);
+                            return Opt.fst(list(opt(null)
+                                , Tls.cast(FunctionReferenceImpl.class, call)
+                                    .fop(func -> getArgFromNsFuncCall(func, funcVarOrder, caretArgOrder))
+                                , Tls.cast(MethodReferenceImpl.class, call)
+                                    .fop(func -> getArgFromMethodCall(func, funcVarOrder, caretArgOrder))
+                                // go into the called function and look what
+                                // is passed to the passed func var there
+                                , L(call.multiResolve(false))
+                                    .fop(res -> opt(res.getElement()))
+                                    .fop(toCast(Function.class))
+                                    .map(func -> new KeyUsageResolver(subCtx, 3).resolveArgCallArrKeys(func, funcVarOrder, caretArgOrder))
+                                    .fap(mt -> mt.types)
+                                    .wap(types -> opt(new MultiType(types)))
+                            ));
+                        }))
                 // like $mapper(['a' => 5, 'b' => 6])
                 , Tls.cast(FunctionReferenceImpl.class, parent)
                     .fop(call -> L(call.getParameters()).gat(caretArgOrder))

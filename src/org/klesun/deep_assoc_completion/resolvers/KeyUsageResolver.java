@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.Lang;
@@ -65,6 +66,22 @@ public class KeyUsageResolver extends Lang
                 new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnVar(arg)
             ).fap(a -> a))
             .def(L());
+    }
+
+    // not sure this method belongs here... and name should be changed
+    public MultiType resolveArgCallArrKeys(Function meth, int funcVarArgOrder, int caretArgOrder)
+    {
+        return L(meth.getParameters()).gat(funcVarArgOrder)
+            .fop(toCast(ParameterImpl.class))
+            .fap(arg -> findVarReferences(arg))
+            .fop(var -> opt(var.getParent()))
+            // TODO: include not just dirrect calls,
+            // but also array_map and other built-ins
+            .fop(toCast(FunctionReference.class))
+            .fop(call -> L(call.getParameters()).gat(caretArgOrder))
+            .fop(toCast(PhpExpression.class))
+            .fap(exp -> fakeCtx.findExprType(exp).types)
+            .wap(MultiType::new);
     }
 
     private static Opt<Function> resolveFunc(ParameterList argList)
