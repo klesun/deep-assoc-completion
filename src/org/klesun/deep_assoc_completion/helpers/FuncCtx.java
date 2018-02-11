@@ -3,7 +3,6 @@ package org.klesun.deep_assoc_completion.helpers;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.FunctionReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
@@ -13,11 +12,13 @@ import org.klesun.lang.Tls;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /** a node in called function stack trace with args */
 public class FuncCtx extends Lang
 {
-    enum EArgPsiType {DIRECT, ARR, NONE};
+    enum EArgPsiType {DIRECT, ARR, NONE, INDIRECT};
 
     final private Opt<FuncCtx> parent;
     final private Opt<PsiElement> uniqueRef;
@@ -91,10 +92,27 @@ public class FuncCtx extends Lang
     }
 
     /** context from args passed in array for example in array_map or array_filter */
-    public FuncCtx subCtxArgArr(PhpExpression argArr)
+    public FuncCtx subCtxSingleArgArr(PhpExpression argArr)
     {
         L<S<MultiType>> argGetters = list(() -> findExprType(argArr).getEl());
         return new FuncCtx(this, argGetters, argArr, EArgPsiType.ARR);
+    }
+
+    /** when you have expression PSI and it is not directly passed to the func, ex. call_user_func_arr() */
+    public FuncCtx subCtxIndirect(PhpExpression args)
+    {
+        MultiType mt = findExprType(args);
+        Set<String> indexes = new HashSet<>(mt.getKeyNames());
+        L<S<MultiType>> argGetters = list();
+        for (int i = 0; i < indexes.size(); ++i) {
+            if (indexes.contains(i + "")) {
+                String key = i + "";
+                argGetters.add(() -> mt.getKey(key));
+            } else {
+                break;
+            }
+        }
+        return new FuncCtx(this, argGetters, args, EArgPsiType.INDIRECT);
     }
 
     public int getArgCnt()

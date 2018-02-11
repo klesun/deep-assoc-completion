@@ -56,7 +56,7 @@ public class FuncCallRes extends Lang
                         .map(exp -> ctx.findExprType(exp))
                         .def(MultiType.INVALID_PSI);
                     FuncCtx subCtx = Tls.cast(PhpExpression.class, array)
-                        .uni(argArr -> ctx.subCtxArgArr(argArr),
+                        .uni(argArr -> ctx.subCtxSingleArgArr(argArr),
                             () -> new FuncCtx(ctx.getSearch())
                         );
                     findPsiExprType(callback).types
@@ -185,6 +185,16 @@ public class FuncCallRes extends Lang
                     .map(str -> Integer.parseInt(str))
                     .fop(order -> ctx.getArg(order))
                     .thn(mt -> result.addAll(mt.types));
+            } else if (name.equals("call_user_func_array")) {
+                FuncCtx newCtx = lParams.gat(1)
+                    .fop(toCast(PhpExpression.class))
+                    .map(args -> ctx.subCtxIndirect(args))
+                    .def(new FuncCtx(ctx.getSearch()));
+                lParams.gat(0)
+                    .fop(toCast(PhpExpression.class))
+                    .map(val -> ctx.findExprType(val))
+                    .fap(func -> func.types.fap(t -> t.getReturnTypes(newCtx)))
+                    .fch(t -> result.add(t));
             } else {
                 // try to get type info from standard_2.php
                 opt(call.resolve())

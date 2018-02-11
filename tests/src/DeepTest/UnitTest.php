@@ -1601,6 +1601,23 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function makeFcSegment($segmentData, $fareInfo)
+    {
+        return array_merge($segmentData, $fareInfo);
+    }
+
+    public function provideCallUserFuncArray()
+    {
+        $args = [
+            ['from' => 'LON', 'to' => 'TYO'],
+            ['fare' => '150.00', 'fareBasis' => 'CHD50AD'],
+        ];
+        $fcSegment = call_user_func_array([static::class, 'makeFcSegment'], $args);
+        $fcSegment;
+        $list[] = [$fcSegment, ['from' => [], 'to' => [], 'fare' => [], 'fareBasis' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
