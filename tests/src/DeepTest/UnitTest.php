@@ -1578,4 +1578,70 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
     //=============================
     // following are not implemented yet
     //=============================
+
+    private static function addAgeToPaxes(...$paxes)
+    {
+        $paxes;
+        return array_map(function($pax){
+            $pax['age'] = 25;
+            return $pax;
+        }, $paxes);
+    }
+
+    public function provideTripleDotInDecl()
+    {
+        $list = [];
+        $vova = ['name' => 'Vova', 'country' => 'US', 'optData' => ['children' => 3, 'wives' => 2]];
+        $petja = ['name' => 'Petja', 'country' => 'GB'];
+        $vasja = ['name' => 'Vasja', 'country' => 'FR'];
+        $paxesWithAge = static::addAgeToPaxes($vova, $petja, $vasja);
+        // should not suggest 'wives' and 'children' btw
+//        $list[] = [$paxesWithAge[0], ['name' => [], 'country' => [], 'optData' => [], 'age' => []]];
+        return $list;
+    }
+
+    private static function addNumToSegments($segA, $segB, $segC, $segD, $segE)
+    {
+        return array_map(function($seg){
+            $seg['segmentNumber'] = 123;
+            return $seg;
+        }, [$segA, $segB, $segC, $segD, $segE]);
+    }
+
+    public function provideTripleDotInCall()
+    {
+        $list = [];
+        $segs = [];
+        $segs[] = ['from' => 'RIX', 'to' => 'KIV'];
+        $segs[] = ['from' => 'JFK', 'to' => 'LON'];
+        $withNums = static::addNumToSegments(...$segs);
+//        $list[] = [$withNums[0], ['from' => [], 'to' => [], 'segmentNumber' => []]];
+        return $list;
+    }
+
+    private static function addAirlineToSsts()
+    {
+        $args = func_get_args();
+        $arg = func_get_arg(3);
+        $addAir = function($ssr){
+            $ssr['airline'] = 'BT';
+            return $ssr;
+        };
+        return [
+            'all' => array_map($addAir, $args),
+            'third' => $addAir($arg),
+        ];
+    }
+
+    public function provideFuncGetArgs()
+    {
+        $list = [];
+        $ssrs = self::addAirlineToSsts(
+            ['code' => 'WCHR', 'line' => 5],
+            ['code' => 'KSML', 'line' => 6]
+        );
+        $list[] = [$ssrs['all'][0], ['code' => [], 'line' => [], 'airline' => []]];
+//        $list[] = [$ssrs['third'], ['code' => [], 'line' => [], 'airline' => []]];
+        return $list;
+    }
 }

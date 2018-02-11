@@ -11,6 +11,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.ScopeFinder;
+import org.klesun.deep_assoc_completion.helpers.ArgOrder;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
@@ -172,6 +173,8 @@ public class FuncCallRes extends Lang
                         .map(keyName -> new DeepType(call, PhpType.STRING, keyName));
                     result.addAll(keyTypes);
                 }
+            } else if (name.equals("func_get_args")) {
+                result.addAll(ctx.getArg(new ArgOrder(0, true)).fap(a -> a.types));
             } else {
                 // try to get type info from standard_2.php
                 opt(call.resolve())

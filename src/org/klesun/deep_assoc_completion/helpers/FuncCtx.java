@@ -4,7 +4,9 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.FunctionReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
+import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -45,14 +47,31 @@ public class FuncCtx extends Lang
         this.argPsiType = argPsiType;
     }
 
+    public Opt<MultiType> getArg(ArgOrder orderObj)
+    {
+        if (!orderObj.isVariadic) {
+            int index = orderObj.order;
+            return argGetters.gat(index).map(argGetter -> {
+                if (!cachedArgs.containsKey(index)) {
+                    cachedArgs.put(index, argGetter.get());
+                }
+                return cachedArgs.get(index);
+            });
+        } else {
+            return uniqueRef.map(ref -> {
+                DeepType allArgs = new DeepType(ref, PhpType.ARRAY);
+                argGetters.sub(orderObj.order)
+                    .map(argGetter -> argGetter.get())
+                    .fch((mt, i) -> allArgs.addKey(i + "", ref)
+                        .addType(() -> mt, mt.getIdeaType()));
+                return new MultiType(list(allArgs));
+            });
+        }
+    }
+
     public Opt<MultiType> getArg(Integer index)
     {
-        return argGetters.gat(index).map(argGetter -> {
-            if (!cachedArgs.containsKey(index)) {
-                cachedArgs.put(index, argGetter.get());
-            }
-            return cachedArgs.get(index);
-        });
+        return getArg(new ArgOrder(index, false));
     }
 
     @NotNull
