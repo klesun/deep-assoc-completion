@@ -89,7 +89,10 @@ public class FuncCallRes extends Lang
                         .addType(() -> elMt, elMt.getIdeaType()));
                 combine.anyKeyElTypes.addAll(elMt.types);
                 result.add(combine);
-            } else if (name.equals("array_pop") || name.equals("array_shift")) {
+            } else if (name.equals("array_pop") || name.equals("array_shift")
+                    || name.equals("current") || name.equals("end") || name.equals("next")
+                    || name.equals("prev") || name.equals("reset")
+            ) {
                 L(params).gat(0).map(p -> findPsiExprType(p).getEl().types).thn(result::addAll);
             } else if (name.equals("array_merge")) {
                 for (PsiElement paramPsi: params) {

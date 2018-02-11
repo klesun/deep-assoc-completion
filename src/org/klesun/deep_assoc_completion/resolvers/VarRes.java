@@ -79,10 +79,19 @@ public class VarRes extends Lang
     {
         return opt(varRef.getParent())
             .fop(toCast(ForeachImpl.class))
-            .flt(fch -> opt(fch.getValue()).map(v -> v.isEquivalentTo(varRef)).def(false))
-            .map(fch -> fch.getArray())
-            .fop(toCast(PhpExpression.class))
-            .map(arr -> () -> ctx.findExprType(arr).getEl());
+            .fop(fch -> opt(fch.getArray())
+                .fop(toCast(PhpExpression.class))
+                .map(arr -> () -> {
+                    MultiType valMt = ctx.findExprType(arr).getEl();
+                    L<Variable> tuple = L(fch.getVariables());
+                    if (tuple.size() > 1) {
+                        return valMt.getKey(tuple.indexOf(varRef) + "");
+                    } else {
+                        // this is actually not correct since you could write list($a)
+                        // or $list(,,$c), but IDEA does not parse list in foreach well
+                        return valMt;
+                    }
+                }));
     }
 
     private Opt<S<MultiType>> assertTupleAssignment(PsiElement varRef)

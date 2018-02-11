@@ -98,4 +98,84 @@ class UnitTest
         $list[] = [$rows['0'], ['id' => [], 'name' => [], 'profit' => []]];
         return $list;
     }
+
+    public function provideZip()
+    {
+        $list = [];
+        $grooms = [
+            ['smoking' => 'black', 'salary' => '510090.00'],
+            ['smoking' => 'red', 'salary' => '710090.00'],
+        ];
+        $wives = [
+            ['weddingDress' => 'expensiveOne', 'face' => 'average'],
+            ['weddingDress' => 'cheapOne', 'face' => 'beautiful'],
+        ];
+        $weddingPairs = Fp::zip([$grooms, $wives]);
+        $firstPair = $weddingPairs[0];
+        $list[] = [$firstPair[0], ['smoking' => [], 'salary' => []]];
+        $list[] = [$firstPair[1], ['weddingDress' => [], 'face' => []]];
+        return $list;
+    }
+
+    private static function pairsToDict(array $pairs)
+    {
+        $result = [];
+        foreach ($pairs as list($key, $value)) {
+            $result[$key] = $value;
+        }
+        return $result;
+    }
+
+    public function providePairsToDict()
+    {
+        $list = [];
+        $pairs = [
+            ['gds', 'apollo'],
+            ['profile', 'GENERIC'],
+            ['user', 'RBS'],
+        ];
+        $dict = static::pairsToDict($pairs);
+        $list[] = [$dict, ['gds' => [], 'profile' => [], 'user' => []]];
+        return $list;
+    }
+
+    private static function unpackList(array $keys, array $data)
+    {
+        $result = [];
+        foreach ($data as $record) {
+            $pairs = Fp::zip([$keys, $record]);
+            $result[] = static::pairsToDict($pairs);
+        }
+        return $result;
+    }
+
+    public static function provideTableOwnImplementation()
+    {
+        $list = [];
+        $profiles = [
+            // gds       | profile                | user   | group                 | gds_profile                | session_limit | idle_session_timeout |
+            //-----------+------------------------+--------+-----------------------+----------------------------+---------------+----------------------|
+            [  'amadeus' , 'GENERIC'              , 'RBS'  ,  null                 , 'AMADEUS_PROD_1ASIWTUTICO' , null          , null                 ],
+            [  'apollo'  , 'AIRLINE_TERMINAL'     , 'AFPE' , 'apollo_terminals'    , 'DynApolloProd_1O3K'       , null          , null                 ],
+            [  'apollo'  , 'CMS_TERMINAL'         , 'RBS'  ,  null                 , 'DynApolloProd_2G55'       , 1000          , null                 ],
+            [  'apollo'  , 'FPE_STUDENT_TERMINAL' , 'FPE'  , 'apollo_terminals'    , 'DynApolloProd_1O3K'       , null          , null                 ],
+            [  'apollo'  , 'GRAB_FARES'           , 'RBS'  , 'apollo_auto_process' , 'DynApolloProd_1O3K'       , null          , null                 ],
+            [  'apollo'  , 'IMPORT_PNR'           , 'RBS'  , 'apollo_auto_process' , 'DynApolloProd_1O3K'       , null          , null                 ],
+            [  'apollo'  , 'QUEUE_PROCESSING'     , 'RBS'  , 'apollo_auto_process' , 'DynApolloProd_1O3K'       , null          , null                 ],
+            [  'apollo'  , 'UNCLASSIFIED'         , 'RBS'  , 'apollo_auto_process' , 'DynApolloProd_1O3K'       , null          , null                 ],
+            [  'apollo'  , 'OTA'                  , 'OTA'  , 'apollo_auto_process' , 'DynApolloProd_1O3K'       , null          , null                 ],
+            [  'apollo'  , 'STAGING'              , 'RBS'  ,  null                 , 'DynApolloCopy_1O3K'       , 200           , null                 ],
+            [  'sabre'   , 'CMS_OLD_TERMINAL'     , 'FPE'  , 'sabre_terminals'     , 'SABRE_PROD_L3II'          , null          , 5*60                 ],
+            [  'sabre'   , 'CMS_TERMINAL'         , 'RBS'  , 'sabre_terminals'     , 'SABRE_PROD_L3II'          , null          , null                 ],
+            [  'sabre'   , 'FPE_STUDENT_TERMINAL' , 'FPE'  , 'sabre_terminals'     , 'SABRE_PROD_Z2NI'          , null          , 5*60                 ],
+            [  'sabre'   , 'IMPORT_PNR'           , 'RBS'  , 'sabre_auto_process'  , 'SABRE_PROD_L3II'          , null          , null                 ],
+            [  'sabre'   , 'QUEUE_PROCESSING'     , 'RBS'  , 'sabre_auto_process'  , 'SABRE_PROD_L3II'          , null          , null                 ],
+            [  'sabre'   , 'OTA'                  , 'OTA'  , 'sabre_auto_process'  , 'SABRE_PROD_L3II'          , null          , null                 ],
+            [  'sabre'   , 'UNCLASSIFIED'         , 'RBS'  , 'sabre_auto_process'  , 'SABRE_PROD_L3II'          , null          , null                 ],
+        ];
+        $unpacked = static::unpackList(['gds', 'profile', 'user', 'group', 'gds_profile', 'session_limit', 'idle_session_timeout'], $profiles);
+        $row = $unpacked[0];
+        $list[] = [$row, ['gds' => [], 'profile' => [], 'user' => [], 'group' => [], 'gds_profile' => [], 'session_limit' => [], 'idle_session_timeout' => []]];
+        return $list;
+    }
 }
