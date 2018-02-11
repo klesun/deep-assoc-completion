@@ -1551,6 +1551,30 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    public static function provideForeachKeyCompletion()
+    {
+        $requestedData = [
+            'reservation' => ['mandatory', 'async'],
+            'fareQuoteInfo' => ['mandatory'],
+            'repeatedItinerary' => ['optional'],
+        ];
+        $result = [];
+        foreach ($requestedData as $field => list($prefLevel, $mode)) {
+            $result[$field] = [
+                'errors' => [],
+                'data' => [1,2,3],
+            ];
+        }
+        $list[] = [$result, ['reservation' => [], 'fareQuoteInfo' => [], 'repeatedItinerary' => []]];
+
+        $simpleFchArr = [];
+        foreach (['a' => 1, 'b' => 3] as $k => $v) {
+            $simpleFchArr[$k] = $v * 5;
+        }
+        $list[] = [$simpleFchArr, ['a' => [], 'b' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

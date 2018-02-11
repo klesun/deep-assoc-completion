@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiWhiteSpace;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocVarImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
@@ -82,14 +83,31 @@ public class VarRes extends Lang
             .fop(fch -> opt(fch.getArray())
                 .fop(toCast(PhpExpression.class))
                 .map(arr -> () -> {
-                    MultiType valMt = ctx.findExprType(arr).getEl();
+                    MultiType arrt = ctx.findExprType(arr);
                     L<Variable> tuple = L(fch.getVariables());
+                    Opt<Variable> keyVarOpt = opt(fch.getKey())
+                        // IDEA breaks on list() - should help her
+                        .flt(keyVar -> Opt.fst(list(
+                            opt(keyVar.getNextSibling())
+                                .fop(toCast(PsiWhiteSpace.class))
+                                .map(ws -> ws.getNextSibling()),
+                            opt(keyVar.getNextSibling())
+                        )).flt(par -> par.getText().equals("=>")).has());
+                    if (keyVarOpt.has()) {
+                        tuple = tuple.sub(1); // key was included
+                        if (varRef.isEquivalentTo(keyVarOpt.unw())) {
+                            return arrt.types.fap(t -> L(t.keys.values()))
+                                .map(keyObj -> new DeepType(keyObj.definition, PhpType.STRING, keyObj.name))
+                                .wap(MultiType::new);
+                        }
+                    }
                     if (tuple.size() > 1) {
-                        return valMt.getKey(tuple.indexOf(varRef) + "");
+                        return arrt.getEl()
+                            .getKey(tuple.indexOf(varRef) + "");
                     } else {
                         // this is actually not correct since you could write list($a)
                         // or $list(,,$c), but IDEA does not parse list in foreach well
-                        return valMt;
+                        return arrt.getEl();
                     }
                 }));
     }
