@@ -398,6 +398,10 @@ class DeepKeysTest
         if ($type === '') {
 
         }
+        // should also suggest: DOCO, DOCA, DOCS, FQTV
+        if ($type !== '') {
+
+        }
         $arr = ['asd' => 'lol'];
         $arr['asd'] === '';
     }

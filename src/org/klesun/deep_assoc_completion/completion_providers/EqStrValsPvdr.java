@@ -49,7 +49,8 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters>
             .map(literal -> literal.getParent()) // BinaryExpressionImpl
             .fop(toCast(BinaryExpressionImpl.class))
             .fop(bin -> opt(bin.getOperation())
-                .flt(op -> op.getText().equals("==") || op.getText().equals("==="))
+                .flt(op -> op.getText().equals("==") || op.getText().equals("===")
+                        || op.getText().equals("!=") || op.getText().equals("!=="))
                 .map(op -> bin.getLeftOperand())
                 .fop(toCast(PhpExpression.class))
                 .map(exp -> funcCtx.findExprType(exp)))
