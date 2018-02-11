@@ -1575,6 +1575,32 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function addAirlineToSsts()
+    {
+        $args = func_get_args();
+        $arg = func_get_arg(1);
+        $addAir = function($ssr){
+            $ssr['airline'] = 'BT';
+            return $ssr;
+        };
+        return [
+            'all' => array_map($addAir, $args),
+            'third' => $addAir($arg),
+        ];
+    }
+
+    public function provideFuncGetArgs()
+    {
+        $list = [];
+        $ssrs = self::addAirlineToSsts(
+            ['code' => 'WCHR', 'line' => 5],
+            ['code' => 'KSML', 'line' => 6]
+        );
+        $list[] = [$ssrs['all'][0], ['code' => [], 'line' => [], 'airline' => []]];
+        $list[] = [$ssrs['third'], ['code' => [], 'line' => [], 'airline' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
@@ -1616,32 +1642,6 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $segs[] = ['from' => 'JFK', 'to' => 'LON'];
         $withNums = static::addNumToSegments(...$segs);
 //        $list[] = [$withNums[0], ['from' => [], 'to' => [], 'segmentNumber' => []]];
-        return $list;
-    }
-
-    private static function addAirlineToSsts()
-    {
-        $args = func_get_args();
-        $arg = func_get_arg(3);
-        $addAir = function($ssr){
-            $ssr['airline'] = 'BT';
-            return $ssr;
-        };
-        return [
-            'all' => array_map($addAir, $args),
-            'third' => $addAir($arg),
-        ];
-    }
-
-    public function provideFuncGetArgs()
-    {
-        $list = [];
-        $ssrs = self::addAirlineToSsts(
-            ['code' => 'WCHR', 'line' => 5],
-            ['code' => 'KSML', 'line' => 6]
-        );
-        $list[] = [$ssrs['all'][0], ['code' => [], 'line' => [], 'airline' => []]];
-//        $list[] = [$ssrs['third'], ['code' => [], 'line' => [], 'airline' => []]];
         return $list;
     }
 }

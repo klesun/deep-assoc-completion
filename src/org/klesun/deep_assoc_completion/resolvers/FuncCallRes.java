@@ -46,6 +46,7 @@ public class FuncCallRes extends Lang
         return opt(call.getName()).map(name -> {
             L<DeepType> result = L();
             PsiElement[] params = call.getParameters();
+            L<PsiElement> lParams = L(params);
             if (name.equals("array_map")) {
                 DeepType mapRetType = new DeepType(call);
                 if (params.length > 1) {
@@ -175,6 +176,15 @@ public class FuncCallRes extends Lang
                 }
             } else if (name.equals("func_get_args")) {
                 result.addAll(ctx.getArg(new ArgOrder(0, true)).fap(a -> a.types));
+            } else if (name.equals("func_get_arg")) {
+                lParams.gat(0)
+                    .fop(toCast(PhpExpression.class))
+                    .map(val -> ctx.findExprType(val))
+                    .fop(mt -> opt(mt.getStringValue()))
+                    .flt(str -> Tls.isNum(str))
+                    .map(str -> Integer.parseInt(str))
+                    .fop(order -> ctx.getArg(order))
+                    .thn(mt -> result.addAll(mt.types));
             } else {
                 // try to get type info from standard_2.php
                 opt(call.resolve())
