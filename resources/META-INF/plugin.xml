@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.02.05.001</version>
+    <version>2018.02.11.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,13 +29,8 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>Suggest completion in a lambda based what is passed to it even when it is passed somewhere itself</li>
-      <li>Make it possible to Go Yo method from anything resembling [$this, "doSomething"]</li>
-      <li>Show used keys when you ask for arg description inside func declaration with _Ctrl + Alt + Q_</li>
-      <li>Fix: do not show definition of built-in function in brief type</li>
-      <li>Show completion options inside [], not only ['']</li>
-      <li>Separate list element types from unknown key element types</li>
-      <li>Provide completion of string values in $type === ""</li>
+      <li>Support call_user_func_arr(), func_get_args(), current(), next(), end(), reset(), etc...</li>
+      <li>Infer type of $key in foreach ($arr as $key => $value) {} and list() elements in foreach($pairs as list($first, $second)) {}</li>
     </ul>
     ]]>
     </change-notes>
