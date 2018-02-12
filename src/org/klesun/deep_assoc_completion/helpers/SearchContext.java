@@ -14,6 +14,8 @@ import java.util.Map;
 public class SearchContext extends Lang
 {
     // parametrized fields
+    private long startTime = System.nanoTime();
+    private long lastReportTime = System.nanoTime();
     private int depth = 20;
     private int initialDepth = depth;
     private boolean debug = false;
@@ -90,6 +92,14 @@ public class SearchContext extends Lang
 
     public Opt<MultiType> findExprType(PhpExpression expr, FuncCtx funcCtx)
     {
+        /** @debug */
+        long time = System.nanoTime();
+        double seconds = (time - startTime) / 1000000000.0;
+        if (!debug && (time - lastReportTime) / 1000000000.0 > 0.5) {
+            lastReportTime = System.nanoTime();
+            System.out.println("deep-assoc-completion warning at " + time + ": type resolution takes " + seconds + " seconds " + expr.getText() + " " + expr.getClass());
+        }
+
         String indent = "";
         for (int i = 0; i < initialDepth - depth; ++i) {
             indent += " ";
