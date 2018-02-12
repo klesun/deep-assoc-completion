@@ -1,8 +1,11 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.*;
@@ -21,6 +24,19 @@ public class FieldRes extends Lang
     public FieldRes(FuncCtx ctx)
     {
         this.ctx = ctx;
+    }
+
+    private static L<FieldReferenceImpl> findReferences(PsiFile file, String name)
+    {
+        // ReferenceSearch seems to cause freezes
+//        SearchScope scope = GlobalSearchScope.fileScope(
+//            fieldRef.getProject(),
+//            decl.getContainingFile().getVirtualFile()
+//        );
+//        return ReferencesSearch.search(decl, scope, false).findAll();
+
+        return L(PsiTreeUtil.findChildrenOfType(file, FieldReferenceImpl.class))
+            .flt(ref -> name.equals(ref.getName()));
     }
 
     private boolean isCircularExpr(FieldReferenceImpl fieldRef)
@@ -51,15 +67,8 @@ public class FieldRes extends Lang
                     .map(def -> implCtx.findExprType(def).types)
                     .thn(result::addAll);
 
-                L<Assign> asses = opt(resolved.getOriginalElement())
-                    .map(decl -> {
-                        SearchScope scope = GlobalSearchScope.fileScope(
-                            fieldRef.getProject(),
-                            decl.getContainingFile().getVirtualFile()
-                        );
-                        return ReferencesSearch.search(decl, scope, false).findAll();
-                    })
-                    .map(usages -> L(usages).map(u -> u.getElement()))
+                L<Assign> asses = opt(resolved.getContainingFile())
+                    .map(file -> findReferences(file, fieldRef.getName()))
                     .def(L())
                     .fop(psi -> (new AssRes(implCtx)).collectAssignment(psi, false));
 
