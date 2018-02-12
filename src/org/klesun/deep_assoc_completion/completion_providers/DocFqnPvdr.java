@@ -66,6 +66,6 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 .thn(options -> L(options)
                     .map((lookup) -> LookupElementBuilder.create(lookup))
                     .fch(result::addElement))
-                .els(() -> System.out.println("No FQN-s found with such partial name - " + literal.getText())));
+                .els(() -> result.addLookupAdvertisement("No FQN-s found with such partial name - " + literal.getText())));
     }
 }

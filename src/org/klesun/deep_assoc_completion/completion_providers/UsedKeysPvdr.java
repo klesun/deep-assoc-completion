@@ -74,9 +74,8 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
             // to preserve order
             .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - i))
             .fch(result::addElement);
-        result.addLookupAdvertisement("Press <Page Down> few times to skip built-in suggestions");
 
         long elapsed = System.nanoTime() - startTime;
-        System.out.println("Resolved used keys in " + (elapsed / 1000000000.0) + " seconds");
+        result.addLookupAdvertisement("Resolved used keys in " + (elapsed / 1000000000.0) + " seconds");
     }
 }
