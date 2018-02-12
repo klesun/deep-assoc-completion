@@ -98,26 +98,23 @@ public class FuncCtx extends Lang
         return new FuncCtx(this, argGetters, argArr, EArgPsiType.ARR);
     }
 
-    /** when you have expression PSI and it is not directly passed to the func, ex. call_user_func_arr() */
+    /** when you have expression PSI and it is not directly passed to the func, ex. call_user_func_array() */
     public FuncCtx subCtxIndirect(PhpExpression args)
     {
-        MultiType mt = findExprType(args);
-        Set<String> indexes = new HashSet<>(mt.getKeyNames());
+        S<MultiType> getMt = Tls.onDemand(() -> findExprType(args));
         L<S<MultiType>> argGetters = list();
-        for (int i = 0; i < indexes.size(); ++i) {
-            if (indexes.contains(i + "")) {
-                String key = i + "";
-                argGetters.add(() -> mt.getKey(key));
-            } else {
-                break;
-            }
+        // always 10 arguments, got any problem?
+        // it probably should be done correctly one day...
+        for (int i = 0; i < 10; ++i) {
+            String key = i + "";
+            argGetters.add(() -> getMt.get().getKey(key));
         }
         return new FuncCtx(this, argGetters, args, EArgPsiType.INDIRECT);
     }
 
-    public int getArgCnt()
+    public boolean hasArgs()
     {
-        return argGetters.size();
+        return argGetters.size() > 0;
     }
 
     public SearchContext getSearch()

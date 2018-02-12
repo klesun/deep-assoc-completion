@@ -11,8 +11,6 @@ import com.jetbrains.php.lang.psi.elements.FunctionReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.PhpModifier;
 import com.jetbrains.php.lang.psi.elements.impl.*;
-import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
@@ -158,7 +156,7 @@ public class ArgRes extends Lang
 
         return Tls.cast(MethodImpl.class, func)
             // if caret is inside this function, when passed args are unknown
-            .flt(a -> trace.getArgCnt() == 0)
+            .flt(a -> !trace.hasArgs())
             .flt(a -> func.getParameters().length > 0)
             .flt(meth -> meth.getAccess() == PhpModifier.Access.PRIVATE)
             .map(meth -> {
@@ -246,7 +244,7 @@ public class ArgRes extends Lang
             .fch(mt -> result.types.addAll(mt.types))
             ;
         result.types.addAll(resolveFromDataProviderDoc(param).types);
-        if (trace.getArgCnt() == 0) {
+        if (!trace.hasArgs()) {
             // passed args not known - if caret was inside this function
             result.types.addAll(peekOutside(param).types);
         } else {

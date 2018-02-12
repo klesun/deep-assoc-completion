@@ -3,6 +3,7 @@ namespace Lib;
 
 use Lib\Utils\ArrayUtil;
 use Lib\Utils\Fp;
+use Lib\Utils\MemoizedFunctions;
 
 class UnitTest
 {
@@ -176,6 +177,44 @@ class UnitTest
         $unpacked = static::unpackList(['gds', 'profile', 'user', 'group', 'gds_profile', 'session_limit', 'idle_session_timeout'], $profiles);
         $row = $unpacked[0];
         $list[] = [$row, ['gds' => [], 'profile' => [], 'user' => [], 'group' => [], 'gds_profile' => [], 'session_limit' => [], 'idle_session_timeout' => []]];
+        return $list;
+    }
+
+    public static function fetchTdData(string $ticketDesignator)
+    {
+        return [
+            'is_published' => true,
+            'prefix' => substr($ticketDesignator, 0, 3),
+            'correct_cmd' => '$B:N',
+        ];
+    }
+
+    /**
+     * following not resolved yet
+     */
+
+    public static function provideCachedFuncCall()
+    {
+        $list = [];
+        $args = ['CHD054'];
+        $tdData1 = MemoizedFunctions::ramCachedFunctionCall(
+            'asd', [static::class, 'fetchTdData'], $args
+        );
+        $tdData1[''];
+//        $list[] = [$tdData1, ['is_published' => [], 'prefix' => [], 'correct_cmd' => []]];
+
+        $tdData2 = MemoizedFunctions::cachedFunctionCall(
+            'asd', [static::class, 'fetchTdData'], $args, 60*60
+        );
+        $tdData2[''];
+        $list[] = [$tdData2, ['is_published' => [], 'prefix' => [], 'correct_cmd' => []]];
+
+        $tdData3 = MemoizedFunctions::cachedBothWays(
+            [static::class, 'fetchTdData'], $args, 60*60
+        );
+        $tdData3[''];
+//        $list[] = [$tdData3, ['is_published' => [], 'prefix' => [], 'correct_cmd' => []]];
+
         return $list;
     }
 }
