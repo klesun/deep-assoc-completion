@@ -6,10 +6,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
-import com.jetbrains.php.lang.psi.elements.Function;
-import com.jetbrains.php.lang.psi.elements.FunctionReference;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.PhpModifier;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
@@ -19,6 +16,8 @@ import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
+
+import javax.annotation.Nullable;
 
 public class ArgRes extends Lang
 {
@@ -126,9 +125,9 @@ public class ArgRes extends Lang
 
     // $getAirline = function($seg){return $seg['airline'];};
     // array_map($getAirline, $segments);
-    private Opt<MultiType> getFuncVarUsageArg(FunctionImpl clos, int argOrderInLambda)
+    private Opt<MultiType> getFuncVarUsageArg(PsiElement closEpxr, int argOrderInLambda)
     {
-        return opt(clos.getParent())
+        return opt(closEpxr)
             .map(expr -> expr.getParent())
             .fop(toCast(AssignmentExpressionImpl.class))
             .fop(ass -> opt(ass.getParent())
@@ -148,6 +147,7 @@ public class ArgRes extends Lang
                 .map(mts -> new MultiType(mts.fap(mt -> mt.types))));
     }
 
+    // $result = static::doSomething($args);
     private Opt<MultiType> getPrivateFuncUsageArg(FunctionImpl func, int argOrderInLambda)
     {
         // it would be nice to also infer arg type when function is
@@ -161,21 +161,40 @@ public class ArgRes extends Lang
             .flt(meth -> meth.getAccess() == PhpModifier.Access.PRIVATE)
             .map(meth -> {
                 PsiFile file = func.getContainingFile();
-                return L(PsiTreeUtil.findChildrenOfType(file, MethodReferenceImpl.class))
-                    .flt(call -> meth.getName().equals(call.getName()));
+                return list(
+                    L(PsiTreeUtil.findChildrenOfType(file, MethodReferenceImpl.class))
+                        .flt(call -> meth.getName().equals(call.getName()))
+                        .fop(call -> L(call.getParameters()).gat(argOrderInLambda))
+                        .fop(toCast(PhpExpression.class))
+                        .map(arg -> new FuncCtx(trace.getSearch()).findExprType(arg))
+                        .fap(mt -> mt.types),
+                    L(PsiTreeUtil.findChildrenOfType(file, ArrayCreationExpressionImpl.class))
+                        .flt(arr -> arr.getChildren().length == 2
+                                && L(arr.getChildren()).gat(0)
+                                    .flt(psi -> psi.getText().equals("$this")
+                                            || psi.getText().equals("self::class")
+                                            || psi.getText().equals("static::class"))
+                                    .has()
+                                && L(arr.getChildren()).gat(1).map(psi -> psi.getFirstChild())
+                                    .fop(toCast(StringLiteralExpression.class))
+                                    .flt(str -> str.getContents().equals(meth.getName()))
+                                    .has())
+                        .fop(arr -> Opt.fst(list(
+                            new ArgRes(new FuncCtx(trace.getSearch()))
+                                .getInlineFuncArg(arr, argOrderInLambda),
+                            new ArgRes(new FuncCtx(trace.getSearch()))
+                                .getFuncVarUsageArg(arr, argOrderInLambda)
+                        )))
+                        .fap(mt -> mt.types)
+                ).fap(a -> a);
             })
-            .map(calls -> calls
-                .fop(call -> L(call.getParameters()).gat(argOrderInLambda))
-                .fop(toCast(PhpExpression.class))
-                .map(arg -> new FuncCtx(trace.getSearch()).findExprType(arg))
-                .fap(mt -> mt.types)
-                .wap(types -> new MultiType(types)));
+            .map(types -> new MultiType(types));
     }
 
     // array_map(function($seg){return $seg['airline'];}, $segments);
-    private Opt<MultiType> getInlineFuncArg(FunctionImpl clos, int argOrderInLambda)
+    private Opt<MultiType> getInlineFuncArg(@Nullable PsiElement funcExpr, int argOrderInLambda)
     {
-        return opt(clos.getParent())
+        return opt(funcExpr)
             .fop(toCast(PhpExpression.class))
             .fop(call -> getArgPassedTo(call, argOrderInLambda));
     }
@@ -187,8 +206,8 @@ public class ArgRes extends Lang
             .fop(toCast(FunctionImpl.class)) // closure
             .fop(clos -> getArgOrder(param)
                 .fop(order -> Opt.fst(list(opt(null)
-                    , getInlineFuncArg(clos, order)
-                    , getFuncVarUsageArg(clos, order)
+                    , getInlineFuncArg(clos.getParent(), order)
+                    , getFuncVarUsageArg(clos.getParent(), order)
                     , getPrivateFuncUsageArg(clos, order)
                 ))))
             .def(MultiType.INVALID_PSI)

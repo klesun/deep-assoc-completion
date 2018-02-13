@@ -82,7 +82,6 @@ public class ArrCtorRes extends Lang
             .flt(psi -> !(psi instanceof ArrayHashElement));
 
         resolveMethodFromArray(orderedParams)
-            // TODO: think of a way how to pass args here
             .map(meth -> MethCallRes.findMethRetType(meth))
             .thn(retTypeGetter -> {
                 arrayType.returnTypeGetters.add(retTypeGetter);

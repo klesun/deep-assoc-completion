@@ -1618,6 +1618,23 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private function providePrivateIndirectPeekOutside(array $pax)
+    {
+        $list = [];
+        $pax['']; // should suggest keys determined from usage
+        $list[] = [$pax, ['name' => [], 'salary' => [], 'experience' => []]];
+        return $list;
+    }
+
+    public function parseManyDenyaEmployees(array $pax)
+    {
+        $paxes = [
+            ['name' => 'Denya', 'salary' => '15.00', 'experience' => '89%'],
+            ['name' => 'Ilja', 'salary' => '15.50', 'experience' => '91%'],
+        ];
+        $transformed = array_map([self::class, 'providePrivateIndirectPeekOutside'], $paxes);
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
