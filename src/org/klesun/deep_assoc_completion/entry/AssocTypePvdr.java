@@ -1,5 +1,7 @@
 package org.klesun.deep_assoc_completion.entry;
 
+import com.intellij.openapi.diagnostic.ControlFlowException;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.patterns.PlatformPatterns;
@@ -23,6 +25,7 @@ import org.klesun.lang.Tls;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class AssocTypePvdr extends Lang implements PhpTypeProvider3
 {
@@ -63,10 +66,25 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         SearchContext search = new SearchContext().setDepth(35).setDebug(false);
         FuncCtx funcCtx = new FuncCtx(search);
 
-        @Nullable PhpType result = Tls.cast(PhpExpression.class, psi)
-            .map(exp -> funcCtx.findExprType(exp))
-            .map(mt -> mt.getIdeaType())
-            .def(null);
+        @Nullable PhpType result = null;
+        try {
+            result = Tls.cast(PhpExpression.class, psi)
+                .map(exp -> funcCtx.findExprType(exp))
+                .map(mt -> mt.getIdeaType())
+                .def(null);
+        } catch (Throwable exc) {
+            // throwing some exceptions further would cause class to become undefined
+            L<Class> allowedExceptions = list(ControlFlowException.class);
+            if (allowedExceptions.any(excCls -> exc.getClass().isAssignableFrom(excCls))) {
+                throw exc;
+            } else {
+                String msg = "Unexpected exception in deep-assoc-completion plugin - " + exc.getClass() + " while resolving " + psi.getText() + " " + psi.getClass() + " " + opt(psi.getContainingFile()).map(f -> f.getName()).def("(no file)") + " :" + psi.getTextOffset();
+                com.intellij.openapi.diagnostic.Logger.getInstance(getClass()).debug(msg, exc);
+                System.out.println(msg + "\n" + Tls.getStackTrace(exc));
+                // it would also be nice to email such cases to me somehow...
+                return null;
+            }
+        }
 
         long elapsed = System.nanoTime() - startTime;
         double seconds = elapsed / 1000000000.0;
