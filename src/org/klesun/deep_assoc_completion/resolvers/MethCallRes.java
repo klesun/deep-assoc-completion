@@ -23,6 +23,7 @@ import org.klesun.lang.Tls;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class MethCallRes extends Lang
 {
@@ -66,9 +67,10 @@ public class MethCallRes extends Lang
     {
         DeepType parsedType = new DeepType(strType.definition, PhpType.ARRAY);
         String sql = opt(strType.stringValue).def("");
+        int regexFlags = Pattern.DOTALL | Pattern.CASE_INSENSITIVE;
         Opt<L<String>> matched = Opt.fst(list(
-            Tls.regex("SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql),
-            Tls.regex("SELECT\\s+(\\S.*)", sql) // partial SQL without FROM
+            Tls.regex("SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql, regexFlags),
+            Tls.regex("SELECT\\s+(\\S.*)", sql, regexFlags) // partial SQL without FROM
         ));
         matched.fap(matches -> {
             L<String> fields = L(matches.gat(0).def("").split(",", -1));
@@ -78,7 +80,7 @@ public class MethCallRes extends Lang
                     if (f.equals("*")) {
                         return getTableColumns(table, project);
                     } else {
-                        return Tls.regex("(\\S+.*?\\.)?(\\S+\\s+[aA][sS]\\s+)?(\\S+)", f)
+                        return Tls.regex("(\\S+.*?\\.)?(\\S+\\s+AS\\s+)?(\\S+)", f, regexFlags)
                             .fop(m -> m.gat(2))
                             .fap(a -> list(a));
                     }

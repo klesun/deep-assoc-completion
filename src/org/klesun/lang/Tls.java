@@ -80,10 +80,10 @@ public class Tls extends Lang
      * be careful, java's regex implementation matches WHOLE string, in other
      * words, it implicitly adds "^" and "$" at beginning and end of your regex
      */
-    public static Opt<L<String>> regex(String patternText, String subjectText)
+    public static Opt<L<String>> regex(String patternText, String subjectText, int flags)
     {
         List<String> result = list();
-        Pattern pattern = Pattern.compile(patternText, Pattern.DOTALL);
+        Pattern pattern = Pattern.compile(patternText, flags);
         Matcher matcher = pattern.matcher(subjectText);
         if (matcher.matches()) {
             for (int i = 1; i < matcher.groupCount() + 1; ++i) {
@@ -93,6 +93,11 @@ public class Tls extends Lang
         } else {
             return opt(null);
         }
+    }
+
+    public static Opt<L<String>> regex(String patternText, String subjectText)
+    {
+        return regex(patternText, subjectText, Pattern.DOTALL);
     }
 
     /** make object string representation _approximately_ resembling json for debug */

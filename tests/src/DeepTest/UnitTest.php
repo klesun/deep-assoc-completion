@@ -1653,6 +1653,18 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         ]]);
     }
 
+    public function providePdoSqlLowerCaseSelect()
+    {
+        $list = [];
+        $connection = new \PDO();
+        $sql = 'select id, cmd_performed, dt from terminal_command_log order by id desc limit 1;';
+        $stmt = $connection->query($sql);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result[''];
+        $list[] = [$result, ['id' => [], 'cmd_performed' => [], 'dt' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
