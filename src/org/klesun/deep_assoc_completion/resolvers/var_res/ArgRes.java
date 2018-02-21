@@ -78,6 +78,8 @@ public class ArgRes extends Lang
             // TODO: remove Fp-specific functions once resolveArgCallArrKeys() supports built-ins
             if (MethCallRes.nameIs(call, "Fp", "map") ||
                 MethCallRes.nameIs(call, "Fp", "filter") ||
+                MethCallRes.nameIs(call, "Fp", "any") ||
+                MethCallRes.nameIs(call, "Fp", "all") ||
                 MethCallRes.nameIs(call, "Fp", "sortBy")
             ) {
                 return L(call.getParameters()).gat(1)
