@@ -1635,6 +1635,24 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $transformed = array_map([self::class, 'providePrivateIndirectPeekOutside'], $paxes);
     }
 
+    public static function providePseudoPrivateFuncArgCompletion($pccRows)
+    {
+        $list = [];
+        $list[] = [$pccRows[0], ['pcc' => [], 'is_tour' => []]];
+        return $list;
+    }
+
+    public function executePccReprice()
+    {
+        $result = static::providePseudoPrivateFuncArgCompletion([[
+            'pcc' => 'KL33',
+            'is_tour' => true,
+        ], [
+            'pcc' => 'KL35',
+            'is_tour' => false,
+        ]]);
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

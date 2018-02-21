@@ -33,13 +33,6 @@ public class MethCallRes extends Lang
         this.ctx = ctx;
     }
 
-    private MultiType findPsiExprType(PsiElement psi)
-    {
-        return Tls.cast(PhpExpression.class, psi)
-            .map(casted -> ctx.findExprType(casted))
-            .def(new MultiType(L()));
-    }
-
     public static boolean nameIs(MethodReferenceImpl call, String cls, String mth)
     {
         String callCls = opt(call.getClassReference())

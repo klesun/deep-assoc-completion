@@ -110,7 +110,8 @@ public class ArgRes extends Lang
                                 , L(call.multiResolve(false))
                                     .fop(res -> opt(res.getElement()))
                                     .fop(toCast(Function.class))
-                                    .map(func -> new KeyUsageResolver(subCtx, 3).resolveArgCallArrKeys(func, funcVarOrder, caretArgOrder))
+                                    .map(func -> new KeyUsageResolver(subCtx, 3)
+                                        .resolveArgCallArrKeys(func, funcVarOrder, caretArgOrder))
                                     .fap(mt -> mt.types)
                                     .wap(types -> opt(new MultiType(types)))
                             ));
@@ -158,7 +159,6 @@ public class ArgRes extends Lang
             // if caret is inside this function, when passed args are unknown
             .flt(a -> !trace.hasArgs())
             .flt(a -> func.getParameters().length > 0)
-            .flt(meth -> meth.getAccess() == PhpModifier.Access.PRIVATE)
             .map(meth -> {
                 PsiFile file = func.getContainingFile();
                 return list(
