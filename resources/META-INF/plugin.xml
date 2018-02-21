@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.02.13.002</version>
+    <version>2018.02.22.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,9 +29,8 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-      <li>Hotfix: Catch and ignore any exception in AssocTypePvdr.java since they are pretty random and can make class unresolvable</li>
-      <li>Provide arg completion inside private func even if it is called this way: array_map([$this, 'doSomething'], $values)</li>
-      <li>Optimize: do not resolve string value of a key if array does not have keys with known names</li>
+      <li>Support SQL in any case</li>
+      <li>Provide func arg usage-based completion even if it is not private</li>
     </ul>
     ]]>
     </change-notes>

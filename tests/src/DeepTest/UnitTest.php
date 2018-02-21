@@ -1665,6 +1665,23 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function providePrivateFuncArgFromArrayMap($person)
+    {
+        $list = [];
+        $person[''];
+        $list[] = [$person, ['height' => [], 'gender' => [], 'dream' => []]];
+        return $list;
+    }
+
+    public function executePersonMapping()
+    {
+        $persons = [
+            ['height' => 181, 'gender' => 'male', 'dream' => 'a can of beer'],
+            ['height' => 161, 'gender' => 'female', 'dream' => 'great wedding'],
+        ];
+        return array_map([static::class, 'providePrivateFuncArgFromArrayMap'], $persons);
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
