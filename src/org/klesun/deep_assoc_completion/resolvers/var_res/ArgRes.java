@@ -165,6 +165,9 @@ public class ArgRes extends Lang
                 return list(
                     L(PsiTreeUtil.findChildrenOfType(file, MethodReferenceImpl.class))
                         .flt(call -> meth.getName().equals(call.getName()))
+                        .flt(call -> opt(call.getClassReference()).map(ref -> ref.getText())
+                            .flt(txt -> txt.equals("$this") || txt.equals("self") || txt.equals("static"))
+                            .has())
                         .fop(call -> L(call.getParameters()).gat(argOrderInLambda))
                         .fop(toCast(PhpExpression.class))
                         .map(arg -> new FuncCtx(trace.getSearch()).findExprType(arg))
