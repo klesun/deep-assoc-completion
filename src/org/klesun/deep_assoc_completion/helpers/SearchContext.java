@@ -37,6 +37,12 @@ public class SearchContext extends Lang
         return this;
     }
 
+    public SearchContext setMaxExpressions(int maxExpressions)
+    {
+        this.maxExpressions = maxExpressions;
+        return this;
+    }
+
     public SearchContext setDebug(boolean debug)
     {
         this.debug = debug;
