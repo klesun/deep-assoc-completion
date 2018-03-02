@@ -1682,6 +1682,24 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return array_map([static::class, 'providePrivateFuncArgFromArrayMap'], $persons);
     }
 
+    public function provideArrayAdd()
+    {
+        $humanRights = [
+            'toTrust' => 'your friends',
+            'toLove' => 'your family',
+            'toHate' => 'your chef',
+        ];
+        $citizenRights = [
+            'toAttend' => 'school',
+            'toVote' => 'for anyone bust honest guys',
+            'toPreserveSilence' => 'when there is nothing to say',
+        ];
+        $merged = $humanRights + $citizenRights;
+        $merged[''];
+        $list[] = [$merged, ['toTrust' => [], 'toLove' => [], 'toHate' => [], 'toAttend' => [], 'toVote' => [], 'toPreserveSilence' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

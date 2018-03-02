@@ -50,7 +50,7 @@ public class MiscRes extends Lang
                     ).collect(Collectors.toList())))
             , Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
-                    .flt(op -> op.getText().equals("+") || op.getText().equals("-")
+                    .flt(op -> op.getText().equals("-")
                         || op.getText().equals("*") || op.getText().equals("/")
                         || op.getText().equals("%") || op.getText().equals("**")
                     )
@@ -58,6 +58,21 @@ public class MiscRes extends Lang
                         DeepType type = new DeepType(bin, PhpType.NUMBER);
                         type.isNumber = true;
                         return list(type);
+                    }))
+            , Tls.cast(BinaryExpressionImpl.class, expr)
+                .fop(bin -> opt(bin.getOperation())
+                    .flt(op -> op.getText().equals("+"))
+                    .map(op -> {
+                        MultiType lmt = findPsiExprType(bin.getLeftOperand());
+                        MultiType rmt = findPsiExprType(bin.getRightOperand());
+                        L<DeepType> types = L();
+                        if (lmt.types.cct(rmt.types).any(t -> t.isNumber())) {
+                            types.add(new DeepType(bin, PhpType.NUMBER));
+                        } else {
+                            types.addAll(lmt.types);
+                            types.addAll(rmt.types);
+                        }
+                        return types;
                     }))
             , Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
