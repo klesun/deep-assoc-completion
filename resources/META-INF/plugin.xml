@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.02.22.001</version>
+    <version>2018.02.23.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,6 +29,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
+      <li>Bugfix: do not mistake methods with same name for current class methods in Func Usage Based arg inference</li>
       <li>Support SQL in any case</li>
       <li>Provide func arg usage-based completion even if it is not private</li>
     </ul>
