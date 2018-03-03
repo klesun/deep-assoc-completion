@@ -5,6 +5,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.NonNull;
+import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.*;
@@ -188,5 +189,10 @@ public class MultiType extends Lang
     public boolean isInt()
     {
         return types.any(t -> t.isNumber());
+    }
+
+    public L<FuncCtx> getArgsPassedToCtor()
+    {
+        return types.fop(t -> t.ctorArgs);
     }
 }

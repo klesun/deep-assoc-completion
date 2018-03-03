@@ -189,6 +189,22 @@ class UnitTest
         ];
     }
 
+    public static function provideValPassedToObjCtor()
+    {
+        $result = Result::makeError(new \Exception('asd'));
+        if (rand() % 2) {
+            $result = Result::makeOk(['a' => 5, 'b' => 6]);
+        } elseif (rand() % 3) {
+            $result = Result::makeOk(['e' => 5, 'f' => 6]);
+        }
+        $result->result[''];
+        $list[] = [$result->result, ['a' => [], 'b' => [], 'e' => [], 'f' => []]];
+        $unwrapped = $result->unwrap();
+        $unwrapped[''];
+        $list[] = [$unwrapped, ['a' => [], 'b' => [], 'e' => [], 'f' => []]];
+        return $list;
+    }
+
     /**
      * following not resolved yet
      */

@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
+import com.jetbrains.php.lang.psi.elements.impl.NewExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.TernaryExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -85,6 +86,8 @@ public class MiscRes extends Lang
                         DeepType type = new DeepType(bin, PhpType.STRING, unescaped);
                         return list(type);
                     }))
+            , Tls.cast(NewExpressionImpl.class, expr)
+                .map(newExp -> list(new DeepType(newExp, ctx.subCtxDirect(newExp))))
             , Tls.cast(PhpExpression.class, expr)
                 .map(t -> list(new DeepType(t)))
 //            , Tls.cast(ConstantReferenceImpl.class, expr)

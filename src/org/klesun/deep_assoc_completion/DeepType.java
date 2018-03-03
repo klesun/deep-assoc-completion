@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.*;
@@ -31,6 +32,7 @@ public class DeepType extends Lang
     // list of functions that take arg list and return list of return types
     public final L<F<FuncCtx, L<DeepType>>> returnTypeGetters = L();
     public final L<DeepType> pdoTypes = L();
+    public Opt<FuncCtx> ctorArgs = opt(null);
     public final @Nullable String stringValue;
     public final PsiElement definition;
     public final PhpType briefType;
@@ -76,6 +78,12 @@ public class DeepType extends Lang
     {
         this(numPsi, numPsi.getType(), "" + number);
         this.isNumber = true;
+    }
+
+    public DeepType(PhpExpression numPsi, FuncCtx ctorArgs)
+    {
+        this(numPsi, numPsi.getType(), null);
+        this.ctorArgs = opt(ctorArgs);
     }
 
     public L<DeepType> getReturnTypes(FuncCtx ctx)

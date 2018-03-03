@@ -1,8 +1,7 @@
 package org.klesun.deep_assoc_completion.helpers;
 
 import com.intellij.psi.PsiElement;
-import com.jetbrains.php.lang.psi.elements.FunctionReference;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
@@ -12,8 +11,6 @@ import org.klesun.lang.Tls;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
 /** a node in called function stack trace with args */
 public class FuncCtx extends Lang
@@ -24,6 +21,7 @@ public class FuncCtx extends Lang
     final private Opt<PsiElement> uniqueRef;
     final private SearchContext search;
     final private L<Lang.S<MultiType>> argGetters;
+    public Opt<Lang.S<MultiType>> instGetter = opt(null);
     final private EArgPsiType argPsiType;
 
     private HashMap<Integer, MultiType> cachedArgs = new HashMap<>();
@@ -83,7 +81,25 @@ public class FuncCtx extends Lang
     }
 
     /** when you simply call function */
+    public FuncCtx subCtxDirect(MethodReference funcCall)
+    {
+        FuncCtx self = subCtxDirectGeneric(funcCall);
+        self.instGetter = opt(funcCall.getClassReference())
+            .map(obj -> () -> findExprType(obj));
+        return self;
+    }
+
     public FuncCtx subCtxDirect(FunctionReference funcCall)
+    {
+        return subCtxDirectGeneric(funcCall);
+    }
+
+    public FuncCtx subCtxDirect(NewExpression funcCall)
+    {
+        return subCtxDirectGeneric(funcCall);
+    }
+
+    public FuncCtx subCtxDirectGeneric(ParameterListOwner funcCall)
     {
         L<PsiElement> psiArgs = L(funcCall.getParameters());
         L<S<MultiType>> argGetters = psiArgs.map((psi) -> () -> Tls.cast(PhpExpression.class, psi)
