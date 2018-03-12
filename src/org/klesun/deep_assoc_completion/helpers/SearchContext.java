@@ -22,6 +22,7 @@ public class SearchContext extends Lang
     // max expressions per single search - guard
     // against memory overflow in circular references
     private int maxExpressions = 10000;
+    private Opt<Double> timeout = opt(null);
     // for performance measurement
     private int expressionsResolved = 0;
     final public L<PhpExpression> psiTrace = L();
@@ -34,6 +35,12 @@ public class SearchContext extends Lang
     public SearchContext setDepth(int depth)
     {
         this.depth = initialDepth = depth;
+        return this;
+    }
+
+    public SearchContext setTimeout(double timeout)
+    {
+        this.timeout = opt(timeout);
         return this;
     }
 
@@ -123,6 +130,9 @@ public class SearchContext extends Lang
         } else if (++expressionsResolved > maxExpressions) {
             /** @debug */
             System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
+            return opt(null);
+        } else if (timeout.flt(tout -> seconds > tout).has()) {
+            System.out.println(indent + "## Timed out " + seconds);
             return opt(null);
         }
         --depth;

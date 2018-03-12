@@ -64,6 +64,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         // Type Provider is called at random points of time breaking
         // my recursive formatting in STDOUT, so always setDebug(false)
         SearchContext search = new SearchContext().setDepth(15)
+            .setTimeout(0.1)
             .setMaxExpressions(1000).setDebug(false);
         FuncCtx funcCtx = new FuncCtx(search);
 
