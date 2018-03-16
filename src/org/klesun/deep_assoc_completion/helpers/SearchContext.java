@@ -132,7 +132,9 @@ public class SearchContext extends Lang
             System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
             return opt(null);
         } else if (timeout.flt(tout -> seconds > tout).has()) {
-            System.out.println(indent + "## Timed out " + seconds);
+            String fileText = expr.getContainingFile().getText();
+            int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
+            System.out.println(indent + "## Timed out " + seconds + " " + expr.getClass() + " " + Tls.singleLine(expr.getText(), 50) + " " + expr.getContainingFile().getName() + ":" + phpLineNum);
             return opt(null);
         }
         --depth;

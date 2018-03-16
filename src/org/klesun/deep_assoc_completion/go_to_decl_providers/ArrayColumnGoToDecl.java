@@ -8,6 +8,7 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
@@ -39,7 +40,8 @@ public class ArrayColumnGoToDecl extends Lang implements GotoDeclarationHandler
     @Override
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
-        SearchContext search = new SearchContext().setDepth(35);
+        SearchContext search = new SearchContext()
+            .setDepth(DeepKeysPvdr.getMaxDepth(false));
         FuncCtx funcCtx = new FuncCtx(search);
 
         L<PsiElement> psiTargets = opt(psiElement)

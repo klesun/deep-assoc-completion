@@ -27,6 +27,11 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
     final private static int BRIEF_TYPE_MAX_LEN = 50;
 
+    public static int getMaxDepth(boolean isAutoPopup)
+    {
+        return isAutoPopup ? 25 : 40;
+    }
+
     private static InsertHandler<LookupElement> makeInsertHandler()
     {
         return (ctx, lookup) -> {
@@ -97,7 +102,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        SearchContext search = new SearchContext().setDepth(35);
+        int depth = getMaxDepth(parameters.isAutoPopup());
+        SearchContext search = new SearchContext().setDepth(depth);
         FuncCtx funcCtx = new FuncCtx(search);
 
         Set<String> suggested = new HashSet<>();

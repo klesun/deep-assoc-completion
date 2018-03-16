@@ -56,7 +56,8 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        SearchContext search = new SearchContext();
+        SearchContext search = new SearchContext()
+            .setDepth(DeepKeysPvdr.getMaxDepth(parameters.isAutoPopup()));
         FuncCtx funcCtx = new FuncCtx(search);
 
         long startTime = System.nanoTime();
