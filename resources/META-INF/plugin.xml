@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.03.16.001</version>
+    <version>2018.03.18.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,6 +29,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
+        <li>Provide completion in Laravel Model instantiation based on class properties. Like in `new App\Comment(['message' => 'A new comment.'])`</li>
         <li>Put smaller depth limit on auto-popup and bigger on explicit use action (Ctrl+B, Ctrl+Space, etc...)</li>
     </ul>
     ]]>

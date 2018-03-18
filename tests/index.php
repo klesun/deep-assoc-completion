@@ -529,6 +529,14 @@ class DeepKeysTest
         $allBooksAreCheap = Fp::all($isCheep, $books);
     }
 
+    private static function testLaravelModelCtorParams()
+    {
+        $competitor = new \App\Orm\Competitor([
+            // should suggest: id, created_at, updated_at, spice_left
+            '' => 123,
+        ]);
+    }
+
     //============================
     // not implemented follow
     //============================

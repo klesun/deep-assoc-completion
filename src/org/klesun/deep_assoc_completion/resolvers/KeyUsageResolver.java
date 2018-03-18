@@ -10,6 +10,9 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * takes associative array that caret points at and returns
  * all key names that will be accessed on this array later
@@ -49,12 +52,12 @@ public class KeyUsageResolver extends Lang
                 .map(varUsage -> acc.getIndex()));
     }
 
-    public L<String> resolveArgUsedKeys(Function meth, int argOrder)
+    public L<String> resolveArgUsedKeys(Function meht, int argOrder)
     {
-        return L(meth.getParameters()).gat(argOrder)
+        return L(meht.getParameters()).gat(argOrder)
             .fop(toCast(ParameterImpl.class))
             .map(arg -> list(
-                findUsedIndexes(meth, arg.getName())
+                findUsedIndexes(meht, arg.getName())
                     .map(idx -> idx.getValue())
                     .fop(toCast(StringLiteralExpressionImpl.class))
                     .map(lit -> lit.getContents()),
@@ -108,6 +111,34 @@ public class KeyUsageResolver extends Lang
             ).flt(varUsage -> caretVar.getName().equals(varUsage.getName())));
     }
 
+    // add completion from new SomeClass() that depends
+    // on class itself, not on the constructor function
+    private L<String> findClsMagicCtorUsedKeys(NewExpressionImpl newEx, int order)
+    {
+        return opt(newEx.getClassReference())
+            .map(ref -> ref.resolve())
+            .fop(clsPsi -> Opt.fst(list(
+                Tls.cast(Method.class, clsPsi).map(m -> m.getContainingClass()), // class has own constructor
+                Tls.cast(PhpClass.class, clsPsi) // class does not have an own constructor
+            )))
+            // Laravel's Model takes array of initial column values in constructor
+            .flt(cls -> order == 0)
+            .fap(cls -> {
+                L<PhpClass> supers = L(cls.getSupers());
+                boolean isModel = supers.any(sup -> sup.getFQN()
+                    .equals("\\Illuminate\\Database\\Eloquent\\Model"));
+                if (!isModel) {
+                    return list();
+                } else {
+                    Set<String> inherited = new HashSet<>(supers.fap(s -> L(s.getOwnFields()).map(f -> f.getName())));
+                    return L(cls.getOwnFields())
+                        .flt(fld -> !fld.getModifier().isPrivate())
+                        .flt(fld -> !inherited.contains(fld.getName()))
+                        .map(fld -> fld.getName());
+                }
+            });
+    }
+
     private L<String> findKeysUsedOnExpr(PhpExpression arrCtor)
     {
         return opt(arrCtor.getParent())
@@ -115,12 +146,16 @@ public class KeyUsageResolver extends Lang
             .fap(argList -> {
                 int order = L(argList.getParameters()).indexOf(arrCtor);
                 return resolveFunc(argList)
+                    .thn(asd -> System.out.println("resolved func " + asd.getClass() + " " + asd.getName()))
                     .fap(meth -> list(
                         resolveArgUsedKeys(meth, order),
                         opt(meth.getName())
                             .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
                             .fap(n -> resolveReplaceKeys(argList, order))
-                    ).fap(a -> a));
+                    ).fap(a -> a))
+                    .cct(opt(argList.getParent())
+                        .fop(toCast(NewExpressionImpl.class))
+                        .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order)));
             });
     }
 
