@@ -1,11 +1,16 @@
 package org.klesun.lang;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.PhpCaches;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -179,5 +184,26 @@ public class Tls extends Lang
     public static boolean isNum(String str)
     {
         return regex("^\\d+$", str).has();
+    }
+
+    /**
+     * get built-in type, refresh cache if empty
+     * (with advanced type resolver this time)
+     */
+    public static PhpType getIdeaType(PhpExpression exp)
+    {
+        PhpType type = exp.getType();
+        if (type.filterMixed().filterUnknown().filterNull().isEmpty()) {
+            //try {
+            //    Project project = exp.getProject();
+            //    Map<PsiElement, PhpType> typeCache = PhpCaches.getInstance(project).TYPE_CACHE;
+            //    typeCache.remove(exp);
+            //    type = exp.getType(); // triggering type provider again, with Deep this time
+            //} catch (Throwable exc) {
+            //    System.out.println("got an exception when trying to refresh cached expression type " +
+            //        exc.getClass() + " " + exc.getMessage() + " " + exp.getClass() + " " + exp.getText());
+            //}
+        }
+        return type;
     }
 }

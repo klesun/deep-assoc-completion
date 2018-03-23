@@ -94,7 +94,7 @@ public class ArrCtorRes extends Lang
                 // i believe this is likely to change in future - so we try both cases
                 .elf(() -> opt(valuePsi.getFirstChild()).fop(toCast(PhpExpression.class)))
                 .thn(val -> arrayType.addKey(i + "", val)
-                    .addType(() -> ctx.findExprType(val), val.getType())));
+                    .addType(() -> ctx.findExprType(val), Tls.getIdeaType(val))));
 
         // keyed elements
         L(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
@@ -107,7 +107,7 @@ public class ArrCtorRes extends Lang
                     .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
                     .thn(keyStrValues -> {
                         if (keyStrValues.size() > 0) {
-                            keyStrValues.fch(key -> arrayType.addKey(key, keyRec).addType(getType, v.getType()));
+                            keyStrValues.fch(key -> arrayType.addKey(key, keyRec).addType(getType, Tls.getIdeaType(v)));
                         } else {
                             arrayType.anyKeyElTypes.addAll(getType.get().types);
                         }

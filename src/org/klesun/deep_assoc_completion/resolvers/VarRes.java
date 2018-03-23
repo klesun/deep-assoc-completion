@@ -72,7 +72,7 @@ public class VarRes extends Lang
                 return args.gat(1)
                     .flt(asd -> isCaretArr)
                     .fop(Tls.toCast(PhpExpression.class))
-                    .map(el -> new Assign(keys, () -> ctx.findExprType(el), false, el, el.getType()));
+                    .map(el -> new Assign(keys, () -> ctx.findExprType(el), false, el, Tls.getIdeaType(el)));
             });
     }
 

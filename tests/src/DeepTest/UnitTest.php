@@ -1025,6 +1025,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         ];
         $storRecord['stor']->mainPerson;
 
+        $storRecord['stor']->mainPerson[''];
         $list[] = [$storRecord['stor']->mainPerson, ['name' => [], 'age' => []]];
         return $list;
     }

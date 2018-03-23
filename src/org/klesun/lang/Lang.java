@@ -449,6 +449,9 @@ public class Lang
 
         public L<T> sub(int start, int length)
         {
+            if (length < 0) {
+                length = this.size() - start + length;
+            }
             L<T> subList = new L<>();
             int ceil = Math.min(start + length, this.size());
             for (int i = start; i < ceil; ++i) {

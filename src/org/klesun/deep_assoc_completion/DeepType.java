@@ -40,7 +40,7 @@ public class DeepType extends Lang
     final public boolean isExactPsi;
     public boolean hasIntKeys = false;
 
-    public DeepType(PsiElement definition, PhpType briefType, String stringValue, boolean isExactPsi)
+    private DeepType(PsiElement definition, PhpType briefType, String stringValue, boolean isExactPsi)
     {
         this.definition = definition;
         this.briefType = briefType;
@@ -66,23 +66,24 @@ public class DeepType extends Lang
 
     public DeepType(PhpExpression definition)
     {
-        this(definition, definition.getType());
+        this(definition, Tls.getIdeaType(definition));
     }
 
     DeepType(StringLiteralExpressionImpl lit)
     {
-        this(lit, lit.getType(), lit.getContents());
+        this(lit, PhpType.STRING, lit.getContents());
     }
 
     public DeepType(PhpExpressionImpl numPsi, Integer number)
     {
-        this(numPsi, numPsi.getType(), "" + number);
+        this(numPsi, PhpType.INT, "" + number);
         this.isNumber = true;
     }
 
-    public DeepType(PhpExpression numPsi, FuncCtx ctorArgs)
+    /** new object creation */
+    public DeepType(PhpExpression newExp, FuncCtx ctorArgs)
     {
-        this(numPsi, numPsi.getType(), null);
+        this(newExp, newExp.getType(), null);
         this.ctorArgs = opt(ctorArgs);
     }
 

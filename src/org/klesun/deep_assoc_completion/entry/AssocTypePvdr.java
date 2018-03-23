@@ -1,20 +1,22 @@
 package org.klesun.deep_assoc_completion.entry;
 
 import com.intellij.openapi.diagnostic.ControlFlowException;
+import com.intellij.openapi.graph.view.MouseInputEditor;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.popup.MouseChecker;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.parser.PhpElementTypes;
-import com.jetbrains.php.lang.psi.elements.PhpClass;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.PhpNamedElement;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.AssignmentExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import com.jetbrains.php.lang.psi.resolve.types.PhpTypeInfo;
 import com.jetbrains.php.lang.psi.resolve.types.PhpTypeProvider3;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_assoc_completion.go_to_decl_providers.TriggerObjTypeGoToDecl;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
@@ -23,6 +25,7 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import java.awt.*;
 import java.util.Collection;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -34,6 +37,41 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         // i dunno what that means, copy pasted from:
         // https://github.com/Haehnchen/idea-php-symfony2-plugin/blob/master/src/fr/adrienbrault/idea/symfony2plugin/doctrine/ObjectRepositoryResultTypeProvider.java
         return '\u0152';
+    }
+
+    private static String getPluginNameSpace()
+    {
+        // -2 - remove class name and /entry/ folder, keep org.klesun.deep_assoc_completion
+        L<String> dirChain = L(DeepKeysCbtr.class.getName().split("\\.")).sub(0, -2);
+        return Tls.implode(".", dirChain) + ".";
+    }
+
+    private boolean wasGoToDefinitionAsked(PsiElement psi)
+    {
+        // the slow implementation - with stack trace
+        // I think I should make some TypeRqService to
+        // get type everywhere so that you could ask it
+        // from here whether we are currently resolving this PSI type
+        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+        return list(trace).any(call -> call.getClassName().equals(TriggerObjTypeGoToDecl.class.getName()));
+    }
+
+    private boolean wasRequestedInCode(PsiElement psi)
+    {
+        // the slow implementation - with stack trace
+        // I think I should make some TypeRqService to
+        // get type everywhere so that you could ask it
+        // from here whether we are currently resolving this PSI type
+        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+        return list(trace).any(call -> {
+            if (call.getClassName().startsWith(getPluginNameSpace()) &&
+                !call.getClassName().equals(this.getClass().getName())
+            ) {
+                return true;
+            } else {
+                return false;
+            }
+        });
     }
 
     @Nullable
@@ -67,6 +105,21 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
             .setTimeout(0.1)
             .setMaxExpressions(1000).setDebug(false);
         FuncCtx funcCtx = new FuncCtx(search);
+
+        // since this type provider is so deep it can take hundreds of milliseconds
+        // we don't want that to happen on every expression on each file re-indexation,
+        // so let's do this only when user explicitly asks for completion from some particular expression
+        boolean isUnderCaret = opt(psi.getParent()).flt(p -> p.getText().contains("IntellijIdeaRulezzz")).has();
+        // this flag should be true when we get
+        // here from DeepKeysPvdr and others with exprPsi.getType()
+        boolean wasRequestedInCode = wasRequestedInCode(psi);
+        // should be true when user ctrl-clicks on a method
+        // should resolve class by any means, since it is explicit user action
+        boolean wasGoToDefinitionAsked = false; // wasGoToDefinitionAsked(psi);
+
+        if (!isUnderCaret && !wasRequestedInCode && !wasGoToDefinitionAsked) {
+            return null;
+        }
 
         @Nullable PhpType result = null;
         try {

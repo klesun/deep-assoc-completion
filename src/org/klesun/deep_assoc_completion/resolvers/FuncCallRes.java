@@ -137,7 +137,7 @@ public class FuncCallRes extends Lang
                                     ;
                                 if (refs.size() > 0) {
                                     PhpType briefType = new PhpType();
-                                    refs.map(var -> var.getType()).fch(briefType::add);
+                                    refs.map(var -> Tls.getIdeaType(var)).fch(briefType::add);
                                     arrt.addKey(varName, argPsi)
                                         .addType(() -> refs
                                             .fap(ref -> ctx.findExprType(ref).types)

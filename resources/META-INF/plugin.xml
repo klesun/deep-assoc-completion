@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.03.18.001</version>
+    <version>2018.03.23.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,6 +29,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
+        <li>#33 Prevent Type Provider from running in background. Only use it on a particular expression (instead of whole file) on explicit user action like Ctrl+Space, Ctrl+Click, etc... This should fix the problem of validation lagging for several seconds each time you change code</li>
         <li>Provide completion in Laravel Model instantiation based on class properties. Like in `new App\Comment(['message' => 'A new comment.'])`</li>
         <li>Put smaller depth limit on auto-popup and bigger on explicit use action (Ctrl+B, Ctrl+Space, etc...)</li>
     </ul>
@@ -43,10 +44,11 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.DeepKeysGoToDecl"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrayColumnGoToDecl"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrFuncRefGoToDecl"/>
+        <gotoDeclarationHandler order="first" implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.TriggerObjTypeGoToDecl"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.jetbrains.php">
-        <typeProvider3 implementation="org.klesun.deep_assoc_completion.entry.AssocTypePvdr"/>
+        <typeProvider3 order="last" implementation="org.klesun.deep_assoc_completion.entry.AssocTypePvdr"/>
     </extensions>
 
 
