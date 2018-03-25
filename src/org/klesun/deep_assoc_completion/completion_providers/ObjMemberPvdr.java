@@ -72,7 +72,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             .fop(toCast(MemberReference.class))
             .map(mem -> mem.getClassReference())
             .fap(ref -> {
-                if (!ref.getType().filterMixed().filter(PhpType.OBJECT).isEmpty()) {
+                if (!ref.getType().filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).isEmpty()) {
                     // IDEA resolved the class on it's own - no need for Deep resolution
                     return list();
                 } else {

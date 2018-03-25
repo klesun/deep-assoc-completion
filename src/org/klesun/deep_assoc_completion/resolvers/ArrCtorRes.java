@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.*;
@@ -29,8 +30,8 @@ public class ArrCtorRes extends Lang
     {
         return opt(expr)
             .map(xpr -> ctx.findExprType(xpr).getIdeaType())
-            .map(tpe -> L(tpe.filterMixed().filter(PhpType.OBJECT).getTypes())
-                .fap(clsPath -> L(PhpIndex.getInstance(expr.getProject()).getClassesByFQN(clsPath)))
+            .map(tpe -> L(tpe.filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).getTypes())
+                .fap(clsPath -> L(PhpIndex.getInstance(expr.getProject()).getAnyByFQN(clsPath)))
                 .fop(rvd -> opt(rvd)))
             .fop(clses -> clses.gat(0));
     }
@@ -60,7 +61,7 @@ public class ArrCtorRes extends Lang
                             ? Tls.findParent(clsPsi, PhpClass.class, a -> true)
                             : opt(null),
                         L(PhpIndex.getInstance(expr.getProject())
-                            .getClassesByFQN(clsName)).gat(0)
+                            .getAnyByFQN(clsName)).gat(0)
                     )))
             )));
     }
