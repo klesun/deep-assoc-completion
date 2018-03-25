@@ -24,11 +24,10 @@ import org.klesun.lang.Opt;
 import java.util.Map;
 
 /**
- * this is kind of fake Go To Decl handler, it should not
- * have any logic, I'll just use it to trigger the heavy AssocTypePvdr
- * which should be used only on explicit user action
+ * for cases when built-in Type Provider failed to determine
+ * class of object - try ourselves using the Deep Resolver
  */
-public class TriggerObjTypeGoToDecl extends Lang implements GotoDeclarationHandler
+public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandler
 {
     private L<? extends PsiElement> resolveMember(PhpClass cls, String name)
     {
@@ -42,34 +41,15 @@ public class TriggerObjTypeGoToDecl extends Lang implements GotoDeclarationHandl
     @Override
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
-        Project project = editor.getProject();
-        if (project == null) {
-            return new PsiElement[]{};
-        }
-
-        // gonna do a nasty thing - remove cache of object PSI if class was
-        // not resolved and resolve type again with my Type Provider this time
-        Map<PsiElement, PhpType> typeCache = PhpCaches.getInstance(project).TYPE_CACHE;
+        SearchContext search = new SearchContext()
+            .setDepth(DeepKeysPvdr.getMaxDepth(false));
+        FuncCtx funcCtx = new FuncCtx(search);
 
         L<? extends PsiElement> psiTargets = opt(psiElement)
             .map(leaf -> leaf.getParent())
             .fop(toCast(MemberReference.class))
-            .fap(mem -> opt(mem.getClassReference())
-                .fap(ref -> {
-                    PhpType objType = ref.getType().filterMixed().filterUnknown().filterNull().filterPrimitives();
-                    if (objType.isEmpty()) {
-                        typeCache.remove(ref);
-                        objType = ref.getType(); // triggering type provider again, with Deep this time
-                    }
-                    // does not work for some reason
-//                    return L(mem.multiResolve(false))
-//                        .fop(res -> opt(res.getElement()));
-
-                    return L(objType.filter(PhpType.OBJECT).getTypes())
-                        .fap(clsPath -> L(PhpIndex.getInstance(project).getClassesByFQN(clsPath)))
-                        // TODO: distinguish properties and methods
-                        .fap(cls -> resolveMember(cls, mem.getName()));
-                }));
+            .fap(mem -> new ArrCtorRes(funcCtx).resolveInstance(mem)
+                    .fap(cls -> resolveMember(cls, mem.getName())));
 
         return psiTargets.toArray(new PsiElement[psiTargets.size()]);
     }

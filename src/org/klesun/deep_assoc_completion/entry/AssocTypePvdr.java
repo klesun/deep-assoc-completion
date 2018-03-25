@@ -1,34 +1,23 @@
 package org.klesun.deep_assoc_completion.entry;
 
 import com.intellij.openapi.diagnostic.ControlFlowException;
-import com.intellij.openapi.graph.view.MouseInputEditor;
-import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.popup.MouseChecker;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.parser.PhpElementTypes;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
-import com.jetbrains.php.lang.psi.elements.impl.AssignmentExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import com.jetbrains.php.lang.psi.resolve.types.PhpTypeInfo;
 import com.jetbrains.php.lang.psi.resolve.types.PhpTypeProvider3;
 import org.jetbrains.annotations.Nullable;
-import org.klesun.deep_assoc_completion.go_to_decl_providers.TriggerObjTypeGoToDecl;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.go_to_decl_providers.DeepObjMemberGoToDecl;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
-import org.klesun.deep_assoc_completion.resolvers.ArrAccRes;
 import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
-import java.awt.*;
 import java.util.Collection;
 import java.util.Set;
-import java.util.logging.Logger;
 
 public class AssocTypePvdr extends Lang implements PhpTypeProvider3
 {
@@ -53,7 +42,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         // get type everywhere so that you could ask it
         // from here whether we are currently resolving this PSI type
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-        return list(trace).any(call -> call.getClassName().equals(TriggerObjTypeGoToDecl.class.getName()));
+        return list(trace).any(call -> call.getClassName().equals(DeepObjMemberGoToDecl.class.getName()));
     }
 
     private boolean wasRequestedInCode(PsiElement psi)
