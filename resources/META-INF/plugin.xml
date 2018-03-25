@@ -45,6 +45,15 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrayColumnGoToDecl"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrFuncRefGoToDecl"/>
         <gotoDeclarationHandler order="first" implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.DeepObjMemberGoToDecl"/>
+
+        <projectConfigurable
+            instance="org.klesun.deep_assoc_completion.entry.DeepSettingsForm"
+            id="deep-assoc-completion.SettingsForm"
+            displayName="deep-assoc-completion"
+            parentId="reference.webide.settings.project.settings.php"
+            nonDefaultProject="true"
+        />
+        <projectService serviceImplementation="org.klesun.deep_assoc_completion.entry.DeepSettings"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.jetbrains.php">

@@ -28,47 +28,12 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         return '\u0152';
     }
 
-    private static String getPluginNameSpace()
-    {
-        // -2 - remove class name and /entry/ folder, keep org.klesun.deep_assoc_completion
-        L<String> dirChain = L(DeepKeysCbtr.class.getName().split("\\.")).sub(0, -2);
-        return Tls.implode(".", dirChain) + ".";
-    }
-
-    private boolean wasGoToDefinitionAsked(PsiElement psi)
-    {
-        // the slow implementation - with stack trace
-        // I think I should make some TypeRqService to
-        // get type everywhere so that you could ask it
-        // from here whether we are currently resolving this PSI type
-        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-        return list(trace).any(call -> call.getClassName().equals(DeepObjMemberGoToDecl.class.getName()));
-    }
-
-    private boolean wasRequestedInCode(PsiElement psi)
-    {
-        // the slow implementation - with stack trace
-        // I think I should make some TypeRqService to
-        // get type everywhere so that you could ask it
-        // from here whether we are currently resolving this PSI type
-        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-        return list(trace).any(call -> {
-            if (call.getClassName().startsWith(getPluginNameSpace()) &&
-                !call.getClassName().equals(this.getClass().getName())
-            ) {
-                return true;
-            } else {
-                return false;
-            }
-        });
-    }
-
     @Nullable
     public PhpType getType(PsiElement psi)
     {
-        // TODO: to config!
-        boolean enabled = false;
-        if (!enabled) {
+        Project project = psi.getProject();
+        DeepSettings settings = DeepSettings.inst(project);
+        if (!settings.bgTypePvdrEnabled) {
             return null;
         }
 
@@ -96,7 +61,8 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
 
         // Type Provider is called at random points of time breaking
         // my recursive formatting in STDOUT, so always setDebug(false)
-        SearchContext search = new SearchContext().setDepth(15)
+        SearchContext search = new SearchContext()
+            .setDepth(settings.bgTypePvdrDepthLimit)
             .setTimeout(0.1)
             .setMaxExpressions(1000).setDebug(false);
         FuncCtx funcCtx = new FuncCtx(search);

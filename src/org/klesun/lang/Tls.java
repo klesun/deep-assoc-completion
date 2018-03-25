@@ -193,17 +193,6 @@ public class Tls extends Lang
     public static PhpType getIdeaType(PhpExpression exp)
     {
         PhpType type = exp.getType();
-        if (type.filterMixed().filterUnknown().filterNull().isEmpty()) {
-            //try {
-            //    Project project = exp.getProject();
-            //    Map<PsiElement, PhpType> typeCache = PhpCaches.getInstance(project).TYPE_CACHE;
-            //    typeCache.remove(exp);
-            //    type = exp.getType(); // triggering type provider again, with Deep this time
-            //} catch (Throwable exc) {
-            //    System.out.println("got an exception when trying to refresh cached expression type " +
-            //        exc.getClass() + " " + exc.getMessage() + " " + exp.getClass() + " " + exp.getText());
-            //}
-        }
         return type;
     }
 }
