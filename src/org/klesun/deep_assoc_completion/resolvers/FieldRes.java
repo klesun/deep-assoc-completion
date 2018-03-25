@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.jetbrains.php.lang.psi.elements.Field;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
@@ -49,6 +50,16 @@ public class FieldRes extends Lang
         return false;
     }
 
+    private Opt<Field> findReferenced(FieldReferenceImpl fieldRef)
+    {
+//         return opt(fieldRef.resolve()).fop(toCast(Field.class));
+        return opt(fieldRef.getClassReference())
+            .fop(obj -> new ArrCtorRes(ctx).resolveObjCls(obj))
+            .fap(cls -> L(cls.getFields()))
+            .flt(f -> f.getName().equals(fieldRef.getName()))
+            .fst();
+    }
+
     public MultiType resolve(FieldReferenceImpl fieldRef)
     {
         if (isCircularExpr(fieldRef)) {
@@ -56,7 +67,7 @@ public class FieldRes extends Lang
         }
 
         L<DeepType> result = list();
-        opt(fieldRef.resolve())
+        findReferenced(fieldRef)
             .thn(resolved -> {
                 FuncCtx implCtx = new FuncCtx(ctx.getSearch());
                 Tls.cast(FieldImpl.class, resolved)

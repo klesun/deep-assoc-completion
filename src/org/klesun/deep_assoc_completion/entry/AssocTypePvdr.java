@@ -66,6 +66,12 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
     @Nullable
     public PhpType getType(PsiElement psi)
     {
+        // TODO: to config!
+        boolean enabled = false;
+        if (!enabled) {
+            return null;
+        }
+
         if (DumbService.isDumb(psi.getProject())) {
             // following code relies on complex reference resolutions
             // very much, so trying to resolve type during indexing
@@ -94,21 +100,6 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
             .setTimeout(0.1)
             .setMaxExpressions(1000).setDebug(false);
         FuncCtx funcCtx = new FuncCtx(search);
-
-        // since this type provider is so deep it can take hundreds of milliseconds
-        // we don't want that to happen on every expression on each file re-indexation,
-        // so let's do this only when user explicitly asks for completion from some particular expression
-        boolean isUnderCaret = opt(psi.getParent()).flt(p -> p.getText().contains("IntellijIdeaRulezzz")).has();
-        // this flag should be true when we get
-        // here from DeepKeysPvdr and others with exprPsi.getType()
-        boolean wasRequestedInCode = wasRequestedInCode(psi);
-        // should be true when user ctrl-clicks on a method
-        // should resolve class by any means, since it is explicit user action
-        boolean wasGoToDefinitionAsked = false; // wasGoToDefinitionAsked(psi);
-
-        if (!isUnderCaret && !wasRequestedInCode && !wasGoToDefinitionAsked) {
-            return null;
-        }
 
         @Nullable PhpType result = null;
         try {
