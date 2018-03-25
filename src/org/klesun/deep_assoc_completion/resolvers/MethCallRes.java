@@ -4,10 +4,8 @@ import com.intellij.database.model.ObjectKind;
 import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.php.PhpIndex;
-import com.jetbrains.php.lang.psi.elements.Method;
-import com.jetbrains.php.lang.psi.elements.MethodReference;
-import com.jetbrains.php.lang.psi.elements.PhpClass;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
@@ -133,9 +131,19 @@ public class MethCallRes extends Lang
             .flt(m -> Objects.equals(m.getName(), func));
     }
 
-    private static Opt<L<Method>> resolveMethodFromCall(MethodReferenceImpl call)
+    private L<Method> findReferenced(MethodReferenceImpl fieldRef)
+    {
+//         return opt(fieldRef.resolve()).fop(toCast(Method.class));
+        return opt(fieldRef.getClassReference())
+            .fop(obj -> new ArrCtorRes(ctx).resolveObjCls(obj))
+            .fap(cls -> L(cls.getMethods()))
+            .flt(f -> f.getName().equals(fieldRef.getName()));
+    }
+
+    private Opt<L<Method>> resolveMethodFromCall(MethodReferenceImpl call)
     {
         return Opt.fst(list(opt(null)
+            , opt(findReferenced(call)).flt(found -> found.size() > 0)
             , opt(L(call.multiResolve(false)))
                 .map(l -> l.map(v -> v.getElement()))
                 .map(l -> l.fop(toCast(Method.class)))

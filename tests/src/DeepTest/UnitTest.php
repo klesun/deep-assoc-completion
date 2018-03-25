@@ -23,6 +23,7 @@ class PersonStorage
             'name' => $name,
             'age' => $age,
         ];
+        return ['status' => 'OK', 'spaceLeft' => 192846];
     }
 }
 
@@ -1703,6 +1704,20 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $merged = $humanRights + $citizenRights;
         $merged[''];
         $list[] = [$merged, ['toTrust' => [], 'toLove' => [], 'toHate' => [], 'toAttend' => [], 'toVote' => [], 'toPreserveSilence' => []]];
+        return $list;
+    }
+
+    public static function provideObjectInAKeyMethod()
+    {
+        $list = [];
+        $storRecord = [
+            'capacity' => '256mb',
+            'path' => '/home/klesun/person_storage.db',
+            'stor' => new PersonStorage(),
+        ];
+        $added = $storRecord['stor']->addPerson();
+        $added[''];
+        $list[] = [$added, ['status' => [], 'spaceLeft' => []]];
         return $list;
     }
 
