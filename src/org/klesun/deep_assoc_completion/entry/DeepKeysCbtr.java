@@ -91,13 +91,21 @@ public class DeepKeysCbtr extends CompletionContributor
                 ,
             new EqStrValsPvdr()
         );
+        // for cases when only Deep Resolve can say what class it is
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, MemberReference.class)
+                ,
+            new ObjMemberPvdr()
+        );
     }
 
     /**
      * Allow autoPopup to appear after custom symbol
      */
     public boolean invokeAutoPopup(@NotNull PsiElement position, char typeChar) {
-        if (typeChar == '\'' || typeChar == '\"') {
+        if (typeChar == '\'' || typeChar == '\"' || typeChar == '>') {
             return true;
         } else if (typeChar == '[') {
             return opt(position.getParent())

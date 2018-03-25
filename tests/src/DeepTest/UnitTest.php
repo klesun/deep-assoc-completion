@@ -13,6 +13,11 @@ class PersonStorage
 {
     public $mainPerson = ['name' => 'Vasja', 'age' => 21];
     public $allPersons = [];
+    public $asdasd = [
+        ['segmentType' => 123, 'flightNumber' => '456', 'paxes' => [1,2,3]],
+        ['segmentType' => 123, 'flightNumber' => '457', 'paxes' => [1,2,3]],
+        ['segmentType' => 123, 'flightNumber' => '458', 'paxes' => [1,2,3]],
+    ];
     public function addPerson($name, $age) {
         $this->allPersons[] = [
             'name' => $name,
@@ -1576,7 +1581,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
-    private static function addAirlineToSsts()
+    private static function addAirlineToSsrs()
     {
         $args = func_get_args();
         $arg = func_get_arg(1);
@@ -1593,7 +1598,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
     public function provideFuncGetArgs()
     {
         $list = [];
-        $ssrs = self::addAirlineToSsts(
+        $ssrs = self::addAirlineToSsrs(
             ['code' => 'WCHR', 'line' => 5],
             ['code' => 'KSML', 'line' => 6]
         );

@@ -25,15 +25,21 @@ public class ArrCtorRes extends Lang
         this.ctx = ctx;
     }
 
+    public Opt<PhpClass> resolveObjCls(PhpExpression expr)
+    {
+        return opt(expr)
+            .map(xpr -> ctx.findExprType(xpr).getIdeaType())
+            .map(tpe -> L(tpe.filterMixed().filter(PhpType.OBJECT).getTypes())
+                .fap(clsPath -> L(PhpIndex.getInstance(expr.getProject()).getClassesByFQN(clsPath)))
+                .fop(rvd -> opt(rvd)))
+            .fop(clses -> clses.gat(0));
+    }
+
     public Opt<PhpClass> resolveInstance(PsiElement instExpr)
     {
         return opt(instExpr.getFirstChild())
             .fop(toCast(PhpExpression.class))
-            .map(xpr -> ctx.findExprType(xpr).getIdeaType())
-            .map(tpe -> L(tpe.filter(PhpType.OBJECT).getTypes())
-                .fap(clsPath -> L(PhpIndex.getInstance(instExpr.getProject()).getClassesByFQN(clsPath)))
-                .fop(rvd -> opt(rvd)))
-            .fop(clses -> clses.gat(0))
+            .fop(xpr -> resolveObjCls(xpr))
             ;
     }
 
