@@ -78,16 +78,16 @@ public class FuncCallRes extends Lang
                 L(params).gat(0).map(p -> findPsiExprType(p).types).thn(result::addAll);
             } else if (name.equals("array_combine")) {
                 DeepType combine = new DeepType(call, PhpType.ARRAY);
-                L<String> keyNames = L(params).gat(0)
+                Dict<L<DeepType>> keyToTypes = L(params).gat(0)
                     .map(p -> findPsiExprType(p))
-                    .map(mt -> mt.getEl())
-                    .fap(mt -> mt.getStringValues());
+                    .fap(mt -> mt.getEl().types)
+                    .gop(t -> opt(t.stringValue));
                 MultiType elMt = L(params).gat(1)
                     .map(p -> findPsiExprType(p))
                     .def(MultiType.INVALID_PSI)
                     .getEl();
-                keyNames.fch(keyName -> combine
-                    .addKey(keyName, call)
+                keyToTypes.fch((types,keyName) -> combine
+                    .addKey(keyName, types.map(t -> t.definition).fst().def(call))
                         .addType(() -> elMt, elMt.getIdeaType()));
                 combine.anyKeyElTypes.addAll(elMt.types);
                 result.add(combine);

@@ -187,18 +187,51 @@ public class Lang
             entries.fch(t -> subject.put(t.a, t.b));
         }
 
-        public <Tnew> Dict<Tnew> map(F2<T, String, Tnew> f)
+        public Dict(Map<String, T> entries)
         {
+            subject = new LinkedHashMap<>(entries);
+        }
+
+        public <Tnew> Dict<Tnew> map(F2<T, String, Tnew> f) {
             return new Dict<>(L(entrySet()).map(e -> T2(e.getKey(), f.apply(e.getValue(), e.getKey()))));
         }
-
-        public <Tnew> Dict<Tnew> map(F<T, Tnew> f)
-        {
+        public <Tnew> Dict<Tnew> map(F<T, Tnew> f) {
             return this.map((v,k) -> f.apply(v));
         }
-
-        public Opt<T> gat(String key)
-        {
+        // "for each"
+        public void fch(C<T> f) {
+            fch((el, i) -> f.accept(el));
+        }
+        public void fch(C2<T, String> f) {
+            subject.forEach((k,v) -> f.accept(v,k));
+        }
+        // "pairs"
+        public L<T2<String, T>> prs() {
+            L<T2<String, T>> result = list();
+            fch((v,k) -> result.add(T2(k,v)));
+            return result;
+        }
+        // "values"
+        public L<T> vls() {
+            return prs().map(p -> p.b);
+        }
+        // "keys"
+        public L<String> kys() {
+            return prs().map(p -> p.a);
+        }
+        // "flat map filter optional"
+        public <Tnew> Dict<Tnew> fop(F<T, Opt<Tnew>> convert) {
+            return fop((el, i) -> convert.apply(el));
+        }
+        public <Tnew> Dict<Tnew> fop(F2<T, String, Opt<Tnew>> convert) {
+            Dict<Tnew> result = new Dict<>(list());
+            return prs()
+                .fop(t -> convert.apply(t.b, t.a)
+                    .map(newVal -> T2(t.a, newVal)))
+                .dct(a -> a);
+        }
+        // "get at"
+        public Opt<T> gat(String key) {
             if (subject.containsKey(key)) {
                 return opt(subject.get(key));
             } else {
@@ -388,15 +421,13 @@ public class Lang
             return value;
         }
 
-        /** @debug */
-        public L<T> wth(C<L<T>> f)
-        {
+        /** "with" */
+        public L<T> wth(C<L<T>> f) {
             f.accept(this);
             return this;
         }
-
         /** group values by passed function. could be used to get read of duplicate values */
-        public L<L<T>> grp(F<T, String> getHash)
+        public Dict<L<T>> grp(F<T, String> getHash)
         {
             LinkedHashMap<String, L<T>> grouped = new LinkedHashMap<>();
             for (T val: this) {
@@ -406,7 +437,13 @@ public class Lang
                 }
                 grouped.get(hash).add(val);
             }
-            return L(grouped.values());
+            return new Dict<>(grouped);
+        }
+        /** "group thru optional - skip null keys" */
+        public Dict<L<T>> gop(F<T, Opt<String>> getHash)
+        {
+            return fop(v -> getHash.apply(v).map(k -> T2(k,v)))
+                .grp(p -> p.a).map(pairs -> pairs.map(p -> p.b));
         }
 
         /** stands for "concatenate" */

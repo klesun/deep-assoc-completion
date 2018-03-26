@@ -151,7 +151,7 @@ public class MultiType extends Lang
         L<String> strvals = types.fop(t -> opt(t.stringValue));
         if (strvals.size() > 0) {
             briefValues.add(Tls.implode("|", strvals
-                .grp(a -> a).fop(g -> g.fst())
+                .grp(a -> a).kys()
                 .map(s -> (types.all((t,i) -> t.definition.getText().equals(s)))
                     ? s : "'" + s + "'")));
         }
@@ -160,7 +160,7 @@ public class MultiType extends Lang
         }
         if (briefValues.isEmpty() && types.size() > 0) {
             L<String> psiParts = types.flt(t -> t.isExactPsi).map(t -> Tls.singleLine(t.definition.getText(), 40));
-            briefValues.add(Tls.implode("|", psiParts.grp(a -> a).fop(g -> g.fst())));
+            briefValues.add(Tls.implode("|", psiParts.grp(a -> a).kys()));
         }
         String fullStr = Tls.implode("|", briefValues);
 
