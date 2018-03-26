@@ -1717,7 +1717,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         foreach ($zhopa as $color) {
             $colorToNum[$color] = rand(0,100);
         }
-        $colorToNum['black'];
+        $colorToNum['green'];
 
         $storRecord = [
             'capacity' => '256mb',

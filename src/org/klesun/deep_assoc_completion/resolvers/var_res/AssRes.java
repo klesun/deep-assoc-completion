@@ -38,9 +38,9 @@ public class AssRes extends Lang
             KeyType nextKey = keys.get(0);
             L<KeyType> furtherKeys = keys.sub(1);
             if (nextKey.keyType == KeyType.EKeyType.STRING) {
-                nextKey.names.fch(name ->
-                    arr.addKey(name, psi).addType(() ->
-                        makeType(furtherKeys, getType, psi, briefType), briefType));
+                nextKey.getNameToMt().fch((types, name) ->
+                    types.fch(t -> arr.addKey(name, t.definition).addType(() ->
+                        makeType(furtherKeys, getType, psi, briefType), briefType)));
             } else  if (nextKey.keyType == KeyType.EKeyType.INTEGER) {
                 arr.hasIntKeys = true;
                 arr.listElTypes = makeType(furtherKeys, getType, psi, briefType).types;
@@ -75,11 +75,7 @@ public class AssRes extends Lang
                 .map(index -> index.getValue())
                 .fop(toCast(PhpExpression.class))
                 .map(key -> ctx.findExprType(key))
-                .map(mt -> mt.getStringValues().size() > 0
-                    ? KeyType.string(mt.getStringValues())
-                    : (mt.isInt()
-                        ? KeyType.integer()
-                        : KeyType.unknown()))
+                .map(mt -> KeyType.mt(mt))
                 .def(KeyType.integer());
             reversedKeys.add(name);
 
