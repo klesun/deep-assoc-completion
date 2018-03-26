@@ -38,23 +38,23 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
         FuncCtx funcCtx = new FuncCtx(search);
         long startTime = System.nanoTime();
         L<Method> methods = opt(parameters.getPosition().getParent())
-            .fop(literal -> opt(literal.getParent())
+            .fap(literal -> opt(literal.getParent())
                 .map(arrVal -> arrVal.getParent())
                 .fop(toCast(ArrayCreationExpressionImpl.class))
                 .map(arrCtor -> L(arrCtor.getChildren()))
                 .flt(params -> params.size() == 2)
                 .flt(params -> literal.isEquivalentTo(params.get(1).getFirstChild()))
                 .fop(params -> params.gat(0))
-                .fop(clsPsi -> Opt.fst(list(
+                .fap(clsPsi -> list(
                     ArrCtorRes.resolveClass(clsPsi)
-                        .map(cls -> L(cls.getMethods())
+                        .fap(cls -> L(cls.getMethods())
                             .flt(meth -> meth.isStatic())),
                     new ArrCtorRes(funcCtx).resolveInstance(clsPsi)
-                        .map(cls -> L(cls.getMethods())
+                        .fap(cls -> L(cls.getMethods())
                             .flt(meth -> meth.getMethodType(false) != Method.MethodType.CONSTRUCTOR)
                             .flt(meth -> !meth.isStatic())))
-                )))
-            .def(L());
+                ))
+            .fap(a -> a);
 
         methods.map(m -> makeLookup(m)).fch(result::addElement);
         long elapsed = System.nanoTime() - startTime;

@@ -43,14 +43,15 @@ public class ArrFuncRefGoToDecl extends Lang implements GotoDeclarationHandler
                 .flt(params -> params.size() == 2)
                 .flt(params -> literal.isEquivalentTo(params.get(1).getFirstChild()))
                 .fop(params -> params.gat(0))
-                .fop(clsPsi -> Opt.fst(list(
+                .fap(clsPsi -> list(
                     ArrCtorRes.resolveClass(clsPsi)
-                        .map(cls -> L(cls.getMethods())
-                            .flt(meth -> meth.isStatic())),
+                        .fap(cls -> L(cls.getMethods())
+                            .flt(meth -> meth.isStatic()))
+                    ,
                     new ArrCtorRes(funcCtx).resolveInstance(clsPsi)
-                        .map(cls -> L(cls.getMethods())
+                        .fap(cls -> L(cls.getMethods())
                             .flt(meth -> meth.getMethodType(false) != Method.MethodType.CONSTRUCTOR)
-                            .flt(meth -> !meth.isStatic())))))
+                            .flt(meth -> !meth.isStatic()))))
                 .fap(a -> a)
                 .flt(meth -> meth.getName().equals(literal.getContents()))
             );

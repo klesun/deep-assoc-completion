@@ -1,6 +1,7 @@
 <?php
 namespace DeepTest;
 
+use Lib\ParamValidation\DictP;
 use Rbs\Parsers\Apollo\PricingParser\DataStructureWriters\PricingStructureWriter;
 use Rbs\Parsers\Sabre\Pricing\PqParserFull;
 use Rbs\Parsers\Sabre\Pricing\PqParserUnshiftOverflow;
@@ -1710,6 +1711,14 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
     public static function provideObjectInAKeyMethod()
     {
         $list = [];
+
+        $colorToNum = [];
+        $zhopa = ['black', 'yellow', 'green'];
+        foreach ($zhopa as $color) {
+            $colorToNum[$color] = rand(0,100);
+        }
+        $colorToNum['black'];
+
         $storRecord = [
             'capacity' => '256mb',
             'path' => '/home/klesun/person_storage.db',
@@ -1721,13 +1730,40 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function getGrabFaresScheme()
+    {
+        return new DictP([], [
+            'cnt' => 123,
+            'pcc' => 'KLS3',
+            'cmd' => '$D10MAYKIVRIX',
+        ]);
+    }
+
+    /** @param $params = UnitTest::getGrabFaresScheme() */
+    private static function provideNewWoBgTyping($params)
+    {
+        $list = [];
+        $sampleData = null;
+        // recursion caused type from doc be lost cuz
+        // i took first resolution instead of all
+        if ($params instanceof DictP) {
+            foreach ($params->definition as $key => $val) {
+                $sampleData[$key] = static::provideNewWoBgTyping($val);
+            }
+        } else {
+            $sampleData = $params;
+        }
+        $list[] = [$sampleData, ['cnt' => [], 'pcc' => [], 'cmd' => []]];
+        $list[] = [$params->definition, ['cnt' => [], 'pcc' => [], 'cmd' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
 
     private static function addAgeToPaxes(...$paxes)
     {
-        $paxes;
         return array_map(function($pax){
             $pax['age'] = 25;
             return $pax;

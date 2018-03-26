@@ -26,21 +26,21 @@ public class ArrCtorRes extends Lang
         this.ctx = ctx;
     }
 
-    public Opt<PhpClass> resolveObjCls(PhpExpression expr)
+    public L<PhpClass> resolveObjCls(PhpExpression expr)
     {
         return opt(expr)
             .map(xpr -> ctx.findExprType(xpr).getIdeaType())
             .map(tpe -> L(tpe.filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).getTypes())
                 .fap(clsPath -> L(PhpIndex.getInstance(expr.getProject()).getAnyByFQN(clsPath)))
                 .fop(rvd -> opt(rvd)))
-            .fop(clses -> clses.gat(0));
+            .fap(clses -> clses);
     }
 
-    public Opt<PhpClass> resolveInstance(PsiElement instExpr)
+    public L<PhpClass> resolveInstance(PsiElement instExpr)
     {
         return opt(instExpr.getFirstChild())
             .fop(toCast(PhpExpression.class))
-            .fop(xpr -> resolveObjCls(xpr))
+            .fap(xpr -> resolveObjCls(xpr))
             ;
     }
 
@@ -67,17 +67,18 @@ public class ArrCtorRes extends Lang
     }
 
     /** like in [Ns\Employee::class, 'getSalary'] */
-    private Opt<Method> resolveMethodFromArray(L<PsiElement> refParts)
+    private L<Method> resolveMethodFromArray(L<PsiElement> refParts)
     {
         return refParts.gat(1)
             .map(psi -> psi.getFirstChild())
             .fop(toCast(StringLiteralExpression.class))
             .map(lit -> lit.getContents())
-            .fop(met -> refParts.gat(0)
-                .fop(clsPsi -> Opt.fst(list(
-                    resolveClass(clsPsi),
-                    resolveInstance(clsPsi))
+            .fap(met -> refParts.gat(0)
+                .fap(clsPsi -> list(
+                    resolveClass(clsPsi).fap(a -> list(a)),
+                    resolveInstance(clsPsi)
                 ))
+                .fap(a -> a)
                 .map(cls -> cls.findMethodByName(met)));
     }
 
@@ -90,9 +91,7 @@ public class ArrCtorRes extends Lang
 
         resolveMethodFromArray(orderedParams)
             .map(meth -> MethCallRes.findMethRetType(meth))
-            .thn(retTypeGetter -> {
-                arrayType.returnTypeGetters.add(retTypeGetter);
-            });
+            .fch(retTypeGetter -> arrayType.returnTypeGetters.add(retTypeGetter));
 
         // indexed elements
         orderedParams

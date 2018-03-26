@@ -135,7 +135,7 @@ public class MethCallRes extends Lang
     {
 //         return opt(fieldRef.resolve()).fop(toCast(Method.class));
         return opt(fieldRef.getClassReference())
-            .fop(obj -> new ArrCtorRes(ctx).resolveObjCls(obj))
+            .fap(obj -> new ArrCtorRes(ctx).resolveObjCls(obj))
             .fap(cls -> L(cls.getMethods()))
             .flt(f -> f.getName().equals(fieldRef.getName()));
     }
