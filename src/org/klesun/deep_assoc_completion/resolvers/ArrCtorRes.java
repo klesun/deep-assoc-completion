@@ -79,7 +79,7 @@ public class ArrCtorRes extends Lang
                     resolveInstance(clsPsi)
                 ))
                 .fap(a -> a)
-                .map(cls -> cls.findMethodByName(met)));
+                .fop(cls -> opt(cls.findMethodByName(met))));
     }
 
     public DeepType resolve(ArrayCreationExpressionImpl expr)
