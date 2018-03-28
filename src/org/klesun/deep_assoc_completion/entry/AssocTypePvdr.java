@@ -63,7 +63,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         // my recursive formatting in STDOUT, so always setDebug(false)
         SearchContext search = new SearchContext()
             .setDepth(settings.bgTypePvdrDepthLimit)
-            .setTimeout(0.1)
+            .setTimeout(settings.bgTypePvdrTimeout / 1000)
             .setMaxExpressions(1000).setDebug(false);
         FuncCtx funcCtx = new FuncCtx(search);
 

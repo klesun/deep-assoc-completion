@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 public class DeepSettings implements PersistentStateComponent<DeepSettings> {
     public Boolean bgTypePvdrEnabled = false;
     public Integer bgTypePvdrDepthLimit = 5;
+    public Integer bgTypePvdrTimeout = 100; // milliseconds
     public Integer explicitDepthLimit = 40;
     public Integer implicitDepthLimit = 25;
 

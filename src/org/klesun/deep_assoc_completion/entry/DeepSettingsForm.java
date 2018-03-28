@@ -21,6 +21,7 @@ public class DeepSettingsForm implements Configurable
     private JPanel rootPanel;
     private JCheckBox bgTypePvdrEnabled;
     private JFormattedTextField bgTypePvdrDepthLimit;
+    private JFormattedTextField bgTypePvdrTimeout;
     private JFormattedTextField explicitDepthLimit;
     private JFormattedTextField implicitDepthLimit;
 
@@ -40,6 +41,7 @@ public class DeepSettingsForm implements Configurable
     public boolean isModified() {
         return !getSettings().bgTypePvdrEnabled == bgTypePvdrEnabled.isSelected()
             || !getSettings().bgTypePvdrDepthLimit.toString().equals(bgTypePvdrDepthLimit.getText())
+            || !getSettings().bgTypePvdrTimeout.toString().equals(bgTypePvdrTimeout.getText())
             || !getSettings().explicitDepthLimit.toString().equals(explicitDepthLimit.getText())
             || !getSettings().implicitDepthLimit.toString().equals(implicitDepthLimit.getText())
             ;
@@ -65,6 +67,7 @@ public class DeepSettingsForm implements Configurable
     public void apply() throws ConfigurationException {
         getSettings().bgTypePvdrEnabled = bgTypePvdrEnabled.isSelected();
         getSettings().bgTypePvdrDepthLimit = validateInt(bgTypePvdrDepthLimit, 0, 100);
+        getSettings().bgTypePvdrTimeout = validateInt(bgTypePvdrTimeout, 5, 10000);
         getSettings().explicitDepthLimit = validateInt(explicitDepthLimit, 0, 100);
         getSettings().implicitDepthLimit = validateInt(implicitDepthLimit, 0, 100);
     }
@@ -73,6 +76,7 @@ public class DeepSettingsForm implements Configurable
     public void reset() {
         bgTypePvdrEnabled.setSelected(getSettings().bgTypePvdrEnabled);
         bgTypePvdrDepthLimit.setText(getSettings().bgTypePvdrDepthLimit.toString());
+        bgTypePvdrTimeout.setText(getSettings().bgTypePvdrTimeout.toString());
         explicitDepthLimit.setText(getSettings().explicitDepthLimit.toString());
         implicitDepthLimit.setText(getSettings().implicitDepthLimit.toString());
     }
