@@ -100,6 +100,16 @@ class UnitTest
         return $list;
     }
 
+    /** @param $row = Db::fetchAll('SELECT * FROM delete_me')[0]; */
+    public function provideDbFetchInADoc($row)
+    {
+        $row['name'];
+        $list = [];
+        $rows = Db::inst()->fetchAll('SELECT id, name, profit FROM teams LIMIT 10;');
+        $list[] = [$rows['0'], ['id' => [], 'name' => [], 'profit' => []]];
+        return $list;
+    }
+
     public function provideZip()
     {
         $list = [];

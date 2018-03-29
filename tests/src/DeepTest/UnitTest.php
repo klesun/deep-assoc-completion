@@ -356,6 +356,8 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         // should suggest all the keys from the function
         $list[] = [$firstBomb['touch'], ['into' => [], 'a' => [], 'bomb' => []]];
 
+        $thirdBomb['requirements']['desperation'];
+
         return $list;
     }
 

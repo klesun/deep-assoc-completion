@@ -99,7 +99,7 @@ public class ArrCtorRes extends Lang
                 // currently each value is wrapped into a plane Psi element
                 // i believe this is likely to change in future - so we try both cases
                 .elf(() -> opt(valuePsi.getFirstChild()).fop(toCast(PhpExpression.class)))
-                .thn(val -> arrayType.addKey(i + "", val)
+                .thn(val -> arrayType.addKey(i + "", ctx.getRealPsi(val))
                     .addType(() -> ctx.findExprType(val), Tls.getIdeaType(val))));
 
         // keyed elements
@@ -113,7 +113,9 @@ public class ArrCtorRes extends Lang
                     .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
                     .thn(keyStrValues -> {
                         if (keyStrValues.size() > 0) {
-                            keyStrValues.fch(key -> arrayType.addKey(key, keyRec).addType(getType, Tls.getIdeaType(v)));
+                            keyStrValues.fch(key -> arrayType
+                                .addKey(key, ctx.getRealPsi(keyRec))
+                                .addType(getType, Tls.getIdeaType(v)));
                         } else {
                             arrayType.anyKeyElTypes.addAll(getType.get().types);
                         }

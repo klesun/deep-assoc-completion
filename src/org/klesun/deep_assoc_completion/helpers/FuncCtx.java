@@ -1,6 +1,8 @@
 package org.klesun.deep_assoc_completion.helpers;
 
+import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +25,8 @@ public class FuncCtx extends Lang
     final private L<Lang.S<MultiType>> argGetters;
     public Opt<Lang.S<MultiType>> instGetter = opt(null);
     final private EArgPsiType argPsiType;
+    /** use this when you need to reference a real PSI during parsing of PHP Doc */
+    public Opt<PsiElement> fakeFileSource = opt(null);
 
     private HashMap<Integer, MultiType> cachedArgs = new HashMap<>();
 
@@ -44,6 +48,8 @@ public class FuncCtx extends Lang
             : opt(null);
         this.parent = opt(parentCtx);
         this.argPsiType = argPsiType;
+        this.fakeFileSource = opt(parentCtx)
+            .fop(par -> par.fakeFileSource);
     }
 
     public Opt<MultiType> getArg(ArgOrder orderObj)
@@ -179,5 +185,21 @@ public class FuncCtx extends Lang
             tmp = tmp.parent.def(null);
         }
         return Tls.implode(" | ", parents.map(p -> Tls.singleLine(p.getText(), 40)));
+    }
+
+    /**
+     * when you parse text, attempts to go to a PSI
+     * in it will lead you to a fake foo.bar file
+     * I would rather go to the doc
+     */
+    public PsiElement getRealPsi(PsiElement maybeFake)
+    {
+        PsiFile file = maybeFake.getContainingFile();
+        PsiDirectory dir = file.getContainingDirectory();
+        if (dir == null && fakeFileSource.has()) {
+            return fakeFileSource.unw();
+        } else {
+            return maybeFake;
+        }
     }
 }

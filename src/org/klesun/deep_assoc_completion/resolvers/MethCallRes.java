@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 
 public class MethCallRes extends Lang
 {
-    private FuncCtx ctx;
+    final private FuncCtx ctx;
 
     public MethCallRes(FuncCtx ctx)
     {
@@ -57,7 +57,7 @@ public class MethCallRes extends Lang
             .map(col -> col.getName());
     }
 
-    private static Opt<DeepType> parseSqlSelect(DeepType strType, Project project)
+    private Opt<DeepType> parseSqlSelect(DeepType strType, Project project)
     {
         DeepType parsedType = new DeepType(strType.definition, PhpType.ARRAY);
         String sql = opt(strType.stringValue).def("");
@@ -79,7 +79,7 @@ public class MethCallRes extends Lang
                             .fap(a -> list(a));
                     }
                 });
-        }).fch(name -> parsedType.addKey(name, strType.definition)
+        }).fch(name -> parsedType.addKey(name, ctx.getRealPsi(strType.definition))
             .addType(() -> new MultiType(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
         return opt(parsedType);
     }
