@@ -24,19 +24,19 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
 {
     private static String makeMethOrderValue(Method meth)
     {
-        String result = "";
+        var result = "";
         result += meth.getAccess() == PhpModifier.Access.PUBLIC ? "+" : "-";
         return result;
     }
 
     private Opt<List<String>> extractTypedFqnPart(String docValue, Project project)
     {
-        PhpIndex idx = PhpIndex.getInstance(project);
+        var idx = PhpIndex.getInstance(project);
         return Opt.fst(list(opt(null)
             , Tls.regex(" *= *([A-Z][A-Za-z0-9_]+)::([a-zA-Z0-9_]*?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete method
                 .map(mtch -> {
-                    String clsName = mtch.gat(0).unw();
+                    var clsName = mtch.gat(0).unw();
                     PrefixMatcher metMatcher = new CamelHumpMatcher(mtch.gat(1).unw());
                     return L(idx.getClassesByName(clsName))
                         .cct(L(idx.getInterfacesByName(clsName)))

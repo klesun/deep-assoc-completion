@@ -58,7 +58,7 @@ public class SearchContext extends Lang
 
     private <T> boolean endsWith(L<T> superList, L<T> subList)
     {
-        for (int i = 0; i < subList.size(); ++i) {
+        for (var i = 0; i < subList.size(); ++i) {
             if (i >= superList.size() || !superList.get(-i - 1).equals(subList.get(-i - 1))) {
                 return false;
             }
@@ -72,8 +72,8 @@ public class SearchContext extends Lang
         //                           ^_____^_____
         // I'm not sure this assumption is right, but I'll try to
         // treat any case where end repeats pre-end as recursion
-        for (int i = 0; i < psiTrace.size() / 2; ++i) {
-            L<PhpExpression> subList = psiTrace.sub(psiTrace.size() - i * 2 - 2, i + 1);
+        for (var i = 0; i < psiTrace.size() / 2; ++i) {
+            var subList = psiTrace.sub(psiTrace.size() - i * 2 - 2, i + 1);
             if (endsWith(psiTrace, subList)) {
                 return true;
             }
@@ -106,22 +106,22 @@ public class SearchContext extends Lang
     public Opt<MultiType> findExprType(PhpExpression expr, FuncCtx funcCtx)
     {
         /** @debug */
-        long time = System.nanoTime();
-        double seconds = (time - startTime) / 1000000000.0;
+        var time = System.nanoTime();
+        var seconds = (time - startTime) / 1000000000.0;
         if (!debug && (time - lastReportTime) / 1000000000.0 > 1.0) {
             lastReportTime = System.nanoTime();
             System.out.println("deep-assoc-completion warning at " + time + ": type resolution takes " + seconds + " seconds " + expr.getText() + " " + expr.getClass());
         }
 
-        String indent = "";
-        for (int i = 0; i < initialDepth - depth; ++i) {
+        var indent = "";
+        for (var i = 0; i < initialDepth - depth; ++i) {
             indent += " ";
         }
         if (debug) {
             System.out.print(indent);
-            String fileText = expr.getContainingFile().getText();
-            int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
-            StackTraceElement caller = new Exception().getStackTrace()[2];
+            var fileText = expr.getContainingFile().getText();
+            var phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
+            var caller = new Exception().getStackTrace()[2];
             System.out.println(depth + " " + expr.getText().split("\n")[0] + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber());
         }
 
@@ -132,8 +132,8 @@ public class SearchContext extends Lang
             System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
             return opt(null);
         } else if (timeout.flt(tout -> seconds > tout).has()) {
-            String fileText = expr.getContainingFile().getText();
-            int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
+            var fileText = expr.getContainingFile().getText();
+            var phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
             System.out.println(indent + "## Timed out " + seconds + " " + expr.getClass() + " " + Tls.singleLine(expr.getText(), 50) + " " + expr.getContainingFile().getName() + ":" + phpLineNum);
             return opt(null);
         }
@@ -147,9 +147,9 @@ public class SearchContext extends Lang
             ++depth;
             return opt(MultiType.CIRCULAR_REFERENCE);
         }
-        long startTime = System.nanoTime();
+        var startTime = System.nanoTime();
 
-        Opt<MultiType> result = takeFromCache(funcCtx, expr);
+        var result = takeFromCache(funcCtx, expr);
         if (result.has()) {
             if (debug) {
                 System.out.println(indent + "<< TAKING RESULT FROM CACHE");
@@ -164,7 +164,7 @@ public class SearchContext extends Lang
         ++depth;
 
         if (debug) {
-            long elapsed = System.nanoTime() - startTime;
+            var elapsed = System.nanoTime() - startTime;
             System.out.println(indent + "* " + result.fap(a -> a.types).size() + " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()));
         }
 

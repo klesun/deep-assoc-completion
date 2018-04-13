@@ -30,9 +30,9 @@ public class MethCallRes extends Lang
 
     public static boolean nameIs(MethodReferenceImpl call, String cls, String mth)
     {
-        String callCls = opt(call.getClassReference())
+        var callCls = opt(call.getClassReference())
             .map(clsPsi -> clsPsi.getName()).def("");
-        String callMet = opt(call.getName()).def("");
+        var callMet = opt(call.getName()).def("");
 
         return callCls.equals(cls) && callMet.equals(mth);
     }
@@ -59,16 +59,16 @@ public class MethCallRes extends Lang
 
     private Opt<DeepType> parseSqlSelect(DeepType strType, Project project)
     {
-        DeepType parsedType = new DeepType(strType.definition, PhpType.ARRAY);
-        String sql = opt(strType.stringValue).def("");
-        int regexFlags = Pattern.DOTALL | Pattern.CASE_INSENSITIVE;
-        Opt<L<String>> matched = Opt.fst(list(
+        var parsedType = new DeepType(strType.definition, PhpType.ARRAY);
+        var sql = opt(strType.stringValue).def("");
+        var regexFlags = Pattern.DOTALL | Pattern.CASE_INSENSITIVE;
+        var matched = Opt.fst(list(
             Tls.regex("SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql, regexFlags),
             Tls.regex("SELECT\\s+(\\S.*)", sql, regexFlags) // partial SQL without FROM
         ));
         matched.fap(matches -> {
-            L<String> fields = L(matches.gat(0).def("").split(",", -1));
-            String table = matches.gat(1).def("");
+            var fields = L(matches.gat(0).def("").split(",", -1));
+            var table = matches.gat(1).def("");
             return fields.map(str -> str.trim())
                 .fap(f -> {
                     if (f.equals("*")) {
@@ -87,18 +87,18 @@ public class MethCallRes extends Lang
     private MultiType findBuiltInRetType(Method meth, FuncCtx argCtx, MethodReference methCall)
     {
         L<DeepType> types = L();
-        String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
+        var clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
         if (clsNme.equals("PDO") && meth.getName().equals("query") ||
             clsNme.equals("PDO") && meth.getName().equals("prepare")
         ) {
-            L<DeepType> parsedSql = argCtx.getArg(0)
+            var parsedSql = argCtx.getArg(0)
                 .fap(mt -> mt.types)
                 .fop(type -> parseSqlSelect(type, meth.getProject()));
-            DeepType type = new DeepType(methCall);
+            var type = new DeepType(methCall);
             type.pdoTypes.addAll(parsedSql);
             types.add(type);
         } else if (clsNme.equals("PDOStatement") && meth.getName().equals("fetch")) {
-            L<DeepType> pdoTypes = opt(methCall.getClassReference())
+            var pdoTypes = opt(methCall.getClassReference())
                 .fop(toCast(PhpExpression.class))
                 .map(obj -> ctx.findExprType(obj))
                 .fap(mt -> mt.types.fap(t -> t.pdoTypes));
@@ -109,7 +109,7 @@ public class MethCallRes extends Lang
 
     public static F<FuncCtx, L<DeepType>> findMethRetType(Method meth)
     {
-        L<Method> impls = meth.isAbstract()
+        var impls = meth.isAbstract()
             ? findOverridingMethods(meth)
             : list(meth);
         return (FuncCtx funcCtx) -> impls
@@ -122,7 +122,7 @@ public class MethCallRes extends Lang
 
     private static List<Method> resolveMethodsNoNs(String clsName, String func, Project proj)
     {
-        PhpIndex idx = PhpIndex.getInstance(proj);
+        var idx = PhpIndex.getInstance(proj);
         return new L<PhpClass>()
             .cct(L(idx.getClassesByName(clsName)))
             .cct(L(idx.getInterfacesByName(clsName)))
@@ -157,8 +157,8 @@ public class MethCallRes extends Lang
 
     public MultiType resolveCall(MethodReferenceImpl funcCall)
     {
-        FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
-        L<DeepType> rtypes = resolveMethodFromCall(funcCall)
+        var funcCtx = ctx.subCtxDirect(funcCall);
+        var rtypes = resolveMethodFromCall(funcCall)
             .map(funcs -> list(
                 funcs.fap(func -> findMethRetType(func).apply(funcCtx)),
                 funcs.fap(func -> findBuiltInRetType(func, funcCtx, funcCall).types)

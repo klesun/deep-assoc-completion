@@ -295,7 +295,7 @@ public class Lang
         public L<T> flt(F2<T, Integer, Boolean> pred)
         {
             L<T> result = list();
-            for (int i = 0; i < size(); ++i) {
+            for (var i = 0; i < size(); ++i) {
                 if (pred.apply(get(i), i)) {
                     result.add(get(i));
                 }
@@ -316,8 +316,8 @@ public class Lang
         public <@NonNull Tnew> L<Tnew> map(F2<T, Integer, Tnew> f)
         {
             L<Tnew> result = L();
-            for (int i = 0; i < s.size(); ++i) {
-                T el = s.get(i);
+            for (var i = 0; i < s.size(); ++i) {
+                var el = s.get(i);
                 result.add(f.apply(el, i));
             }
             return result;
@@ -332,8 +332,8 @@ public class Lang
         public <Tnew> L<Tnew> mop(F2<T, Integer, Tnew> f)
         {
             L<Tnew> result = L();
-            for (int i = 0; i < s.size(); ++i) {
-                Tnew fed = f.apply(s.get(i), i);
+            for (var i = 0; i < s.size(); ++i) {
+                var fed = f.apply(s.get(i), i);
                 if (fed != null) {
                     result.add(fed);
                 }
@@ -353,7 +353,7 @@ public class Lang
         public <Tnew> L<Tnew> fop(F2<T, Integer, Opt<Tnew>> convert)
         {
             List<Tnew> result = list();
-            for (int i = 0; i < s.size(); ++i) {
+            for (var i = 0; i < s.size(); ++i) {
                 convert.apply(s.get(i), i).thn(result::add);
             }
             return new L(result);
@@ -370,7 +370,7 @@ public class Lang
         public <Tnew> L<Tnew> fap(F2<T, Integer, List<Tnew>> flatten)
         {
             List<Tnew> result = list();
-            for (int i = 0; i < s.size(); ++i) {
+            for (var i = 0; i < s.size(); ++i) {
                 result.addAll(flatten.apply(s.get(i), i));
             }
             return new L<>(result);
@@ -406,7 +406,7 @@ public class Lang
 
         public void fch(C2<T, Integer> f)
         {
-            for (int i = 0; i < s.size(); ++i) {
+            for (var i = 0; i < s.size(); ++i) {
                 f.accept(s.get(i), i);
             }
         }
@@ -414,8 +414,8 @@ public class Lang
         /** "rdc" stands for "reduce" */
         public <Tnew> Tnew rdc(F2<Tnew, T, Tnew> f, Tnew initialValue)
         {
-            Tnew value = initialValue;
-            for (T el: s) {
+            var value = initialValue;
+            for (var el: s) {
                 value = f.apply(value, el);
             }
             return value;
@@ -430,8 +430,8 @@ public class Lang
         public Dict<L<T>> grp(F<T, String> getHash)
         {
             LinkedHashMap<String, L<T>> grouped = new LinkedHashMap<>();
-            for (T val: this) {
-                String hash = getHash.apply(val);
+            for (var val: this) {
+                var hash = getHash.apply(val);
                 if (!grouped.containsKey(hash)) {
                     grouped.put(hash, list());
                 }
@@ -454,8 +454,8 @@ public class Lang
 
         public L<T> srt(F<T, String> makeValue)
         {
-            L<String> weights = map(makeValue);
-            L<Integer> indexes = Tls.range(0, size());
+            var weights = map(makeValue);
+            var indexes = Tls.range(0, size());
             indexes.sort(Comparator.comparing(weights::get));
             return indexes.map(idx -> s.get(idx));
         }
@@ -464,7 +464,7 @@ public class Lang
         public L<T> rvr()
         {
             L<T> reversed = L();
-            for (int i = size() - 1; i >= 0; --i) {
+            for (var i = size() - 1; i >= 0; --i) {
                 reversed.add(get(i));
             }
             return reversed;
@@ -474,8 +474,8 @@ public class Lang
         public <Tnew> L<Tnew> tkw(F<T, Opt<Tnew>> convert)
         {
             L<Tnew> takenFromEnd = L();
-            for (int i = size() - 1; i >=0; --i) {
-                Opt<Tnew> converted = convert.apply(get(i));
+            for (var i = size() - 1; i >=0; --i) {
+                var converted = convert.apply(get(i));
                 if (converted.has()) {
                     takenFromEnd.add(converted.unw());
                     remove(i);
@@ -490,8 +490,8 @@ public class Lang
                 length = this.size() - start + length;
             }
             L<T> subList = new L<>();
-            int ceil = Math.min(start + length, this.size());
-            for (int i = start; i < ceil; ++i) {
+            var ceil = Math.min(start + length, this.size());
+            for (var i = start; i < ceil; ++i) {
                 subList.add(this.get(i));
             }
             return subList;

@@ -41,8 +41,8 @@ public class RunTest extends AnAction
     @Override
     public void actionPerformed(AnActionEvent e)
     {
-        long startTime = System.nanoTime();
-        Logger logger = new Logger();
+        var startTime = System.nanoTime();
+        var logger = new Logger();
         logger.logMsg("Searching for \"UnitTest\" class in project...");
         List<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
             .fop(file -> findTestDataPvdrFuncs(file))
@@ -51,14 +51,14 @@ public class RunTest extends AnAction
                     .map(ret -> ret.getArgument())
                     .fop(toCast(PhpExpression.class))
                     .map(retVal -> {
-                        SearchContext search = new SearchContext().setDepth(30);
-                        FuncCtx funcCtx = new FuncCtx(search);
+                        var search = new SearchContext().setDepth(30);
+                        var funcCtx = new FuncCtx(search);
                         return funcCtx.findExprType(retVal).types;
                     })
                     .fap(a -> a)
                     .fap(ltype -> L(ltype.getElemTypes())
                         .fop((rett, i) -> {
-                            CaseContext ctx = new CaseContext(logger);
+                            var ctx = new CaseContext(logger);
                             ctx.dataProviderName = func.getName();
                             ctx.testNumber = i;
                             return opt(rett.keys.get("0"))
@@ -67,7 +67,7 @@ public class RunTest extends AnAction
                                         try {
                                             return ctx.testCase(list(input), output);
                                         } catch (RuntimeException exc) {
-                                            String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
+                                            var msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
                                                 // + "\n" + Tls.getStackTrace(exc)
                                                 ;
                                             return list(new Error(ctx, msg));
@@ -79,7 +79,7 @@ public class RunTest extends AnAction
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .def(list());
 
-        double seconds = (System.nanoTime() - startTime) / 1000000000.0;
+        var seconds = (System.nanoTime() - startTime) / 1000000000.0;
         logger.logMsg("");
         errors.forEach(logger::logErr);
         logger.logMsg("Done testing with " + errors.size() + " errors and " + logger.sucCnt + " OK-s in " + seconds + " s. \n");
@@ -108,9 +108,9 @@ public class RunTest extends AnAction
         {
             List<Error> errors = list();
 
-            DeepType expectedt = expected.getTypes().get(0);
+            var expectedt = expected.getTypes().get(0);
             expectedt.keys.forEach((subKey, subExpected) -> {
-                L<DeepType.Key> havingKey = L(actual)
+                var havingKey = L(actual)
                     .fap(krecs -> L(krecs.getTypes())
                         .fop(t -> opt(t.keys.get(subKey))).s);
 
@@ -162,7 +162,7 @@ public class RunTest extends AnAction
         {
             System.out.print(text);
             wholeText += text;
-            L<String> lines = L(text.split("/\n/"));
+            var lines = L(text.split("/\n/"));
             if (lines.size() > 1) {
                 caret = 0;
             }
@@ -174,7 +174,7 @@ public class RunTest extends AnAction
 
         void logErr(Error err)
         {
-            String msg = "Error in " + err.dataProviderName + " #" + err.testNumber + " " +
+            var msg = "Error in " + err.dataProviderName + " #" + err.testNumber + " " +
                 L(err.keyChain).rdc((a,b) -> a + ", " + b, "") + " " + err.message;
             logMsg(msg);
         }

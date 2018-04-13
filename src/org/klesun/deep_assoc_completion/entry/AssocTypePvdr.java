@@ -31,8 +31,8 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
     @Nullable
     public PhpType getType(PsiElement psi)
     {
-        Project project = psi.getProject();
-        DeepSettings settings = DeepSettings.inst(project);
+        var project = psi.getProject();
+        var settings = DeepSettings.inst(project);
         if (!settings.bgTypePvdrEnabled) {
             return null;
         }
@@ -45,12 +45,12 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
             return null;
         }
 
-        long startTime = System.nanoTime();
+        var startTime = System.nanoTime();
 
-        boolean isMethCall = PlatformPatterns.psiElement()
+        var isMethCall = PlatformPatterns.psiElement()
             .withParent(PlatformPatterns.psiElement(PhpElementTypes.METHOD_REFERENCE))
             .accepts(psi);
-        boolean isFieldAcc = PlatformPatterns.psiElement()
+        var isFieldAcc = PlatformPatterns.psiElement()
             .withParent(PlatformPatterns.psiElement(PhpElementTypes.FIELD_REFERENCE))
             .accepts(psi);
 
@@ -61,11 +61,11 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
 
         // Type Provider is called at random points of time breaking
         // my recursive formatting in STDOUT, so always setDebug(false)
-        SearchContext search = new SearchContext()
+        var search = new SearchContext()
             .setDepth(settings.bgTypePvdrDepthLimit)
             .setTimeout(settings.bgTypePvdrTimeout / 1000)
             .setMaxExpressions(1000).setDebug(false);
-        FuncCtx funcCtx = new FuncCtx(search);
+        var funcCtx = new FuncCtx(search);
 
         @Nullable PhpType result = null;
         try {
@@ -79,7 +79,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
             if (allowedExceptions.any(excCls -> exc.getClass().isAssignableFrom(excCls))) {
                 throw exc;
             } else {
-                String msg = "Unexpected exception in deep-assoc-completion plugin - " + exc.getClass() + " while resolving " + psi.getText() + " " + psi.getClass() + " " + opt(psi.getContainingFile()).map(f -> f.getName()).def("(no file)") + " :" + psi.getTextOffset();
+                var msg = "Unexpected exception in deep-assoc-completion plugin - " + exc.getClass() + " while resolving " + psi.getText() + " " + psi.getClass() + " " + opt(psi.getContainingFile()).map(f -> f.getName()).def("(no file)") + " :" + psi.getTextOffset();
                 com.intellij.openapi.diagnostic.Logger.getInstance(getClass()).debug(msg, exc);
                 System.out.println(msg + "\n" + Tls.getStackTrace(exc));
                 // it would also be nice to email such cases to me somehow...
@@ -87,8 +87,8 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
             }
         }
 
-        long elapsed = System.nanoTime() - startTime;
-        double seconds = elapsed / 1000000000.0;
+        var elapsed = System.nanoTime() - startTime;
+        var seconds = elapsed / 1000000000.0;
         if (search.getExpressionsResolved() > 0 && seconds > 0.5) {
             System.out.println("Resolved " + search.getExpressionsResolved() + " expressions in " + seconds + " seconds");
         }

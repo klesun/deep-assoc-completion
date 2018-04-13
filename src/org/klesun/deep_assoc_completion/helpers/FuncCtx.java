@@ -55,7 +55,7 @@ public class FuncCtx extends Lang
     public Opt<MultiType> getArg(ArgOrder orderObj)
     {
         if (!orderObj.isVariadic) {
-            int index = orderObj.order;
+            var index = orderObj.order;
             return argGetters.gat(index).map(argGetter -> {
                 if (!cachedArgs.containsKey(index)) {
                     cachedArgs.put(index, argGetter.get());
@@ -64,7 +64,7 @@ public class FuncCtx extends Lang
             });
         } else {
             return uniqueRef.map(ref -> {
-                DeepType allArgs = new DeepType(ref, PhpType.ARRAY);
+                var allArgs = new DeepType(ref, PhpType.ARRAY);
                 argGetters.sub(orderObj.order)
                     .map(argGetter -> argGetter.get())
                     .fch((mt, i) -> allArgs.addKey(i + "", ref)
@@ -82,14 +82,14 @@ public class FuncCtx extends Lang
     @NotNull
     public MultiType findExprType(PhpExpression expr)
     {
-        MultiType result = search.findExprType(expr, this).def(new MultiType(L()));
+        var result = search.findExprType(expr, this).def(new MultiType(L()));
         return result;
     }
 
     /** when you simply call function */
     public FuncCtx subCtxDirect(MethodReference funcCall)
     {
-        FuncCtx self = subCtxDirectGeneric(funcCall);
+        var self = subCtxDirectGeneric(funcCall);
         self.instGetter = opt(funcCall.getClassReference())
             .map(obj -> () -> findExprType(obj));
         return self;
@@ -107,7 +107,7 @@ public class FuncCtx extends Lang
 
     public FuncCtx subCtxDirectGeneric(ParameterListOwner funcCall)
     {
-        L<PsiElement> psiArgs = L(funcCall.getParameters());
+        var psiArgs = L(funcCall.getParameters());
         L<S<MultiType>> argGetters = psiArgs.map((psi) -> () -> Tls.cast(PhpExpression.class, psi)
             .uni(arg -> findExprType(arg), () -> MultiType.INVALID_PSI));
         return new FuncCtx(this, argGetters, funcCall, EArgPsiType.DIRECT);
@@ -123,12 +123,12 @@ public class FuncCtx extends Lang
     /** when you have expression PSI and it is not directly passed to the func, ex. call_user_func_array() */
     public FuncCtx subCtxIndirect(PhpExpression args)
     {
-        S<MultiType> getMt = Tls.onDemand(() -> findExprType(args));
+        var getMt = Tls.onDemand(() -> findExprType(args));
         L<S<MultiType>> argGetters = list();
         // always 10 arguments, got any problem?
         // it probably should be done correctly one day...
-        for (int i = 0; i < 10; ++i) {
-            String key = i + "";
+        for (var i = 0; i < 10; ++i) {
+            var key = i + "";
             argGetters.add(() -> getMt.get().getKey(key));
         }
         return new FuncCtx(this, argGetters, args, EArgPsiType.INDIRECT);
@@ -151,7 +151,7 @@ public class FuncCtx extends Lang
             // so they should have same hash code
             return 4348980; // random int
         } else {
-            int noParentSalt = 7052005; // random int
+            var noParentSalt = 7052005; // random int
             int parentHash = parent.uni(p -> p.hashCode(), () -> noParentSalt);
             return Arrays.asList(parentHash, uniqueRef.unw().hashCode()).hashCode();
         }
@@ -179,7 +179,7 @@ public class FuncCtx extends Lang
     public String toString()
     {
         L<PsiElement> parents = L();
-        FuncCtx tmp = this;
+        var tmp = this;
         while (tmp != null && tmp.uniqueRef.has()) {
             parents.add(tmp.uniqueRef.unw());
             tmp = tmp.parent.def(null);
@@ -194,8 +194,8 @@ public class FuncCtx extends Lang
      */
     public PsiElement getRealPsi(PsiElement maybeFake)
     {
-        PsiFile file = maybeFake.getContainingFile();
-        PsiDirectory dir = file.getContainingDirectory();
+        var file = maybeFake.getContainingFile();
+        var dir = file.getContainingDirectory();
         if (dir == null && fakeFileSource.has()) {
             return fakeFileSource.unw();
         } else {

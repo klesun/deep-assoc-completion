@@ -40,9 +40,9 @@ public class FieldRes extends Lang
 
     private boolean isCircularExpr(FieldReferenceImpl fieldRef)
     {
-        L<PhpExpression> psiTrace = ctx.getSearch().psiTrace;
+        var psiTrace = ctx.getSearch().psiTrace;
         // -1, because last always will be this PSI, not a circular reference
-        for (int i = 0; i < psiTrace.size() - 1; ++i) {
+        for (var i = 0; i < psiTrace.size() - 1; ++i) {
             if (psiTrace.get(i).isEquivalentTo(fieldRef)) {
                 return true;
             }
@@ -68,14 +68,14 @@ public class FieldRes extends Lang
         L<DeepType> result = list();
         findReferenced(fieldRef)
             .fch(resolved -> {
-                FuncCtx implCtx = new FuncCtx(ctx.getSearch());
+                var implCtx = new FuncCtx(ctx.getSearch());
                 Tls.cast(FieldImpl.class, resolved)
                     .map(fld -> fld.getDefaultValue())
                     .fop(toCast(PhpExpression.class))
                     .map(def -> implCtx.findExprType(def).types)
                     .thn(result::addAll);
 
-                L<Assign> asses = opt(resolved.getContainingFile())
+                var asses = opt(resolved.getContainingFile())
                     .map(file -> findReferences(file, fieldRef.getName()))
                     .def(L())
                     .fap(psi -> Tls.findParent(psi, Method.class, a -> true)

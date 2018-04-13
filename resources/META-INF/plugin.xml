@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.03.29.001</version>
+    <version>2018.04.14.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,8 +29,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-        <li>Go To the doc comment instead of fake foo.bar file</li>
-        <li>Make BG Type Provider timeout configurable</li>
+        <li>Refactor versioned code to Java 10 var-s (I guess I'll run Code Analysis before each production and replace them back to types)</li>
     </ul>
     ]]>
     </change-notes>

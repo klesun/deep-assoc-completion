@@ -29,11 +29,11 @@ public class ArrFuncRefGoToDecl extends Lang implements GotoDeclarationHandler
     @Override
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
-        SearchContext search = new SearchContext()
+        var search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(false));
-        FuncCtx funcCtx = new FuncCtx(search);
+        var funcCtx = new FuncCtx(search);
 
-        L<Method> psiTargets = opt(psiElement)
+        var psiTargets = opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
             .fap(literal -> opt(literal.getParent())

@@ -26,7 +26,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 {
     private static PsiElement truncateOnLineBreak(PsiElement psi)
     {
-        PsiElement truncated = psi.getFirstChild();
+        var truncated = psi.getFirstChild();
         while (psi.getText().contains("\n") && truncated != null) {
             psi = truncated;
             truncated = psi.getFirstChild();
@@ -38,8 +38,8 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
     private static void removeDuplicates(L<PsiElement> psiTargets)
     {
         Set<PsiElement> fingerprints = new HashSet<>();
-        int size = psiTargets.size();
-        for (int k = size - 1; k >= 0; --k) {
+        var size = psiTargets.size();
+        for (var k = size - 1; k >= 0; --k) {
             if (fingerprints.contains(psiTargets.get(k))) {
                 psiTargets.remove(k);
             }
@@ -51,9 +51,9 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
     @Override
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
-        SearchContext search = new SearchContext()
+        var search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(false));
-        FuncCtx funcCtx = new FuncCtx(search);
+        var funcCtx = new FuncCtx(search);
 
         L<PsiElement> psiTargets = L();
         opt(psiElement)
@@ -67,7 +67,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 .fop(toCast(PhpExpression.class))
                 .map(srcExpr -> funcCtx.findExprType(srcExpr).types)
                 .thn(arrayTypes -> arrayTypes.forEach(arrayType -> {
-                    String key = funcCtx.findExprType(literal).getStringValue();
+                    var key = funcCtx.findExprType(literal).getStringValue();
                     if (arrayType.keys.containsKey(key)) {
                         psiTargets.add(arrayType.keys.get(key).definition);
                     }

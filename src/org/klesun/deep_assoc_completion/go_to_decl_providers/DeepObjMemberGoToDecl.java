@@ -41,11 +41,11 @@ public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandle
     @Override
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
-        SearchContext search = new SearchContext()
+        var search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(false));
-        FuncCtx funcCtx = new FuncCtx(search);
+        var funcCtx = new FuncCtx(search);
 
-        L<? extends PsiElement> psiTargets = opt(psiElement)
+        var psiTargets = opt(psiElement)
             .map(leaf -> leaf.getParent())
             .fop(toCast(MemberReference.class))
             .flt(mem -> opt(mem.getClassReference())

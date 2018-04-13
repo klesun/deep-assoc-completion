@@ -31,7 +31,7 @@ public class DocParamRes extends Lang
     {
         // adding "$arg = " so anonymous functions were parsed as expressions
         expr = "<?php\n$arg = " + expr + ";";
-        PsiFile psiFile = PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr);
+        var psiFile = PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr);
         return opt(psiFile.getFirstChild())
             .fop(toCast(GroupStatement.class))
             .map(gr -> gr.getFirstPsiChild())
@@ -43,9 +43,9 @@ public class DocParamRes extends Lang
 
     private Opt<MultiType> parseDoc(PhpDocTag doc, Project project)
     {
-        Pattern pattern = Pattern.compile("^\\s*=\\s*(.+)$", Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(doc.getTagValue());
-        FuncCtx docCtx = new FuncCtx(ctx.getSearch());
+        var pattern = Pattern.compile("^\\s*=\\s*(.+)$", Pattern.DOTALL);
+        var matcher = pattern.matcher(doc.getTagValue());
+        var docCtx = new FuncCtx(ctx.getSearch());
         docCtx.fakeFileSource = opt(doc);
         if (matcher.matches()) {
             return parseExpression(matcher.group(1), project, docCtx);

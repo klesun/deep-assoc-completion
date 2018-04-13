@@ -35,8 +35,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     private static InsertHandler<LookupElement> makeInsertHandler()
     {
         return (ctx, lookup) -> {
-            int from = ctx.getStartOffset();
-            int to = ctx.getTailOffset();
+            var from = ctx.getStartOffset();
+            var to = ctx.getTailOffset();
             if (Tls.isNum(lookup.getLookupString()) && from != to) {
                 if (ctx.getEditor().getDocument().getText(TextRange.create(from - 1, from)).equals("'") &&
                     ctx.getEditor().getDocument().getText(TextRange.create(to, to + 1)).equals("'")
@@ -102,19 +102,19 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        int depth = getMaxDepth(parameters.isAutoPopup());
-        SearchContext search = new SearchContext().setDepth(depth);
-        FuncCtx funcCtx = new FuncCtx(search);
+        var depth = getMaxDepth(parameters.isAutoPopup());
+        var search = new SearchContext().setDepth(depth);
+        var funcCtx = new FuncCtx(search);
 
         Set<String> suggested = new HashSet<>();
-        PsiElement caretPsi = parameters.getPosition(); // usually leaf element
-        Opt<PsiElement> firstParent = opt(caretPsi.getParent());
+        var caretPsi = parameters.getPosition(); // usually leaf element
+        var firstParent = opt(caretPsi.getParent());
         boolean includeQuotes = firstParent
             .fop(toCast(StringLiteralExpression.class)) // inside ['']
             .uni(l -> false, () -> true); // else just inside []
 
-        long startTime = System.nanoTime();
-        MultiType mt = firstParent
+        var startTime = System.nanoTime();
+        var mt = firstParent
             .map(litRaw -> litRaw.getParent())
             .fop(toCast(ArrayIndex.class))
             .map(index -> index.getParent())
@@ -124,24 +124,24 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .map(srcExpr -> funcCtx.findExprType(srcExpr))
             .def(MultiType.INVALID_PSI);
 
-        L<String> keyNames = mt.getKeyNames();
+        var keyNames = mt.getKeyNames();
         L<MutableLookup> lookups = L();
         // preliminary keys without type - they may be at least 3 times faster in some cases
         keyNames.fch((keyName, i) -> {
-            LookupElement justName = makePaddedLookup(keyName, "resolving...", "");
-            MutableLookup mutLookup = new MutableLookup(justName, includeQuotes);
+            var justName = makePaddedLookup(keyName, "resolving...", "");
+            var mutLookup = new MutableLookup(justName, includeQuotes);
             result.addElement(PrioritizedLookupElement.withPriority(mutLookup, 2000 - i));
             lookups.add(mutLookup);
 
-            String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
+            var briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
             mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "");
         });
-        L<DeepType> indexTypes = mt.types.fap(t -> t.getElemTypes());
+        var indexTypes = mt.types.fap(t -> t.getElemTypes());
         if (indexTypes.size() > 0) {
-            String typeText = new MultiType(indexTypes).getBriefValueText(BRIEF_TYPE_MAX_LEN);
-            String ideaType = new MultiType(indexTypes).getIdeaType().filterUnknown().toStringResolved();
+            var typeText = new MultiType(indexTypes).getBriefValueText(BRIEF_TYPE_MAX_LEN);
+            var ideaType = new MultiType(indexTypes).getIdeaType().filterUnknown().toStringResolved();
             if (mt.hasNumberIndexes()) {
-                for (int k = 0; k < 5; ++k) {
+                for (var k = 0; k < 5; ++k) {
                     result.addElement(makePaddedLookup(k + "", ideaType, typeText));
                 }
             } else {
@@ -161,7 +161,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         suggested.addAll(lookups.map(l -> l.getLookupString()));
         result.runRemainingContributors(parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
-            LookupElement lookup = otherSourceResult.getLookupElement();
+            var lookup = otherSourceResult.getLookupElement();
             if (!suggested.contains(lookup.getLookupString()) &&
                 !isEmptySquareBracket // no auto-popup is needed here
             ) {
@@ -172,17 +172,17 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // following code calculates deeper type info for
         // completion options and updates them in the dialog
 
-        Lang.Dict<LookupElement> nameToNewLookup = keyNames.key(keyName -> keyName)
+        var nameToNewLookup = keyNames.key(keyName -> keyName)
             .map(keyName -> mt.getKey(keyName))
             .map((keyMt, keyName) -> {
-                String briefValue = keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
-                String ideaTypeStr = keyMt.getIdeaType().filterUnknown().toStringResolved();
+                var briefValue = keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
+                var ideaTypeStr = keyMt.getIdeaType().filterUnknown().toStringResolved();
                 return makePaddedLookup(keyName, ideaTypeStr, briefValue);
             });
 
         lookups.fch(l -> nameToNewLookup.gat(l.getKeyName()).thn(newL -> l.lookupData = newL));
 
-        long elapsed = System.nanoTime() - startTime;
+        var elapsed = System.nanoTime() - startTime;
         result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
 
         if (search.getExpressionsResolved() > 100) {

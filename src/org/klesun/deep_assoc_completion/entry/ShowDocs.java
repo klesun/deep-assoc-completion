@@ -34,8 +34,8 @@ public class ShowDocs extends AnAction
 {
     public static List<DeepType> findPsiType(PsiElement psi)
     {
-        SearchContext search = new SearchContext().setDepth(20);
-        FuncCtx funcCtx = new FuncCtx(search);
+        var search = new SearchContext().setDepth(20);
+        var funcCtx = new FuncCtx(search);
 
         return list(
             Tls.cast(PhpExpression.class, psi)
@@ -48,8 +48,8 @@ public class ShowDocs extends AnAction
                         .map(lst -> lst.getParent())
                         .fop(toCast(Function.class))
                         .fap(func -> {
-                            DeepType arrt = new DeepType(par, PhpType.ARRAY);
-                            L<String> keys = new KeyUsageResolver(funcCtx, 3).resolveArgUsedKeys(func, order);
+                            var arrt = new DeepType(par, PhpType.ARRAY);
+                            var keys = new KeyUsageResolver(funcCtx, 3).resolveArgUsedKeys(func, order);
                             keys.fch(k -> arrt.addKey(k, psi));
                             return list(arrt);
                         });
@@ -59,7 +59,7 @@ public class ShowDocs extends AnAction
 
     public void actionPerformed(AnActionEvent e)
     {
-        String doc = opt(e.getData(LangDataKeys.PSI_FILE))
+        var doc = opt(e.getData(LangDataKeys.PSI_FILE))
             .fop(psiFile -> opt(e.getData(LangDataKeys.CARET))
                 .map(caret -> psiFile.findElementAt(caret.getOffset())))
             .map(psi -> psi instanceof LeafPsiElement ? psi.getParent() : psi)
@@ -68,11 +68,11 @@ public class ShowDocs extends AnAction
 
         System.out.println(doc);
         // see https://www.jetbrains.org/intellij/sdk/docs/user_interface_components/editor_components.html
-        EditorTextField textArea = new EditorTextField(doc, e.getProject(), JsonFileType.INSTANCE);
+        var textArea = new EditorTextField(doc, e.getProject(), JsonFileType.INSTANCE);
         textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
         textArea.setEnabled(true); // to make text editable (to navigate with arrows)
         textArea.setOneLineMode(false);
-        JBScrollPane scroll = new JBScrollPane(textArea);
+        var scroll = new JBScrollPane(textArea);
         scroll.setPreferredSize(new Dimension(400, 400));
         scroll.setMaximumSize(new Dimension(800, 800));
 

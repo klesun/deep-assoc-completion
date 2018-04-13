@@ -56,14 +56,14 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        SearchContext search = new SearchContext()
+        var search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(parameters.isAutoPopup()));
-        FuncCtx funcCtx = new FuncCtx(search);
+        var funcCtx = new FuncCtx(search);
 
-        long startTime = System.nanoTime();
-        L<String> usedKeys = assertArrCtorKey(parameters)
+        var startTime = System.nanoTime();
+        var usedKeys = assertArrCtorKey(parameters)
             .fap(arrCtor -> {
-                L<String> alreadyDeclared = L(arrCtor.getHashElements())
+                var alreadyDeclared = L(arrCtor.getHashElements())
                     .fop(el -> opt(el.getKey()))
                     .fop(toCast(StringLiteralExpressionImpl.class))
                     .map(lit -> lit.getContents());
@@ -76,7 +76,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
             .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - i))
             .fch(result::addElement);
 
-        long elapsed = System.nanoTime() - startTime;
+        var elapsed = System.nanoTime() - startTime;
         result.addLookupAdvertisement("Resolved used keys in " + (elapsed / 1000000000.0) + " seconds");
     }
 }

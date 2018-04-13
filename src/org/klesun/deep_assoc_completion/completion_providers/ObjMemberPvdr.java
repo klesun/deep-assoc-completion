@@ -31,7 +31,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     private static InsertHandler<LookupElement> makeMethInsertHandler()
     {
         return (ctx, lookup) -> {
-            int to = ctx.getTailOffset();
+            var to = ctx.getTailOffset();
             // adding parentheses around caret
             ctx.getEditor().getDocument().insertString(to, "(");
             ctx.getEditor().getDocument().insertString(to + 1, ")");
@@ -41,7 +41,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
 
     private static LookupElement makeLookup(PhpClassMember member)
     {
-        LookupElementBuilder base = LookupElementBuilder.create(member.getName())
+        var base = LookupElementBuilder.create(member.getName())
             .bold()
             .withIcon(PhpIcons.METHOD)
             .withTypeText(member.getType().filterUnknown().toString());
@@ -64,11 +64,11 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        SearchContext search = new SearchContext()
+        var search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(parameters.isAutoPopup()));
-        FuncCtx funcCtx = new FuncCtx(search);
-        long startTime = System.nanoTime();
-        L<? extends PhpClassMember> members = opt(parameters.getPosition().getParent())
+        var funcCtx = new FuncCtx(search);
+        var startTime = System.nanoTime();
+        var members = opt(parameters.getPosition().getParent())
             .fop(toCast(MemberReference.class))
             .map(mem -> mem.getClassReference())
             .fap(ref -> {
@@ -90,8 +90,8 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             });
 
         members.map(m -> makeLookup(m)).fch(result::addElement);
-        long elapsed = System.nanoTime() - startTime;
-        String msg = "Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds";
+        var elapsed = System.nanoTime() - startTime;
+        var msg = "Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds";
         result.addLookupAdvertisement(msg);
     }
 }

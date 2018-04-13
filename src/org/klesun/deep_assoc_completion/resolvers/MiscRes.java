@@ -56,7 +56,7 @@ public class MiscRes extends Lang
                         || op.getText().equals("%") || op.getText().equals("**")
                     )
                     .map(op -> {
-                        DeepType type = new DeepType(bin, PhpType.NUMBER);
+                        var type = new DeepType(bin, PhpType.NUMBER);
                         type.isNumber = true;
                         return list(type);
                     }))
@@ -64,8 +64,8 @@ public class MiscRes extends Lang
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("+"))
                     .map(op -> {
-                        MultiType lmt = findPsiExprType(bin.getLeftOperand());
-                        MultiType rmt = findPsiExprType(bin.getRightOperand());
+                        var lmt = findPsiExprType(bin.getLeftOperand());
+                        var rmt = findPsiExprType(bin.getRightOperand());
                         L<DeepType> types = L();
                         if (lmt.types.cct(rmt.types).any(t -> t.isNumber())) {
                             types.add(new DeepType(bin, PhpType.NUMBER));
@@ -79,11 +79,11 @@ public class MiscRes extends Lang
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("."))
                     .map(op -> {
-                        MultiType lmt = findPsiExprType(bin.getLeftOperand());
-                        MultiType rmt = findPsiExprType(bin.getRightOperand());
-                        String ccted = opt(lmt.getStringValue()).def("") + opt(rmt.getStringValue()).def("");
-                        String unescaped = StringEscapeUtils.unescapeJava(ccted); // PHP ~ java
-                        DeepType type = new DeepType(bin, PhpType.STRING, unescaped);
+                        var lmt = findPsiExprType(bin.getLeftOperand());
+                        var rmt = findPsiExprType(bin.getRightOperand());
+                        var ccted = opt(lmt.getStringValue()).def("") + opt(rmt.getStringValue()).def("");
+                        var unescaped = StringEscapeUtils.unescapeJava(ccted); // PHP ~ java
+                        var type = new DeepType(bin, PhpType.STRING, unescaped);
                         return list(type);
                     }))
             , Tls.cast(NewExpressionImpl.class, expr)

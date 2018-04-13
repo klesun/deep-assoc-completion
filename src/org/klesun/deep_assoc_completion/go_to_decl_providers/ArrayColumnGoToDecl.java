@@ -27,8 +27,8 @@ public class ArrayColumnGoToDecl extends Lang implements GotoDeclarationHandler
     private static void removeDuplicates(List<PsiElement> psiTargets)
     {
         Set<PsiElement> fingerprints = new HashSet<>();
-        int size = psiTargets.size();
-        for (int k = size - 1; k >= 0; --k) {
+        var size = psiTargets.size();
+        for (var k = size - 1; k >= 0; --k) {
             if (fingerprints.contains(psiTargets.get(k))) {
                 psiTargets.remove(k);
             }
@@ -40,11 +40,11 @@ public class ArrayColumnGoToDecl extends Lang implements GotoDeclarationHandler
     @Override
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
-        SearchContext search = new SearchContext()
+        var search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(false));
-        FuncCtx funcCtx = new FuncCtx(search);
+        var funcCtx = new FuncCtx(search);
 
-        L<PsiElement> psiTargets = opt(psiElement)
+        var psiTargets = opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
             .map(literal -> opt(literal.getParent())
