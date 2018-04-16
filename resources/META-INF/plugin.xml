@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.04.14.001</version>
+    <version>2018.04.17.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,6 +29,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
+        <li>Add an option to remove unused use-s on save (just a simple nice feature)</li>
         <li>Refactor versioned code to Java 10 var-s (I guess I'll run Code Analysis before each production and replace them back to types)</li>
     </ul>
     ]]>
@@ -53,6 +54,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
             nonDefaultProject="true"
         />
         <projectService serviceImplementation="org.klesun.deep_assoc_completion.entry.DeepSettings"/>
+        <fileDocumentManagerListener implementation="org.klesun.deep_assoc_completion.entry.RemoveUnusedUsesSaveHandler"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.jetbrains.php">

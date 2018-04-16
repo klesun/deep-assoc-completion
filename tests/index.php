@@ -1,8 +1,7 @@
 <?php
 
-use DeepTest\KiraYoshikage;
 use DeepTest\TestData;
-use Lib\Utils\Fp;
+use Illuminate\Database\Eloquent\Model, Lib\Utils\Fp;
 
 class DeepKeysTest
 {

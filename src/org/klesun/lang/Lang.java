@@ -452,7 +452,7 @@ public class Lang
             return list(this.s, more).fap(a -> a);
         }
 
-        public L<T> srt(F<T, String> makeValue)
+        public <U extends Comparable> L<T> srt(F<T, U> makeValue)
         {
             var weights = map(makeValue);
             var indexes = Tls.range(0, size());
