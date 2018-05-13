@@ -394,7 +394,7 @@ class DeepKeysTest
             $type = 'FQTV';
         }
         // should suggest: DOCO, DOCA, DOCS, FQTV
-        if ($type === '') {
+        if ($type === 'DOCA') {
 
         }
         // should also suggest: DOCO, DOCA, DOCS, FQTV

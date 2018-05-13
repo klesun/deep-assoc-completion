@@ -115,7 +115,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     @Nullable
     @Override
     public String getActionText(DataContext dataContext) {
-        // dunno what this does
-        return "viva Denis!";
+        // renames the "Declaration" action if returned value is not null
+        return null;
     }
 }
