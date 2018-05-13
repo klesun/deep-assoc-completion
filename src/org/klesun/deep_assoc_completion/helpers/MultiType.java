@@ -44,6 +44,7 @@ public class MultiType extends Lang
         this(types, REASON.OK);
     }
 
+    /** transforms type T to T[] */
     public DeepType getInArray(PsiElement call)
     {
         var result = new DeepType(call, PhpType.ARRAY);

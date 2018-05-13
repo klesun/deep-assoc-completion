@@ -112,12 +112,8 @@ public class MethCallRes extends Lang
         var impls = meth.isAbstract()
             ? findOverridingMethods(meth)
             : list(meth);
-        return (FuncCtx funcCtx) -> impls
-            .fap(m -> ClosRes.findFunctionReturns(m))
-            .map(ret -> ret.getArgument())
-            .fop(toCast(PhpExpression.class))
-            .map(retVal -> funcCtx.findExprType(retVal))
-            .fap(mt -> mt.types);
+        return (FuncCtx funcCtx) -> impls.fap(m ->
+            ClosRes.getReturnedValue(m, funcCtx).types);
     }
 
     private static List<Method> resolveMethodsNoNs(String clsName, String func, Project proj)

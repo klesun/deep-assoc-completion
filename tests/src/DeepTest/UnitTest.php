@@ -1760,6 +1760,30 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function getFareStream()
+    {
+        for ($i = 0; $i < 10; ++$i) {
+            yield [
+                'fareBasis' => 'QWE123',
+                'currency' => 'USD',
+                'airline' => 'AA',
+                'amount' => rand(1, 100),
+            ];
+        }
+    }
+
+    public function provideYield()
+    {
+        $fares = [];
+        foreach (static::getFareStream() as $i => $fare) {
+            $fare['index'] = $i;
+            $fares[] = $fare;
+        }
+        $fares[0][''];
+        $list[] = [$fares[0], ['fareBasis' => [], 'currency' => [], 'airline' => [], 'amount' => [], 'index' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

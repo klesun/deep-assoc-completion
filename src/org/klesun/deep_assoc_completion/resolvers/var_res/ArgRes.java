@@ -231,12 +231,7 @@ public class ArgRes extends Lang
             .fop(ref -> L(ref.getReferences()).fst())
             .map(ref -> ref.resolve())
             .fop(toCast(MethodImpl.class))
-            .map(met -> ClosRes.findFunctionReturns(met))
-            .map(rets -> rets
-                .fop(ret -> opt(ret.getArgument()))
-                .fop(toCast(PhpExpression.class))
-                .map(val -> new FuncCtx(trace.getSearch()).findExprType(val))
-                .fap(mt -> mt.types))
+            .map(met -> ClosRes.getReturnedValue(met, new FuncCtx(trace.getSearch())).types)
             .map(ts -> new MultiType(ts).getEl())
             .fop(mt -> getArgOrder(param)
                 .map(order -> mt.getKey(order + "")))

@@ -5,6 +5,7 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
 
@@ -32,17 +33,41 @@ public class ClosRes extends Lang
         return result;
     }
 
+    private static L<PhpYield> findFunctionYields(PsiElement funcBody)
+    {
+        L<PhpYield> result = list();
+        for (var child: funcBody.getChildren()) {
+            // anonymous functions
+            if (child instanceof Function) continue;
+
+            Tls.cast(PhpYield.class, child)
+                .thn(result::add);
+
+            findFunctionYields(child).forEach(result::add);
+        }
+        return result;
+    }
+
+    public static MultiType getReturnedValue(PsiElement funcBody, FuncCtx ctx)
+    {
+        return list(
+            findFunctionReturns(funcBody)
+                .fop(ret -> opt(ret.getArgument()))
+                .fop(toCast(PhpExpression.class))
+                .map(val -> ctx.findExprType(val)),
+            findFunctionYields(funcBody)
+                .fop(ret -> opt(ret.getArgument()))
+                .fop(toCast(PhpExpression.class))
+                .map(val -> ctx.findExprType(val).getInArray(funcBody))
+                .map(t -> new MultiType(list(t)))
+        ).fap(a -> a).fap(mt -> mt.types).wap(MultiType::new);
+    }
+
     public DeepType resolve(FunctionImpl func)
     {
         var result = new DeepType(func, func.getLocalType(true));
-        findFunctionReturns(func)
-            .map(ret -> ret.getArgument())
-            .fop(toCast(PhpExpression.class))
-            .fch(retVal -> {
-                F<FuncCtx, L<DeepType>> rtGetter =
-                    (funcCtx) -> funcCtx.findExprType(retVal).types;
-                result.returnTypeGetters.add(rtGetter);
-            });
+        result.returnTypeGetters.add((funcCtx) ->
+            getReturnedValue(func, funcCtx).types);
         return result;
     }
 

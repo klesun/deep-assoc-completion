@@ -536,10 +536,6 @@ class DeepKeysTest
         ]);
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     private static function testInArray()
     {
         $i = rand(0, 3);
@@ -551,6 +547,10 @@ class DeepKeysTest
 
         }
     }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function makeCoolOutfit($materials)
     {
