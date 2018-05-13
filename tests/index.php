@@ -540,6 +540,18 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    private static function testInArray()
+    {
+        $i = rand(0, 3);
+        $type = ['AIR', 'CAR', 'HOTEL', 'RAIL'][$i];
+        if ($type === '') {
+
+        }
+        if (in_array($type, ['CAR', ''])) {
+
+        }
+    }
+
     private static function makeCoolOutfit($materials)
     {
         return [

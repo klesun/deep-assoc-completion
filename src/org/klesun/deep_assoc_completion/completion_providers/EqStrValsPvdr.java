@@ -11,8 +11,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
@@ -22,6 +21,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
 
 import java.util.HashSet;
 import java.util.List;
@@ -46,22 +46,52 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
         return mt.getStringValues().map(strVal -> makeLookupBase(strVal, "string"));
     }
 
+    /** $type === '' */
+    private static Opt<MultiType> resolveEqExpr(StringLiteralExpression lit, FuncCtx funcCtx)
+    {
+        return opt(lit)
+            .map(literal -> literal.getParent()) // BinaryExpressionImpl
+            .fop(toCast(BinaryExpressionImpl.class))
+            .fop(bin -> opt(bin.getOperation())
+                .flt(op -> op.getText().equals("==") || op.getText().equals("===")
+                        || op.getText().equals("!=") || op.getText().equals("!=="))
+                .map(op -> bin.getLeftOperand())
+                .fop(toCast(PhpExpression.class))
+                .map(exp -> funcCtx.findExprType(exp)))
+            ;
+    }
+
+    /** in_array($type, ['']) */
+    private static Opt<MultiType> resolveInArray(StringLiteralExpression lit, FuncCtx funcCtx)
+    {
+        return opt(lit)
+            .map(literal -> literal.getParent()) // array value
+            .map(literal -> literal.getParent())
+            .fop(toCast(ArrayCreationExpression.class))
+            .fop(arr -> opt(arr.getParent())
+                .fop(toCast(ParameterList.class))
+                .flt(lst -> L(lst.getParameters()).gat(1)
+                    .flt(arg -> arg.isEquivalentTo(arr)).has()
+                )
+                .flt(lst -> opt(lst.getParent())
+                    .fop(toCast(FunctionReference.class))
+                    .map(fun -> fun.getName())
+                    .flt(nme -> nme.equals("in_array")).has())
+                .fop(lst -> L(lst.getParameters()).gat(0))
+                .fop(toCast(PhpExpression.class))
+                .map(str -> funcCtx.findExprType(str)));
+    }
+
     private MultiType resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
         var search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup));
         var funcCtx = new FuncCtx(search);
 
-        return opt(lit)
-            .map(literal -> literal.getParent()) // BinaryExpressionImpl
-            .fop(toCast(BinaryExpressionImpl.class))
-            .fop(bin -> opt(bin.getOperation())
-                .flt(op -> op.getText().equals("==") || op.getText().equals("===")
-                    || op.getText().equals("!=") || op.getText().equals("!=="))
-                .map(op -> bin.getLeftOperand())
-                .fop(toCast(PhpExpression.class))
-                .map(exp -> funcCtx.findExprType(exp)))
-            .def(MultiType.INVALID_PSI);
+        return Opt.fst(list(
+            resolveEqExpr(lit, funcCtx),
+            resolveInArray(lit, funcCtx)
+        )).def(MultiType.INVALID_PSI);
     }
 
     @Override
