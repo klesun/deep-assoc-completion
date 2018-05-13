@@ -552,6 +552,17 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    /** pressing _Ctrl + Alt + ;_ and specifying test number (say 3) should get you to the 3-rd */
+    public function testGetNthTestCase()
+    {
+        $list = [];
+        $list[] = ['ASD ASD ASD ASD ', ['a' => 1, 'b' => 2]];
+        $list[] = ['ASD ASD ASD ASD ', ['a' => 1, 'b' => 2]];
+        $list[] = ['ASD ASD ASD ASD ', ['a' => 1, 'b' => 2]];
+        $list[] = ['ASD ASD ASD ASD ', ['a' => 1, 'b' => 2]];
+        return $list;
+    }
+
     private static function makeCoolOutfit($materials)
     {
         return [

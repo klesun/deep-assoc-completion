@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.05.13.003</version>
+    <version>2018.05.13.004</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,6 +29,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
+        <li>Add an action to go to PHPUnit test case by number</li>
         <li>Resolve `yield` function return value</li>
         <li>Provide string values completion in in_array($type, [''])</li>
         <li>#35 Fix: no not override "Declaration" action name with "viva Denis!"</li>
@@ -74,17 +75,28 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
     <depends>com.intellij.database</depends>
 
     <actions>
-        <action
-                id="Show docs"
-                class="org.klesun.deep_assoc_completion.entry.ShowDocs" text="Show Deep Type"
-                description="A shame, looks like lang.documentationProvider does not work for PHP, so i have to implement new action to print var info"
-        >
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt Q"/>
-        </action>
-        <action id="Run Deep Keys Test" class="org.klesun.deep_assoc_completion.entry.RunTest" text="Run Deep Keys Test"
-                description="Try to interpret current file as test suite and TESTTESTTEST">
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
-        </action>
+
+
+        <group id="DeepAssocCompletionGroup" popup="true" text="deep-assoc-completion">
+
+            <action id="ShowDeepType" text="Show Deep Type"
+                    class="org.klesun.deep_assoc_completion.entry.ShowDocs"
+                    description="A shame, looks like lang.documentationProvider does not work for PHP, so i have to implement new action to print var info"
+            >
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt Q"/>
+            </action>
+
+            <action id="RunDeepKeyTest" text="Run Deep Keys Test"
+                    class="org.klesun.deep_assoc_completion.entry.RunTest"
+                    description="Try to interpret current file as test suite and TESTTESTTEST"
+            />
+
+            <action id="GoToNthTest" text="To N-th Test"
+                    class="org.klesun.deep_assoc_completion.entry.GoToNthTest"
+                    description="Go to PHPUnit test case by number (place caret inside @dataProvider function before usage)"
+            />
+
+            <add-to-group group-id="ToolsMenu"/>
+        </group>
     </actions>
 </idea-plugin>
