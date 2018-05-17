@@ -38,8 +38,8 @@ public class Tls extends Lang
 
     public static String getStackTrace(Throwable exc)
     {
-        var sw = new StringWriter();
-        var pw = new PrintWriter(sw);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
         exc.printStackTrace(pw);
         return sw.toString();
     }
@@ -54,9 +54,9 @@ public class Tls extends Lang
         Class<T> cls,
         Predicate<PsiElement> continuePred
     ) {
-        var parent = psi.getParent();
+        PsiElement parent = psi.getParent();
         while (parent != null) {
-            var matching = Tls.cast(cls, parent);
+            Opt<T> matching = Tls.cast(cls, parent);
             if (matching.has()) {
                 return matching;
             } else if (!continuePred.test(parent)) {
@@ -88,10 +88,10 @@ public class Tls extends Lang
     public static Opt<L<String>> regex(String patternText, String subjectText, int flags)
     {
         List<String> result = list();
-        var pattern = Pattern.compile(patternText, flags);
-        var matcher = pattern.matcher(subjectText);
+        Pattern pattern = Pattern.compile(patternText, flags);
+        Matcher matcher = pattern.matcher(subjectText);
         if (matcher.matches()) {
-            for (var i = 1; i < matcher.groupCount() + 1; ++i) {
+            for (int i = 1; i < matcher.groupCount() + 1; ++i) {
                 result.add(matcher.group(i));
             }
             return opt(L(result));
@@ -109,9 +109,9 @@ public class Tls extends Lang
     public static String json(Object value)
     {
         if (value instanceof List) {
-            var list = (List)value;
-            var result = "[";
-            for (var i = 0; i < list.size(); ++i) {
+            List list = (List)value;
+            String result = "[";
+            for (int i = 0; i < list.size(); ++i) {
                 result += json(list.get(i));
                 if (i < list.size() - 1) {
                     result += ",";
@@ -127,8 +127,8 @@ public class Tls extends Lang
 
     public static String implode(String delimiter, L<String> values)
     {
-        var result = "";
-        for (var i = 0; i < values.size(); ++i) {
+        String result = "";
+        for (int i = 0; i < values.size(); ++i) {
             result += values.get(i);
             if (i < values.size() - 1) {
                 result += delimiter;
@@ -141,7 +141,7 @@ public class Tls extends Lang
     {
         L<String> result = list();
         Set<String> bSet = new HashSet<>(b);
-        for (var value: a) {
+        for (String value: a) {
             if (!bSet.contains(value)) {
                 result.add(value);
             }
@@ -152,7 +152,7 @@ public class Tls extends Lang
     public static <T> S<T> onDemand(S<T> f)
     {
         Mutable<T> value = new Mutable<>(null);
-        var demanded = new Mutable<>(false);
+        Mutable<Boolean> demanded = new Mutable<>(false);
         return () -> {
             if (!demanded.get()) {
                 value.set(f.get());
@@ -165,7 +165,7 @@ public class Tls extends Lang
     public static L<Integer> range(int l, int r)
     {
         L<Integer> result = L();
-        for (var i = l; i < r; ++i) {
+        for (int i = l; i < r; ++i) {
             result.add(i);
         }
         return result;
@@ -177,7 +177,7 @@ public class Tls extends Lang
      */
     public static String singleLine(String text, int length)
     {
-        var lines = L(text.split("\n")).map(String::trim);
+        L<String> lines = L(text.split("\n")).map(String::trim);
         return Tls.substr(Tls.implode(" ", lines), 0, length);
     }
 
@@ -192,7 +192,7 @@ public class Tls extends Lang
      */
     public static PhpType getIdeaType(PhpExpression exp)
     {
-        var type = exp.getType();
+        PhpType type = exp.getType();
         return type;
     }
 }

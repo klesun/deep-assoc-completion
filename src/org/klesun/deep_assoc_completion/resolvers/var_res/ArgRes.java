@@ -47,7 +47,7 @@ public class ArgRes extends Lang
 
     private Opt<MultiType> getArgFromNsFuncCall(FunctionReferenceImpl call, int argOrderOfLambda, int argOrderInLambda)
     {
-        var params = call.getParameters();
+        PsiElement[] params = call.getParameters();
         if (argOrderOfLambda == 0 && params.length > 1) {
             // functions where array is passed in the second argument
             if (argOrderInLambda == 0 && "array_map".equals(call.getName())) {
@@ -74,7 +74,7 @@ public class ArgRes extends Lang
 
     private Opt<MultiType> getArgFromMethodCall(MethodReferenceImpl call, int argOrderOfLambda, int argOrderInLambda)
     {
-        var params = call.getParameters();
+        PsiElement[] params = call.getParameters();
         if (argOrderOfLambda == 0 && params.length > 1 && argOrderInLambda == 0) {
             // TODO: remove Fp-specific functions once resolveArgCallArrKeys() supports built-ins
             if (MethCallRes.nameIs(call, "Fp", "map") ||
@@ -100,8 +100,8 @@ public class ArgRes extends Lang
                     .fop(parl -> opt(parl.getParent())
                         .fop(toCast(FunctionReference.class))
                         .fop(call -> {
-                            var subCtx = trace.subCtxDirect(call);
-                            var funcVarOrder = L(parl.getParameters()).indexOf(funcVar);
+                            FuncCtx subCtx = trace.subCtxDirect(call);
+                            int funcVarOrder = L(parl.getParameters()).indexOf(funcVar);
                             return Opt.fst(list(opt(null)
                                 , Tls.cast(FunctionReferenceImpl.class, call)
                                     .fop(func -> getArgFromNsFuncCall(func, funcVarOrder, caretArgOrder))
@@ -137,7 +137,7 @@ public class ArgRes extends Lang
                 .fop(toCast(StatementImpl.class))
                 .map(state -> state.getNextPsiSibling())
                 .map(nextSt -> {
-                    var startOffset = nextSt.getTextOffset();
+                    int startOffset = nextSt.getTextOffset();
                     return opt(ass.getVariable())
                         .fop(toCast(VariableImpl.class))
                         .map(variable -> findVarReferences(variable))
@@ -162,7 +162,7 @@ public class ArgRes extends Lang
             .flt(a -> !trace.hasArgs())
             .flt(a -> func.getParameters().length > 0)
             .map(meth -> {
-                var file = func.getContainingFile();
+                PsiFile file = func.getContainingFile();
                 return list(
                     L(PsiTreeUtil.findChildrenOfType(file, MethodReferenceImpl.class))
                         .flt(call -> meth.getName().equals(call.getName()))
@@ -240,7 +240,7 @@ public class ArgRes extends Lang
 
     public MultiType resolveArg(ParameterImpl param)
     {
-        var result = new MultiType(L());
+        MultiType result = new MultiType(L());
         int order = getArgOrder(param).def(-1);
 
         opt(param.getParent())

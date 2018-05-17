@@ -17,7 +17,7 @@ public class ScopeFinder extends Lang
 {
     private static Opt<PsiElement> getParentScope(PsiElement psi)
     {
-        var next = psi.getParent();
+        PsiElement next = psi.getParent();
         while (next != null) {
             Opt<PsiElement> scopeMb = Tls.cast(GroupStatement.class, next).map(v -> v);
             if (scopeMb.has()) {
@@ -31,7 +31,7 @@ public class ScopeFinder extends Lang
     private static L<PsiElement> getParentScopes(PsiElement psi)
     {
         L<PsiElement> result = list();
-        var next = getParentScope(psi);
+        Opt<PsiElement> next = getParentScope(psi);
         while (next.has()) {
             next.thn(result::add);
             next = getParentScope(next.def(null));
@@ -41,7 +41,7 @@ public class ScopeFinder extends Lang
 
     private static boolean isPartOf(PsiElement child, PsiElement grandParent)
     {
-        var parent = child;
+        PsiElement parent = child;
         while (parent != null) {
             if (parent.isEquivalentTo(grandParent)) {
                 return true;
@@ -58,9 +58,9 @@ public class ScopeFinder extends Lang
         // be to stop when complete expression root was found
         // oh, and isPartOf() re-iterates through parents again
 
-        var parent = varReference;
+        PsiElement parent = varReference;
         while (parent != null) {
-            var maybeControl = Opt.fst(list(
+            Opt<ControlStatementImpl> maybeControl = Opt.fst(list(
                 opt(null)
                 , Tls.cast(ElseIfImpl.class, parent).map(v -> v)
                 , Tls.cast(IfImpl.class, parent).flt(v -> opt(v.getParent()).fop(toCast(ElseImpl.class)).has())
@@ -137,12 +137,12 @@ public class ScopeFinder extends Lang
             return false;
         }
 
-        var refScope = getParentScope(reference);
+        Opt<PsiElement> refScope = getParentScope(reference);
         List<PsiElement> varScopes = getParentScopes(caretVar);
 
-        var elseIf = isInElseIfCondition(reference);
+        Opt<ControlStatementImpl> elseIf = isInElseIfCondition(reference);
         if (elseIf.has()) {
-            for (var part: elseIf.def(null).getChildren()) {
+            for (PsiElement part: elseIf.def(null).getChildren()) {
                 if (part instanceof GroupStatement) {
                     return varScopes.stream().anyMatch(s -> s.isEquivalentTo(part));
                 }
@@ -182,11 +182,11 @@ public class ScopeFinder extends Lang
             return false;
         }
 
-        var scopesL = getParentScopes(reference);
-        var scopesR = getParentScopes(caretVar);
+        L<PsiElement> scopesL = getParentScopes(reference);
+        L<PsiElement> scopesR = getParentScopes(caretVar);
 
-        var l = 0;
-        var r = 0;
+        int l = 0;
+        int r = 0;
 
         // 1. find deepest same scope
         while (l < scopesL.size() && r < scopesR.size()) {
@@ -205,14 +205,14 @@ public class ScopeFinder extends Lang
         // 2. if right inside it are (if|elseif) and (elseif|else) respectively, then false
         if (l < scopesL.size() && r < scopesR.size()) {
             if (l > 0 && r > 0) {
-                var scopeL = scopesL.get(l - 1);
-                var scopeR = scopesR.get(r - 1);
+                PsiElement scopeL = scopesL.get(l - 1);
+                PsiElement scopeR = scopesR.get(r - 1);
                 return opt(scopeL.getParent())
                     .flt(ifPar -> ifPar instanceof If || ifPar instanceof ElseIf)
                     .fop(ifPar -> opt(scopeR.getParent())
                         .flt(elsePar -> elsePar instanceof Else || elsePar instanceof ElseIf)
                         .map(elsePar -> {
-                            var incompatibleScopes = areIfElseChained(ifPar, elsePar) && !isInALoop(ifPar);
+                            boolean incompatibleScopes = areIfElseChained(ifPar, elsePar) && !isInALoop(ifPar);
                             return !incompatibleScopes;
                         }))
                     .def(true);

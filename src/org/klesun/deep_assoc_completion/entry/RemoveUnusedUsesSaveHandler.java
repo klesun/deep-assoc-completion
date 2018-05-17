@@ -38,14 +38,14 @@ public class RemoveUnusedUsesSaveHandler implements FileDocumentManagerListener
 
     @Override
     public void beforeDocumentSaving(@NotNull Document document) {
-        for (var project : ProjectManager.getInstance().getOpenProjects()) {
+        for (Project project : ProjectManager.getInstance().getOpenProjects()) {
             if (DeepSettings.inst(project).removeUnusedImportsOnSaveEnabled) {
-                var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-                var inspection = new PhpUnusedAliasInspection();
-                var manager = InspectionManager.getInstance(psiFile.getProject());
-                var checked = inspection.processFile(psiFile, manager);
+                PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
+                PhpUnusedAliasInspection inspection = new PhpUnusedAliasInspection();
+                InspectionManager manager = InspectionManager.getInstance(psiFile.getProject());
+                List<ProblemDescriptor> checked = inspection.processFile(psiFile, manager);
 
-                var unuseRanges = L(checked)
+                L<T2<Integer, Integer>> unuseRanges = L(checked)
                     .map(problem -> problem.getPsiElement())
                     .fop(toCast(PhpUse.class))
                     .fop(psi -> Tls.findParent(psi, PhpUseListImpl.class, a -> true))

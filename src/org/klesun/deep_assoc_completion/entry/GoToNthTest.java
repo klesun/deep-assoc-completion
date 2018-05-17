@@ -36,8 +36,8 @@ public class GoToNthTest extends AnAction
 {
     private static void askForText(String msg, C<String> then)
     {
-        var input = new JFormattedTextField();
-        var dialog = new DialogBuilder().title(msg).centerPanel(input);
+        JFormattedTextField input = new JFormattedTextField();
+        DialogBuilder dialog = new DialogBuilder().title(msg).centerPanel(input);
         dialog.setPreferredFocusComponent(input);
         dialog.setOkOperation(() -> {
             dialog.getDialogWrapper().close(DialogWrapper.OK_EXIT_CODE);
@@ -58,10 +58,10 @@ public class GoToNthTest extends AnAction
 
     public void actionPerformed(AnActionEvent e)
     {
-        var search = new SearchContext().setDepth(20);
-        var funcCtx = new FuncCtx(search);
+        SearchContext search = new SearchContext().setDepth(20);
+        FuncCtx funcCtx = new FuncCtx(search);
 
-        var msg = "Enter the index of PHPUnit test in the current function";
+        String msg = "Enter the index of PHPUnit test in the current function";
         askForText(msg, (testNumStr) -> opt(toInt(testNumStr).def(0))
             .fop(testNum -> opt(e.getData(LangDataKeys.PSI_FILE))
                 .fop(psiFile -> opt(e.getData(LangDataKeys.CARET))

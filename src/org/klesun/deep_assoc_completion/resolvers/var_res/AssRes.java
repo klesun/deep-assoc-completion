@@ -34,9 +34,9 @@ public class AssRes extends Lang
         if (keys.size() == 0) {
             return getType.get();
         } else {
-            var arr = new DeepType(psi, PhpType.ARRAY);
-            var nextKey = keys.get(0);
-            var furtherKeys = keys.sub(1);
+            DeepType arr = new DeepType(psi, PhpType.ARRAY);
+            KeyType nextKey = keys.get(0);
+            L<KeyType> furtherKeys = keys.sub(1);
             if (nextKey.keyType == KeyType.EKeyType.STRING) {
                 nextKey.getNameToMt().fch((types, name) ->
                     types.fch(t -> arr.addKey(name, t.definition).addType(() ->
@@ -54,7 +54,7 @@ public class AssRes extends Lang
     public static L<DeepType> assignmentsToTypes(List<Assign> asses)
     {
         L<DeepType> resultTypes = list();
-        for (var ass: asses) {
+        for (Assign ass: asses) {
             resultTypes.addAll(makeType(L(ass.keys), ass.assignedType, ass.psi, ass.briefType).types);
         }
         return resultTypes;
@@ -63,15 +63,15 @@ public class AssRes extends Lang
     // null in key chain means index (when it is number or variable, not named key)
     private Opt<T2<List<KeyType>, S<MultiType>>> collectKeyAssignment(AssignmentExpressionImpl ass)
     {
-        var nextKeyOpt = opt(ass.getVariable())
+        Opt<ArrayAccessExpressionImpl> nextKeyOpt = opt(ass.getVariable())
             .fop(toCast(ArrayAccessExpressionImpl.class));
 
         List<KeyType> reversedKeys = list();
 
         while (nextKeyOpt.has()) {
-            var nextKey = nextKeyOpt.def(null);
+            ArrayAccessExpressionImpl nextKey = nextKeyOpt.def(null);
 
-            var name = opt(nextKey.getIndex())
+            KeyType name = opt(nextKey.getIndex())
                 .map(index -> index.getValue())
                 .fop(toCast(PhpExpression.class))
                 .map(key -> ctx.findExprType(key))
@@ -84,14 +84,14 @@ public class AssRes extends Lang
         }
 
         List<KeyType> keys = list();
-        for (var i = reversedKeys.size() - 1; i >= 0; --i) {
+        for (int i = reversedKeys.size() - 1; i >= 0; --i) {
             keys.add(reversedKeys.get(i));
         }
 
         return opt(ass.getValue())
             .fop(toCast(PhpExpression.class))
             .map(value -> T2(keys, S(() -> {
-                var mt = ctx.findExprType(value);
+                MultiType mt = ctx.findExprType(value);
                 return mt;
             })));
     }

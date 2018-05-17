@@ -84,9 +84,9 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
 
     private MultiType resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
-        var search = new SearchContext()
+        SearchContext search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup));
-        var funcCtx = new FuncCtx(search);
+        FuncCtx funcCtx = new FuncCtx(search);
 
         return Opt.fst(list(
             resolveEqExpr(lit, funcCtx),
@@ -97,14 +97,14 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        var startTime = System.nanoTime();
-        var mt = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
+        long startTime = System.nanoTime();
+        MultiType mt = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
             .fop(toCast(StringLiteralExpression.class))
             .map(lit -> resolve(lit, parameters.isAutoPopup()))
             .def(MultiType.INVALID_PSI);
 
         makeOptions(mt).fch(result::addElement);
-        var elapsed = System.nanoTime() - startTime;
+        long elapsed = System.nanoTime() - startTime;
         result.addLookupAdvertisement("Resolved in " + (elapsed / 1000000000.0) + " seconds");
     }
 
@@ -116,8 +116,8 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     private static void removeDuplicates(List<PsiElement> psiTargets)
     {
         Set<PsiElement> fingerprints = new HashSet<>();
-        var size = psiTargets.size();
-        for (var k = size - 1; k >= 0; --k) {
+        int size = psiTargets.size();
+        for (int k = size - 1; k >= 0; --k) {
             if (fingerprints.contains(psiTargets.get(k))) {
                 psiTargets.remove(k);
             }
@@ -129,7 +129,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     @Override
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor) {
 
-        var psiTargets = opt(psiElement)
+        L<PsiElement> psiTargets = opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
             .map(lit -> resolve(lit, false)

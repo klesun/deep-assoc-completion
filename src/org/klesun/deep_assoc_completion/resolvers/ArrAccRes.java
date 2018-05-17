@@ -18,7 +18,7 @@ public class ArrAccRes extends Lang
 
     public MultiType resolve(ArrayAccessExpressionImpl keyAccess)
     {
-        var mt = opt(keyAccess.getValue())
+        MultiType mt = opt(keyAccess.getValue())
             .fop(toCast(PhpExpression.class))
             .map(expr -> ctx.findExprType(expr))
             .def(MultiType.INVALID_PSI);
@@ -29,7 +29,7 @@ public class ArrAccRes extends Lang
             .map(v -> {
                 // resolving key type can be a complex operation - we don't
                 // want that if we already know that mt has no known key names
-                @Nullable var keyName = mt.getKeyNames().size() > 0
+                @Nullable String keyName = mt.getKeyNames().size() > 0
                     ? ctx.findExprType(v).getStringValue()
                     : null;
                 return mt.getKey(keyName);

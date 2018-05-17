@@ -33,7 +33,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
 
     private static LookupElement makeLookup(DeepType.Key keyEntry)
     {
-        var type = keyEntry.getTypes().gat(0).map(t -> t.briefType.toString()).def("unknown");
+        String type = keyEntry.getTypes().gat(0).map(t -> t.briefType.toString()).def("unknown");
         return makeLookupBase(keyEntry.name, type);
     }
 
@@ -41,15 +41,15 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
     {
         L<LookupElement> result = L();
         Set<String> suggested = new HashSet<>();
-        for (var type: mt.types) {
-            for (var keyEntry: type.keys.values()) {
-                var key = keyEntry.name;
+        for (DeepType type: mt.types) {
+            for (DeepType.Key keyEntry: type.keys.values()) {
+                String key = keyEntry.name;
                 if (suggested.contains(key)) continue;
                 suggested.add(key);
                 result.add(makeLookup(keyEntry));
             }
             L(type.getElemTypes()).gat(0).flt(t -> type.keys.size() == 0).thn(t -> {
-                for (var k = 0; k < 5; ++k) {
+                for (int k = 0; k < 5; ++k) {
                     result.add(makeLookupBase(k + "", t.briefType.toString()));
                 }
             });
@@ -60,12 +60,12 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        var search = new SearchContext()
+        SearchContext search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(parameters.isAutoPopup()));
-        var funcCtx = new FuncCtx(search);
+        FuncCtx funcCtx = new FuncCtx(search);
 
-        var startTime = System.nanoTime();
-        var mt = opt(parameters.getPosition().getParent())
+        long startTime = System.nanoTime();
+        MultiType mt = opt(parameters.getPosition().getParent())
             .map(literal -> literal.getParent())
             .map(literal -> literal.getParent())
             .fop(toCast(FunctionReferenceImpl.class))
@@ -78,7 +78,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
         makeOptions(mt).fch(result::addElement);
         result.addLookupAdvertisement("Press <Page Down> few times to skip built-in suggestions");
 
-        var elapsed = System.nanoTime() - startTime;
+        long elapsed = System.nanoTime() - startTime;
         System.out.println("Resolved in " + (elapsed / 1000000000.0) + " seconds");
     }
 }

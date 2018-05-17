@@ -30,8 +30,8 @@ public class KeyUsageResolver extends Lang
 
     private static L<String> resolveReplaceKeys(ParameterList argList, int order)
     {
-        var search = new SearchContext();
-        var ctx = new FuncCtx(search);
+        SearchContext search = new SearchContext();
+        FuncCtx ctx = new FuncCtx(search);
         return L(argList.getParameters())
             .flt((psi, i) -> i < order)
             .fop(toCast(PhpExpression.class))
@@ -124,8 +124,8 @@ public class KeyUsageResolver extends Lang
             // Laravel's Model takes array of initial column values in constructor
             .flt(cls -> order == 0)
             .fap(cls -> {
-                var supers = L(cls.getSupers());
-                var isModel = supers.any(sup -> sup.getFQN()
+                L<PhpClass> supers = L(cls.getSupers());
+                boolean isModel = supers.any(sup -> sup.getFQN()
                     .equals("\\Illuminate\\Database\\Eloquent\\Model"));
                 if (!isModel) {
                     return list();
@@ -144,7 +144,7 @@ public class KeyUsageResolver extends Lang
         return opt(arrCtor.getParent())
             .fop(toCast(ParameterList.class))
             .fap(argList -> {
-                var order = L(argList.getParameters()).indexOf(arrCtor);
+                int order = L(argList.getParameters()).indexOf(arrCtor);
                 return resolveFunc(argList)
                     .thn(asd -> System.out.println("resolved func " + asd.getClass() + " " + asd.getName()))
                     .fap(meth -> list(
@@ -172,8 +172,8 @@ public class KeyUsageResolver extends Lang
 
     public L<String> resolve(ArrayCreationExpression arrCtor)
     {
-        var fakeSearch = new SearchContext();
-        var fakeCtx = new FuncCtx(fakeSearch);
+        SearchContext fakeSearch = new SearchContext();
+        FuncCtx fakeCtx = new FuncCtx(fakeSearch);
 
         // TODO: handle nested arrays
         return list(

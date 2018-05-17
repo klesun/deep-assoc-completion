@@ -21,7 +21,7 @@ public class ClosRes extends Lang
     public static L<PhpReturnImpl> findFunctionReturns(PsiElement funcBody)
     {
         L<PhpReturnImpl> result = list();
-        for (var child: funcBody.getChildren()) {
+        for (PsiElement child: funcBody.getChildren()) {
             // anonymous functions
             if (child instanceof Function) continue;
 
@@ -36,7 +36,7 @@ public class ClosRes extends Lang
     private static L<PhpYield> findFunctionYields(PsiElement funcBody)
     {
         L<PhpYield> result = list();
-        for (var child: funcBody.getChildren()) {
+        for (PsiElement child: funcBody.getChildren()) {
             // anonymous functions
             if (child instanceof Function) continue;
 
@@ -65,7 +65,7 @@ public class ClosRes extends Lang
 
     public DeepType resolve(FunctionImpl func)
     {
-        var result = new DeepType(func, func.getLocalType(true));
+        DeepType result = new DeepType(func, func.getLocalType(true));
         result.returnTypeGetters.add((funcCtx) ->
             getReturnedValue(func, funcCtx).types);
         return result;

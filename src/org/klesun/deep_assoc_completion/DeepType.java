@@ -89,7 +89,7 @@ public class DeepType extends Lang
 
     public L<DeepType> getReturnTypes(FuncCtx ctx)
     {
-        var result = returnTypeGetters.fap(g -> g.apply(ctx));
+        L<DeepType> result = returnTypeGetters.fap(g -> g.apply(ctx));
         return result;
     }
 
@@ -100,7 +100,7 @@ public class DeepType extends Lang
 
     public Key addKey(String name, PsiElement definition)
     {
-        var keyEntry = new Key(name, definition);
+        Key keyEntry = new Key(name, definition);
         keys.put(keyEntry.name, keyEntry);
         return keyEntry;
     }
@@ -175,11 +175,11 @@ public class DeepType extends Lang
             briefTypes.add(opt(t.stringValue).map(s -> "'" + s + "'").def(t.briefType.filterUnknown().toString()));
         });
 
-        var result = "unknown";
+        String result = "unknown";
         if (mergedKeys.size() > 0) {
             result = "{\n";
             ++level;
-            for (var e: mergedKeys.entrySet()) {
+            for (Map.Entry<String, List<DeepType>> e: mergedKeys.entrySet()) {
                 result += indent(level) + "\"" + e.getKey() + "\"" + ": " + toJson(e.getValue(), level, circularRefs) + ",\n";
             }
             --level;

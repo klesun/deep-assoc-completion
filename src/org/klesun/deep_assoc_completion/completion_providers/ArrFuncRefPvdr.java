@@ -33,11 +33,11 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        var search = new SearchContext()
+        SearchContext search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(parameters.isAutoPopup()));
-        var funcCtx = new FuncCtx(search);
-        var startTime = System.nanoTime();
-        var methods = opt(parameters.getPosition().getParent())
+        FuncCtx funcCtx = new FuncCtx(search);
+        long startTime = System.nanoTime();
+        L<Method> methods = opt(parameters.getPosition().getParent())
             .fap(literal -> opt(literal.getParent())
                 .map(arrVal -> arrVal.getParent())
                 .fop(toCast(ArrayCreationExpressionImpl.class))
@@ -57,8 +57,8 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
             .fap(a -> a);
 
         methods.map(m -> makeLookup(m)).fch(result::addElement);
-        var elapsed = System.nanoTime() - startTime;
-        var msg = "Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds";
+        long elapsed = System.nanoTime() - startTime;
+        String msg = "Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds";
         result.addLookupAdvertisement(msg);
 
         System.out.println(msg);

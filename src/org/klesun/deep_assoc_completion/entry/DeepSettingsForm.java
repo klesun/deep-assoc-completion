@@ -54,11 +54,11 @@ public class DeepSettingsForm implements Configurable
         try {
             value = Integer.parseInt(field.getText());
         } catch (NumberFormatException numExc) {
-            var msg = "Invalid integer value: " + field.getText() + " - " + numExc.getMessage();
+            String msg = "Invalid integer value: " + field.getText() + " - " + numExc.getMessage();
             throw new ConfigurationException(msg);
         }
         if (value < min || value > max) {
-            var msg = "Value " + field.getText() + " is out of range, it should be between " + min + " and " + max + " inclusive";
+            String msg = "Value " + field.getText() + " is out of range, it should be between " + min + " and " + max + " inclusive";
             throw new ConfigurationException(msg);
         } else {
             return value;

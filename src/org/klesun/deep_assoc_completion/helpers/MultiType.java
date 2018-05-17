@@ -47,7 +47,7 @@ public class MultiType extends Lang
     /** transforms type T to T[] */
     public DeepType getInArray(PsiElement call)
     {
-        var result = new DeepType(call, PhpType.ARRAY);
+        DeepType result = new DeepType(call, PhpType.ARRAY);
         result.listElTypes.addAll(types);
         return result;
     }
@@ -100,9 +100,9 @@ public class MultiType extends Lang
 
     public PhpType getKeyBriefType(@NonNull String keyName)
     {
-        var ideaType = new PhpType();
+        PhpType ideaType = new PhpType();
         Map<PsiElement, L<PhpType>> psiToType = new LinkedHashMap<>();
-        var keyObjs = types.fop(t -> Lang.getKey(t.keys, keyName));
+        L<DeepType.Key> keyObjs = types.fop(t -> Lang.getKey(t.keys, keyName));
         // getting rid of duplicates, temporary solution
         // TODO: 7681 types!!! and only 2 of them are actually unique. should do something
         keyObjs.fch(k -> psiToType.put(k.definition, k.getBriefTypes()));
@@ -126,7 +126,7 @@ public class MultiType extends Lang
 
     public PhpType getIdeaType()
     {
-        var ideaType = new PhpType();
+        PhpType ideaType = new PhpType();
         types.map(t -> t.briefType).fch(ideaType::add);
         return ideaType;
     }
@@ -139,7 +139,7 @@ public class MultiType extends Lang
         circularRefs.addAll(types);
 
         L<String> briefValues = list();
-        var keyNames = getKeyNames();
+        L<String> keyNames = getKeyNames();
 
         if (keyNames.size() > 0) {
             if (keyNames.all((k,i) -> (k + "").equals(i + ""))) {
@@ -149,7 +149,7 @@ public class MultiType extends Lang
                 briefValues.add("{" + Tls.implode(", ", keyNames.map(k -> k + ":")) + "}");
             }
         }
-        var strvals = types.fop(t -> opt(t.stringValue));
+        L<String> strvals = types.fop(t -> opt(t.stringValue));
         if (strvals.size() > 0) {
             briefValues.add(Tls.implode("|", strvals
                 .grp(a -> a).kys()
@@ -160,13 +160,13 @@ public class MultiType extends Lang
             briefValues.add("[" + getEl().getBriefValueText(maxLen, circularRefs) + "]");
         }
         if (briefValues.isEmpty() && types.size() > 0) {
-            var psiParts = types.flt(t -> t.isExactPsi).map(t -> Tls.singleLine(t.definition.getText(), 40));
+            L<String> psiParts = types.flt(t -> t.isExactPsi).map(t -> Tls.singleLine(t.definition.getText(), 40));
             briefValues.add(Tls.implode("|", psiParts.grp(a -> a).kys()));
         }
-        var fullStr = Tls.implode("|", briefValues);
+        String fullStr = Tls.implode("|", briefValues);
 
         circularRefs.removeAll(types);
-        var truncated = Tls.substr(fullStr, 0, maxLen);
+        String truncated = Tls.substr(fullStr, 0, maxLen);
         return truncated.length() == fullStr.length()
             ? truncated : truncated + "...";
     }

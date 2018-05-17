@@ -122,7 +122,7 @@ public class Opt<T>
     /** return result of fst successful function in the passed list */
     public static <Ts> Opt<Ts> fst(Iterable<Opt<Ts>> attempts)
     {
-        for (var a: attempts) {
+        for (Opt<Ts> a: attempts) {
             if (a.has()) {
                 return a;
             }

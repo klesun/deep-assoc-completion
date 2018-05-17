@@ -35,8 +35,8 @@ public class VarRes extends Lang
     private static List<String> parseRegexNameCaptures(String regexText)
     {
         List<String> result = list();
-        var pattern = Pattern.compile("\\(\\?P<([a-zA-Z_0-9]+)>");
-        var matcher = pattern.matcher(regexText);
+        Pattern pattern = Pattern.compile("\\(\\?P<([a-zA-Z_0-9]+)>");
+        Matcher matcher = pattern.matcher(regexText);
         while (matcher.find()) {
             result.add(matcher.group(1));
         }
@@ -49,7 +49,7 @@ public class VarRes extends Lang
             .fop(strt -> opt(strt.stringValue)
                 .map(s -> parseRegexNameCaptures(s))
                 .map(names -> {
-                    var t = new DeepType(strt.definition, PhpType.ARRAY);
+                    DeepType t = new DeepType(strt.definition, PhpType.ARRAY);
                     names.forEach(n -> t.addKey(n, strt.definition)
                         .addType(() -> new MultiType(list(new DeepType(strt.definition, PhpType.STRING))), PhpType.STRING));
                     return t;
@@ -67,7 +67,7 @@ public class VarRes extends Lang
             .fop(toCast(FunctionReferenceImpl.class))
             .flt(call -> "array_unshift".equals(call.getName()))
             .fop(call -> {
-                var args = L(call.getParameters());
+                L<PsiElement> args = L(call.getParameters());
                 boolean isCaretArr = args.gat(0).map(arg -> arg.isEquivalentTo(varRef)).def(false);
                 return args.gat(1)
                     .flt(asd -> isCaretArr)
@@ -83,9 +83,9 @@ public class VarRes extends Lang
             .fop(fch -> opt(fch.getArray())
                 .fop(toCast(PhpExpression.class))
                 .map(arr -> () -> {
-                    var arrt = ctx.findExprType(arr);
-                    var tuple = L(fch.getVariables());
-                    var keyVarOpt = opt(fch.getKey())
+                    MultiType arrt = ctx.findExprType(arr);
+                    L<Variable> tuple = L(fch.getVariables());
+                    Opt<Variable> keyVarOpt = opt(fch.getKey())
                         // IDEA breaks on list() - should help her
                         .flt(keyVar -> Opt.fst(list(
                             opt(keyVar.getNextSibling())
@@ -154,8 +154,8 @@ public class VarRes extends Lang
             .fop(fun -> L(fun.getParameters()).fst())
             .fop(toCast(PhpExpression.class))
             .map(regexPsi -> () -> {
-                var mt = ctx.findExprType(regexPsi);
-                var matchesType = makeRegexNameCaptureTypes(mt.types);
+                MultiType mt = ctx.findExprType(regexPsi);
+                L<DeepType> matchesType = makeRegexNameCaptureTypes(mt.types);
                 return new MultiType(matchesType);
             });
     }
@@ -171,23 +171,23 @@ public class VarRes extends Lang
     public List<DeepType> resolve(Variable variable)
     {
         List<Assign> revAsses = list();
-        var references = findDeclarations(variable)
+        L<PsiElement> references = findDeclarations(variable)
             .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable));
 
         // @var docs are a special case since they give type
         // info from any position (above/below/right of/left of the var declaration)
-        var docTypes = references
+        L<DeepType> docTypes = references
             .tkw(toCast(PhpDocVarImpl.class))
             .mop(varDoc -> varDoc.getParent())
             .fop(toCast(PhpDocTag.class))
             .fop(docTag -> new DocParamRes(ctx).resolve(docTag))
             .fap(mt -> mt.types);
 
-        for (var i = references.size() - 1; i >= 0; --i) {
+        for (int i = references.size() - 1; i >= 0; --i) {
             // TODO: make sure closure `use`-s don't incorrectly use wrong context argument generics
-            var refPsi = references.get(i);
-            var didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
-            var assignOpt = Opt.fst(list(opt(null)
+            PsiElement refPsi = references.get(i);
+            boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
+            Opt<Assign> assignOpt = Opt.fst(list(opt(null)
                 , (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
                 , assertArrayUnshift(refPsi)
                 , assertForeachElement(refPsi)
@@ -203,7 +203,7 @@ public class VarRes extends Lang
                     })
             ));
             if (assignOpt.has()) {
-                var ass = assignOpt.unw();
+                Assign ass = assignOpt.unw();
                 revAsses.add(ass);
                 if (didSurelyHappen && ass.keys.size() == 0) {
                     // direct assignment, everything before it is meaningless
@@ -213,10 +213,10 @@ public class VarRes extends Lang
         }
 
         List<Assign> assignments = list();
-        for (var i = revAsses.size() - 1; i >= 0; --i) {
+        for (int i = revAsses.size() - 1; i >= 0; --i) {
             assignments.add(revAsses.get(i));
         }
-        var typeFromIdea = new DeepType(variable);
+        DeepType typeFromIdea = new DeepType(variable);
         return AssRes.assignmentsToTypes(assignments)
             .cct(docTypes).cct(list(typeFromIdea));
     }

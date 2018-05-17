@@ -84,9 +84,9 @@ public class ArrCtorRes extends Lang
 
     public DeepType resolve(ArrayCreationExpressionImpl expr)
     {
-        var arrayType = new DeepType(expr);
+        DeepType arrayType = new DeepType(expr);
 
-        var orderedParams = L(expr.getChildren())
+        L<PsiElement> orderedParams = L(expr.getChildren())
             .flt(psi -> !(psi instanceof ArrayHashElement));
 
         resolveMethodFromArray(orderedParams)
@@ -106,7 +106,7 @@ public class ArrCtorRes extends Lang
         L(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
             .fop(toCast(PhpExpression.class))
             .thn(v -> {
-                var getType = S(() -> ctx.findExprType(v));
+                S<MultiType> getType = S(() -> ctx.findExprType(v));
                 opt(keyRec.getKey())
                     .fop(toCast(PhpExpression.class))
                     .map(keyPsi -> ctx.findExprType(keyPsi).types)
