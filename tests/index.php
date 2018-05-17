@@ -539,11 +539,15 @@ class DeepKeysTest
     private static function testInArray()
     {
         $i = rand(0, 3);
-        $type = ['AIR', 'CAR', 'HOTEL', 'RAIL'][$i];
+        $types = ['AIR', 'CAR', 'HOTEL', 'RAIL'];
+        $type = $types[$i];
         if ($type === '') {
 
         }
         if (in_array($type, ['CAR', ''])) {
+
+        }
+        if (in_array('', $types)) {
 
         }
     }

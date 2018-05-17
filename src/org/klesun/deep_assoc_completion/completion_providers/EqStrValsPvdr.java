@@ -16,7 +16,6 @@ import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
@@ -62,7 +61,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     }
 
     /** in_array($type, ['']) */
-    private static Opt<MultiType> resolveInArray(StringLiteralExpression lit, FuncCtx funcCtx)
+    private static Opt<MultiType> resolveInArrayHaystack(StringLiteralExpression lit, FuncCtx funcCtx)
     {
         return opt(lit)
             .map(literal -> literal.getParent()) // array value
@@ -82,6 +81,23 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
                 .map(str -> funcCtx.findExprType(str)));
     }
 
+    /** in_array('', $types) */
+    private static Opt<MultiType> resolveInArrayNeedle(StringLiteralExpression lit, FuncCtx funcCtx)
+    {
+        return opt(lit.getParent())
+            .fop(toCast(ParameterList.class))
+            .flt(lst -> L(lst.getParameters()).gat(0)
+                .flt(arg -> arg.isEquivalentTo(lit)).has()
+            )
+            .flt(lst -> opt(lst.getParent())
+                .fop(toCast(FunctionReference.class))
+                .map(fun -> fun.getName())
+                .flt(nme -> nme.equals("in_array")).has())
+            .fop(lst -> L(lst.getParameters()).gat(1))
+            .fop(toCast(PhpExpression.class))
+            .map(str -> funcCtx.findExprType(str).getEl());
+    }
+
     private MultiType resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
         SearchContext search = new SearchContext()
@@ -90,7 +106,8 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
 
         return Opt.fst(list(
             resolveEqExpr(lit, funcCtx),
-            resolveInArray(lit, funcCtx)
+            resolveInArrayHaystack(lit, funcCtx),
+            resolveInArrayNeedle(lit, funcCtx)
         )).def(MultiType.INVALID_PSI);
     }
 
