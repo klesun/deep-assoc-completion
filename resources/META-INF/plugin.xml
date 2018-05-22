@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.05.18.001</version>
+    <version>2018.05.22.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,11 +29,9 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-        <li>Add an action to go to PHPUnit test case by number</li>
-        <li>Resolve `yield` function return value</li>
-        <li>Provide string values completion in in_array($type, [''])</li>
-        <li>#35 Fix: no not override "Declaration" action name with "viva Denis!"</li>
-        <li>Add an option to remove unused use-s on save (just a simple nice feature)</li>
+        <li>Allow specifying keys in @return php doc</li>
+        <li>Provide string completion in array_intersect()</li>
+        <li>Provide completio in the _needle_ arg in in_array, not just _haystack_</li>
     </ul>
     ]]>
     </change-notes>
