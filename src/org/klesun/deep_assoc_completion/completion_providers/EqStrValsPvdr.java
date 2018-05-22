@@ -87,8 +87,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
         return opt(lit.getParent())
             .fop(toCast(ParameterList.class))
             .flt(lst -> L(lst.getParameters()).gat(0)
-                .flt(arg -> arg.isEquivalentTo(lit)).has()
-            )
+                .flt(arg -> arg.isEquivalentTo(lit)).has())
             .flt(lst -> opt(lst.getParent())
                 .fop(toCast(FunctionReference.class))
                 .map(fun -> fun.getName())
@@ -96,6 +95,27 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
             .fop(lst -> L(lst.getParameters()).gat(1))
             .fop(toCast(PhpExpression.class))
             .map(str -> funcCtx.findExprType(str).getEl());
+    }
+
+    // array_intersect($cmdTypes, ['redisplayPnr', 'itinerary', 'airItinerary', 'storeKeepPnr', 'changeArea', ''])
+    private static Opt<MultiType> resolveArrayIntersect(StringLiteralExpression lit, FuncCtx funcCtx)
+    {
+        return opt(lit)
+            .map(literal -> literal.getParent()) // array value
+            .map(literal -> literal.getParent())
+            .fop(toCast(ArrayCreationExpression.class))
+            .fop(arr -> opt(arr.getParent())
+                .fop(toCast(ParameterList.class))
+                .flt(lst -> opt(lst.getParent())
+                    .fop(toCast(FunctionReference.class))
+                    .map(fun -> fun.getName())
+                    .flt(nme -> nme.equals("array_intersect")).has())
+                .fap(lst -> L(lst.getParameters()))
+                .flt(par -> !arr.isEquivalentTo(par))
+                .fop(toCast(PhpExpression.class))
+                .map(str -> funcCtx.findExprType(str).getEl())
+                .fap(mt -> mt.types)
+                .wap(types -> types.size() == 0 ? opt(null) : opt(new MultiType(types))));
     }
 
     private MultiType resolve(StringLiteralExpression lit, boolean isAutoPopup)
@@ -107,7 +127,8 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
         return Opt.fst(list(
             resolveEqExpr(lit, funcCtx),
             resolveInArrayHaystack(lit, funcCtx),
-            resolveInArrayNeedle(lit, funcCtx)
+            resolveInArrayNeedle(lit, funcCtx),
+            resolveArrayIntersect(lit, funcCtx)
         )).def(MultiType.INVALID_PSI);
     }
 

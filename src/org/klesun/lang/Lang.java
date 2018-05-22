@@ -399,9 +399,10 @@ public class Lang
         /**
          * "fch" stands for For Each
          */
-        public void fch(C<T> f)
+        public L<T> fch(C<T> f)
         {
             fch((el, i) -> f.accept(el));
+            return this;
         }
 
         public void fch(C2<T, Integer> f)

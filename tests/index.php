@@ -550,6 +550,9 @@ class DeepKeysTest
         if (in_array('', $types)) {
 
         }
+        if (array_intersect([''], $types, ['ASD'])) {
+
+        }
     }
 
     //============================
