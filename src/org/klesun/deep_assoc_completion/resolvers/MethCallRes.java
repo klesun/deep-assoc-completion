@@ -4,6 +4,7 @@ import com.intellij.database.model.ObjectKind;
 import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.php.PhpIndex;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
@@ -11,6 +12,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -107,13 +109,26 @@ public class MethCallRes extends Lang
         return new MultiType(types);
     }
 
+    private static MultiType parseReturnDoc(PhpDocReturnTag returnDoc, FuncCtx funcCtx)
+    {
+        FuncCtx docCtx = new FuncCtx(funcCtx.getSearch());
+        docCtx.fakeFileSource = opt(returnDoc);
+        return Tls.regex("^\\s*(like\\s*|)(.+)$", returnDoc.getTagValue())
+            .fop(match -> match.gat(1))
+            .fop(expr -> DocParamRes.parseExpression(expr, returnDoc.getProject(), docCtx))
+            .def(MultiType.INVALID_PSI);
+    }
+
     public static F<FuncCtx, L<DeepType>> findMethRetType(Method meth)
     {
         L<Method> impls = meth.isAbstract()
             ? findOverridingMethods(meth)
             : list(meth);
-        return (FuncCtx funcCtx) -> impls.fap(m ->
-            ClosRes.getReturnedValue(m, funcCtx).types);
+        return (FuncCtx funcCtx) -> impls.fap(m -> list(
+            ClosRes.getReturnedValue(m, funcCtx).types,
+            opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
+                .fap(tag -> parseReturnDoc(tag, funcCtx).types)
+        ).fap(a -> a));
     }
 
     private static List<Method> resolveMethodsNoNs(String clsName, String func, Project proj)

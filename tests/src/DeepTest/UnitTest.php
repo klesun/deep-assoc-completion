@@ -6,7 +6,6 @@ use Rbs\Parsers\Apollo\PricingParser\DataStructureWriters\PricingStructureWriter
 use Rbs\Parsers\Sabre\Pricing\PqParserFull;
 use Rbs\Parsers\Sabre\Pricing\PqParserUnshiftOverflow;
 use TestSamples\CmsSessionMemoryOverflow\CmsStatefulSession;
-use TestSamples\CmsSessionMemoryOverflow\ICmsGdsTerminal;
 use TouhouNs\ReimuHakurei;
 use TouhouNs\YakumoRan;
 
@@ -1781,6 +1780,25 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         }
         $fares[0][''];
         $list[] = [$fares[0], ['fareBasis' => [], 'currency' => [], 'airline' => [], 'amount' => [], 'index' => []]];
+        return $list;
+    }
+
+    /** @return array [
+     *     'baseUrl' => 'http://midiana.lv',
+     *     'isDevelopment' => true,
+     *     'fluentdIp' => '128.0.0.1',
+     *     'fluentdPort' => '468138',
+     * ] */
+    private static function getLocalConfig()
+    {
+        return json_decode(file_get_contents('/var/www/html/local_config.json'), true);
+    }
+
+    public function provideReturnDoc()
+    {
+        $config = static::getLocalConfig();
+        $config['fluentdPort'];
+        $list[] = [$config, ['baseUrl' => [], 'isDevelopment' => [], 'fluentdIp' => [], 'fluentdPort' => []]];
         return $list;
     }
 

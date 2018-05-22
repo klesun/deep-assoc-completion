@@ -555,11 +555,7 @@ class DeepKeysTest
         }
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
-    /** pressing _Ctrl + Alt + ;_ and specifying test number (say 3) should get you to the 3-rd */
+    /** pressing _Tools -> deep-assoc-completion -> To N-th Test_ and specifying test number (say 3) should get you to the 3-rd */
     public function testGetNthTestCase()
     {
         $list = [];
@@ -569,6 +565,10 @@ class DeepKeysTest
         $list[] = ['ASD ASD ASD ASD ', ['a' => 1, 'b' => 2]];
         return $list;
     }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function makeCoolOutfit($materials)
     {

@@ -27,7 +27,7 @@ public class DocParamRes extends Lang
         this.ctx = ctx;
     }
 
-    private static Opt<MultiType> parseExpression(String expr, Project project, FuncCtx docCtx)
+    public static Opt<MultiType> parseExpression(String expr, Project project, FuncCtx docCtx)
     {
         // adding "$arg = " so anonymous functions were parsed as expressions
         expr = "<?php\n$arg = " + expr + ";";
