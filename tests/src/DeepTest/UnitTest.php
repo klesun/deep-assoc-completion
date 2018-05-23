@@ -1280,6 +1280,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $arr = compact('age', 'height', 'book', 'misspelledVar');
         $misspelledVar = [123,234];
         $arr[''];
+        $arr['book'][''];
         $list[] = [$arr, ['age' => [], 'height' => []]];
         $list[] = [$arr['book'], ['pages' => [], 'title' => []]];
         return $list;

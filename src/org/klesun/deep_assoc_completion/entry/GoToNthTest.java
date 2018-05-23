@@ -4,10 +4,12 @@ import com.intellij.json.JsonFileType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
+import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.ui.DialogBuilder;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.ui.EditorTextField;
 import com.intellij.ui.awt.RelativePoint;
@@ -60,11 +62,13 @@ public class GoToNthTest extends AnAction
     {
         SearchContext search = new SearchContext().setDepth(20);
         FuncCtx funcCtx = new FuncCtx(search);
+        Opt<PsiFile> psiFileOpt = opt(e.getData(LangDataKeys.PSI_FILE));
+        Opt<Caret> caretOpt = opt(e.getData(LangDataKeys.CARET));
 
         String msg = "Enter the index of PHPUnit test in the current function";
         askForText(msg, (testNumStr) -> opt(toInt(testNumStr).def(0))
-            .fop(testNum -> opt(e.getData(LangDataKeys.PSI_FILE))
-                .fop(psiFile -> opt(e.getData(LangDataKeys.CARET))
+            .fop(testNum -> psiFileOpt
+                .fop(psiFile -> caretOpt
                     .map(caret -> opt(psiFile.findElementAt(caret.getOffset()))
                         .fop(psi -> Tls.findParent(psi, Function.class, a -> true))
                         .map(func -> ClosRes.getReturnedValue(func, funcCtx))
