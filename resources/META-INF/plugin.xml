@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.05.22.001</version>
+    <version>2018.05.24.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,9 +29,8 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-        <li>Allow specifying keys in @return php doc</li>
-        <li>Provide string completion in array_intersect()</li>
-        <li>Provide completion in the _needle_ arg in in_array, not just _haystack_</li>
+        <li>Provide completion when typing accessed key from a function in @param tag</li>
+        <li>Small fixes</li>
     </ul>
     ]]>
     </change-notes>

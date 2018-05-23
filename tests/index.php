@@ -536,7 +536,10 @@ class DeepKeysTest
         ]);
     }
 
-    private static function testInArray()
+    /**
+     * @param $asd = PersonStorage::addPerson()['']
+     */
+    private static function testInArray($asd)
     {
         $i = rand(0, 3);
         $types = ['AIR', 'CAR', 'HOTEL', 'RAIL'];

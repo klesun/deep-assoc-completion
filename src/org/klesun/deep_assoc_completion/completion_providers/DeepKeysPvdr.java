@@ -99,22 +99,10 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    @Override
-    protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
+    public static MultiType resolveAtPsi(PsiElement caretPsi, SearchContext search)
     {
-        int depth = getMaxDepth(parameters.isAutoPopup());
-        SearchContext search = new SearchContext().setDepth(depth);
         FuncCtx funcCtx = new FuncCtx(search);
-
-        Set<String> suggested = new HashSet<>();
-        PsiElement caretPsi = parameters.getPosition(); // usually leaf element
-        Opt<PsiElement> firstParent = opt(caretPsi.getParent());
-        boolean includeQuotes = firstParent
-            .fop(toCast(StringLiteralExpression.class)) // inside ['']
-            .uni(l -> false, () -> true); // else just inside []
-
-        long startTime = System.nanoTime();
-        MultiType mt = firstParent
+        return opt(caretPsi.getParent())
             .map(litRaw -> litRaw.getParent())
             .fop(toCast(ArrayIndex.class))
             .map(index -> index.getParent())
@@ -123,6 +111,30 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .fop(toCast(PhpExpression.class))
             .map(srcExpr -> funcCtx.findExprType(srcExpr))
             .def(MultiType.INVALID_PSI);
+    }
+
+    public static LookupElement makeFullLookup(MultiType mt, String keyName)
+    {
+        MultiType keyMt = mt.getKey(keyName);
+        String briefValue = keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
+        String ideaTypeStr = keyMt.getIdeaType().filterUnknown().toStringResolved();
+        return makePaddedLookup(keyName, ideaTypeStr, briefValue);
+    }
+
+    @Override
+    protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
+    {
+        int depth = getMaxDepth(parameters.isAutoPopup());
+        SearchContext search = new SearchContext().setDepth(depth);
+        Set<String> suggested = new HashSet<>();
+        PsiElement caretPsi = parameters.getPosition(); // usually leaf element
+        Opt<PsiElement> firstParent = opt(caretPsi.getParent());
+        boolean includeQuotes = firstParent
+            .fop(toCast(StringLiteralExpression.class)) // inside ['']
+            .uni(l -> false, () -> true); // else just inside []
+
+        long startTime = System.nanoTime();
+        MultiType mt = resolveAtPsi(caretPsi, search);
 
         L<String> keyNames = mt.getKeyNames();
         L<MutableLookup> lookups = L();
@@ -173,12 +185,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // completion options and updates them in the dialog
 
         Dict<LookupElement> nameToNewLookup = keyNames.key(keyName -> keyName)
-            .map(keyName -> mt.getKey(keyName))
-            .map((keyMt, keyName) -> {
-                String briefValue = keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
-                String ideaTypeStr = keyMt.getIdeaType().filterUnknown().toStringResolved();
-                return makePaddedLookup(keyName, ideaTypeStr, briefValue);
-            });
+            .map(keyName -> makeFullLookup(mt, keyName));
 
         lookups.fch(l -> nameToNewLookup.gat(l.getKeyName()).thn(newL -> l.lookupData = newL));
 
