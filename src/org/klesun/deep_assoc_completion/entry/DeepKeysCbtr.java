@@ -41,12 +41,14 @@ public class DeepKeysCbtr extends CompletionContributor
                 ,
             new DeepKeysPvdr()
         );
+        // @param $a = SomeClass::
         this.extend(
             CompletionType.BASIC,
             PlatformPatterns.psiElement()
                 .withSuperParent(2, PhpDocParamTag.class),
             new DocFqnPvdr()
         );
+        // array_column($arr, '')
         this.extend(
             CompletionType.BASIC,
             PlatformPatterns.psiElement()
@@ -55,6 +57,7 @@ public class DeepKeysCbtr extends CompletionContributor
                 ,
             new ArrayColumnPvdr()
         );
+        // [Something::class, '']
         this.extend(
             CompletionType.BASIC,
             PlatformPatterns.psiElement()

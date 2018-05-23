@@ -190,7 +190,7 @@ public class KeyUsageResolver extends Lang
                 .map(ass -> ass.getVariable())
                 .fop(toCast(Variable.class))
                 .fap(var -> list(
-                    fakeCtx.findExprType(var).getKeyNames(),
+                    new VarRes(fakeCtx).getDocType(var).getKeyNames(),
                     findKeysUsedOnVar(var)
                 ).fap(a -> a))
         ).fap(a -> a);

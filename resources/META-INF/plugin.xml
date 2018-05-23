@@ -31,7 +31,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
     <ul>
         <li>Allow specifying keys in @return php doc</li>
         <li>Provide string completion in array_intersect()</li>
-        <li>Provide completio in the _needle_ arg in in_array, not just _haystack_</li>
+        <li>Provide completion in the _needle_ arg in in_array, not just _haystack_</li>
     </ul>
     ]]>
     </change-notes>

@@ -168,6 +168,20 @@ public class VarRes extends Lang
             .fop(res -> opt(res.getElement()));
     }
 
+    public MultiType getDocType(Variable variable)
+    {
+        L<PsiElement> references = findDeclarations(variable)
+            .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable));
+
+        return references
+            .fop(toCast(PhpDocVarImpl.class))
+            .mop(varDoc -> varDoc.getParent())
+            .fop(toCast(PhpDocTag.class))
+            .fop(docTag -> new DocParamRes(ctx).resolve(docTag))
+            .fap(mt -> mt.types)
+            .wap(MultiType::new);
+    }
+
     public List<DeepType> resolve(Variable variable)
     {
         List<Assign> revAsses = list();
@@ -176,12 +190,7 @@ public class VarRes extends Lang
 
         // @var docs are a special case since they give type
         // info from any position (above/below/right of/left of the var declaration)
-        L<DeepType> docTypes = references
-            .tkw(toCast(PhpDocVarImpl.class))
-            .mop(varDoc -> varDoc.getParent())
-            .fop(toCast(PhpDocTag.class))
-            .fop(docTag -> new DocParamRes(ctx).resolve(docTag))
-            .fap(mt -> mt.types);
+        L<DeepType> docTypes = getDocType(variable).types;
 
         for (int i = references.size() - 1; i >= 0; --i) {
             // TODO: make sure closure `use`-s don't incorrectly use wrong context argument generics

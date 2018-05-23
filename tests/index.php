@@ -566,6 +566,12 @@ class DeepKeysTest
         return $list;
     }
 
+    public function testSelfSuggestion()
+    {
+        /** @var $navCmdTypes = ['locator' => 'QWE123'] */
+        $navCmdTypes = ['a' => 5, 'b' => 6, 'asd', '']; // should not suggest numbers
+    }
+
     //============================
     // not implemented follow
     //============================
