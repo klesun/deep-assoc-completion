@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.editor.Caret;
+import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.ui.DialogBuilder;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
@@ -74,7 +75,10 @@ public class GoToNthTest extends AnAction
                         .map(func -> ClosRes.getReturnedValue(func, funcCtx))
                         .map(mt -> mt.getEl().getKey("0")) // first arg passed to the testing function
                         .fop(argMt -> argMt.types.gat(testNum))
-                        .thn(test -> caret.moveToOffset(test.definition.getTextOffset()))
+                        .thn(test -> {
+                            caret.moveToOffset(test.definition.getTextOffset());
+                            caret.getEditor().getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
+                        })
                         .els(() -> {
                             // TODO: show properly to the user with a pop-up or something
                             System.out.println("Failed to find " + testNum + "-th test in this function");
