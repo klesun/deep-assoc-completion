@@ -39,7 +39,7 @@ public class MethCallRes extends Lang
         return callCls.equals(cls) && callMet.equals(mth);
     }
 
-    private static L<Method> findOverridingMethods(Method meth)
+    public static L<Method> findOverridingMethods(Method meth)
     {
         return opt(PhpIndex.getInstance(meth.getProject()))
             .fop(idx -> opt(meth.getContainingClass())

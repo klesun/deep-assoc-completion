@@ -576,6 +576,14 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    public function provideAbstractMethodUsedKeys()
+    {
+        $result = (new \Gtl\AmadeusSoapActions\AmadeusGetFareRulesAction('GENERIC'))
+            ->execute([
+                ''
+            ]);
+    }
+
     private static function makeCoolOutfit($materials)
     {
         return [

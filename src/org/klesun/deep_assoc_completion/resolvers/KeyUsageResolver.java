@@ -139,6 +139,14 @@ public class KeyUsageResolver extends Lang
             });
     }
 
+    private static L<? extends Function> getImplementations(Function meth)
+    {
+        L<Function> result = Tls.cast(Method.class, meth)
+            .fap(m -> MethCallRes.findOverridingMethods(m)).map(a -> a);
+        result.add(meth);
+        return result;
+    }
+
     private L<String> findKeysUsedOnExpr(PhpExpression arrCtor)
     {
         return opt(arrCtor.getParent())
@@ -146,9 +154,9 @@ public class KeyUsageResolver extends Lang
             .fap(argList -> {
                 int order = L(argList.getParameters()).indexOf(arrCtor);
                 return resolveFunc(argList)
-                    .thn(asd -> System.out.println("resolved func " + asd.getClass() + " " + asd.getName()))
                     .fap(meth -> list(
-                        resolveArgUsedKeys(meth, order),
+                        getImplementations(meth)
+                            .fap(ipl -> resolveArgUsedKeys(ipl, order)),
                         opt(meth.getName())
                             .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
                             .fap(n -> resolveReplaceKeys(argList, order))
