@@ -4,6 +4,9 @@ import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiFileFactory;
+import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
@@ -12,11 +15,14 @@ import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import java.awt.event.MouseEvent;
 import java.util.*;
 
 /**
@@ -47,40 +53,72 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         }
     }
 
-    @Nullable
-    @Override
-    public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
+    private static L<PsiElement> resolveAssocKey(PsiElement psiElement)
     {
         SearchContext search = new SearchContext()
             .setDepth(DeepKeysPvdr.getMaxDepth(false));
         FuncCtx funcCtx = new FuncCtx(search);
 
-        L<PsiElement> psiTargets = L();
-        opt(psiElement)
+        return opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(PhpExpression.class))
-            .thn(literal -> Lang.opt(literal.getParent())
+            .fap(literal -> Lang.opt(literal.getParent())
                 .fop(Lang.toCast(ArrayIndex.class))
                 .map(index -> index.getParent())
                 .fop(Lang.toCast(ArrayAccessExpressionImpl.class))
                 .map(expr -> expr.getValue())
                 .fop(toCast(PhpExpression.class))
-                .map(srcExpr -> funcCtx.findExprType(srcExpr).types)
-                .thn(arrayTypes -> arrayTypes.forEach(arrayType -> {
+                .map(srcExpr -> funcCtx.findExprType(srcExpr))
+                .fap(arrMt -> {
                     String key = funcCtx.findExprType(literal).getStringValue();
-                    if (arrayType.keys.containsKey(key)) {
-                        psiTargets.add(arrayType.keys.get(key).definition);
-                    }
-                })))
-            .els(() -> opt(psiElement)
-                // is following still necessary?
-                .fop(v -> Tls.findParent(v, PhpDocParamTag.class, psi -> true))
-                .fop(tag -> new DocParamRes(funcCtx).resolve(tag))
+                    return arrMt.types
+                        .fop(arrt -> opt(arrt.keys.get(key)))
+                        .map(k -> k.definition);
+                }));
+    }
+
+    private static L<PsiElement> resolveDocAt(PsiElement psiElement, int mouseOffset)
+    {
+        String prefix = "<?php\n$arg ";
+        return opt(psiElement)
+            .map(psi -> psi.getParent())
+            .flt(doc -> Tls.regex("^\\s*=\\s*(.+)$", doc.getText()).has())
+            .fap(doc -> {
+                String fileText = prefix + doc.getText() + ";";
+                PsiFile file = PsiFileFactory.getInstance(doc.getProject())
+                    .createFileFromText(PhpLanguage.INSTANCE, fileText);
+                int offset = mouseOffset - doc.getTextOffset() + prefix.length();
+                return opt(file.findElementAt(offset))
+                    .fap(psi -> resolveAssocKey(psi));
+            });
+    }
+
+    private static Opt<MultiType> resolveDocResult(PsiElement psiElement)
+    {
+        SearchContext search = new SearchContext()
+            .setDepth(DeepKeysPvdr.getMaxDepth(false));
+        FuncCtx funcCtx = new FuncCtx(search);
+
+        return opt(psiElement)
+            .fop(v -> Tls.findParent(v, PhpDocParamTag.class, psi -> true))
+            .fop(tag -> new DocParamRes(funcCtx).resolve(tag));
+    }
+
+    @Nullable
+    @Override
+    public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int mouseOffset, Editor editor)
+    {
+        L<PsiElement> psiTargets = L();
+        resolveAssocKey(psiElement)
+            .fch(psi -> psiTargets.add(psi));
+        resolveDocAt(psiElement, mouseOffset)
+            .fch(psi -> psiTargets.add(psi));
+        if (psiTargets.size() == 0) {
+            resolveDocResult(psiElement)
                 .map(mt -> mt.types)
-                .thn(types -> types.forEach(t -> psiTargets.add(t.definition))));
-
+                .thn(types -> types.forEach(t -> psiTargets.add(t.definition)));
+        }
         removeDuplicates(psiTargets);
-
         return psiTargets
             .map(psi -> truncateOnLineBreak(psi))
             .toArray(new PsiElement[psiTargets.size()]);
