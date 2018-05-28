@@ -131,7 +131,7 @@ public class MethCallRes extends Lang
         ).fap(a -> a));
     }
 
-    private static List<Method> resolveMethodsNoNs(String clsName, String func, Project proj)
+    public static List<Method> resolveMethodsNoNs(String clsName, String func, Project proj)
     {
         PhpIndex idx = PhpIndex.getInstance(proj);
         return new L<PhpClass>()

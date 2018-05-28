@@ -642,8 +642,10 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    /** @param $a = Asd::dsa(); */
     public function provideAbstractMethodUsedKeys()
     {
+        Asd::dsa();
         $result = (new \Gtl\AmadeusSoapActions\AmadeusGetFareRulesAction('GENERIC'))
             ->execute([
                 ''

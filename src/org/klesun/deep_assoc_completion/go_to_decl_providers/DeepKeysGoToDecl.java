@@ -9,6 +9,7 @@ import com.intellij.psi.PsiFileFactory;
 import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
+import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
@@ -17,6 +18,7 @@ import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
@@ -77,6 +79,19 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 }));
     }
 
+    private static L<PsiElement> resolveMethCall(PsiElement psiElement)
+    {
+        return opt(psiElement)
+            .map(psi -> psi.getParent())
+            .fop(toCast(MethodReference.class))
+            .fap(call -> {
+                String cls = opt(call.getClassReference()).map(c -> c.getName()).def("");
+                String mth = opt(call.getName()).def("");
+                return L(MethCallRes.resolveMethodsNoNs(cls, mth, call.getProject()));
+            })
+            .map(a -> a);
+    }
+
     private static L<PsiElement> resolveDocAt(PsiElement psiElement, int mouseOffset)
     {
         String prefix = "<?php\n$arg ";
@@ -89,7 +104,10 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                     .createFileFromText(PhpLanguage.INSTANCE, fileText);
                 int offset = mouseOffset - doc.getTextOffset() + prefix.length();
                 return opt(file.findElementAt(offset))
-                    .fap(psi -> resolveAssocKey(psi));
+                    .fap(psi -> list(
+                        resolveAssocKey(psi),
+                        resolveMethCall(psi)
+                    ).fap(a -> a));
             });
     }
 
