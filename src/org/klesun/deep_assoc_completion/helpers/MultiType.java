@@ -124,6 +124,11 @@ public class MultiType extends Lang
         return names;
     }
 
+    public L<DeepType.Key> getProps()
+    {
+        return types.fap(t -> t.props.vls());
+    }
+
     public PhpType getIdeaType()
     {
         PhpType ideaType = new PhpType();

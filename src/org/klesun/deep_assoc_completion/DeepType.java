@@ -23,6 +23,8 @@ public class DeepType extends Lang
 {
     // keys and typeGetters of associative array
     public final LinkedHashMap<String, Key> keys = new LinkedHashMap<>();
+    // just like array keys, but dynamic object properties
+    public final Dict<Key> props = new Dict<>(L());
     // possible typeGetters of list element
     public L<DeepType> anyKeyElTypes = new L<>();
     public L<DeepType> listElTypes = new L<>();
@@ -105,6 +107,13 @@ public class DeepType extends Lang
         return keyEntry;
     }
 
+    public Key addProp(String name, PsiElement definition)
+    {
+        Key keyEntry = new Key(name, definition);
+        props.put(keyEntry.name, keyEntry);
+        return keyEntry;
+    }
+
     public static class Key
     {
         final public String name;
@@ -161,6 +170,7 @@ public class DeepType extends Lang
         circularRefs.addAll(types);
 
         LinkedHashMap<String, List<DeepType>> mergedKeys = new LinkedHashMap<>();
+        Set<String> mergedProps = new HashSet<>(L(types).fap(t -> t.props.kys()));
         List<DeepType> indexTypes = list();
         List<String> briefTypes = list();
 
@@ -179,11 +189,13 @@ public class DeepType extends Lang
         if (mergedKeys.size() > 0) {
             result = "{\n";
             ++level;
-            for (Map.Entry<String, List<DeepType>> e: mergedKeys.entrySet()) {
+            for (Map.Entry<String, List<DeepType>> e : mergedKeys.entrySet()) {
                 result += indent(level) + "\"" + e.getKey() + "\"" + ": " + toJson(e.getValue(), level, circularRefs) + ",\n";
             }
             --level;
             result += indent(level) + "}";
+        } else if (mergedProps.size() > 0) {
+            result = "{" + Tls.implode(", ", L(mergedProps).map(p -> "$" + p)) + "}";
         } else if (indexTypes.size() > 0) {
             result = "[" + toJson(indexTypes, level, circularRefs) + "]";
         } else if (briefTypes.size() > 0) {

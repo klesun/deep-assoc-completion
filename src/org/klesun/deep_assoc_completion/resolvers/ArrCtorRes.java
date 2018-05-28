@@ -26,14 +26,21 @@ public class ArrCtorRes extends Lang
         this.ctx = ctx;
     }
 
+    public static L<PhpClass> resolveMtCls(MultiType mtArg, Project project)
+    {
+        return opt(mtArg)
+            .map(mt -> mt.getIdeaType())
+            .map(tpe -> L(tpe.filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).getTypes())
+                .fap(clsPath -> L(PhpIndex.getInstance(project).getAnyByFQN(clsPath)))
+                .fop(rvd -> opt(rvd)))
+            .fap(clses -> clses);
+    }
+
     public L<PhpClass> resolveObjCls(PhpExpression expr)
     {
         return opt(expr)
-            .map(xpr -> ctx.findExprType(xpr).getIdeaType())
-            .map(tpe -> L(tpe.filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).getTypes())
-                .fap(clsPath -> L(PhpIndex.getInstance(expr.getProject()).getAnyByFQN(clsPath)))
-                .fop(rvd -> opt(rvd)))
-            .fap(clses -> clses);
+            .map(xpr -> ctx.findExprType(xpr))
+            .fap(mt -> resolveMtCls(mt, expr.getProject()));
     }
 
     public L<PhpClass> resolveInstance(PsiElement instExpr)

@@ -642,6 +642,30 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    /**
+     * @param stdClass $argRow {
+     *      @property int id some description
+     *      @property string name some description
+     *      @property \stdClass childPurchase {
+     *          @property int id some description
+     *          @property float price
+     *      }
+     * }
+     */
+    public function testStdClassDoc($argRow)
+    {
+        $argRow->c;
+        /**
+         *  @var stdClass $row {
+         *       @property int id some description
+         *       @property string name some description
+         *}
+         **/
+        while ($row = $result->fetch_object()) {
+            $row->n;
+        }
+    }
+
     /** @param $a = Asd::dsa(); */
     public function provideAbstractMethodUsedKeys()
     {
