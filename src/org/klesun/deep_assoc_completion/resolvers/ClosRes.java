@@ -56,10 +56,14 @@ public class ClosRes extends Lang
                 .fop(toCast(PhpExpression.class))
                 .map(val -> ctx.findExprType(val)),
             findFunctionYields(funcBody)
-                .fop(ret -> opt(ret.getArgument()))
-                .fop(toCast(PhpExpression.class))
-                .map(val -> ctx.findExprType(val).getInArray(funcBody))
-                .map(t -> new MultiType(list(t)))
+                .fop(yld -> opt(yld.getArgument())
+                    .fop(toCast(PhpExpression.class))
+                    .map(val -> ctx.findExprType(val))
+                    .map(mt -> opt(yld.getText())
+                        .fop(txt -> Tls.regex("yield\\s+from[^A-Za-z].*", txt))
+                        .map(txt -> mt)
+                        .def(new MultiType(list(mt.getInArray(funcBody)))))
+                )
         ).fap(a -> a).fap(mt -> mt.types).wap(MultiType::new);
     }
 

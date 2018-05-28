@@ -1803,6 +1803,34 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function getPrivatePqs()
+    {
+        for ($i = 0; $i < 10; ++$i) {
+            yield ['isPrivate' => false, 'price' => '100.00'];
+        }
+    }
+
+    private static function getPublishedPqs()
+    {
+        for ($i = 0; $i < 10; ++$i) {
+            yield ['isPrivate' => true, 'price' => '150.00'];
+        }
+    }
+
+    private static function getPqs()
+    {
+        yield from static::getPrivatePqs();
+        yield from static::getPublishedPqs();
+    }
+
+    public function provideYieldFrom()
+    {
+        $pqs = static::getPqs();
+        $pqs[0][''];
+        $list[] = [$pqs[0], ['isPrivate' => [], 'price' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
