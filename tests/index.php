@@ -654,15 +654,18 @@ class DeepKeysTest
      */
     public function testStdClassDoc($argRow)
     {
-        $argRow->c;
         /**
          *  @var stdClass $row {
          *       @property int id some description
          *       @property string name some description
+         *       @property stdClass childPurchase {
+         *           @property int id some description
+         *           @property float price
+         *       }
          *}
          **/
         while ($row = $result->fetch_object()) {
-            $row->name;
+            $row->childPurchase->;
         }
     }
 

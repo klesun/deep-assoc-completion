@@ -50,15 +50,6 @@ public class FieldRes extends Lang
         return false;
     }
 
-    private L<Field> findReferenced(FieldReferenceImpl fieldRef)
-    {
-//         return opt(fieldRef.resolve()).fop(toCast(Field.class));
-        return opt(fieldRef.getClassReference())
-            .fap(obj -> new ArrCtorRes(ctx).resolveObjCls(obj))
-            .fap(cls -> L(cls.getFields()))
-            .flt(f -> f.getName().equals(fieldRef.getName()));
-    }
-
     public MultiType resolve(FieldReferenceImpl fieldRef)
     {
         if (isCircularExpr(fieldRef)) {
@@ -66,7 +57,17 @@ public class FieldRes extends Lang
         }
 
         L<DeepType> result = list();
-        findReferenced(fieldRef)
+        MultiType objMt = opt(fieldRef.getClassReference())
+            .map(ref -> ctx.findExprType(ref))
+            .def(MultiType.INVALID_PSI);
+
+        objMt.getProps()
+            .flt(prop -> prop.name.equals(fieldRef.getName()))
+            .fch(prop -> result.addAll(prop.getTypes()));
+
+        ArrCtorRes.resolveMtCls(objMt, fieldRef.getProject())
+            .fap(cls -> L(cls.getFields()))
+            .flt(f -> f.getName().equals(fieldRef.getName()))
             .fch(resolved -> {
                 FuncCtx implCtx = new FuncCtx(ctx.getSearch());
                 Tls.cast(FieldImpl.class, resolved)
