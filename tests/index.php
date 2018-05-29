@@ -662,7 +662,7 @@ class DeepKeysTest
          *}
          **/
         while ($row = $result->fetch_object()) {
-            $row->n;
+            $row->name;
         }
     }
 

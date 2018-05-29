@@ -10,6 +10,7 @@ import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.MemberReference;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpClass;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
@@ -50,10 +51,22 @@ public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandle
             .fop(toCast(MemberReference.class))
             .flt(mem -> opt(mem.getClassReference())
                 // skip this provider if IDEA already resolved the class
-                .flt(ref -> ref.getType().filterUnknown().filterUnknown().filterNull().filterNull().filterMixed().filter(PhpType.OBJECT).isEmpty())
+                .flt(ref -> {
+                    PhpType clean = ref.getType().filterUnknown().filterUnknown().filterNull().filterNull().filterMixed().filter(PhpType.OBJECT);
+                    return clean.isEmpty() || clean.toString().equals("\\stdClass");
+                })
                 .has())
-            .fap(mem -> new ArrCtorRes(funcCtx).resolveInstance(mem)
-                .fap(cls -> resolveMember(cls, mem.getName())));
+            .fap(mem -> opt(mem.getFirstChild())
+                .fop(toCast(PhpExpression.class))
+                .map(exp -> funcCtx.findExprType(exp))
+                .fap(mt -> list(
+                    ArrCtorRes.resolveMtCls(mt, mem.getProject())
+                        .fap(cls -> resolveMember(cls, mem.getName())),
+                    mt.getProps()
+                        .flt(prop -> prop.name.equals(mem.getName()))
+                        .map(prop -> prop.definition)
+                ).fap(a -> a))
+            );
 
         return psiTargets.toArray(new PsiElement[psiTargets.size()]);
     }
