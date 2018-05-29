@@ -1831,6 +1831,10 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function doSomeStuff()
+    {
+    }
+
     public function provideArrayMapKeys()
     {
         $dict = [
@@ -1840,6 +1844,10 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
             'originType' => 'agency',
             'teamInitials' =>'  ',
         ];
+
+        $obj = $this;
+        $cb = [$obj, 'doSomeStuff'];
+
         $clean = array_map(function($match) { return trim($match) ?: null; }, $dict);
         $clean[''];
         $list[] = [$clean, ['signCityCode' => [], 'pcc' => [], 'airline' => [], 'originType' => [], 'teamInitials' =>[]]];
