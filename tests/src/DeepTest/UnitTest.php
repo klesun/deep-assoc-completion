@@ -1831,6 +1831,21 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    public function provideArrayMapKeys()
+    {
+        $dict = [
+            'signCityCode' => ' QSY',
+            'pcc' => 'KL34 ',
+            'airline' => '',
+            'originType' => 'agency',
+            'teamInitials' =>'  ',
+        ];
+        $clean = array_map(function($match) { return trim($match) ?: null; }, $dict);
+        $clean[''];
+        $list[] = [$clean, ['signCityCode' => [], 'pcc' => [], 'airline' => [], 'originType' => [], 'teamInitials' =>[]]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

@@ -665,7 +665,7 @@ class DeepKeysTest
          *}
          **/
         while ($row = $result->fetch_object()) {
-            $row->childPurchase->;
+            $row->childPurchase->price;
         }
     }
 

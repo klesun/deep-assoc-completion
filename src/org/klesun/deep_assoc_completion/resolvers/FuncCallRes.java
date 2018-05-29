@@ -62,9 +62,19 @@ public class FuncCallRes extends Lang
                     findPsiExprType(callback).types
                         .map(t -> t.getReturnTypes(subCtx))
                         .fch(rts -> {
+                            MultiType rmt = new MultiType(rts);
+                            arrMt.types.fch(t -> {
+                                DeepType mapped = new DeepType(t.definition, PhpType.ARRAY);
+                                t.keys.forEach((k,v) -> mapped.addKey(k, v.definition)
+                                    .addType(() -> rmt, rmt.getIdeaType()));
+                                result.add(mapped);
+                            });
                             if (arrMt.hasNumberIndexes()) {
                                 mapRetType.listElTypes.addAll(rts);
-                            } else {
+                            } else if (
+                                arrMt.getKeyNames().size() == 0 ||
+                                arrMt.types.any(t -> t.anyKeyElTypes.size() > 0)
+                            ) {
                                 mapRetType.anyKeyElTypes.addAll(rts);
                             }
                         });
