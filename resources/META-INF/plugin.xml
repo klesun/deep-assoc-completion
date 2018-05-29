@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.05.28.001</version>
+    <version>2018.05.29.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,6 +29,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
+        <li>Provide stdClass property completion from php doc</li>
         <li>Resolve `yield from` correctly</li>
         <li>Provide completion when typing accessed key/method from a function in @param tag</li>
         <li>Small fixes</li>
