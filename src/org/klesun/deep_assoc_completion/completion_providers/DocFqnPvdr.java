@@ -75,7 +75,8 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 // method name completion
                 extractTypedFqnPart(docValue, idx)
                     .thn(options -> L(options)
-                        .map((lookup) -> LookupElementBuilder.create(lookup))
+                        .map((lookup) -> LookupElementBuilder.create(lookup)
+                            .withIcon(DeepKeysPvdr.icon))
                         .fch(result::addElement))
                     .els(() -> result.addLookupAdvertisement("No FQN-s found with such partial name - " + literal.getText()));
 

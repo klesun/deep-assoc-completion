@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.05.30.001</version>
+    <version>2018.06.22.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -29,6 +29,8 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
+        <li>Add a "deep" icon in each completion option to make it clear when it is built-in and when from the plugin</li>
+        <li>Infer from parenthesised expression properly</li>
         <li>Provide method reference in [$obj, doSomething] even if it is not passed directly somewhere as a callback</li>
         <li>Keep keys in array_map result</li>
     </ul>

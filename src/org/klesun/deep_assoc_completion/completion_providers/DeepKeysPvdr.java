@@ -16,6 +16,7 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import javax.swing.*;
 import java.util.*;
 
 import static org.klesun.lang.Lang.*;
@@ -26,6 +27,8 @@ import static org.klesun.lang.Lang.*;
 public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
     final private static int BRIEF_TYPE_MAX_LEN = 50;
+
+    final public static ImageIcon icon = new ImageIcon(DeepKeysPvdr.class.getResource("../icons/deep_16_ruby2.png"));
 
     public static int getMaxDepth(boolean isAutoPopup)
     {
@@ -61,7 +64,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .bold()
             .withInsertHandler(makeInsertHandler())
             .withTailText(briefVal, true)
-            .withIcon(PhpIcons.FIELD)
+            .withIcon(icon)
             .withTypeText(ideaType, false);
     }
 

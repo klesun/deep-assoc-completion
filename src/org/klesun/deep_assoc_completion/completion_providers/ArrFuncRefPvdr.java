@@ -26,7 +26,7 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
     {
         return LookupElementBuilder.create(method.getName())
             .bold()
-            .withIcon(PhpIcons.METHOD)
+            .withIcon(DeepKeysPvdr.icon)
             .withTypeText(method.getLocalType(false).filterUnknown().toString());
     }
 

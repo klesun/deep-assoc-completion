@@ -36,7 +36,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     {
         return LookupElementBuilder.create(keyName)
                 .bold()
-                .withIcon(PhpIcons.FIELD)
+                .withIcon(DeepKeysPvdr.icon)
                 .withTypeText(type);
     }
 

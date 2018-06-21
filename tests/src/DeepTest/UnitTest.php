@@ -1845,6 +1845,8 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
             'teamInitials' =>'  ',
         ];
 
+        $arr = ['a' => $this];
+
         $obj = $this;
         $cb = [$obj, 'doSomeStuff'];
 

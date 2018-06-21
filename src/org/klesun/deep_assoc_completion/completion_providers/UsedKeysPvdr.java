@@ -33,7 +33,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     {
         return LookupElementBuilder.create(keyName)
             .bold()
-            .withIcon(PhpIcons.PARAMETER)
+            .withIcon(DeepKeysPvdr.icon)
             .withTypeText("from usage");
     }
 

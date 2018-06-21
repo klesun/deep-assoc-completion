@@ -22,6 +22,10 @@ import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import static org.klesun.lang.Lang.*;
 
 /**
@@ -44,7 +48,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     {
         LookupElementBuilder base = LookupElementBuilder.create(member.getName())
             .bold()
-            .withIcon(PhpIcons.METHOD)
+            .withIcon(DeepKeysPvdr.icon)
             .withTypeText(member.getType().filterUnknown().toString());
 
         return Opt.fst(list(
@@ -106,7 +110,16 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                 }
             });
 
-        members.map(m -> makeLookup(m)).fch(result::addElement);
+        L<LookupElement> builtIns = list();
+        result.runRemainingContributors(parameters, otherSourceResult -> {
+            builtIns.add(otherSourceResult.getLookupElement());
+        });
+        Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()));
+
+        members.map(m -> makeLookup(m))
+            .flt(l -> !suggested.contains(l.getLookupString()))
+            .fch(result::addElement);
+        result.addAllElements(builtIns); // add built-in after ours, this is important
         long elapsed = System.nanoTime() - startTime;
         String msg = "Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds";
         result.addLookupAdvertisement(msg);

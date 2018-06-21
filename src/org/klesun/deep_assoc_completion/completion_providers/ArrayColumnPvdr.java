@@ -27,7 +27,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
     {
         return LookupElementBuilder.create(keyName)
             .bold()
-            .withIcon(PhpIcons.FIELD)
+            .withIcon(DeepKeysPvdr.icon)
             .withTypeText(type);
     }
 
