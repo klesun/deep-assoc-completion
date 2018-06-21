@@ -1854,6 +1854,15 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    public function provideBracketExpression()
+    {
+        $dict = ['vova' => 1, 'misha' => 2];
+        $asd = ($dict ?? null);
+        $asd[''];
+        $list[] = [$asd, ['vova' => [], 'misha' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

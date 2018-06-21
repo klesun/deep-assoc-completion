@@ -556,6 +556,9 @@ class DeepKeysTest
         if (array_intersect([''], $types, ['ASD'])) {
 
         }
+        if (($types[$i] ?? null) === '') {
+
+        }
     }
 
     /** pressing _Tools -> deep-assoc-completion -> To N-th Test_ and specifying test number (say 3) should get you to the 3-rd */
