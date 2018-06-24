@@ -38,24 +38,8 @@ public class FieldRes extends Lang
             .flt(ref -> name.equals(ref.getName()));
     }
 
-    private boolean isCircularExpr(FieldReferenceImpl fieldRef)
-    {
-        L<PhpExpression> psiTrace = ctx.getSearch().psiTrace;
-        // -1, because last always will be this PSI, not a circular reference
-        for (int i = 0; i < psiTrace.size() - 1; ++i) {
-            if (psiTrace.get(i).isEquivalentTo(fieldRef)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public MultiType resolve(FieldReferenceImpl fieldRef)
     {
-        if (isCircularExpr(fieldRef)) {
-            return MultiType.CIRCULAR_REFERENCE;
-        }
-
         L<DeepType> result = list();
         MultiType objMt = opt(fieldRef.getClassReference())
             .map(ref -> ctx.findExprType(ref))
@@ -83,9 +67,7 @@ public class FieldRes extends Lang
                         .flt(meth -> meth.getName().equals("__construct"))
                         .map(meth -> fieldRef.getClassReference())
                         .fop(toCast(PhpExpression.class))
-                        .fop(ref -> ref.getText().equals("$this")
-                            ? ctx.instGetter.map(g -> g.get())
-                            : opt(ctx.findExprType(ref)))
+                        .fop(ref -> opt(ctx.findExprType(ref)))
                         .fap(mt -> mt.getArgsPassedToCtor())
                         .wap(ctxs -> ctxs.size() > 0 ? ctxs : list(implCtx))
                         .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(psi, false)));

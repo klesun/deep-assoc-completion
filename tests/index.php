@@ -207,15 +207,22 @@ class DeepKeysTest
         ]);
     }
 
+    private static function isOld($pcc)
+    {
+        return $pcc[''] < '1970';
+    }
+
     public function provideFuncVarUsageBasedCompletion()
     {
         $list = [];
-
         $pccRecords = [
-            ['gds' => 'apollo', 'pcc' => '1O4K'],
-            ['gds' => 'sabre', 'pcc' => '611F'],
-            ['gds' => 'amadeus', 'pcc' => 'RIX123456'],
+            ['gds' => 'apollo', 'pcc' => '1O4K', 'year' => '1971'],
+            ['gds' => 'sabre', 'pcc' => '611F', 'year' => '1960'],
+            ['gds' => 'amadeus', 'pcc' => 'RIX123456', 'year' => '1987'],
         ];
+        $oldPccs = array_filter($pccRecords, [static::class, 'isOld']);
+
+
         $getPcc = function($pccRecord) use (&$list){
             // should suggest 'pcc' and 'gds' based on what
             // is passed to this lambda further in array_map

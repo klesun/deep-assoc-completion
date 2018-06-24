@@ -202,6 +202,9 @@ public class DeepType extends Lang
             List<String> bytes = new ArrayList(new HashSet(briefTypes));
             result = "\"" + StringUtils.join(bytes, "|") + "\"";
         }
+        result += L(types).fop(t -> t.ctorArgs)
+            .map(ctx -> Tls.implode(", ", ctx.getArgs().map(a -> a.toJson())))
+            .grp(a -> a).kys().fst().map(argStr -> "(" + argStr + ")").def("");
         circularRefs.removeAll(types);
         return result;
     }

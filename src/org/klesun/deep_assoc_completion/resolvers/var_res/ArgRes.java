@@ -96,6 +96,7 @@ public class ArgRes extends Lang
         return opt(funcVar.getParent())
             .fop(parent -> Opt.fst(list(opt(null)
                 // like array_map($mapper, ['a' => 5, 'b' => 6])
+                // or SomeCls::doSomething($mapper)
                 , Tls.cast(ParameterListImpl.class, parent)
                     .fop(parl -> opt(parl.getParent())
                         .fop(toCast(FunctionReference.class))

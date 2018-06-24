@@ -97,7 +97,11 @@ public class FuncCtx extends Lang
 
     public FuncCtx subCtxDirect(FunctionReference funcCall)
     {
-        return subCtxDirectGeneric(funcCall);
+        FuncCtx self = subCtxDirectGeneric(funcCall);
+        self.instGetter = Tls.cast(MethodReference.class, funcCall)
+            .map(methCall -> methCall.getClassReference())
+            .map(obj -> () -> findExprType(obj));
+        return self;
     }
 
     public FuncCtx subCtxDirect(NewExpression funcCall)
@@ -174,6 +178,12 @@ public class FuncCtx extends Lang
                 return this.parent.unw().equals(that.parent.unw());
             })
             .def(false);
+    }
+
+    /** for debug */
+    public L<MultiType> getArgs()
+    {
+        return argGetters.map(g -> g.get());
     }
 
     public String toString()

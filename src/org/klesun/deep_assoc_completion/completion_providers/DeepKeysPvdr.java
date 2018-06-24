@@ -32,7 +32,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
     public static int getMaxDepth(boolean isAutoPopup)
     {
-        return isAutoPopup ? 25 : 40;
+        return isAutoPopup ? 30 : 40;
     }
 
     private static InsertHandler<LookupElement> makeInsertHandler()
@@ -193,7 +193,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         lookups.fch(l -> nameToNewLookup.gat(l.getKeyName()).thn(newL -> l.lookupData = newL));
 
         long elapsed = System.nanoTime() - startTime;
-        result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
+        result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
 
         if (search.getExpressionsResolved() > 100) {
             System.out.println("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");

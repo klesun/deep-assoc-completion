@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.06.22.001</version>
+    <version>2018.06.25.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -14,21 +14,31 @@
 </ul>
 This plugin greatly extends phpstorm's associative array completion and typing<br/>
 
+<p>---------------------------------</p>
+<img style="width: 33%; height: auto;" src="https://user-images.githubusercontent.com/5202330/30349574-179c80e2-981c-11e7-9783-c7b9e6076c5c.png"/>
 <br clear="all"/>
-<img style="width: 250px; height: auto;" src="https://user-images.githubusercontent.com/5202330/30349574-179c80e2-981c-11e7-9783-c7b9e6076c5c.png"/>
+<p>Completion from function called in a function called in another function...</p>
+<p>---------------------------------</p>
+<img style="width: 33%; height: auto;" src="https://cloud.githubusercontent.com/assets/5202330/26426602/0f72f554-40e2-11e7-8873-30b873310746.png"/>
 <br clear="all"/>
-<hr/>
-<img style="width: 250px; height: auto;" src="https://user-images.githubusercontent.com/5202330/30355696-9d6aa368-983d-11e7-8b8a-6b4f5afcee0e.png"/>
+<p>Specify type with key names and data source functions in PHP DOC</p>
+<p>---------------------------------</p>
+<img style="width: 33%; height: auto;" src="https://user-images.githubusercontent.com/5202330/41822110-53be76b8-77f3-11e8-9115-fb007dac38c8.png"/>
 <br clear="all"/>
-<hr/>
-<img style="width: 250px; height: auto;" src="https://cloud.githubusercontent.com/assets/5202330/26426602/0f72f554-40e2-11e7-8873-30b873310746.png"/>
+<p>Infer type inside chained method calls and wrappers</p>
+<p>---------------------------------</p>
+<img style="width: 33%; height: auto;" src="https://user-images.githubusercontent.com/5202330/41823825-f82a5724-780e-11e8-9a8e-4eb37c89aa53.png"/>
 <br clear="all"/>
-<hr/>
-<img style="width: 250px; height: auto;" src="https://user-images.githubusercontent.com/5202330/34743879-3e690ff0-f583-11e7-8dee-dd8c86b78917.png"/>
+<p>Infer argument type based on function usage</p>
+<p>---------------------------------</p>
+<img style="width: 33%; height: auto;" src="https://user-images.githubusercontent.com/5202330/34743879-3e690ff0-f583-11e7-8dee-dd8c86b78917.png"/>
+<br clear="all"/>
+<p>Infer type from \PDO SQL-s if DB is connected</p>
     ]]></description>
 
     <change-notes><![CDATA[
     <ul>
+        <li>Infer type in chained methods (map/filter/etc...) in an Option-like class</li>
         <li>Add a "deep" icon in each completion option to make it clear when it is built-in and when from the plugin</li>
         <li>Infer from parenthesised expression properly</li>
         <li>Provide method reference in [$obj, doSomething] even if it is not passed directly somewhere as a callback</li>

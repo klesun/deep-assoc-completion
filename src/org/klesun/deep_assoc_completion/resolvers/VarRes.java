@@ -226,7 +226,11 @@ public class VarRes extends Lang
             assignments.add(revAsses.get(i));
         }
         DeepType typeFromIdea = new DeepType(variable);
+        Opt<MultiType> thisType = opt(variable)
+            .flt(vari -> vari.getText().equals("$this"))
+            .fop(vari -> ctx.instGetter.map(g -> g.get()));
         return AssRes.assignmentsToTypes(assignments)
-            .cct(docTypes).cct(list(typeFromIdea));
+            .cct(docTypes).cct(list(typeFromIdea))
+            .cct(thisType.fap(a -> a.types));
     }
 }

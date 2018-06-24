@@ -68,9 +68,23 @@ class Result
      * @param \Closure $mapper - returns new Result
      * @return Result - same if was error or mapped if ok
      */
-    public function flatMap(\Closure $mapper): Result
+    public function flatMap(\Closure $mapper)
     {
-        return $this->isOk() ? $mapper($this->unwrap()) : $this;
+        return $this->isOk() ? $mapper($this->unwrap()) : Result::makeError($this->error);
+    }
+
+    public function map(\Closure $mapper)
+    {
+        return $this->isOk()
+            ? Result::makeOk($mapper($this->unwrap()))
+            : Result::makeError($this->error);
+    }
+
+    public function filter(\Closure $pred)
+    {
+        return $this->isOk() && $pred($this->unwrap())
+            ? $this
+            : Result::makeError($this->error);
     }
 
     public function __toString()
