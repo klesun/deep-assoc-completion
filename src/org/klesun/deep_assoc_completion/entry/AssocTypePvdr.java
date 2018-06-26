@@ -96,6 +96,11 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         return result;
     }
 
+    // 2016.2.2
+    public Collection<? extends PhpNamedElement> getBySignature(String s, Project project) {
+        return list();
+    }
+
     public Collection<? extends PhpNamedElement> getBySignature(String s, Set<String> set, int i, Project project)
     {
         return list();

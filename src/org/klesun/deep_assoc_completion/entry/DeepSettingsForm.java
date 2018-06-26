@@ -33,6 +33,11 @@ public class DeepSettingsForm implements Configurable
     }
 
     @Nullable
+    public String getHelpTopic() {
+        return null;
+    }
+
+    @Nullable
     @Override
     public JComponent createComponent() {
         return rootPanel;
@@ -83,6 +88,10 @@ public class DeepSettingsForm implements Configurable
         bgTypePvdrTimeout.setText(getSettings().bgTypePvdrTimeout.toString());
         explicitDepthLimit.setText(getSettings().explicitDepthLimit.toString());
         implicitDepthLimit.setText(getSettings().implicitDepthLimit.toString());
+    }
+
+    public void disposeUIResources() {
+
     }
 
     private DeepSettings getSettings() {

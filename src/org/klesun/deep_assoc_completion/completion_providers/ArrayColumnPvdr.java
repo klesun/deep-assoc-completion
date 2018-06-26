@@ -27,7 +27,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
     {
         return LookupElementBuilder.create(keyName)
             .bold()
-            .withIcon(DeepKeysPvdr.icon)
+            .withIcon(DeepKeysPvdr.getIcon())
             .withTypeText(type);
     }
 

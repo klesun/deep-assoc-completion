@@ -48,7 +48,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     {
         LookupElementBuilder base = LookupElementBuilder.create(member.getName())
             .bold()
-            .withIcon(DeepKeysPvdr.icon)
+            .withIcon(DeepKeysPvdr.getIcon())
             .withTypeText(member.getType().filterUnknown().toString());
 
         return Opt.fst(list(

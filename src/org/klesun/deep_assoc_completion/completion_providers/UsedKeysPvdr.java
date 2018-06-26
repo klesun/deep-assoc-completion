@@ -33,7 +33,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     {
         return LookupElementBuilder.create(keyName)
             .bold()
-            .withIcon(DeepKeysPvdr.icon)
+            .withIcon(DeepKeysPvdr.getIcon())
             .withTypeText("from usage");
     }
 

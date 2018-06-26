@@ -41,6 +41,16 @@ public class FuncCallRes extends Lang
         ).flt(varUsage -> varName.equals(varUsage.getName()));
     }
 
+    private static PhpType getDocType(Function func)
+    {
+        //return func.getDocType();
+        return opt(func.getDocComment())
+            .map(doc -> doc.getReturnTag())
+            .map(ret -> ret.getType())
+            .def(PhpType.EMPTY)
+            ;
+    }
+
     private L<DeepType> findBuiltInFuncCallType(FunctionReferenceImpl call)
     {
         return opt(call.getName()).map(name -> {
@@ -209,7 +219,7 @@ public class FuncCallRes extends Lang
                 // try to get type info from standard_2.php
                 opt(call.resolve())
                     .fop(toCast(Function.class))
-                    .thn(func -> result.add(new DeepType(call, func.getDocType())))
+                    .thn(func -> result.add(new DeepType(call, getDocType(func))))
                     ;
             }
             return result;

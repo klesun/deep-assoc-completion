@@ -12,11 +12,13 @@ import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.icons.DeepIcons;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import javax.swing.*;
+import java.net.URL;
 import java.util.*;
 
 import static org.klesun.lang.Lang.*;
@@ -28,7 +30,16 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
     final private static int BRIEF_TYPE_MAX_LEN = 50;
 
-    final public static ImageIcon icon = new ImageIcon(DeepKeysPvdr.class.getResource("../icons/deep_16_ruby2.png"));
+    private static ImageIcon icon = null;
+
+    public static ImageIcon getIcon()
+    {
+        if (icon == null) {
+            URL path = DeepIcons.class.getResource("deep_16_ruby2.png");
+            icon = new ImageIcon(path);
+        }
+        return icon;
+    }
 
     public static int getMaxDepth(boolean isAutoPopup)
     {
@@ -64,7 +75,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .bold()
             .withInsertHandler(makeInsertHandler())
             .withTailText(briefVal, true)
-            .withIcon(icon)
+            .withIcon(getIcon())
             .withTypeText(ideaType, false);
     }
 

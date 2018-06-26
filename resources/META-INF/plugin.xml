@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.06.25.001</version>
+    <version>2018.06.26.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -38,6 +38,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
+        <li>Add backward-compatibility with 2016.2.2</li>
         <li>Infer type in chained methods (map/filter/etc...) in an Option-like class</li>
         <li>Add a "deep" icon in each completion option to make it clear when it is built-in and when from the plugin</li>
         <li>Infer from parenthesised expression properly</li>
@@ -48,7 +49,7 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
     </change-notes>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-    <idea-version since-build="145.0"/>
+    <idea-version since-build="162.2380.11"/>
 
     <extensions defaultExtensionNs="com.intellij">
         <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DeepKeysCbtr"/>

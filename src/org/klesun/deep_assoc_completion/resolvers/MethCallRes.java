@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
+import com.intellij.database.model.DasObject;
 import com.intellij.database.model.ObjectKind;
 import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.openapi.project.Project;
@@ -49,13 +50,19 @@ public class MethCallRes extends Lang
             .fop(cls -> opt(cls.findMethodByName(meth.getName())));
     }
 
+    private static L<DasObject> getDasChildren(DasObject parent)
+    {
+        // return getDasChildren(ObjectKind.COLUMN);
+        return L(parent.getDbChildren(DasObject.class, ObjectKind.TABLE));
+    }
+
     private static L<String> getTableColumns(String table, Project project)
     {
         return L(DbPsiFacade.getInstance(project).getDataSources())
             .fap(src -> L(src.getModel().getModelRoots()))
-            .fap(root -> L(root.getDasChildren(ObjectKind.TABLE)))
+            .fap(root -> getDasChildren(root))
             .flt(t -> t.getName().equals(table))
-            .fap(tab -> L(tab.getDasChildren(ObjectKind.COLUMN)))
+            .fap(tab -> getDasChildren(tab))
             .map(col -> col.getName());
     }
 
