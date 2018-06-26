@@ -50,19 +50,19 @@ public class MethCallRes extends Lang
             .fop(cls -> opt(cls.findMethodByName(meth.getName())));
     }
 
-    private static L<DasObject> getDasChildren(DasObject parent)
+    private static L<DasObject> getDasChildren(DasObject parent, ObjectKind kind)
     {
         // return getDasChildren(ObjectKind.COLUMN);
-        return L(parent.getDbChildren(DasObject.class, ObjectKind.TABLE));
+        return L(parent.getDbChildren(DasObject.class, kind));
     }
 
     private static L<String> getTableColumns(String table, Project project)
     {
         return L(DbPsiFacade.getInstance(project).getDataSources())
             .fap(src -> L(src.getModel().getModelRoots()))
-            .fap(root -> getDasChildren(root))
+            .fap(root -> getDasChildren(root, ObjectKind.TABLE))
             .flt(t -> t.getName().equals(table))
-            .fap(tab -> getDasChildren(tab))
+            .fap(tab -> getDasChildren(tab, ObjectKind.COLUMN))
             .map(col -> col.getName());
     }
 
