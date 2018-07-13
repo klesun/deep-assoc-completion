@@ -138,7 +138,20 @@ public class MethCallRes extends Lang
         ).fap(a -> a));
     }
 
-    public static List<Method> resolveMethodsNoNs(String clsName, String func, Project proj)
+    public static L<Method> resolveMethodsNoNs(MethodReference call, FuncCtx ctx)
+    {
+        String cls = opt(call.getClassReference()).map(c -> c.getName()).def("");
+        String mth = opt(call.getName()).def("");
+        if (cls.equals("self") || cls.equals("static")) {
+            cls = ctx.fakeFileSource
+                .fop(doc -> Tls.findParent(doc, PhpClass.class, a -> true))
+                .map(clsPsi -> clsPsi.getName())
+                .def(cls);
+        }
+        return L(MethCallRes.resolveMethodsNoNs(cls, mth, call.getProject()));
+    }
+
+    private static L<Method> resolveMethodsNoNs(String clsName, String func, Project proj)
     {
         PhpIndex idx = PhpIndex.getInstance(proj);
         return new L<PhpClass>()
@@ -166,9 +179,7 @@ public class MethCallRes extends Lang
                 .map(l -> l.map(v -> v.getElement()))
                 .map(l -> l.fop(toCast(Method.class)))
                 .flt(l -> l.s.size() > 0)
-            , opt(call.getClassReference())
-                .map(cls -> resolveMethodsNoNs(cls.getName(), call.getName(), call.getProject()))
-                .map(meths -> L(meths))
+            , opt(resolveMethodsNoNs(call, ctx))
                 .flt(l -> l.s.size() > 0)
         ));
     }

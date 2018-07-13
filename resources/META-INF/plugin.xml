@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.06.26.002</version>
+    <version>2018.07.13.002</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -11,7 +11,7 @@
   <li>Specify array keys and reference functions in phpdoc.</li>
   <li>Infer argument types inside closures from array_map, array_filter, etc...</li>
 </ul>
-This plugin greatly extends phpstorm's associative array completion and typing<br/>
+This plugin greatly extends phpstorm's typing with associative array support<br/>
 
 <p>---------------------------------</p>
 <img style="width: 33%; height: auto;" src="https://user-images.githubusercontent.com/5202330/30349574-179c80e2-981c-11e7-9783-c7b9e6076c5c.png"/>
@@ -37,12 +37,8 @@ This plugin greatly extends phpstorm's associative array completion and typing<b
 
     <change-notes><![CDATA[
     <ul>
-        <li>Add backward-compatibility with 2016.2.2</li>
-        <li>Infer type in chained methods (map/filter/etc...) in an Option-like class</li>
-        <li>Add a "deep" icon in each completion option to make it clear when it is built-in and when from the plugin</li>
-        <li>Infer from parenthesised expression properly</li>
-        <li>Provide method reference in [$obj, doSomething] even if it is not passed directly somewhere as a callback</li>
-        <li>Keep keys in array_map result</li>
+        <li>#40 Allow using self in php doc</li>
+        <li>#39 Fix caching: do not ignore instance expression in method call</li>
     </ul>
     ]]>
     </change-notes>
