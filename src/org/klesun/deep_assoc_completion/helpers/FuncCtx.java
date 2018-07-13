@@ -43,9 +43,7 @@ public class FuncCtx extends Lang
     {
         this.argGetters = argGetters;
         this.search = parentCtx.search;
-        this.uniqueRef = argGetters.size() > 0
-            ? opt(uniqueRef)
-            : opt(null);
+        this.uniqueRef = opt(uniqueRef);
         this.parent = opt(parentCtx);
         this.argPsiType = argPsiType;
         this.fakeFileSource = opt(parentCtx)
@@ -140,7 +138,7 @@ public class FuncCtx extends Lang
 
     public boolean hasArgs()
     {
-        return argGetters.size() > 0;
+        return argGetters.size() > 0 || instGetter.has();
     }
 
     public SearchContext getSearch()
@@ -150,7 +148,7 @@ public class FuncCtx extends Lang
 
     public int hashCode()
     {
-        if (!uniqueRef.has()) {
+        if (!uniqueRef.has() || !hasArgs()) {
             // all contexts without args are same
             // so they should have same hash code
             return 4348980; // random int
@@ -163,12 +161,13 @@ public class FuncCtx extends Lang
 
     public boolean equals(Object thatRaw)
     {
-        return Tls.cast(FuncCtx.class, thatRaw)
+        Boolean result = Tls.cast(FuncCtx.class, thatRaw)
             .map(that -> {
                 // this could be written much shorter with one function getParents()
                 // and list comparison, but taking all parents could be
                 // not efficient, and we want this function to be AFAP
                 if (this.argPsiType != that.argPsiType) return false;
+                if (!this.hasArgs()) return !that.hasArgs();
                 if (!this.uniqueRef.has()) return !that.uniqueRef.has();
                 if (!that.uniqueRef.has()) return false;
                 if (!this.uniqueRef.unw().isEquivalentTo(that.uniqueRef.unw())) return false;
@@ -178,6 +177,7 @@ public class FuncCtx extends Lang
                 return this.parent.unw().equals(that.parent.unw());
             })
             .def(false);
+        return result;
     }
 
     /** for debug */
@@ -194,7 +194,7 @@ public class FuncCtx extends Lang
             parents.add(tmp.uniqueRef.unw());
             tmp = tmp.parent.def(null);
         }
-        return Tls.implode(" | ", parents.map(p -> Tls.singleLine(p.getText(), 40)));
+        return Tls.implode(" | ", parents.map(p -> Tls.singleLine(p.getText(), 600)));
     }
 
     /**

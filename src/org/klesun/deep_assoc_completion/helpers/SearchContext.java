@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.helpers;
 
+import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_assoc_completion.DeepTypeResolver;
 import org.klesun.lang.Lang;
@@ -89,7 +90,8 @@ public class SearchContext extends Lang
         if (!ctxToExprToResult.get(ctx).containsKey(expr)) {
             return opt(null);
         }
-        return opt(ctxToExprToResult.get(ctx).get(expr));
+        MultiType mt = ctxToExprToResult.get(ctx).get(expr);
+        return opt(mt);
     }
 
     private void putToCache(FuncCtx ctx, PhpExpression expr, MultiType result)
@@ -122,7 +124,7 @@ public class SearchContext extends Lang
             String fileText = expr.getContainingFile().getText();
             int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
             StackTraceElement caller = new Exception().getStackTrace()[2];
-            System.out.println(depth + " " + expr.getText().split("\n")[0] + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber());
+            System.out.println(depth + " " + Tls.singleLine(expr.getText(), 120) + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber() + " ### " + funcCtx);
         }
 
         if (depth <= 0) {
@@ -166,7 +168,7 @@ public class SearchContext extends Lang
         if (debug) {
             long elapsed = System.nanoTime() - startTime;
             System.out.println(indent + "* " + result.fap(a -> a.types).size() +
-                " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()));
+                " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()) + " : " + Tls.implode(", ", result.fap(a -> a.getKeyNames())));
         }
 
         return result;
