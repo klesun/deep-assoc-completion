@@ -43,7 +43,10 @@ public class RemoveUnusedUsesSaveHandler implements FileDocumentManagerListener
                 PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
                 PhpUnusedAliasInspection inspection = new PhpUnusedAliasInspection();
                 InspectionManager manager = InspectionManager.getInstance(psiFile.getProject());
-                List<ProblemDescriptor> checked = inspection.processFile(psiFile, manager);
+                List<ProblemDescriptor> checked = L(inspection.processFile(psiFile, manager))
+                    .flt(problem ->
+                        problem.getDescriptionTemplate().contains("never used") &&
+                        !problem.getDescriptionTemplate().contains("not necessary")); // same namespace, keep
 
                 L<T2<Integer, Integer>> unuseRanges = L(checked)
                     .map(problem -> problem.getPsiElement())
