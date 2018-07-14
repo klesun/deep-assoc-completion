@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.07.13.002</version>
+    <version>2018.07.14.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,6 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
+        <li>#40 Allow omitting class namespace of `new` expression in php doc</li>
         <li>#40 Allow using self in php doc</li>
         <li>#39 Fix caching: do not ignore instance expression in method call</li>
     </ul>
