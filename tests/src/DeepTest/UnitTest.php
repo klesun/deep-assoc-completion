@@ -1891,6 +1891,20 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    /** @param $heroes = [
+     *     'reimu' => new ReimuHakurei,
+     *     'ran' => new YakumoRan,
+     * ] */
+    public function providePhpDocNewNoNs($heroes)
+    {
+        $demand = $heroes['reimu']->demandDonuts();
+        $shiki = $heroes['ran']->getFreeShikigami();
+        $demand[''];
+        $list[] = [$demand, ['patience' => [], 'amount' => [], 'consequences' => []]];
+        $list[] = [$shiki, ['name' => [], 'power' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

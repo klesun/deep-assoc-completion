@@ -38,9 +38,21 @@ public class ArrCtorRes extends Lang
 
     public L<PhpClass> resolveObjCls(PhpExpression expr)
     {
-        return opt(expr)
+        MultiType mt = opt(expr)
             .map(xpr -> ctx.findExprType(xpr))
-            .fap(mt -> resolveMtCls(mt, expr.getProject()));
+            .def(MultiType.INVALID_PSI);
+        L<PhpClass> resolved = resolveMtCls(mt, expr.getProject());
+        if (resolved.size() == 0) {
+            // allow no namespace in php doc class references
+            PhpIndex idx = PhpIndex.getInstance(expr.getProject());
+            String clsName = L(mt.getIdeaType().filterUnknown().filterNull()
+                .filterMixed().filter(PhpType.OBJECT).getTypes()).flt(fqn -> !fqn.isEmpty())
+                .fst().def("").replaceAll("^\\\\", "");
+            resolved.addAll(idx.getClassesByName(clsName));
+            resolved.addAll(idx.getInterfacesByName(clsName));
+            resolved.addAll(idx.getInterfacesByName(clsName));
+        }
+        return resolved;
     }
 
     public L<PhpClass> resolveInstance(PsiElement instExpr)
