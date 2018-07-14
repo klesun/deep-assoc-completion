@@ -5,7 +5,6 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
@@ -156,16 +155,16 @@ public class DeepType extends Lang
         return new String(new char[level]).replace("\0", "  ");
     }
 
-    public static String toJson(List<DeepType> types, int level)
+    public static String varExport(List<DeepType> types, int level)
     {
         Set<DeepType> circularRefs = new HashSet<>();
-        return toJson(types, level, circularRefs);
+        return varExport(types, level, circularRefs);
     }
 
-    public static String toJson(List<DeepType> types, int level, Set<DeepType> circularRefs)
+    public static String varExport(List<DeepType> types, int level, Set<DeepType> circularRefs)
     {
         if (L(types).any(circularRefs::contains)) {
-            return "\"*circ*\"";
+            return "'*circ*'";
         }
         circularRefs.addAll(types);
 
@@ -182,28 +181,28 @@ public class DeepType extends Lang
                 mergedKeys.get(k).addAll(v.getTypes());
             });
             t.getElemTypes().forEach(indexTypes::add);
-            briefTypes.add(opt(t.stringValue).map(s -> "'" + s + "'").def(t.briefType.filterUnknown().toString()));
+            briefTypes.add(opt(t.stringValue).def(t.briefType.filterUnknown().toString()));
         });
 
-        String result = "unknown";
+        String result = "'unknown'";
         if (mergedKeys.size() > 0) {
-            result = "{\n";
+            result = "[\n";
             ++level;
             for (Map.Entry<String, List<DeepType>> e : mergedKeys.entrySet()) {
-                result += indent(level) + "\"" + e.getKey() + "\"" + ": " + toJson(e.getValue(), level, circularRefs) + ",\n";
+                result += indent(level) + "'" + e.getKey() + "'" + " => " + varExport(e.getValue(), level, circularRefs) + ",\n";
             }
             --level;
-            result += indent(level) + "}";
+            result += indent(level) + "]";
         } else if (mergedProps.size() > 0) {
             result = "{" + Tls.implode(", ", L(mergedProps).map(p -> "$" + p)) + "}";
         } else if (indexTypes.size() > 0) {
-            result = "[" + toJson(indexTypes, level, circularRefs) + "]";
+            result = "[" + varExport(indexTypes, level, circularRefs) + "]";
         } else if (briefTypes.size() > 0) {
-            List<String> bytes = new ArrayList(new HashSet(briefTypes));
-            result = "\"" + StringUtils.join(bytes, "|") + "\"";
+            L<String> briefs = L(new HashSet(briefTypes)).flt(t -> !"".equals(t));
+            result = "'" + Tls.implode("|", briefs) + "'";
         }
         result += L(types).fop(t -> t.ctorArgs)
-            .map(ctx -> Tls.implode(", ", ctx.getArgs().map(a -> a.toJson())))
+            .map(ctx -> Tls.implode(", ", ctx.getArgs().map(a -> a.varExport())))
             .grp(a -> a).kys().fst().map(argStr -> "(" + argStr + ")").def("");
         circularRefs.removeAll(types);
         return result;
@@ -212,7 +211,7 @@ public class DeepType extends Lang
     @Override
     public String toString()
     {
-        return toJson(list(this), 0);
+        return varExport(list(this), 0);
     }
 
     public boolean hasNumberIndexes()

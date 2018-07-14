@@ -18,11 +18,8 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import javax.swing.*;
@@ -65,7 +62,7 @@ public class ShowDocs extends AnAction
             .fop(psiFile -> opt(e.getData(LangDataKeys.CARET))
                 .map(caret -> psiFile.findElementAt(caret.getOffset())))
             .map(psi -> psi instanceof LeafPsiElement ? psi.getParent() : psi)
-            .map(psi -> DeepType.toJson(findPsiType(psi), 0))
+            .map(psi -> DeepType.varExport(findPsiType(psi), 0))
             .def("There is no file opened to describe a php variable");
 
         System.out.println(doc);

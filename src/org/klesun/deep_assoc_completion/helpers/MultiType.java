@@ -5,7 +5,6 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.NonNull;
-import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.*;
@@ -182,9 +181,9 @@ public class MultiType extends Lang
         return getBriefValueText(maxLen, circularRefs);
     }
 
-    public String toJson()
+    public String varExport()
     {
-        return DeepType.toJson(types, 0);
+        return DeepType.varExport(types, 0);
     }
 
     public boolean hasNumberIndexes()
