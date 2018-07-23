@@ -89,6 +89,7 @@ public class FuncCtx extends Lang
     {
         FuncCtx self = subCtxDirectGeneric(funcCall);
         self.instGetter = opt(funcCall.getClassReference())
+            .flt(ref -> !(ref instanceof ClassReference))
             .map(obj -> () -> findExprType(obj));
         return self;
     }
@@ -98,6 +99,7 @@ public class FuncCtx extends Lang
         FuncCtx self = subCtxDirectGeneric(funcCall);
         self.instGetter = Tls.cast(MethodReference.class, funcCall)
             .map(methCall -> methCall.getClassReference())
+            .flt(ref -> !(ref instanceof ClassReference))
             .map(obj -> () -> findExprType(obj));
         return self;
     }
