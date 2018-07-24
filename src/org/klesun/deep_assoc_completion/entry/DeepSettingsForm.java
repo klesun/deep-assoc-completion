@@ -25,6 +25,7 @@ public class DeepSettingsForm implements Configurable
     private JFormattedTextField explicitDepthLimit;
     private JFormattedTextField implicitDepthLimit;
     private JCheckBox removeUnusedImportsOnSaveEnabled;
+    private JFormattedTextField totalExpressionLimit;
 
     @Nls
     @Override
@@ -51,6 +52,7 @@ public class DeepSettingsForm implements Configurable
             || !getSettings().bgTypePvdrTimeout.toString().equals(bgTypePvdrTimeout.getText())
             || !getSettings().explicitDepthLimit.toString().equals(explicitDepthLimit.getText())
             || !getSettings().implicitDepthLimit.toString().equals(implicitDepthLimit.getText())
+            || !getSettings().totalExpressionLimit.toString().equals(totalExpressionLimit.getText())
             ;
     }
 
@@ -78,6 +80,7 @@ public class DeepSettingsForm implements Configurable
         getSettings().bgTypePvdrTimeout = validateInt(bgTypePvdrTimeout, 5, 10000);
         getSettings().explicitDepthLimit = validateInt(explicitDepthLimit, 0, 100);
         getSettings().implicitDepthLimit = validateInt(implicitDepthLimit, 0, 100);
+        getSettings().totalExpressionLimit = validateInt(totalExpressionLimit, 0, 1000000);
     }
 
     @Override
@@ -88,6 +91,7 @@ public class DeepSettingsForm implements Configurable
         bgTypePvdrTimeout.setText(getSettings().bgTypePvdrTimeout.toString());
         explicitDepthLimit.setText(getSettings().explicitDepthLimit.toString());
         implicitDepthLimit.setText(getSettings().implicitDepthLimit.toString());
+        totalExpressionLimit.setText(getSettings().totalExpressionLimit.toString());
     }
 
     public void disposeUIResources() {

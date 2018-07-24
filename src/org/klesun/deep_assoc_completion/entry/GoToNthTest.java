@@ -45,7 +45,8 @@ public class GoToNthTest extends AnAction
 
     public void actionPerformed(AnActionEvent e)
     {
-        SearchContext search = new SearchContext().setDepth(20);
+        SearchContext search = new SearchContext(opt(e.getData(LangDataKeys.EDITOR)).map(ed -> ed.getProject()).def(null))
+            .setDepth(20);
         FuncCtx funcCtx = new FuncCtx(search);
         Opt<PsiFile> psiFileOpt = opt(e.getData(LangDataKeys.PSI_FILE));
         Opt<Caret> caretOpt = opt(e.getData(LangDataKeys.CARET));

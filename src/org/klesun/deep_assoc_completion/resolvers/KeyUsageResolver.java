@@ -30,7 +30,7 @@ public class KeyUsageResolver extends Lang
 
     private static L<String> resolveReplaceKeys(ParameterList argList, int order)
     {
-        SearchContext search = new SearchContext();
+        SearchContext search = new SearchContext(argList.getProject());
         FuncCtx ctx = new FuncCtx(search);
         return L(argList.getParameters())
             .flt((psi, i) -> i < order)
@@ -180,7 +180,7 @@ public class KeyUsageResolver extends Lang
 
     public L<String> resolve(ArrayCreationExpression arrCtor)
     {
-        SearchContext fakeSearch = new SearchContext();
+        SearchContext fakeSearch = new SearchContext(arrCtor.getProject());
         FuncCtx fakeCtx = new FuncCtx(fakeSearch);
 
         // TODO: handle nested arrays

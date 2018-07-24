@@ -53,7 +53,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        SearchContext search = new SearchContext()
+        SearchContext search = new SearchContext(parameters)
             .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
         FuncCtx funcCtx = new FuncCtx(search);
 

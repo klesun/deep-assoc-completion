@@ -119,7 +119,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
 
     private MultiType resolve(StringLiteralExpression lit, boolean isAutoPopup, Editor editor)
     {
-        SearchContext search = new SearchContext()
+        SearchContext search = new SearchContext(lit.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 

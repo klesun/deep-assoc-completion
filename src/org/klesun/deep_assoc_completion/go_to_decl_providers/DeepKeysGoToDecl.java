@@ -55,7 +55,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 
     private static L<PsiElement> resolveAssocKey(PsiElement psiElement)
     {
-        SearchContext search = new SearchContext()
+        SearchContext search = new SearchContext(psiElement.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
@@ -82,7 +82,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         return opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(MethodReference.class))
-            .fap(call -> L(MethCallRes.resolveMethodsNoNs(call, new FuncCtx(new SearchContext()))))
+            .fap(call -> L(MethCallRes.resolveMethodsNoNs(call, new FuncCtx(new SearchContext(psiElement.getProject())))))
             .map(a -> a);
     }
 
@@ -107,7 +107,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 
     private static Opt<MultiType> resolveDocResult(PsiElement psiElement)
     {
-        SearchContext search = new SearchContext()
+        SearchContext search = new SearchContext(psiElement.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 

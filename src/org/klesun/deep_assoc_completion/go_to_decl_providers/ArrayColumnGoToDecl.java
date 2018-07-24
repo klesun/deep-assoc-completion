@@ -39,7 +39,7 @@ public class ArrayColumnGoToDecl extends Lang implements GotoDeclarationHandler
     @Override
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
-        SearchContext search = new SearchContext()
+        SearchContext search = new SearchContext(editor.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(false, editor.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 

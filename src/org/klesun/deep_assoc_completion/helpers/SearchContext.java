@@ -1,12 +1,16 @@
 package org.klesun.deep_assoc_completion.helpers;
 
+import com.intellij.codeInsight.completion.CompletionParameters;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_assoc_completion.DeepTypeResolver;
+import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,17 +23,21 @@ public class SearchContext extends Lang
     private int depth = 20;
     private int initialDepth = depth;
     private boolean debug = false;
-    // max expressions per single search - guard
-    // against memory overflow in circular references
-    private int maxExpressions = 10000;
     private Opt<Double> timeout = opt(null);
+    private Opt<Project> project = opt(null);
     // for performance measurement
     private int expressionsResolved = 0;
     final public L<PhpExpression> psiTrace = L();
     final private Map<FuncCtx, Map<PhpExpression, MultiType>> ctxToExprToResult = new HashMap<>();
 
-    public SearchContext()
+    public SearchContext(@Nullable Project project)
     {
+        this.project = opt(project);
+    }
+
+    public SearchContext(CompletionParameters parameters)
+    {
+        this(parameters.getEditor().getProject());
     }
 
     public SearchContext setDepth(int depth)
@@ -44,16 +52,20 @@ public class SearchContext extends Lang
         return this;
     }
 
-    public SearchContext setMaxExpressions(int maxExpressions)
-    {
-        this.maxExpressions = maxExpressions;
-        return this;
-    }
-
     public SearchContext setDebug(boolean debug)
     {
         this.debug = debug;
         return this;
+    }
+
+    private Integer getMaxExpressions()
+    {
+        // max expressions per single search - guard
+        // against memory overflow in circular references
+        return project.map(project -> {
+            DeepSettings settings = DeepSettings.inst(project);
+            return settings.totalExpressionLimit;
+        }).def(10000);
     }
 
     private <T> boolean endsWith(L<T> superList, L<T> subList)
@@ -128,7 +140,7 @@ public class SearchContext extends Lang
 
         if (depth <= 0) {
             return opt(null);
-        } else if (++expressionsResolved > maxExpressions) {
+        } else if (++expressionsResolved > getMaxExpressions()) {
             /** @debug */
             System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
             return opt(null);
