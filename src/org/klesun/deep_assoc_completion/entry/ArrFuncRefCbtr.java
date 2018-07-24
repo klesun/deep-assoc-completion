@@ -10,7 +10,6 @@ import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.parser.PhpElementTypes;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
 
 import static org.klesun.lang.Lang.L;

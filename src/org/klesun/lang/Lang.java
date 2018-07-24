@@ -8,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.*;
-import java.util.stream.Collectors;
 
 /**
  * put here wrappers for things you use extremely

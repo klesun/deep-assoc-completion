@@ -1,6 +1,5 @@
 package org.klesun.deep_assoc_completion.entry;
 
-import com.intellij.json.JsonFileType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
@@ -8,30 +7,15 @@ import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.ui.DialogBuilder;
 import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.openapi.ui.popup.JBPopupFactory;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.impl.source.tree.LeafPsiElement;
-import com.intellij.ui.EditorTextField;
-import com.intellij.ui.awt.RelativePoint;
-import com.intellij.ui.components.JBScrollPane;
 import com.jetbrains.php.lang.psi.elements.Function;
-import com.jetbrains.php.lang.psi.elements.Parameter;
-import com.jetbrains.php.lang.psi.elements.ParameterList;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
-import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import javax.swing.*;
-import java.awt.*;
-import java.util.List;
-import java.util.function.Consumer;
 
 import static org.klesun.lang.Lang.*;
 

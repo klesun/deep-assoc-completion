@@ -1,7 +1,6 @@
 package org.klesun.deep_assoc_completion.helpers;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.lang.Lang;
 

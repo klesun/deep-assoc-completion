@@ -6,7 +6,6 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIcons;
 import com.jetbrains.php.lang.psi.elements.Field;
@@ -23,7 +22,6 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static org.klesun.lang.Lang.*;
