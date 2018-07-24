@@ -218,6 +218,13 @@ class UnitTest
     public function provideOptionChain()
     {
         $result = \Lib\Result::makeOk(['a' => 1])
+            ->map(function($value1){return $value1 + ['b' => 2];})->unwrap()[''];
+
+        $result = \Lib\Result::makeOk(['a' => 1])
+            ->map(function($value1){return $value1 + ['b' => 2];})
+            ->filter(function($value4){return $value4[''];});
+
+        $result = \Lib\Result::makeOk(['a' => 1])
             ->map(function($value1){return $value1 + ['b' => 2];})
             ->map(function($value2){return $value2 + ['c' => 3];})
             ->map(function($value3){return $value3 + ['d' => 4];})

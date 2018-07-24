@@ -181,9 +181,9 @@ public class MultiType extends Lang
         return getBriefValueText(maxLen, circularRefs);
     }
 
-    public String toJson()
+    public String varExport()
     {
-        return DeepType.toJson(types, 0);
+        return DeepType.varExport(types, 0);
     }
 
     public boolean hasNumberIndexes()

@@ -62,7 +62,7 @@ public class ShowDocs extends AnAction
             .fop(psiFile -> opt(e.getData(LangDataKeys.CARET))
                 .map(caret -> psiFile.findElementAt(caret.getOffset())))
             .map(psi -> psi instanceof LeafPsiElement ? psi.getParent() : psi)
-            .map(psi -> DeepType.toJson(findPsiType(psi), 0))
+            .map(psi -> DeepType.varExport(findPsiType(psi), 0))
             .def("There is no file opened to describe a php variable");
 
         System.out.println(doc);

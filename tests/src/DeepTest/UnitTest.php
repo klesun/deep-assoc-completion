@@ -1865,6 +1865,46 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function getBeer()
+    {
+        return [
+            'price' => '1.79',
+            'volume' => '0.5l',
+            'alcohol' => '5.3%',
+            'name' => 'Valmiermuizas',
+            'quality' => 'good',
+        ];
+    }
+
+    /** @param $beer = self::getBeer() */
+//    /** @param $beer = UnitTest::getBeer() */
+    public function provideSelfInPhpDoc($beer)
+    {
+        $beer[''];
+        $list[] = [$beer, [
+            'price' => [],
+            'volume' => [],
+            'alcohol' => [],
+            'name' => [],
+            'quality' => [],
+        ]];
+        return $list;
+    }
+
+    /** @param $heroes = [
+     *     'reimu' => new ReimuHakurei,
+     *     'ran' => new YakumoRan,
+     * ] */
+    public function providePhpDocNewNoNs($heroes)
+    {
+        $demand = $heroes['reimu']->demandDonuts();
+        $shiki = $heroes['ran']->getFreeShikigami();
+        $demand[''];
+        $list[] = [$demand, ['patience' => [], 'amount' => [], 'consequences' => []]];
+        $list[] = [$shiki, ['name' => [], 'power' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

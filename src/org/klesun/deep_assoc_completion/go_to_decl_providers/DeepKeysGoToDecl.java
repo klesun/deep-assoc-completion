@@ -82,11 +82,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         return opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(MethodReference.class))
-            .fap(call -> {
-                String cls = opt(call.getClassReference()).map(c -> c.getName()).def("");
-                String mth = opt(call.getName()).def("");
-                return L(MethCallRes.resolveMethodsNoNs(cls, mth, call.getProject()));
-            })
+            .fap(call -> L(MethCallRes.resolveMethodsNoNs(call, new FuncCtx(new SearchContext()))))
             .map(a -> a);
     }
 

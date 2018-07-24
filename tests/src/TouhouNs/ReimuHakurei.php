@@ -23,4 +23,13 @@ class ReimuHakurei
             'arcDegree' => '45',
         ];
     }
+
+    public function demandDonuts()
+    {
+        return [
+            'patience' => 0.01,
+            'amount' => 10,
+            'consequences' => 'juggernaut',
+        ];
+    }
 }

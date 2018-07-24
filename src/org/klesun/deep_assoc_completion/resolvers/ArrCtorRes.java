@@ -28,19 +28,33 @@ public class ArrCtorRes extends Lang
 
     public static L<PhpClass> resolveMtCls(MultiType mtArg, Project project)
     {
-        return opt(mtArg)
+        L<PhpClass> resolved = opt(mtArg)
             .map(mt -> mt.getIdeaType())
             .map(tpe -> L(tpe.filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).getTypes())
                 .fap(clsPath -> L(PhpIndex.getInstance(project).getAnyByFQN(clsPath)))
                 .fop(rvd -> opt(rvd)))
             .fap(clses -> clses);
+        if (resolved.size() == 0) {
+            // allow no namespace in php doc class references
+            PhpIndex idx = PhpIndex.getInstance(project);
+            L(mtArg.getIdeaType().filterUnknown().filterNull()
+                .filterMixed().filter(PhpType.OBJECT).getTypes()).flt(fqn -> !fqn.isEmpty())
+                .fch(clsName -> {
+                    clsName = clsName.replaceAll("^\\\\", "");
+                    resolved.addAll(idx.getClassesByName(clsName));
+                    resolved.addAll(idx.getInterfacesByName(clsName));
+                    resolved.addAll(idx.getInterfacesByName(clsName));
+                });
+        }
+        return resolved;
     }
 
     public L<PhpClass> resolveObjCls(PhpExpression expr)
     {
-        return opt(expr)
+        MultiType mt = opt(expr)
             .map(xpr -> ctx.findExprType(xpr))
-            .fap(mt -> resolveMtCls(mt, expr.getProject()));
+            .def(MultiType.INVALID_PSI);
+        return resolveMtCls(mt, expr.getProject());
     }
 
     public L<PhpClass> resolveInstance(PsiElement instExpr)
