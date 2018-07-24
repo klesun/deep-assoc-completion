@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.completion_providers;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.project.Project;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
@@ -60,7 +61,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         SearchContext search = new SearchContext()
-            .setDepth(DeepKeysPvdr.getMaxDepth(parameters.isAutoPopup()));
+            .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
         FuncCtx funcCtx = new FuncCtx(search);
 
         long startTime = System.nanoTime();

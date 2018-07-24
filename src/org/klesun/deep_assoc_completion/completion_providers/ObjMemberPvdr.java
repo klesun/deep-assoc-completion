@@ -81,7 +81,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         SearchContext search = new SearchContext()
-            .setDepth(DeepKeysPvdr.getMaxDepth(parameters.isAutoPopup()));
+            .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
         FuncCtx funcCtx = new FuncCtx(search);
         long startTime = System.nanoTime();
         L<? extends PhpClassMember> members = opt(parameters.getPosition().getParent())

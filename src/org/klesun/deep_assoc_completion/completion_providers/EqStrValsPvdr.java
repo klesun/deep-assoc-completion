@@ -117,10 +117,10 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
                 .wap(types -> types.size() == 0 ? opt(null) : opt(new MultiType(types))));
     }
 
-    private MultiType resolve(StringLiteralExpression lit, boolean isAutoPopup)
+    private MultiType resolve(StringLiteralExpression lit, boolean isAutoPopup, Editor editor)
     {
         SearchContext search = new SearchContext()
-            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup));
+            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
         return Opt.fst(list(
@@ -137,7 +137,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
         long startTime = System.nanoTime();
         MultiType mt = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
             .fop(toCast(StringLiteralExpression.class))
-            .map(lit -> resolve(lit, parameters.isAutoPopup()))
+            .map(lit -> resolve(lit, parameters.isAutoPopup(), parameters.getEditor()))
             .def(MultiType.INVALID_PSI);
 
         makeOptions(mt).fch(result::addElement);
@@ -169,7 +169,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
         L<PsiElement> psiTargets = opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
-            .map(lit -> resolve(lit, false)
+            .map(lit -> resolve(lit, false, editor)
                 .types.flt(t -> lit.getContents().equals(t.stringValue))
                 .map(t -> t.definition))
             .def(list());

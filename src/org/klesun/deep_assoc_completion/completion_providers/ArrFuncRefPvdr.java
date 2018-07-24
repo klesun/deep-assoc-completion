@@ -32,7 +32,7 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         SearchContext search = new SearchContext()
-            .setDepth(DeepKeysPvdr.getMaxDepth(parameters.isAutoPopup()));
+            .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
         FuncCtx funcCtx = new FuncCtx(search);
         long startTime = System.nanoTime();
         L<Method> methods = opt(parameters.getPosition().getParent())

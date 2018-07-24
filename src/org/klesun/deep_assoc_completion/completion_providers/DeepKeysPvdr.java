@@ -2,12 +2,15 @@ package org.klesun.deep_assoc_completion.completion_providers;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
@@ -39,9 +42,19 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         return icon;
     }
 
-    public static int getMaxDepth(boolean isAutoPopup)
+    public static int getMaxDepth(boolean isAutoPopup, @Nullable Project project)
     {
-        return isAutoPopup ? 30 : 40;
+        if (project != null) {
+            DeepSettings settings = DeepSettings.inst(project);
+            return isAutoPopup ? settings.implicitDepthLimit : settings.explicitDepthLimit;
+        } else {
+            return isAutoPopup ? 30 : 40;
+        }
+    }
+
+    public static int getMaxDepth(CompletionParameters parameters)
+    {
+        return getMaxDepth(parameters.isAutoPopup(), parameters.getEditor().getProject());
     }
 
     private static InsertHandler<LookupElement> makeInsertHandler()
@@ -136,7 +149,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        int depth = getMaxDepth(parameters.isAutoPopup());
+        int depth = getMaxDepth(parameters);
         SearchContext search = new SearchContext().setDepth(depth);
         Set<String> suggested = new HashSet<>();
         PsiElement caretPsi = parameters.getPosition(); // usually leaf element

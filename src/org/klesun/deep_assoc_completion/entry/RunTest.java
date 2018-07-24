@@ -51,7 +51,7 @@ public class RunTest extends AnAction
                     .fop(toCast(PhpExpression.class))
                     .map(retVal -> {
                         SearchContext search = new SearchContext()
-                            .setDepth(DeepKeysPvdr.getMaxDepth(false));
+                            .setDepth(DeepKeysPvdr.getMaxDepth(false, retVal.getProject()));
                         FuncCtx funcCtx = new FuncCtx(search);
                         return funcCtx.findExprType(retVal).types;
                     })

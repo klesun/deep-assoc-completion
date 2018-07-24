@@ -64,7 +64,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        int depth = getMaxDepth(parameters.isAutoPopup());
+        int depth = getMaxDepth(parameters);
         SearchContext search = new SearchContext().setDepth(depth);
 
         opt(parameters.getPosition().getParent())

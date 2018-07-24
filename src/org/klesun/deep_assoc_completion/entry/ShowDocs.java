@@ -33,7 +33,7 @@ public class ShowDocs extends AnAction
     public static List<DeepType> findPsiType(PsiElement psi)
     {
         SearchContext search = new SearchContext()
-            .setDepth(DeepKeysPvdr.getMaxDepth(false));
+            .setDepth(DeepKeysPvdr.getMaxDepth(false, psi.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
         return list(

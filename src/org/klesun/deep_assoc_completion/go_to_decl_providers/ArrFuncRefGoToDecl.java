@@ -27,7 +27,7 @@ public class ArrFuncRefGoToDecl extends Lang implements GotoDeclarationHandler
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
         SearchContext search = new SearchContext()
-            .setDepth(DeepKeysPvdr.getMaxDepth(false));
+            .setDepth(DeepKeysPvdr.getMaxDepth(false, editor.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
         L<Method> psiTargets = opt(psiElement)
