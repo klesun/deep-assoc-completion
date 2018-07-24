@@ -1,6 +1,10 @@
 <?php
 namespace Lib;
 
+use Lib\ParamValidation\DictP;
+use Lib\ParamValidation\ListP;
+use Lib\ParamValidation\ParamUtil;
+use Lib\ParamValidation\StringP;
 use Lib\Utils\ArrayUtil;
 use Lib\Utils\Fp;
 use Lib\Utils\MemoizedFunctions;
@@ -43,7 +47,7 @@ class UnitTest
                 'firstNameNumber' => [],
             ],
         ]];
- 
+
         // `Fp::filter` is our wrapper to `array_filter` with different arg order
         $filtered = Fp::filter('is_null', $records);
         $list[] = [$filtered[0], ['fieldNumber' => [], 'firstNameNumber' => [], 'through' => []]];
@@ -240,6 +244,28 @@ class UnitTest
     /**
      * following not resolved yet
      */
+
+    public static function provideInstRecursion()
+    {
+        $schema = new DictP([], [
+            'gds' => new StringP([], []),
+            'recordLocator' => new StringP([], []),
+            'passengers' => new ListP([], ['elemType' => new DictP([], [
+                'absoluteNumber' => new StringP([], []),
+                'fullName' => new StringP([], []),
+            ])]),
+            'segments' => new ListP([], ['elemType' => new DictP([], [
+                'airline' => new StringP([], []),
+                'departureAirport' => new StringP([], []),
+            ])]),
+        ]);
+        $sample = ParamUtil::sample($schema);
+        $sample['passengers'][0][''];
+        // must not reach the 10000 expression limit
+        $list[] = [$sample['passengers'][0], ['absoluteNumber' => [], 'fullName' => []]];
+        $list[] = [$sample['segments'][0], ['airline' => [], 'departureAirport' => []]];
+        return $list;
+    }
 
     public static function provideCachedFuncCall()
     {
