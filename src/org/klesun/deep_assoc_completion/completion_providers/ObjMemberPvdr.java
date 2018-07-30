@@ -101,7 +101,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                             L(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
                             L(cls.getFields())
                         ).fap(a -> a)
-                            .flt(fld -> !fld.getModifier().isPrivate()
+                            .flt(fld -> fld.getModifier().isPublic()
                                 || ref.getText().equals("$this"))
                             .flt(fld -> !fld.getModifier().isStatic())
                         );
