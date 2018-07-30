@@ -56,7 +56,7 @@ public class RunTest extends AnAction
                         return funcCtx.findExprType(retVal).types;
                     })
                     .fap(a -> a)
-                    .fap(ltype -> L(ltype.getElemTypes())
+                    .fap(ltype -> L(ltype.getListElemTypes())
                         .fop((rett, i) -> {
                             CaseContext ctx = new CaseContext(logger);
                             ctx.dataProviderName = func.getName();

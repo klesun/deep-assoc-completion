@@ -43,9 +43,9 @@ public class AssRes extends Lang
                         makeType(furtherKeys, getType, psi, briefType), briefType)));
             } else  if (nextKey.keyType == KeyType.EKeyType.INTEGER) {
                 arr.hasIntKeys = true;
-                arr.listElTypes = makeType(furtherKeys, getType, psi, briefType).types;
+                arr.listElTypes.add(() -> makeType(furtherKeys, getType, psi, briefType));
             } else {
-                arr.anyKeyElTypes = makeType(furtherKeys, getType, psi, briefType).types;
+                arr.anyKeyElTypes.add(() -> makeType(furtherKeys, getType, psi, briefType));
             }
             return new MultiType(list(arr));
         }

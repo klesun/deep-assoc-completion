@@ -260,7 +260,7 @@ class UnitTest
             ])]),
         ]);
         $sample = ParamUtil::sample($schema);
-        $sample['passengers'][0][''];
+        $sample['passengers'][0]['fullName'];
         // must not reach the 10000 expression limit
         $list[] = [$sample['passengers'][0], ['absoluteNumber' => [], 'fullName' => []]];
         $list[] = [$sample['segments'][0], ['airline' => [], 'departureAirport' => []]];

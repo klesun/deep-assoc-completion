@@ -69,25 +69,23 @@ public class FuncCallRes extends Lang
                         .uni(argArr -> ctx.subCtxSingleArgArr(argArr),
                             () -> new FuncCtx(ctx.getSearch())
                         );
-                    findPsiExprType(callback).types
-                        .map(t -> t.getReturnTypes(subCtx))
-                        .fch(rts -> {
-                            MultiType rmt = new MultiType(rts);
-                            arrMt.types.fch(t -> {
-                                DeepType mapped = new DeepType(t.definition, PhpType.ARRAY);
-                                t.keys.forEach((k,v) -> mapped.addKey(k, v.definition)
-                                    .addType(() -> rmt, rmt.getIdeaType()));
-                                result.add(mapped);
-                            });
-                            if (arrMt.hasNumberIndexes()) {
-                                mapRetType.listElTypes.addAll(rts);
-                            } else if (
-                                arrMt.getKeyNames().size() == 0 ||
-                                arrMt.types.any(t -> t.anyKeyElTypes.size() > 0)
-                            ) {
-                                mapRetType.anyKeyElTypes.addAll(rts);
-                            }
-                        });
+                    S<MultiType> getElMt = () -> findPsiExprType(callback).types
+                        .fap(t -> t.getReturnTypes(subCtx))
+                        .wap(MultiType::new);
+                    arrMt.types.fch(t -> {
+                        DeepType mapped = new DeepType(t.definition, PhpType.ARRAY);
+                        t.keys.forEach((k, v) -> mapped.addKey(k, v.definition)
+                            .addType(getElMt, call.getType().elementType()));
+                        result.add(mapped);
+                    });
+                    if (arrMt.hasNumberIndexes()) {
+                        mapRetType.listElTypes.add(getElMt);
+                    } else if (
+                        arrMt.getKeyNames().size() == 0 ||
+                        arrMt.types.any(t -> t.anyKeyElTypes.size() > 0)
+                    ) {
+                        mapRetType.anyKeyElTypes.add(getElMt);
+                    }
                 }
                 result.add(mapRetType);
             } else if (name.equals("array_filter") || name.equals("array_reverse")
@@ -102,14 +100,17 @@ public class FuncCallRes extends Lang
                     .map(p -> findPsiExprType(p))
                     .fap(mt -> mt.getEl().types)
                     .gop(t -> opt(t.stringValue));
-                MultiType elMt = L(params).gat(1)
+                S<MultiType> getElMt = () -> L(params).gat(1)
                     .map(p -> findPsiExprType(p))
                     .def(MultiType.INVALID_PSI)
                     .getEl();
+                PhpType ideaElType = L(params).gat(1)
+                    .fop(toCast(PhpExpression.class))
+                    .map(e -> e.getType()).def(PhpType.MIXED);
                 keyToTypes.fch((types,keyName) -> combine
                     .addKey(keyName, types.map(t -> t.definition).fst().def(call))
-                        .addType(() -> elMt, elMt.getIdeaType()));
-                combine.anyKeyElTypes.addAll(elMt.types);
+                        .addType(getElMt, ideaElType));
+                combine.anyKeyElTypes.add(getElMt);
                 result.add(combine);
             } else if (name.equals("array_pop") || name.equals("array_shift")
                     || name.equals("current") || name.equals("end") || name.equals("next")
@@ -126,14 +127,11 @@ public class FuncCallRes extends Lang
                     Tls.cast(PhpExpression.class, params[1])
                         .map(keyNamePsi -> ctx.findExprType(keyNamePsi))
                         .map(mt -> opt(mt.getStringValue()))
-                        .map(keyName -> elType.getKey(keyName.def(null)).types)
-                        .flt(itypes -> itypes.size() > 0)
-                        .map(itypes -> {
+                        .thn(keyName -> {
                             DeepType type = new DeepType(call);
-                            type.listElTypes.addAll(itypes);
-                            return list(type);
-                        })
-                        .thn(result::addAll);
+                            type.listElTypes.add(() -> elType.getKey(keyName.def(null)));
+                            result.add(type);
+                        });
                 }
             } else if (name.equals("array_chunk")) {
                 L(params).gat(0)

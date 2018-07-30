@@ -138,7 +138,7 @@ public class ArrCtorRes extends Lang
                                 .addKey(key, ctx.getRealPsi(keyRec))
                                 .addType(getType, Tls.getIdeaType(v)));
                         } else {
-                            arrayType.anyKeyElTypes.addAll(getType.get().types);
+                            arrayType.anyKeyElTypes.add(getType);
                         }
                     });
             }));

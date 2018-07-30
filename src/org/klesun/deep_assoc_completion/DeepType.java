@@ -25,8 +25,8 @@ public class DeepType extends Lang
     // just like array keys, but dynamic object properties
     public final Dict<Key> props = new Dict<>(L());
     // possible typeGetters of list element
-    public L<DeepType> anyKeyElTypes = new L<>();
-    public L<DeepType> listElTypes = new L<>();
+    public L<S<MultiType>> anyKeyElTypes = new L<>();
+    public L<S<MultiType>> listElTypes = new L<>();
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
@@ -94,9 +94,9 @@ public class DeepType extends Lang
         return result;
     }
 
-    public L<DeepType> getElemTypes()
+    public L<DeepType> getListElemTypes()
     {
-        return listElTypes.cct(anyKeyElTypes);
+        return listElTypes.cct(anyKeyElTypes).fap(s -> s.get().types);
     }
 
     public Key addKey(String name, PsiElement definition)
@@ -180,7 +180,7 @@ public class DeepType extends Lang
                 }
                 mergedKeys.get(k).addAll(v.getTypes());
             });
-            t.getElemTypes().forEach(indexTypes::add);
+            t.getListElemTypes().forEach(indexTypes::add);
             briefTypes.add(opt(t.stringValue).def(t.briefType.filterUnknown().toString()));
         });
 

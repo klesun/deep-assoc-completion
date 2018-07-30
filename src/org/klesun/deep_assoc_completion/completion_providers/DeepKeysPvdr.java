@@ -173,7 +173,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
             mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "");
         });
-        L<DeepType> indexTypes = mt.types.fap(t -> t.getElemTypes());
+        L<DeepType> indexTypes = mt.types.fap(t -> t.getListElemTypes());
         if (indexTypes.size() > 0) {
             String typeText = new MultiType(indexTypes).getBriefValueText(BRIEF_TYPE_MAX_LEN);
             String ideaType = new MultiType(indexTypes).getIdeaType().filterUnknown().toStringResolved();

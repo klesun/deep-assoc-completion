@@ -47,7 +47,7 @@ public class MultiType extends Lang
     public DeepType getInArray(PsiElement call)
     {
         DeepType result = new DeepType(call, PhpType.ARRAY);
-        result.listElTypes.addAll(types);
+        result.listElTypes.add(() -> new MultiType(types));
         return result;
     }
 
@@ -79,16 +79,16 @@ public class MultiType extends Lang
                 .fap(v -> v.getTypes())
                 .fch(t -> keyTypes.add(t));
             if (Tls.isNum(keyName)) {
-                types.fap(t -> t.listElTypes).fch(t -> keyTypes.add(t));
+                types.fap(t -> t.listElTypes).fch(t -> keyTypes.addAll(t.get().types));
             }
         } else {
             // if keyName is a var - return types of all keys
             types.fap(t -> L(t.keys.values()))
                 .fap(v -> v.getTypes())
                 .fch(t -> keyTypes.add(t));
-            types.fap(t -> t.listElTypes).fch(t -> keyTypes.add(t));
+            types.fap(t -> t.listElTypes).fch(t -> keyTypes.addAll(t.get().types));
         }
-        types.fap(t -> t.anyKeyElTypes).fch(t -> keyTypes.add(t));
+        types.fap(t -> t.anyKeyElTypes).fch(t -> keyTypes.addAll(t.get().types));
         /** @param Segment{} $segment */
         types.fop(t -> opt(t.briefType.elementType().filterUnknown().filterMixed())
             .flt(it -> !it.isEmpty())
@@ -160,7 +160,7 @@ public class MultiType extends Lang
                 .map(s -> (types.all((t,i) -> t.definition.getText().equals(s)))
                     ? s : "'" + s + "'")));
         }
-        if (types.any(t -> t.getElemTypes().size() > 0)) {
+        if (types.any(t -> t.getListElemTypes().size() > 0)) {
             briefValues.add("[" + getEl().getBriefValueText(maxLen, circularRefs) + "]");
         }
         if (briefValues.isEmpty() && types.size() > 0) {

@@ -3,7 +3,6 @@ package org.klesun.deep_assoc_completion.completion_providers;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.openapi.project.Project;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
@@ -48,7 +47,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
                 suggested.add(key);
                 result.add(makeLookup(keyEntry));
             }
-            L(type.getElemTypes()).gat(0).flt(t -> type.keys.size() == 0).thn(t -> {
+            L(type.getListElemTypes()).gat(0).flt(t -> type.keys.size() == 0).thn(t -> {
                 for (int k = 0; k < 5; ++k) {
                     result.add(makeLookupBase(k + "", t.briefType.toString()));
                 }
