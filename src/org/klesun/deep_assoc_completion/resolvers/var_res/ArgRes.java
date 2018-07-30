@@ -9,6 +9,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProvi
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_assoc_completion.helpers.ArgOrder;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
@@ -268,8 +269,13 @@ public class ArgRes extends Lang
             result.types.addAll(peekOutside(param).types);
         } else {
             getArgOrder(param)
-                .fop(i -> trace.getArg(i))
-                .thn(mt -> result.types.addAll(mt.types));
+                .thn(i -> {
+                    if (param.getText().startsWith("...")) {
+                        result.types.addAll(trace.getArg(new ArgOrder(i, true)).fap(a -> a.types));
+                    } else {
+                        result.types.addAll(trace.getArg(i).fap(mt -> mt.types));
+                    }
+                });
         }
         return result;
     }

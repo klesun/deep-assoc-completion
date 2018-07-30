@@ -1906,11 +1906,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
-    private static function addAgeToPaxes(...$paxes)
+    private static function addAgeToPaxes($first, ...$paxes)
     {
         return array_map(function($pax){
             $pax['age'] = 25;
@@ -1921,14 +1917,19 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
     public function provideTripleDotInDecl()
     {
         $list = [];
-        $vova = ['name' => 'Vova', 'country' => 'US', 'optData' => ['children' => 3, 'wives' => 2]];
+        $vova = ['name' => 'Vova', 'country' => 'US'];
         $petja = ['name' => 'Petja', 'country' => 'GB'];
-        $vasja = ['name' => 'Vasja', 'country' => 'FR'];
+        $vasja = ['name' => 'Vasja', 'country' => 'FR', 'optData' => ['children' => 3, 'wives' => 2]];
         $paxesWithAge = static::addAgeToPaxes($vova, $petja, $vasja);
+        $paxesWithAge[0][''];
         // should not suggest 'wives' and 'children' btw
-//        $list[] = [$paxesWithAge[0], ['name' => [], 'country' => [], 'optData' => [], 'age' => []]];
+        $list[] = [$paxesWithAge[0], ['name' => [], 'country' => [], 'optData' => [], 'age' => []]];
         return $list;
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     private static function addNumToSegments($segA, $segB, $segC, $segD, $segE)
     {
