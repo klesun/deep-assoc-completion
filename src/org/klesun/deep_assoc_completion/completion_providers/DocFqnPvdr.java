@@ -8,6 +8,7 @@ import com.intellij.psi.PsiFileFactory;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.PhpLanguage;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
@@ -36,7 +37,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
     private Opt<List<String>> extractTypedFqnPart(String docValue, PhpIndex idx)
     {
         return Opt.fst(list(opt(null)
-            , Tls.regex(" *= *([A-Z][A-Za-z0-9_]+)::([a-zA-Z0-9_]*?)(IntellijIdeaRulezzz.*)?", docValue)
+            , Tls.regex(" *([A-Z][A-Za-z0-9_]+)::([a-zA-Z0-9_]*?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete method
                 .map(mtch -> {
                     String clsName = mtch.gat(0).unw();
@@ -52,7 +53,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                             .flt(p -> metMatcher.prefixMatches(p))
                             .map(f -> f + "()"));
                 })
-            , Tls.regex(" *= *([A-Z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
+            , Tls.regex(" *([A-Z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete class
                 .fop(m -> m.gat(0))
                 .map(CamelHumpMatcher::new)
@@ -68,22 +69,23 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
         SearchContext search = new SearchContext(parameters).setDepth(depth);
 
         opt(parameters.getPosition().getParent())
-            .thn(literal -> {
-                String docValue = literal.getText();
-                Project project = literal.getProject();
+            .thn(tagValue -> {
+                String docValue = tagValue.getText();
+                Project project = tagValue.getProject();
                 PhpIndex idx = PhpIndex.getInstance(project);
-                // method name completion
-                extractTypedFqnPart(docValue, idx)
-                    .thn(options -> L(options)
-                        .map((lookup) -> LookupElementBuilder.create(lookup)
-                            .withIcon(DeepKeysPvdr.getIcon()))
-                        .fch(result::addElement))
-                    .els(() -> result.addLookupAdvertisement("No FQN-s found with such partial name - " + literal.getText()));
 
-                // assoc array completion
                 String prefix = "<?php\n$arg = ";
-                Tls.regex("^\\s*=\\s*(.+)$", docValue)
+                String regex = tagValue.getParent() instanceof PhpDocReturnTag
+                    ? "^\\s*(?:like|=|)\\s*(.+)$" : "^\\s*=\\s*(.+)$";
+                Tls.regex(regex, docValue)
                     .fop(match -> match.gat(0))
+                    // method name completion
+                    .thn(expr -> extractTypedFqnPart(expr, idx)
+                        .thn(options -> L(options)
+                            .map((lookup) -> LookupElementBuilder.create(lookup)
+                                .withIcon(DeepKeysPvdr.getIcon()))
+                            .fch(result::addElement)))
+                    // assoc array completion
                     .map(expr -> prefix + expr + ";")
                     .map(expr -> PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr))
                     .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))

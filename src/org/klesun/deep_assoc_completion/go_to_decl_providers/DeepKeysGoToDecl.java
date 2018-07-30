@@ -8,6 +8,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.ArrayIndex;
 import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
@@ -91,7 +92,8 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         String prefix = "<?php\n$arg ";
         return opt(psiElement)
             .map(psi -> psi.getParent())
-            .flt(doc -> Tls.regex("^\\s*=\\s*(.+)$", doc.getText()).has())
+            .flt(doc -> Tls.regex("^\\s*=\\s*(.+)$", doc.getText()).has() ||
+                        doc.getParent() instanceof PhpDocReturnTag)
             .fap(doc -> {
                 String fileText = prefix + doc.getText() + ";";
                 PsiFile file = PsiFileFactory.getInstance(doc.getProject())
