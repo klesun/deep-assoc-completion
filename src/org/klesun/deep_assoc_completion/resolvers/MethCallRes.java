@@ -119,7 +119,7 @@ public class MethCallRes extends Lang
     {
         FuncCtx docCtx = new FuncCtx(funcCtx.getSearch());
         docCtx.fakeFileSource = opt(returnDoc);
-        return Tls.regex("^\\s*(like\\s*|)(.+)$", returnDoc.getTagValue())
+        return Tls.regex("^\\s*(like\\s*|=|)(.+)$", returnDoc.getTagValue())
             .fop(match -> match.gat(1))
             .fop(expr -> DocParamRes.parseExpression(expr, returnDoc.getProject(), docCtx))
             .def(MultiType.INVALID_PSI);

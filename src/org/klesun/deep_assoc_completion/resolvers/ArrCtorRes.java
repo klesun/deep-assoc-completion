@@ -145,5 +145,4 @@ public class ArrCtorRes extends Lang
 
         return arrayType;
     }
-
 }

@@ -1338,6 +1338,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
     public function providePqParserArrayUnshiftMemoryOverflow(string $pqDump)
     {
         $list = [];
+        /** @var $parsed = YakumoRan::acquireChen() */
         $parsed = PqParserUnshiftOverflow::parse($pqDump);
         $parsed[0][''];
         // should not cause infinite recursion

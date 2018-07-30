@@ -241,10 +241,6 @@ class UnitTest
         return $list;
     }
 
-    /**
-     * following not resolved yet
-     */
-
     public static function provideInstRecursion()
     {
         $schema = new DictP([], [
@@ -260,12 +256,16 @@ class UnitTest
             ])]),
         ]);
         $sample = ParamUtil::sample($schema);
-        $sample['passengers'][0]['fullName'];
+        $sample['passengers'][0][''];
         // must not reach the 10000 expression limit
         $list[] = [$sample['passengers'][0], ['absoluteNumber' => [], 'fullName' => []]];
         $list[] = [$sample['segments'][0], ['airline' => [], 'departureAirport' => []]];
         return $list;
     }
+
+    /**
+     * following not resolved yet
+     */
 
     public static function provideCachedFuncCall()
     {

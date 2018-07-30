@@ -4,6 +4,7 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocParamTag;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
 import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
@@ -43,7 +44,7 @@ public class DeepKeysCbtr extends CompletionContributor
         this.extend(
             CompletionType.BASIC,
             PlatformPatterns.psiElement()
-                .withSuperParent(2, PhpDocParamTag.class),
+                .withSuperParent(2, PhpDocTag.class),
             new DocFqnPvdr()
         );
         // array_column($arr, '')
