@@ -23,6 +23,7 @@ public class FuncCtx extends Lang
     final private Opt<PsiElement> uniqueRef;
     final private SearchContext search;
     final private L<Lang.S<MultiType>> argGetters;
+    private L<Integer> variadicOrders = L();
     public Opt<Lang.S<MultiType>> instGetter = opt(null);
     final private EArgPsiType argPsiType;
     /** use this when you need to reference a real PSI during parsing of PHP Doc */
@@ -50,21 +51,49 @@ public class FuncCtx extends Lang
             .fop(par -> par.fakeFileSource);
     }
 
+    private MultiType getCached(int index, S<MultiType> argGetter)
+    {
+        if (!cachedArgs.containsKey(index)) {
+            cachedArgs.put(index, argGetter.get());
+        }
+        return cachedArgs.get(index);
+    }
+
+    private Opt<MultiType> getPassedVariadicPart(int order)
+    {
+        return variadicOrders.fst()
+            .flt(firstVari -> firstVari <= order)
+            .map(firstVari -> argGetters.fap((get, i) -> {
+                if (i >= firstVari) {
+                    MultiType mt = getCached(order, get);
+                    if (variadicOrders.contains(i)) {
+                        mt = mt.getEl();
+                    }
+                    return mt.types;
+                } else {
+                    return list();
+                }
+            }))
+            .map(types -> new MultiType(types));
+    }
+
     public Opt<MultiType> getArg(ArgOrder orderObj)
     {
-        if (!orderObj.isVariadic) {
+        Opt<MultiType> fromVariadic = getPassedVariadicPart(orderObj.order);
+        if (fromVariadic.has()) {
+            if (orderObj.isVariadic) {
+                return uniqueRef.map(ref -> fromVariadic.unw().getInArray(ref)).map(t -> new MultiType(list(t)));
+            } else {
+                return opt(fromVariadic.fap(mt -> mt.types).wap(MultiType::new));
+            }
+        } else if (!orderObj.isVariadic) {
             int index = orderObj.order;
-            return argGetters.gat(index).map(argGetter -> {
-                if (!cachedArgs.containsKey(index)) {
-                    cachedArgs.put(index, argGetter.get());
-                }
-                return cachedArgs.get(index);
-            });
+            return argGetters.gat(index).map(argGetter -> getCached(index, argGetter));
         } else {
             return uniqueRef.map(ref -> {
                 DeepType allArgs = new DeepType(ref, PhpType.ARRAY);
                 argGetters.sub(orderObj.order)
-                    .map(argGetter -> argGetter.get())
+                    .map((argGetter, i) -> getCached(i, argGetter))
                     .fch((mt, i) -> allArgs.addKey(i + "", ref)
                         .addType(() -> mt, mt.getIdeaType()));
                 return new MultiType(list(allArgs));
@@ -114,7 +143,13 @@ public class FuncCtx extends Lang
         L<PsiElement> psiArgs = L(funcCall.getParameters());
         L<S<MultiType>> argGetters = psiArgs.map((psi) -> () -> Tls.cast(PhpExpression.class, psi)
             .uni(arg -> findExprType(arg), () -> MultiType.INVALID_PSI));
-        return new FuncCtx(this, argGetters, funcCall, EArgPsiType.DIRECT);
+        FuncCtx subCtx = new FuncCtx(this, argGetters, funcCall, EArgPsiType.DIRECT);
+        psiArgs.fch((arg, i) -> {
+            if (opt(arg.getPrevSibling()).map(sib -> sib.getText()).def("").equals("...")) {
+                subCtx.variadicOrders.add(i);
+            }
+        });
+        return subCtx;
     }
 
     /** context from args passed in array for example in array_map or array_filter */

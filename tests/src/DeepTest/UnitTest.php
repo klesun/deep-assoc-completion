@@ -1927,10 +1927,6 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     private static function addNumToSegments($segA, $segB, $segC, $segD, $segE)
     {
         return array_map(function($seg){
@@ -1945,8 +1941,26 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $segs = [];
         $segs[] = ['from' => 'RIX', 'to' => 'KIV'];
         $segs[] = ['from' => 'JFK', 'to' => 'LON'];
-        $withNums = static::addNumToSegments(...$segs);
-//        $list[] = [$withNums[0], ['from' => [], 'to' => [], 'segmentNumber' => []]];
+        $withNums = static::addNumToSegments(...$segs, ...$segs);
+        $withNums[0][''];
+        $list[] = [$withNums[0], ['from' => [], 'to' => [], 'segmentNumber' => []]];
+        return $list;
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
+
+    public function provideTripleDotInBuiltInCall()
+    {
+        $list = [];
+        $args = [];
+        $args[] = ['huj' => 123, 'pizda' => 456];
+        $args[] = ['zalupa' => 432, 'dzhigurda' => 523];
+        $args[] = ['guzno' => 432, 'zhopa' => 523];
+        $flat = array_merge(...$args);
+        $flat[''];
+        //$list[] = [$flat, ['huj' => [], 'pizda' => [], 'zalupa' => [], 'dzhigurda' => [], 'guzno' => [], 'zhopa' => []];
         return $list;
     }
 }
