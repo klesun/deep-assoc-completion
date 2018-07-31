@@ -128,10 +128,6 @@ public class FuncCtx extends Lang
                     self.instGetter = opt(() -> findExprType(ref));
                 }
             });
-        self.instGetter = Tls.cast(MethodReference.class, funcCall)
-            .map(methCall -> methCall.getClassReference())
-            .flt(ref -> !(ref instanceof ClassReference))
-            .map(obj -> () -> findExprType(obj));
         return self;
     }
 

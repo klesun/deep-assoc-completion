@@ -43,7 +43,6 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
         <li>Provide completion and GoTo in @return and @var phpdoc tags</li>
         <li>#41 Optimize: resolve array element type _on demand_</li>
         <li>Fix: do not suggest protected method completion from outside</li>
-        <li>Fix: do not ignore depth limit settings</li>
     </ul>
     ]]>
     </change-notes>
