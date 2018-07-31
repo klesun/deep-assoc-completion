@@ -184,13 +184,15 @@ public class FuncCallRes extends Lang
                     result.add(type);
                 }
             } else if (name.equals("array_keys")) {
-                if (params.length > 1) {
-                    L<DeepType> keyTypes = opt(params[0])
+                if (params.length > 0) {
+                    DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                    arrt.listElTypes.add(() -> opt(params[0])
                         .fop(toCast(PhpExpression.class))
                         .map(exp -> ctx.findExprType(exp))
                         .fap(mt -> mt.getKeyNames())
-                        .map(keyName -> new DeepType(call, PhpType.STRING, keyName));
-                    result.addAll(keyTypes);
+                        .map(keyName -> new DeepType(call, PhpType.STRING, keyName))
+                        .wap(MultiType::new));
+                    result.add(arrt);
                 }
             } else if (name.equals("func_get_args")) {
                 result.addAll(ctx.getArg(new ArgOrder(0, true)).fap(a -> a.types));
