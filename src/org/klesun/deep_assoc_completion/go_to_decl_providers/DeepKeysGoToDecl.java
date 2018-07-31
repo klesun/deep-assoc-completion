@@ -54,12 +54,8 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         }
     }
 
-    private static L<PsiElement> resolveAssocKey(PsiElement psiElement)
+    private static L<PsiElement> resolveAssocKey(PsiElement psiElement, FuncCtx funcCtx)
     {
-        SearchContext search = new SearchContext(psiElement.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
-        FuncCtx funcCtx = new FuncCtx(search);
-
         return opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(PhpExpression.class))
@@ -78,12 +74,12 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 }));
     }
 
-    private static L<PsiElement> resolveMethCall(PsiElement psiElement)
+    private static L<PsiElement> resolveMethCall(PsiElement psiElement, FuncCtx ctx)
     {
         return opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(MethodReference.class))
-            .fap(call -> L(MethCallRes.resolveMethodsNoNs(call, new FuncCtx(new SearchContext(psiElement.getProject())))))
+            .fap(call -> L(MethCallRes.resolveMethodsNoNs(call, ctx)))
             .map(a -> a);
     }
 
@@ -99,10 +95,14 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 PsiFile file = PsiFileFactory.getInstance(doc.getProject())
                     .createFileFromText(PhpLanguage.INSTANCE, fileText);
                 int offset = mouseOffset - doc.getTextOffset() + prefix.length();
+
+                FuncCtx ctx = new FuncCtx(new SearchContext(psiElement.getProject()));
+                ctx.fakeFileSource = opt(doc);
+
                 return opt(file.findElementAt(offset))
                     .fap(psi -> list(
-                        resolveAssocKey(psi),
-                        resolveMethCall(psi)
+                        resolveAssocKey(psi, ctx),
+                        resolveMethCall(psi, ctx)
                     ).fap(a -> a));
             });
     }
@@ -123,7 +123,11 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int mouseOffset, Editor editor)
     {
         L<PsiElement> psiTargets = L();
-        resolveAssocKey(psiElement)
+        SearchContext search = new SearchContext(psiElement.getProject())
+            .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
+        FuncCtx funcCtx = new FuncCtx(search);
+
+        resolveAssocKey(psiElement, funcCtx)
             .fch(psi -> psiTargets.add(psi));
         resolveDocAt(psiElement, mouseOffset)
             .fch(psi -> psiTargets.add(psi));

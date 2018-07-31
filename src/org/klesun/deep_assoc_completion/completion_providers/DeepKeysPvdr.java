@@ -124,9 +124,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    public static MultiType resolveAtPsi(PsiElement caretPsi, SearchContext search)
+    public static MultiType resolveAtPsi(PsiElement caretPsi, FuncCtx funcCtx)
     {
-        FuncCtx funcCtx = new FuncCtx(search);
         return opt(caretPsi.getParent())
             .map(litRaw -> litRaw.getParent())
             .fop(toCast(ArrayIndex.class))
@@ -159,7 +158,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .uni(l -> false, () -> true); // else just inside []
 
         long startTime = System.nanoTime();
-        MultiType mt = resolveAtPsi(caretPsi, search);
+        MultiType mt = resolveAtPsi(caretPsi, new FuncCtx(search));
 
         L<String> keyNames = mt.getKeyNames();
         L<MutableLookup> lookups = L();

@@ -9,6 +9,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
@@ -139,24 +140,26 @@ public class MethCallRes extends Lang
 
     public static L<Method> resolveMethodsNoNs(MethodReference call, FuncCtx ctx)
     {
-        String cls = opt(call.getClassReference()).map(c -> c.getName()).def("");
+        String cls = opt(call.getClassReference()).map(c -> c.getText()).def("");
         String mth = opt(call.getName()).def("");
         if (cls.equals("self") || cls.equals("static")) {
             cls = ctx.fakeFileSource
                 .fop(doc -> Tls.findParent(doc, PhpClass.class, a -> true))
-                .map(clsPsi -> clsPsi.getName())
+                .map(clsPsi -> clsPsi.getFQN())
                 .def(cls);
         }
         return L(MethCallRes.resolveMethodsNoNs(cls, mth, call.getProject()));
     }
 
-    private static L<Method> resolveMethodsNoNs(String clsName, String func, Project proj)
+    private static L<Method> resolveMethodsNoNs(String partialFqn, String func, Project proj)
     {
         PhpIndex idx = PhpIndex.getInstance(proj);
+        String justName = L(partialFqn.split("\\\\")).lst().unw();
         return new L<PhpClass>()
-            .cct(L(idx.getClassesByName(clsName)))
-            .cct(L(idx.getInterfacesByName(clsName)))
-            .cct(L(idx.getTraitsByName(clsName)))
+            .cct(L(idx.getClassesByName(justName)))
+            .cct(L(idx.getInterfacesByName(justName)))
+            .cct(L(idx.getTraitsByName(justName)))
+            .flt(cls -> cls.getFQN().endsWith(partialFqn))
             .fap(cls -> L(cls.getMethods()))
             .flt(m -> Objects.equals(m.getName(), func));
     }
