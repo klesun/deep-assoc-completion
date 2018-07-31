@@ -40,7 +40,11 @@ public class FieldRes extends Lang
     {
         L<DeepType> result = list();
         MultiType objMt = opt(fieldRef.getClassReference())
-            .map(ref -> ctx.findExprType(ref))
+            .map(ref -> ctx.clsIdeaType
+                .flt(typ -> ref.getText().equals("static"))
+                .flt(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, ref.getProject()).size() > 0)
+                .map(typ -> new MultiType(list(new DeepType(ref, typ))))
+                .def(ctx.findExprType(ref)))
             .def(MultiType.INVALID_PSI);
 
         objMt.getProps()

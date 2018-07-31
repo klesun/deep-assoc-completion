@@ -26,13 +26,18 @@ public class ArrCtorRes extends Lang
         this.ctx = ctx;
     }
 
+    public static L<PhpClass> resolveIdeaTypeCls(PhpType ideaType, Project project)
+    {
+        return L(ideaType.filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).getTypes())
+            .fap(clsPath -> L(PhpIndex.getInstance(project).getAnyByFQN(clsPath)))
+            .fop(rvd -> opt(rvd));
+    }
+
     public static L<PhpClass> resolveMtCls(MultiType mtArg, Project project)
     {
         L<PhpClass> resolved = opt(mtArg)
             .map(mt -> mt.getIdeaType())
-            .map(tpe -> L(tpe.filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).getTypes())
-                .fap(clsPath -> L(PhpIndex.getInstance(project).getAnyByFQN(clsPath)))
-                .fop(rvd -> opt(rvd)))
+            .map(tpe -> resolveIdeaTypeCls(tpe, project))
             .fap(clses -> clses);
         if (resolved.size() == 0) {
             // allow no namespace in php doc class references

@@ -25,6 +25,7 @@ public class FuncCtx extends Lang
     final private L<Lang.S<MultiType>> argGetters;
     private L<Integer> variadicOrders = L();
     public Opt<Lang.S<MultiType>> instGetter = opt(null);
+    public Opt<PhpType> clsIdeaType = opt(null);
     final private EArgPsiType argPsiType;
     /** use this when you need to reference a real PSI during parsing of PHP Doc */
     public Opt<PsiElement> fakeFileSource = opt(null);
@@ -113,19 +114,18 @@ public class FuncCtx extends Lang
         return result;
     }
 
-    /** when you simply call function */
-    public FuncCtx subCtxDirect(MethodReference funcCall)
-    {
-        FuncCtx self = subCtxDirectGeneric(funcCall);
-        self.instGetter = opt(funcCall.getClassReference())
-            .flt(ref -> !(ref instanceof ClassReference))
-            .map(obj -> () -> findExprType(obj));
-        return self;
-    }
-
     public FuncCtx subCtxDirect(FunctionReference funcCall)
     {
         FuncCtx self = subCtxDirectGeneric(funcCall);
+        Tls.cast(MethodReference.class, funcCall)
+            .map(methCall -> methCall.getClassReference())
+            .thn(ref -> {
+                if (ref instanceof ClassReference) {
+                    self.clsIdeaType = opt(ref.getType());
+                } else {
+                    self.instGetter = opt(() -> findExprType(ref));
+                }
+            });
         self.instGetter = Tls.cast(MethodReference.class, funcCall)
             .map(methCall -> methCall.getClassReference())
             .flt(ref -> !(ref instanceof ClassReference))
@@ -175,6 +175,7 @@ public class FuncCtx extends Lang
 
     public boolean hasArgs()
     {
+        // this probably must also include clsIdeaType.has()...
         return argGetters.size() > 0 || instGetter.has();
     }
 

@@ -40,6 +40,25 @@ class MyModuleOptions
     }
 }
 
+class StaticInferenceParent
+{
+    protected static $array = [
+        'parentKey' => 'parentVal',
+    ];
+    
+    public static function getArray(): array
+    {
+        return static::$array;
+    }
+}
+
+class StaticInferenceChild extends StaticInferenceParent
+{
+    protected static $array = [
+        'subKey' => 'subVal',
+    ];
+}
+
 interface IProcessPntQueueAction
 {
     /** @param $optionalData = [
@@ -1944,6 +1963,15 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $withNums = static::addNumToSegments(...$segs, ...$segs);
         $withNums[0][''];
         $list[] = [$withNums[0], ['from' => [], 'to' => [], 'segmentNumber' => []]];
+        return $list;
+    }
+
+    public function provideStaticInference()
+    {
+        $list = [];
+        $arr = StaticInferenceChild::getArray();
+        $arr[''];
+        $list[] = [$arr, ['subKey' => []]];
         return $list;
     }
 
