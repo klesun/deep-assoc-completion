@@ -7,12 +7,14 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Set;
 
 /** a node in called function stack trace with args */
 public class FuncCtx extends Lang
@@ -187,9 +189,8 @@ public class FuncCtx extends Lang
     public int hashCode()
     {
         if (!uniqueRef.has() || !hasArgs()) {
-            // all contexts without args are same
-            // so they should have same hash code
-            return 4348980; // random int
+            // all contexts without args are same if class is same
+            return ArrCtorRes.ideaTypeToFqn(this.clsIdeaType.def(null)).hashCode();
         } else {
             int noParentSalt = 7052005; // random int
             int parentHash = parent.uni(p -> p.hashCode(), () -> noParentSalt);
@@ -205,6 +206,11 @@ public class FuncCtx extends Lang
                 // and list comparison, but taking all parents could be
                 // not efficient, and we want this function to be AFAP
                 if (this.argPsiType != that.argPsiType) return false;
+                if (clsIdeaType.has()) {
+                    Set<String> thisFqn = ArrCtorRes.ideaTypeToFqn(this.clsIdeaType.unw());
+                    Set<String> thatFqn = ArrCtorRes.ideaTypeToFqn(that.clsIdeaType.def(null));
+                    if (!thisFqn.equals(thatFqn)) return false;
+                }
                 if (!this.hasArgs()) return !that.hasArgs();
                 if (!this.uniqueRef.has()) return !that.uniqueRef.has();
                 if (!that.uniqueRef.has()) return false;

@@ -15,7 +15,10 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class ArrCtorRes extends Lang
 {
@@ -26,9 +29,14 @@ public class ArrCtorRes extends Lang
         this.ctx = ctx;
     }
 
+    public static Set<String> ideaTypeToFqn(@Nullable PhpType ideaType)
+    {
+        return new HashSet<>(opt(ideaType).def(PhpType.EMPTY).filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).getTypes());
+    }
+
     public static L<PhpClass> resolveIdeaTypeCls(PhpType ideaType, Project project)
     {
-        return L(ideaType.filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).getTypes())
+        return L(ideaTypeToFqn(ideaType))
             .fap(clsPath -> L(PhpIndex.getInstance(project).getAnyByFQN(clsPath)))
             .fop(rvd -> opt(rvd));
     }
