@@ -291,6 +291,11 @@ public class Lang
             return gat(-1);
         }
 
+        public L<T> def(L<T> fallback)
+        {
+            return size() > 0 ? this : fallback;
+        }
+
         public L<T> flt(F2<T, Integer, Boolean> pred)
         {
             L<T> result = list();

@@ -45,10 +45,23 @@ class StaticInferenceParent
     protected static $array = [
         'parentKey' => 'parentVal',
     ];
+
+    protected static function getSchema()
+    {
+        return [
+            'id' => 'int',
+            'dt' => 'datetime',
+        ];
+    }
     
     public static function getArray(): array
     {
         return static::$array;
+    }
+
+    public static function getCompleteSchema()
+    {
+        return static::getSchema() + ['isComplete' => true];
     }
 }
 
@@ -57,7 +70,20 @@ class StaticInferenceChild extends StaticInferenceParent
     protected static $array = [
         'subKey' => 'subVal',
     ];
+
+    protected static function getSchema()
+    {
+        return [
+            'recordLocator' => 'str',
+            'gds' => 'str',
+        ];
+    }
 }
+
+$arr = StaticInferenceChild::getArray();
+$arr[''];
+$schema = StaticInferenceChild::getCompleteSchema();
+$schema[''];
 
 interface IProcessPntQueueAction
 {
@@ -1972,6 +1998,9 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $arr = StaticInferenceChild::getArray();
         $arr[''];
         $list[] = [$arr, ['subKey' => []]];
+        $schema = StaticInferenceChild::getCompleteSchema();
+        $schema[''];
+        $list[] = [$schema, ['recordLocator' => [], 'gds' => [], 'isComplete' => []]];
         return $list;
     }
 

@@ -164,19 +164,22 @@ public class MethCallRes extends Lang
             .flt(m -> Objects.equals(m.getName(), func));
     }
 
-    private L<Method> findReferenced(MethodReferenceImpl fieldRef)
+    private L<Method> findReferenced(MethodReferenceImpl fieldRef, FuncCtx ctx)
     {
 //         return opt(fieldRef.resolve()).fop(toCast(Method.class));
         return opt(fieldRef.getClassReference())
-            .fap(obj -> new ArrCtorRes(ctx).resolveObjCls(obj))
+            .fap(obj -> ctx.clsIdeaType
+                .flt(typ -> obj.getText().equals("static"))
+                .fap(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, obj.getProject()))
+                .def(new ArrCtorRes(ctx).resolveObjCls(obj)))
             .fap(cls -> L(cls.getMethods()))
             .flt(f -> f.getName().equals(fieldRef.getName()));
     }
 
-    private Opt<L<Method>> resolveMethodFromCall(MethodReferenceImpl call)
+    private Opt<L<Method>> resolveMethodFromCall(MethodReferenceImpl call, FuncCtx ctx)
     {
         return Opt.fst(list(opt(null)
-            , opt(findReferenced(call)).flt(found -> found.size() > 0)
+            , opt(findReferenced(call, ctx)).flt(found -> found.size() > 0)
             , opt(L(call.multiResolve(false)))
                 .map(l -> l.map(v -> v.getElement()))
                 .map(l -> l.fop(toCast(Method.class)))
@@ -189,7 +192,7 @@ public class MethCallRes extends Lang
     public MultiType resolveCall(MethodReferenceImpl funcCall)
     {
         FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
-        L<DeepType> rtypes = resolveMethodFromCall(funcCall)
+        L<DeepType> rtypes = resolveMethodFromCall(funcCall, ctx)
             .map(funcs -> list(
                 funcs.fap(func -> findMethRetType(func).apply(funcCtx)),
                 funcs.fap(func -> findBuiltInRetType(func, funcCtx, funcCall).types)
