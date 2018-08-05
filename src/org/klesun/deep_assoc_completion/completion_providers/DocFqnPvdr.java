@@ -9,6 +9,8 @@ import com.intellij.psi.PsiFileFactory;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.PhpLanguage;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocType;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocReturnTagImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
@@ -20,9 +22,7 @@ import org.klesun.lang.Tls;
 import java.util.*;
 
 import static org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr.getMaxDepth;
-import static org.klesun.lang.Lang.L;
-import static org.klesun.lang.Lang.list;
-import static org.klesun.lang.Lang.opt;
+import static org.klesun.lang.Lang.*;
 
 /**
  * provides completion for class/functions inside a @param doc comment
@@ -82,8 +82,19 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 Project project = tagValue.getProject();
 
                 String prefix = "<?php\n$arg = ";
-                String regex = tagValue.getParent() instanceof PhpDocReturnTag
-                    ? "^\\s*(?:like|=|)\\s*(.+)$" : "^\\s*=\\s*(.+)$";
+                String regex = "^\\s*=\\s*(.+)$";
+                if (tagValue.getParent() instanceof PhpDocReturnTagImpl) {
+                    PhpDocReturnTagImpl returnTag = (PhpDocReturnTagImpl)tagValue.getParent();
+                    regex = "^\\s*(?:like|=|)\\s*(.+)$";
+                    if (docValue.matches("::[a-zA-Z0-9_]*IntellijIdeaRulezzz")) {
+                        // class name gets resolved as return type psi
+                        String typePart = L(returnTag.getChildren())
+                            .fop(toCast(PhpDocType.class))
+                            .map(typ -> typ.getText())
+                            .wap(parts -> Tls.implode("", parts));
+                        docValue = typePart + docValue;
+                    }
+                }
                 FuncCtx ctx = new FuncCtx(search);
                 ctx.fakeFileSource = opt(tagValue);
                 Tls.regex(regex, docValue)
