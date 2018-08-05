@@ -280,6 +280,8 @@ class UnitTest
             array_column($lexed['lexemes'], 'lexeme'),
             array_column($lexed['lexemes'], 'data')
         );
+        $asd = explode(' ', 'sad asd sada');
+        $asd[0];
         $typeToData[''];
         $list[] = [$typeToData, ['departureDate' => [], 'returnDate' => []]];
         return $list;

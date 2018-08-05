@@ -181,6 +181,10 @@ public class FuncCallRes extends Lang
                 callCtx.getArgMt(0).types
                     .fap(t -> t.getReturnTypes(newCtx))
                     .fch(t -> result.add(t));
+            } else if (name.equals("explode")) {
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.listElTypes.add(() -> new MultiType(list(new DeepType(call, PhpType.STRING))));
+                result.add(arrt);
             } else {
                 // try to get type info from standard_2.php
                 opt(call.resolve())
