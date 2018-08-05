@@ -2004,10 +2004,6 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function provideTripleDotInBuiltInCall()
     {
         $list = [];
@@ -2017,7 +2013,11 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $args[] = ['guzno' => 432, 'zhopa' => 523];
         $flat = array_merge(...$args);
         $flat[''];
-        //$list[] = [$flat, ['huj' => [], 'pizda' => [], 'zalupa' => [], 'dzhigurda' => [], 'guzno' => [], 'zhopa' => []];
+        $list[] = [$flat, ['huj' => [], 'pizda' => [], 'zalupa' => [], 'dzhigurda' => [], 'guzno' => [], 'zhopa' => []];
         return $list;
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 }

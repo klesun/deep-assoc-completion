@@ -24,12 +24,12 @@ public class Tls extends Lang
      * this returns empty optional instead of
      * throwing exception if cast fails
      */
-    public static <T> Opt<T> cast(Class<T> cls, Object value)
+    public static <T extends U, U> Opt<T> cast(Class<T> cls, U value)
     {
         if (cls.isInstance(value)) {
-            return new Opt(cls.cast(value));
+            return new Opt<>(cls.cast(value));
         } else {
-            return new Opt(null);
+            return new Opt<>(null);
         }
     }
 

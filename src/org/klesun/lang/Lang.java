@@ -127,7 +127,7 @@ public class Lang
         return result;
     }
 
-    public static <T, Tin extends PsiElement> Lang.F<Tin, Opt<T>> toCast(Class<T> cls)
+    public static <T extends Tin, Tin> Lang.F<Tin, Opt<T>> toCast(Class<T> cls)
     {
         return obj -> Tls.cast(cls, obj);
     }

@@ -17,6 +17,8 @@ import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
 
+import javax.annotation.Nullable;
+
 public class FuncCallRes extends Lang
 {
     private FuncCtx ctx;
@@ -55,37 +57,33 @@ public class FuncCallRes extends Lang
     {
         return opt(call.getName()).map(name -> {
             L<DeepType> result = L();
+            FuncCtx callCtx = ctx.subCtxDirect(call);
             PsiElement[] params = call.getParameters();
             L<PsiElement> lParams = L(params);
             if (name.equals("array_map")) {
                 DeepType mapRetType = new DeepType(call);
-                if (params.length > 1) {
-                    PsiElement callback = params[0];
-                    PsiElement array = params[1];
-                    MultiType arrMt = Tls.cast(PhpExpression.class, array)
-                        .map(exp -> ctx.findExprType(exp))
-                        .def(MultiType.INVALID_PSI);
-                    FuncCtx subCtx = Tls.cast(PhpExpression.class, array)
-                        .uni(argArr -> ctx.subCtxSingleArgArr(argArr),
-                            () -> new FuncCtx(ctx.getSearch())
-                        );
-                    S<MultiType> getElMt = () -> findPsiExprType(callback).types
-                        .fap(t -> t.getReturnTypes(subCtx))
-                        .wap(MultiType::new);
-                    arrMt.types.fch(t -> {
-                        DeepType mapped = new DeepType(t.definition, PhpType.ARRAY);
-                        t.keys.forEach((k, v) -> mapped.addKey(k, v.definition)
-                            .addType(getElMt, call.getType().elementType()));
-                        result.add(mapped);
-                    });
-                    if (arrMt.hasNumberIndexes()) {
-                        mapRetType.listElTypes.add(getElMt);
-                    } else if (
-                        arrMt.getKeyNames().size() == 0 ||
-                        arrMt.types.any(t -> t.anyKeyElTypes.size() > 0)
-                    ) {
-                        mapRetType.anyKeyElTypes.add(getElMt);
-                    }
+                MultiType arrMt = callCtx.getArgMt(1);
+                FuncCtx subCtx = L(params).gat(1)
+                    .fop(array -> Tls.cast(PhpExpression.class, array))
+                    .uni(argArr -> ctx.subCtxSingleArgArr(argArr),
+                        () -> new FuncCtx(ctx.getSearch())
+                    );
+                S<MultiType> getElMt = () -> callCtx.getArgMt(0).types
+                    .fap(t -> t.getReturnTypes(subCtx))
+                    .wap(MultiType::new);
+                arrMt.types.fch(t -> {
+                    DeepType mapped = new DeepType(t.definition, PhpType.ARRAY);
+                    t.keys.forEach((k, v) -> mapped.addKey(k, v.definition)
+                        .addType(getElMt, call.getType().elementType()));
+                    result.add(mapped);
+                });
+                if (arrMt.hasNumberIndexes()) {
+                    mapRetType.listElTypes.add(getElMt);
+                } else if (
+                    arrMt.getKeyNames().size() == 0 ||
+                    arrMt.types.any(t -> t.anyKeyElTypes.size() > 0)
+                ) {
+                    mapRetType.anyKeyElTypes.add(getElMt);
                 }
                 result.add(mapRetType);
             } else if (name.equals("array_filter") || name.equals("array_reverse")
@@ -93,17 +91,12 @@ public class FuncCallRes extends Lang
                     || name.equals("array_values")
             ) {
                 // array type unchanged
-                L(params).gat(0).map(p -> findPsiExprType(p).types).thn(result::addAll);
+                result.addAll(callCtx.getArgMt(0).types);
             } else if (name.equals("array_combine")) {
                 DeepType combine = new DeepType(call, PhpType.ARRAY);
-                Dict<L<DeepType>> keyToTypes = L(params).gat(0)
-                    .map(p -> findPsiExprType(p))
-                    .fap(mt -> mt.getEl().types)
+                Dict<L<DeepType>> keyToTypes = callCtx.getArgMt(0).getEl().types
                     .gop(t -> opt(t.stringValue));
-                S<MultiType> getElMt = () -> L(params).gat(1)
-                    .map(p -> findPsiExprType(p))
-                    .def(MultiType.INVALID_PSI)
-                    .getEl();
+                S<MultiType> getElMt = () -> callCtx.getArgMt(1).getEl();
                 PhpType ideaElType = L(params).gat(1)
                     .fop(toCast(PhpExpression.class))
                     .map(e -> e.getType()).def(PhpType.MIXED);
@@ -116,38 +109,29 @@ public class FuncCallRes extends Lang
                     || name.equals("current") || name.equals("end") || name.equals("next")
                     || name.equals("prev") || name.equals("reset")
             ) {
-                L(params).gat(0).map(p -> findPsiExprType(p).getEl().types).thn(result::addAll);
+                result.addAll(callCtx.getArgMt(0).getEl().types);
             } else if (name.equals("array_merge")) {
-                for (PsiElement paramPsi: params) {
-                    result.addAll(findPsiExprType(paramPsi).types);
+                for (int i = 0; i < params.length; ++i) {
+                    result.addAll(callCtx.getArg(i).fap(mt -> mt.types));
                 }
             } else if (name.equals("array_column")) {
-                if (params.length > 1) {
-                    MultiType elType = findPsiExprType(params[0]).getEl();
-                    Tls.cast(PhpExpression.class, params[1])
-                        .map(keyNamePsi -> ctx.findExprType(keyNamePsi))
-                        .map(mt -> opt(mt.getStringValue()))
-                        .thn(keyName -> {
-                            DeepType type = new DeepType(call);
-                            type.listElTypes.add(() -> elType.getKey(keyName.def(null)));
-                            result.add(type);
-                        });
-                }
+                MultiType elType = callCtx.getArgMt(0).getEl();
+                @Nullable String keyName = callCtx.getArgMt(1).getStringValue();
+                DeepType type = new DeepType(call);
+                type.listElTypes.add(() -> elType.getKey(keyName));
+                result.add(type);
             } else if (name.equals("array_chunk")) {
-                L(params).gat(0)
-                    .map(this::findPsiExprType)
-                    .map(mt -> mt.getInArray(call))
-                    .thn(result::add);
+                result.add(callCtx.getArgMt(0).getInArray(call));
             } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")
                     || name.equals("array_intersect_assoc") || name.equals("array_diff_assoc")
             ) {
                 // do something more clever?
-                L(params).gat(0).map(p -> findPsiExprType(p).types).thn(result::addAll);
+                result.addAll(callCtx.getArgMt(0).types);
             } else if (name.equals("compact")) {
                 DeepType arrt = new DeepType(call, PhpType.ARRAY);
                 Tls.findParent(call, GroupStatement.class, a -> true)
-                    .thn(scope -> L(params)
-                        .fch(argPsi -> opt(findPsiExprType(argPsi))
+                    .thn(scope -> Tls.range(0, params.length)
+                        .fch(i -> callCtx.getArg(i)
                             .map(keyt -> keyt.getStringValue())
                             .thn(varName -> {
                                 L<VariableImpl> refs = findVarRefsInFunc(scope, varName)
@@ -156,7 +140,7 @@ public class FuncCallRes extends Lang
                                 if (refs.size() > 0) {
                                     PhpType briefType = new PhpType();
                                     refs.map(var -> Tls.getIdeaType(var)).fch(briefType::add);
-                                    arrt.addKey(varName, argPsi)
+                                    arrt.addKey(varName, call)
                                         .addType(() -> refs
                                             .fap(ref -> ctx.findExprType(ref).types)
                                             .wap(MultiType::new), briefType);
@@ -164,42 +148,26 @@ public class FuncCallRes extends Lang
                             })));
                 result.add(arrt);
             } else if (name.equals("implode")) {
-                if (params.length > 1) {
-                    String delim = opt(params[0])
-                        .fop(toCast(PhpExpression.class))
-                        .map(exp -> ctx.findExprType(exp))
-                        .fop(mt -> mt.getStringValues().gat(0))
-                        .def(" ");
-                    L<String> parts = opt(params[1])
-                        .fop(toCast(PhpExpression.class))
-                        .map(exp -> ctx.findExprType(exp))
-                        .fap(t -> t.types)
-                        .fap(t -> L(t.keys.values()))
-                        .fap(kv -> kv.getTypes())
-                        .fop(t -> opt(t.stringValue));
-                    String joined = Tls.implode(delim, parts);
-                    // PHP string is not java string, of course, but pretty close
-                    String unescaped = StringEscapeUtils.unescapeJava(joined);
-                    DeepType type = new DeepType(call, PhpType.STRING, unescaped);
-                    result.add(type);
-                }
+                String delim = callCtx.getArgMt(0).getStringValues().gat(0).def(" ");
+                L<String> parts = callCtx.getArgMt(1).types
+                    .fap(t -> L(t.keys.values()))
+                    .fap(kv -> kv.getTypes())
+                    .fop(t -> opt(t.stringValue));
+                String joined = Tls.implode(delim, parts);
+                // PHP string is not java string, of course, but pretty close
+                String unescaped = StringEscapeUtils.unescapeJava(joined);
+                DeepType type = new DeepType(call, PhpType.STRING, unescaped);
+                result.add(type);
             } else if (name.equals("array_keys")) {
-                if (params.length > 0) {
-                    DeepType arrt = new DeepType(call, PhpType.ARRAY);
-                    arrt.listElTypes.add(() -> opt(params[0])
-                        .fop(toCast(PhpExpression.class))
-                        .map(exp -> ctx.findExprType(exp))
-                        .fap(mt -> mt.getKeyNames())
-                        .map(keyName -> new DeepType(call, PhpType.STRING, keyName))
-                        .wap(MultiType::new));
-                    result.add(arrt);
-                }
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.listElTypes.add(() -> callCtx.getArgMt(0).getKeyNames()
+                    .map(keyName -> new DeepType(call, PhpType.STRING, keyName))
+                    .wap(types -> new MultiType(types)));
+                result.add(arrt);
             } else if (name.equals("func_get_args")) {
                 result.addAll(ctx.getArg(new ArgOrder(0, true)).fap(a -> a.types));
             } else if (name.equals("func_get_arg")) {
-                lParams.gat(0)
-                    .fop(toCast(PhpExpression.class))
-                    .map(val -> ctx.findExprType(val))
+                callCtx.getArg(0)
                     .fop(mt -> opt(mt.getStringValue()))
                     .flt(str -> Tls.isNum(str))
                     .map(str -> Integer.parseInt(str))
@@ -210,10 +178,8 @@ public class FuncCallRes extends Lang
                     .fop(toCast(PhpExpression.class))
                     .map(args -> ctx.subCtxIndirect(args))
                     .def(new FuncCtx(ctx.getSearch()));
-                lParams.gat(0)
-                    .fop(toCast(PhpExpression.class))
-                    .map(val -> ctx.findExprType(val))
-                    .fap(func -> func.types.fap(t -> t.getReturnTypes(newCtx)))
+                callCtx.getArgMt(0).types
+                    .fap(t -> t.getReturnTypes(newCtx))
                     .fch(t -> result.add(t));
             } else {
                 // try to get type info from standard_2.php

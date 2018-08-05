@@ -109,6 +109,11 @@ public class FuncCtx extends Lang
         return getArg(new ArgOrder(index, false));
     }
 
+    public MultiType getArgMt(Integer index)
+    {
+        return getArg(new ArgOrder(index, false)).def(MultiType.INVALID_PSI);
+    }
+
     @NotNull
     public MultiType findExprType(PhpExpression expr)
     {
