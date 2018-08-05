@@ -1,7 +1,9 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.jetbrains.php.lang.psi.elements.Function;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
@@ -10,6 +12,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.List;
@@ -34,6 +37,13 @@ public class FieldRes extends Lang
 
         return L(PsiTreeUtil.findChildrenOfType(file, FieldReferenceImpl.class))
             .flt(ref -> name.equals(ref.getName()));
+    }
+
+    private static boolean areInSameScope(PsiElement a, PsiElement b)
+    {
+        Opt<Function> aFunc = Tls.findParent(a, Function.class, v -> true);
+        Opt<Function> bFunc = Tls.findParent(b, Function.class, v -> true);
+        return aFunc.equals(bFunc);
     }
 
     public MultiType resolve(FieldReferenceImpl fieldRef)
@@ -65,14 +75,22 @@ public class FieldRes extends Lang
                 L<Assign> asses = opt(resolved.getContainingFile())
                     .map(file -> findReferences(file, fieldRef.getName()))
                     .def(L())
-                    .fap(psi -> Tls.findParent(psi, Method.class, a -> true)
+                    .fap(assPsi -> Tls.findParent(assPsi, Method.class, a -> true)
                         .flt(meth -> meth.getName().equals("__construct"))
                         .map(meth -> fieldRef.getClassReference())
                         .fop(toCast(PhpExpression.class))
                         .fop(ref -> opt(ctx.findExprType(ref)))
                         .fap(mt -> mt.getArgsPassedToCtor())
-                        .wap(ctxs -> ctxs.size() > 0 ? ctxs : list(implCtx))
-                        .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(psi, false)));
+                        .wap(ctxs -> {
+                            if (areInSameScope(fieldRef, assPsi)) {
+                                ctxs.add(ctx);
+                            }
+                            if (ctxs.size() == 0) {
+                                ctxs = list(implCtx);
+                            }
+                            return ctxs;
+                        })
+                        .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(assPsi, false)));
 
                 List<DeepType> types = AssRes.assignmentsToTypes(asses);
                 result.addAll(types);

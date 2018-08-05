@@ -8,6 +8,8 @@ use Lib\ParamValidation\StringP;
 use Lib\Utils\ArrayUtil;
 use Lib\Utils\Fp;
 use Lib\Utils\MemoizedFunctions;
+use LocalLib\Lexer\Lexeme;
+use LocalLib\Lexer\Lexer;
 
 class UnitTest
 {
@@ -263,6 +265,43 @@ class UnitTest
         return $list;
     }
 
+    public function provideLexer(string $modsPart)
+    {
+        $onlyRaw = function($matches){return ['raw' => $matches[0], 'parsed' => null];};
+        $lexer = new Lexer([
+            (new Lexeme('departureDate', '/^¥V(\d{1,2}[A-Z]{3}\d{0,2})/'))->preprocessData($onlyRaw),
+            (new Lexeme('returnDate', '/^¥R(\d{1,2}[A-Z]{3}\d{0,2})/'))->preprocessData($onlyRaw),
+        ]);
+        // $this->context used as a local variable - we can support that
+        $lexed = $lexer->lex($modsPart);
+        $lexed['lexemes'][0][''];
+        $lexed['lexemes'][0]['lexeme'] === '';
+        $typeToData = array_combine(
+            array_column($lexed['lexemes'], 'lexeme'),
+            array_column($lexed['lexemes'], 'data')
+        );
+        $list[] = [$typeToData, ['departureDate' => [], 'returnDate' => []]];
+        return $list;
+    }
+
+    public static function provideCachedFuncCallSimple()
+    {
+        $list = [];
+        $args = ['CHD054'];
+        $tdData1 = MemoizedFunctions::ramCachedFunctionCall(
+            'asd', [static::class, 'fetchTdData'], $args
+        );
+        $tdData1[''];
+        $list[] = [$tdData1, ['is_published' => [], 'prefix' => [], 'correct_cmd' => []]];
+
+        $tdData2 = MemoizedFunctions::cachedFunctionCall(
+            'asd', [static::class, 'fetchTdData'], $args, 60*60
+        );
+        $tdData2[''];
+        $list[] = [$tdData2, ['is_published' => [], 'prefix' => [], 'correct_cmd' => []]];
+        return $list;
+    }
+
     /**
      * following not resolved yet
      */
@@ -271,18 +310,6 @@ class UnitTest
     {
         $list = [];
         $args = ['CHD054'];
-        $tdData1 = MemoizedFunctions::ramCachedFunctionCall(
-            'asd', [static::class, 'fetchTdData'], $args
-        );
-        $tdData1[''];
-//        $list[] = [$tdData1, ['is_published' => [], 'prefix' => [], 'correct_cmd' => []]];
-
-        $tdData2 = MemoizedFunctions::cachedFunctionCall(
-            'asd', [static::class, 'fetchTdData'], $args, 60*60
-        );
-        $tdData2[''];
-        $list[] = [$tdData2, ['is_published' => [], 'prefix' => [], 'correct_cmd' => []]];
-
         $tdData3 = MemoizedFunctions::cachedBothWays(
             [static::class, 'fetchTdData'], $args, 60*60
         );

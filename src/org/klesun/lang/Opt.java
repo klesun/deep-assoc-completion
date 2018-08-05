@@ -1,5 +1,7 @@
 package org.klesun.lang;
 
+import java.util.Objects;
+
 import static org.klesun.lang.Lang.*;
 
 /**
@@ -135,5 +137,17 @@ public class Opt<T>
     private static class Then
     {
         // TODO: implement!
+    }
+
+    public boolean equals(Object other)
+    {
+        return opt(other)
+            .fop(that -> Tls.cast(Opt.class, that))
+            .flt(that -> {
+                if (!this.has()) return !that.has();
+                if (!that.has()) return false;
+                return Objects.equals(this.unw(), that.unw());
+            })
+            .has();
     }
 }
