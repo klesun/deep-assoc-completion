@@ -109,6 +109,27 @@ class DeepKeysTest
         array_column(array_column($pnrs, 'ptcInfo'), '');
     }
 
+    private static function testArrayKeyExists()
+    {
+        $segments = [
+            ['from' => 'MOW', 'to' => 'LON'],
+            ['from' => 'LON', 'to' => 'PAR'],
+            ['from' => 'PAR', 'to' => 'MOW'],
+        ];
+        // should suggest: "from", "to"
+        $segments[0][''];
+        // should suggest: "from", "to"
+        array_key_exists('', $segments[0]);
+
+        $pnrs = [];
+        $pnrs[] = [
+            'ptcInfo' => ['ptc' => 'C05', 'quantity' => 1],
+            'paxes' => [['name' => 'vova', 'surname' => 'turman']],
+            'itinerary' => $segments,
+        ];
+        array_key_exists('itinerary', $pnrs[0]);
+    }
+
     private static function testGenericAccess()
     {
         $records = [];

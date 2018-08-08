@@ -56,6 +56,15 @@ public class DeepKeysCbtr extends CompletionContributor
                 ,
             new ArrayColumnPvdr()
         );
+        // array_key_exists('', $arr)
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, StringLiteralExpression.class)
+                .withSuperParent(2, ParameterList.class)
+                ,
+            new ArrayKeyExistsPvdr()
+        );
         // [Something::class, '']
         this.extend(
             CompletionType.BASIC,
