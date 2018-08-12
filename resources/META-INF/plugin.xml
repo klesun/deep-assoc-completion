@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.08.01.002</version>
+    <version>2018.08.13.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,13 +37,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#42 Use _called_ class to resolve static::doSomething() rather than current class</li>
-        <li>Provide method name completion when typing self:: or static:: in phpdoc</li>
-        <li>#42 Use _called_ class to resolve static::$someProp rather than current class</li>
-        <li>Support ... operator in methods</li>
-        <li>Provide completion and GoTo in @return and @var phpdoc tags</li>
-        <li>#41 Optimize: resolve array element type _on demand_</li>
-        <li>Fix: do not suggest protected method completion from outside</li>
+        <li>#44 Fix: null-check in DeepKeysGoToDecl.java</li>
+        <li>Provide completion in array_key_exists</li>
     </ul>
     ]]>
     </change-notes>
