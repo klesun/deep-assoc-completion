@@ -1,8 +1,5 @@
 package org.klesun.lang;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.GsonBuilder;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 
@@ -130,21 +127,6 @@ public class Lang
     public static <T extends Tin, Tin> Lang.F<Tin, Opt<T>> toCast(Class<T> cls)
     {
         return obj -> Tls.cast(cls, obj);
-    }
-
-    public static void debug(String msg, Object data)
-    {
-        /** @debug */
-        System.out.println(msg + "\n" + new GsonBuilder()
-            .addSerializationExclusionStrategy(new ExclusionStrategy() {
-                public boolean shouldSkipField(FieldAttributes fieldAttributes) {
-                    return PsiElement.class.isAssignableFrom(fieldAttributes.getDeclaringClass());
-                }
-                public boolean shouldSkipClass(Class<?> aClass) {
-                    return false;
-                }
-            })
-            .create().toJson(data));
     }
 
     /** L stands for List */

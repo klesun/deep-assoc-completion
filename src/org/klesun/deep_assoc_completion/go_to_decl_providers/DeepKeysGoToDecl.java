@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.go_to_decl_providers;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
@@ -24,6 +25,7 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import javax.swing.text.html.Option;
 import java.util.*;
 
 /**
@@ -120,26 +122,28 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 
     @Nullable
     @Override
-    public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int mouseOffset, Editor editor)
+    public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement nullPsi, int mouseOffset, Editor editor)
     {
-        L<PsiElement> psiTargets = L();
-        SearchContext search = new SearchContext(psiElement.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
-        FuncCtx funcCtx = new FuncCtx(search);
+        L<PsiElement> result = opt(nullPsi)
+            .fap(psiElement -> {
+                L<PsiElement> psiTargets = L();
+                SearchContext search = new SearchContext(psiElement.getProject())
+                    .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
+                FuncCtx funcCtx = new FuncCtx(search);
 
-        resolveAssocKey(psiElement, funcCtx)
-            .fch(psi -> psiTargets.add(psi));
-        resolveDocAt(psiElement, mouseOffset)
-            .fch(psi -> psiTargets.add(psi));
-        if (psiTargets.size() == 0) {
-            resolveDocResult(psiElement)
-                .map(mt -> mt.types)
-                .thn(types -> types.forEach(t -> psiTargets.add(t.definition)));
-        }
-        removeDuplicates(psiTargets);
-        return psiTargets
-            .map(psi -> truncateOnLineBreak(psi))
-            .toArray(new PsiElement[psiTargets.size()]);
+                resolveAssocKey(psiElement, funcCtx)
+                    .fch(psi -> psiTargets.add(psi));
+                resolveDocAt(psiElement, mouseOffset)
+                    .fch(psi -> psiTargets.add(psi));
+                if (psiTargets.size() == 0) {
+                    resolveDocResult(psiElement)
+                        .map(mt -> mt.types)
+                        .thn(types -> types.forEach(t -> psiTargets.add(t.definition)));
+                }
+                removeDuplicates(psiTargets);
+                return psiTargets.map(psi -> truncateOnLineBreak(psi));
+            });
+        return result.toArray(new PsiElement[result.size()]);
     }
 
     @Nullable
