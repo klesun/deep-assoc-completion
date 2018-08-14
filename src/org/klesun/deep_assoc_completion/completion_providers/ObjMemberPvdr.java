@@ -12,6 +12,7 @@ import com.jetbrains.php.lang.psi.elements.Field;
 import com.jetbrains.php.lang.psi.elements.MemberReference;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpClassMember;
+import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
@@ -80,19 +81,20 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        SearchContext search = new SearchContext(parameters)
-            .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
-        FuncCtx funcCtx = new FuncCtx(search);
-        long startTime = System.nanoTime();
-        L<? extends PhpClassMember> members = opt(parameters.getPosition().getParent())
-            .fop(toCast(MemberReference.class))
-            .map(mem -> mem.getClassReference())
-            .fap(ref -> {
-                PhpType clean = ref.getType().filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT);
-                if (!clean.isEmpty() && !clean.toString().equals("\\stdClass")) {
-                    // IDEA resolved the class on it's own - no need for Deep resolution
-                    return list();
-                } else {
+        L<LookupElement> builtIns = list();
+        result.runRemainingContributors(parameters, otherSourceResult -> {
+            builtIns.add(otherSourceResult.getLookupElement());
+        });
+        L<? extends PhpClassMember> members = list();
+        if (builtIns.size() == 0) {
+            SearchContext search = new SearchContext(parameters)
+                .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
+            FuncCtx funcCtx = new FuncCtx(search);
+            long startTime = System.nanoTime();
+            members = opt(parameters.getPosition().getParent())
+                .fop(toCast(MemberReference.class))
+                .map(mem -> mem.getClassReference())
+                .fap(ref -> {
                     // IDEA did not resolve the class on it's own - worth trying Deep resolution
                     MultiType mt = funcCtx.findExprType(ref);
                     result.addAllElements(getDynamicProps(mt));
@@ -105,21 +107,15 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                                 || ref.getText().equals("$this"))
                             .flt(fld -> !fld.getModifier().isStatic())
                         );
-                }
-            });
-
-        L<LookupElement> builtIns = list();
-        result.runRemainingContributors(parameters, otherSourceResult -> {
-            builtIns.add(otherSourceResult.getLookupElement());
-        });
+                });
+            long elapsed = System.nanoTime() - startTime;
+            String msg = "Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds";
+            result.addLookupAdvertisement(msg);
+        }
         Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()));
-
         members.map(m -> makeLookup(m))
             .flt(l -> !suggested.contains(l.getLookupString()))
             .fch(result::addElement);
         result.addAllElements(builtIns); // add built-in after ours, this is important
-        long elapsed = System.nanoTime() - startTime;
-        String msg = "Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds";
-        result.addLookupAdvertisement(msg);
     }
 }

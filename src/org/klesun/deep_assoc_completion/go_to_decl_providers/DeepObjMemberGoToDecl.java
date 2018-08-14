@@ -40,13 +40,7 @@ public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandle
         L<? extends PsiElement> psiTargets = opt(psiElement)
             .map(leaf -> leaf.getParent())
             .fop(toCast(MemberReference.class))
-            .flt(mem -> opt(mem.getClassReference())
-                // skip this provider if IDEA already resolved the class
-                .flt(ref -> {
-                    PhpType clean = ref.getType().filterUnknown().filterUnknown().filterNull().filterNull().filterMixed().filter(PhpType.OBJECT);
-                    return clean.isEmpty() || clean.toString().equals("\\stdClass");
-                })
-                .has())
+            .flt(mem -> mem.multiResolve(false).length == 0)
             .fap(mem -> opt(mem.getFirstChild())
                 .fop(toCast(PhpExpression.class))
                 .map(exp -> funcCtx.findExprType(exp))
