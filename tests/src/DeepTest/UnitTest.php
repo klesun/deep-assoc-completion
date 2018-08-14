@@ -53,7 +53,7 @@ class StaticInferenceParent
             'dt' => 'datetime',
         ];
     }
-    
+
     public static function getArray(): array
     {
         return static::$array;
@@ -2042,4 +2042,32 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
     //=============================
     // following are not implemented yet
     //=============================
+
+    public function provideStrTypeKeyFilter()
+    {
+        $list = [];
+        if (rand() % 2) {
+            $segment = [
+                'type' => 'AIR',
+                'from' => 'KIV',
+                'to' => 'RIX',
+            ];
+        } else {
+            $segment = [
+                'type' => 'CAR',
+                'model' => 'Opel',
+                'state' => 'new',
+            ];
+        }
+        if ($segment['type'] === 'AIR') {
+            // should suggest _only_: type, from, to
+            $segment[''];
+            $list[] = [$segment, ['type' => [], 'from' => [], 'to' => []]];
+        } elseif ($segment['type'] === 'CAR') {
+            // should suggest _only_: type, model, state
+            $segment[''];
+            $list[] = [$segment, ['type' => [], 'model' => [], 'state' => []]];
+        }
+        return $list;
+    }
 }

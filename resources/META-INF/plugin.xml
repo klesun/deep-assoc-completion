@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.08.13.001</version>
+    <version>2018.08.14.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,8 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#44 Fix: null-check in DeepKeysGoToDecl.java</li>
-        <li>Provide completion in array_key_exists</li>
+        <li>#45 Fix StackOverflowException on array_combine expressed through itself</li>
     </ul>
     ]]>
     </change-notes>
