@@ -155,10 +155,10 @@ public class DeepType extends Lang
         return new String(new char[level]).replace("\0", "  ");
     }
 
-    public static String varExport(List<DeepType> types, int level)
+    public static String varExport(List<DeepType> types)
     {
         Set<DeepType> circularRefs = new HashSet<>();
-        return varExport(types, level, circularRefs);
+        return varExport(types, 0, circularRefs);
     }
 
     public static String varExport(List<DeepType> types, int level, Set<DeepType> circularRefs)
@@ -211,7 +211,7 @@ public class DeepType extends Lang
     @Override
     public String toString()
     {
-        return varExport(list(this), 0);
+        return varExport(list(this));
     }
 
     public boolean hasNumberIndexes()

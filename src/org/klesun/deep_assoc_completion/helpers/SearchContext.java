@@ -168,6 +168,7 @@ public class SearchContext extends Lang
                 System.out.println(indent + "<< TAKING RESULT FROM CACHE");
             }
         } else {
+            putToCache(funcCtx, expr, MultiType.CIRCULAR_REFERENCE);
             result = DeepTypeResolver.resolveIn(expr, funcCtx)
                 .map(ts -> new MultiType(ts));
             result.thn(mt -> putToCache(funcCtx, expr, mt));

@@ -57,7 +57,9 @@ public class FuncCtx extends Lang
     private MultiType getCached(int index, S<MultiType> argGetter)
     {
         if (!cachedArgs.containsKey(index)) {
-            cachedArgs.put(index, argGetter.get());
+            cachedArgs.put(index, MultiType.CIRCULAR_REFERENCE);
+            MultiType mt = argGetter.get();
+            cachedArgs.replace(index, mt);
         }
         return cachedArgs.get(index);
     }

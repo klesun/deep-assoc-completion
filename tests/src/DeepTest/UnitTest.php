@@ -2017,6 +2017,28 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    private static function getRecursedArrayCombine()
+    {
+        if (rand() % 2) {
+            $values = static::getRecursedArrayCombine();
+        } else {
+            $values = [['cute' => 1], ['popular' => 1], ['strong' => 1]];
+        }
+        return array_combine(
+            ['pichu', 'pikachu', 'raichu'],
+            $values
+        );
+    }
+
+    public function provideStackOverflowArrayCombine()
+    {
+        $list = [];
+        $combined = static::getRecursedArrayCombine();
+        $combined['pichu']['strong'];
+        $list[] = [$combined['raichu'], ['strong' => []]];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

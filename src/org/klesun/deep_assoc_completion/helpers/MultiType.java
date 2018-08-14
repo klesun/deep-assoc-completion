@@ -27,6 +27,8 @@ public class MultiType extends Lang
     private REASON reason;
     final public L<DeepType> types;
 
+    private boolean isGettingKey = false;
+
     public MultiType(L<DeepType> types, REASON reason)
     {
         // there sometimes appear thousands of duplicates
@@ -72,6 +74,11 @@ public class MultiType extends Lang
 
     public MultiType getKey(String keyName)
     {
+        if (isGettingKey) { // see issue #45
+            return MultiType.CIRCULAR_REFERENCE;
+        }
+        isGettingKey = true;
+
         L<DeepType> keyTypes = list();
         if (keyName != null) {
             // if keyName is a constant string - return type of this key only
@@ -89,11 +96,12 @@ public class MultiType extends Lang
             types.fap(t -> t.listElTypes).fch(t -> keyTypes.addAll(t.get().types));
         }
         types.fap(t -> t.anyKeyElTypes).fch(t -> keyTypes.addAll(t.get().types));
-        /** @param Segment{} $segment */
         types.fop(t -> opt(t.briefType.elementType().filterUnknown().filterMixed())
             .flt(it -> !it.isEmpty())
             .map(it -> new DeepType(t.definition, it, false)))
             .fch(t -> keyTypes.add(t));
+
+        isGettingKey = false;
         return new MultiType(keyTypes);
     }
 
@@ -183,7 +191,7 @@ public class MultiType extends Lang
 
     public String varExport()
     {
-        return DeepType.varExport(types, 0);
+        return DeepType.varExport(types);
     }
 
     public boolean hasNumberIndexes()
