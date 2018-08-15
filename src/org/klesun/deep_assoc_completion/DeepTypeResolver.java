@@ -21,23 +21,23 @@ public class DeepTypeResolver extends Lang
     /** @debug */
     public static Opt<L<DeepType>> resolveIn(PsiElement expr, FuncCtx ctx)
     {
-        return Opt.fst(list(
-            opt(null) // for coma formatting
-            , Tls.cast(VariableImpl.class, expr)
+        return Opt.fst(
+            () -> opt(null) // for coma formatting
+            , () -> Tls.cast(VariableImpl.class, expr)
                 .map(v -> new VarRes(ctx).resolve(v))
-            , Tls.cast(ArrayCreationExpressionImpl.class, expr)
+            , () -> Tls.cast(ArrayCreationExpressionImpl.class, expr)
                 .map(arr -> list(new ArrCtorRes(ctx).resolve(arr)))
-            , Tls.cast(FunctionReferenceImpl.class, expr)
+            , () -> Tls.cast(FunctionReferenceImpl.class, expr)
                 .map(call -> new FuncCallRes(ctx).resolve(call).types)
-            , Tls.cast(MethodReferenceImpl.class, expr)
+            , () -> Tls.cast(MethodReferenceImpl.class, expr)
                 .map(call -> new MethCallRes(ctx).resolveCall(call).types)
-            , Tls.cast(ArrayAccessExpressionImpl.class, expr)
+            , () -> Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .map(keyAccess -> new ArrAccRes(ctx).resolve(keyAccess).types)
-            , Tls.cast(FieldReferenceImpl.class, expr)
+            , () -> Tls.cast(FieldReferenceImpl.class, expr)
                 .map(fieldRef -> new FieldRes(ctx).resolve(fieldRef).types)
-            , Tls.cast(StringLiteralExpressionImpl.class, expr)
+            , () -> Tls.cast(StringLiteralExpressionImpl.class, expr)
                 .map(lit -> list(new DeepType(lit)))
-            , Tls.cast(ConstantReferenceImpl.class, expr)
+            , () -> Tls.cast(ConstantReferenceImpl.class, expr)
                 .flt(cst -> // they are defined through themselves in Core_d.php
                     !cst.getText().toLowerCase().equals("null") &&
                     !cst.getText().toLowerCase().equals("true") &&
@@ -48,32 +48,32 @@ public class DeepTypeResolver extends Lang
                     .fop(def -> opt(def.getValue()))
                     .fop(toCast(PhpExpression.class))
                     .fap(exp -> ctx.findExprType(exp).types))
-            , Tls.cast(AssignmentExpression.class, expr)
+            , () -> Tls.cast(AssignmentExpression.class, expr)
                 .map(ass -> ass.getValue())
                 .fop(toCast(PhpExpression.class))
                 .map(val -> ctx.findExprType(val).types)
-            , Tls.cast(ParenthesizedExpression.class, expr)
+            , () -> Tls.cast(ParenthesizedExpression.class, expr)
                 .map(par -> par.getArgument())
                 .fop(toCast(PhpExpression.class))
                 .map(val -> ctx.findExprType(val).types)
-            , Tls.cast(ClassConstantReferenceImpl.class, expr)
+            , () -> Tls.cast(ClassConstantReferenceImpl.class, expr)
                 .map(cst -> L(cst.multiResolve(false))
                     .map(ref -> ref.getElement())
                     .fop(toCast(ClassConstImpl.class))
                     .map(a -> a.getDefaultValue())
                     .fop(toCast(PhpExpression.class))
                     .fap(exp -> new FuncCtx(ctx.getSearch()).findExprType(exp).types))
-            , Tls.cast(PhpExpressionImpl.class, expr)
+            , () -> Tls.cast(PhpExpressionImpl.class, expr)
                 .map(v -> v.getFirstChild())
                 .fop(toCast(FunctionImpl.class))
                 .map(lambda -> list(new ClosRes(ctx).resolve(lambda)))
-            , Tls.cast(PhpExpressionImpl.class, expr)
+            , () -> Tls.cast(PhpExpressionImpl.class, expr)
                 .fop(casted -> opt(casted.getText())
                     .flt(text -> Tls.regex("^\\d+$", text).has())
                     .map(Integer::parseInt)
                     .map(num -> list(new DeepType(casted, num))))
             // leave rest to MiscRes
-            , new MiscRes(ctx).resolve(expr)
-        )).map(ts -> L(ts));
+            , () -> new MiscRes(ctx).resolve(expr)
+        ).map(ts -> L(ts));
     }
 }

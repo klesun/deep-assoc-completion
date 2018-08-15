@@ -87,12 +87,12 @@ public class VarRes extends Lang
                     L<Variable> tuple = L(fch.getVariables());
                     Opt<Variable> keyVarOpt = opt(fch.getKey())
                         // IDEA breaks on list() - should help her
-                        .flt(keyVar -> Opt.fst(list(
-                            opt(keyVar.getNextSibling())
+                        .flt(keyVar -> Opt.fst(
+                            () -> opt(keyVar.getNextSibling())
                                 .fop(toCast(PsiWhiteSpace.class))
                                 .map(ws -> ws.getNextSibling()),
-                            opt(keyVar.getNextSibling())
-                        )).flt(par -> par.getText().equals("=>")).has());
+                            () -> opt(keyVar.getNextSibling())
+                        ).flt(par -> par.getText().equals("=>")).has());
                     if (keyVarOpt.has()) {
                         tuple = tuple.sub(1); // key was included
                         if (varRef.isEquivalentTo(keyVarOpt.unw())) {
@@ -196,21 +196,21 @@ public class VarRes extends Lang
             // TODO: make sure closure `use`-s don't incorrectly use wrong context argument generics
             PsiElement refPsi = references.get(i);
             boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
-            Opt<Assign> assignOpt = Opt.fst(list(opt(null)
-                , (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
-                , assertArrayUnshift(refPsi)
-                , assertForeachElement(refPsi)
+            Opt<Assign> assignOpt = Opt.fst(() -> opt(null)
+                , () -> (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
+                , () -> assertArrayUnshift(refPsi)
+                , () -> assertForeachElement(refPsi)
                     .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
-                , assertTupleAssignment(refPsi)
+                , () -> assertTupleAssignment(refPsi)
                     .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
-                , assertPregMatchResult(refPsi)
+                , () -> assertPregMatchResult(refPsi)
                     .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi, PhpType.ARRAY))
-                , Tls.cast(ParameterImpl.class, refPsi)
+                , () -> Tls.cast(ParameterImpl.class, refPsi)
                     .map(param -> {
                         S<MultiType> mtg = () -> new ArgRes(ctx).resolveArg(param);
                         return new Assign(list(), mtg, true, refPsi, param.getType());
                     })
-            ));
+            );
             if (assignOpt.has()) {
                 Assign ass = assignOpt.unw();
                 revAsses.add(ass);

@@ -60,12 +60,13 @@ public class ScopeFinder extends Lang
 
         PsiElement parent = varReference;
         while (parent != null) {
-            Opt<ControlStatementImpl> maybeControl = Opt.fst(list(
-                opt(null)
-                , Tls.cast(ElseIfImpl.class, parent).map(v -> v)
-                , Tls.cast(IfImpl.class, parent).flt(v -> opt(v.getParent()).fop(toCast(ElseImpl.class)).has())
+            PsiElement finalParent = parent;
+            Opt<ControlStatementImpl> maybeControl = Opt.fst(
+                () -> opt(null)
+                , () -> Tls.cast(ElseIfImpl.class, finalParent).map(v -> v)
+                , () -> Tls.cast(IfImpl.class, finalParent).flt(v -> opt(v.getParent()).fop(toCast(ElseImpl.class)).has())
                     .map(v -> v)
-            ));
+            );
             if (maybeControl.has()) {
                 return maybeControl.flt(v -> isPartOf(varReference, v.getCondition()));
             }

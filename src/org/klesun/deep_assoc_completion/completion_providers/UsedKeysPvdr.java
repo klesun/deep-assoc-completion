@@ -39,15 +39,15 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         return opt(parameters.getPosition().getParent())
             .fop(literal -> opt(literal.getParent())
                 .map(arrKey -> arrKey.getParent())
-                .fop(parent -> Opt.fst(list(
+                .fop(parent -> Opt.fst(
                     // assoc key
-                    Tls.cast(ArrayHashElementImpl.class, parent)
+                    () -> Tls.cast(ArrayHashElementImpl.class, parent)
                         .flt(hash -> literal.isEquivalentTo(hash.getKey()))
                         .map(hash -> hash.getParent())
                         .fop(toCast(ArrayCreationExpression.class)),
                     // indexed value (that may become associative key as user continues typing)
-                    Tls.cast(ArrayCreationExpression.class, parent)
-                ))));
+                    () -> Tls.cast(ArrayCreationExpression.class, parent)
+                )));
     }
 
     @Override

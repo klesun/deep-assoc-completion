@@ -17,7 +17,6 @@ import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -70,10 +69,10 @@ public class MethCallRes extends Lang
         DeepType parsedType = new DeepType(strType.definition, PhpType.ARRAY);
         String sql = opt(strType.stringValue).def("");
         int regexFlags = Pattern.DOTALL | Pattern.CASE_INSENSITIVE;
-        Opt<L<String>> matched = Opt.fst(list(
-            Tls.regex("SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql, regexFlags),
-            Tls.regex("SELECT\\s+(\\S.*)", sql, regexFlags) // partial SQL without FROM
-        ));
+        Opt<L<String>> matched = Opt.fst(
+            () -> Tls.regex("SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql, regexFlags),
+            () -> Tls.regex("SELECT\\s+(\\S.*)", sql, regexFlags) // partial SQL without FROM
+        );
         matched.fap(matches -> {
             L<String> fields = L(matches.gat(0).def("").split(",", -1));
             String table = matches.gat(1).def("");
@@ -177,15 +176,15 @@ public class MethCallRes extends Lang
 
     private Opt<L<Method>> resolveMethodFromCall(MethodReferenceImpl call, FuncCtx ctx)
     {
-        return Opt.fst(list(opt(null)
-            , opt(findReferenced(call, ctx)).flt(found -> found.size() > 0)
-            , opt(L(call.multiResolve(false)))
+        return Opt.fst(() -> opt(null)
+            , () -> opt(findReferenced(call, ctx)).flt(found -> found.size() > 0)
+            , () -> opt(L(call.multiResolve(false)))
                 .map(l -> l.map(v -> v.getElement()))
                 .map(l -> l.fop(toCast(Method.class)))
                 .flt(l -> l.s.size() > 0)
-            , opt(resolveMethodsNoNs(call, ctx))
+            , () -> opt(resolveMethodsNoNs(call, ctx))
                 .flt(l -> l.s.size() > 0)
-        ));
+        );
     }
 
     public MultiType resolveCall(MethodReferenceImpl funcCall)

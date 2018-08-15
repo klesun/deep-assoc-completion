@@ -36,20 +36,20 @@ public class MiscRes extends Lang
 
     public Opt<List<DeepType>> resolve(PsiElement expr)
     {
-        return Opt.fst(list(opt(null)
-            , Tls.cast(TernaryExpressionImpl.class, expr)
+        return Opt.fst(() -> opt(null)
+            , () -> Tls.cast(TernaryExpressionImpl.class, expr)
                 .map(tern -> Stream.concat(
                     findPsiExprType(tern.getTrueVariant()).types.stream(),
                     findPsiExprType(tern.getFalseVariant()).types.stream()
                 ).collect(Collectors.toList()))
-            , Tls.cast(BinaryExpressionImpl.class, expr)
+            , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("??") || op.getText().equals("?:"))
                     .map(op -> Stream.concat(
                         findPsiExprType(bin.getLeftOperand()).types.stream(),
                         findPsiExprType(bin.getRightOperand()).types.stream()
                     ).collect(Collectors.toList())))
-            , Tls.cast(BinaryExpressionImpl.class, expr)
+            , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("-")
                         || op.getText().equals("*") || op.getText().equals("/")
@@ -60,7 +60,7 @@ public class MiscRes extends Lang
                         type.isNumber = true;
                         return list(type);
                     }))
-            , Tls.cast(BinaryExpressionImpl.class, expr)
+            , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("+"))
                     .map(op -> {
@@ -75,7 +75,7 @@ public class MiscRes extends Lang
                         }
                         return types;
                     }))
-            , Tls.cast(BinaryExpressionImpl.class, expr)
+            , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("."))
                     .map(op -> {
@@ -86,12 +86,12 @@ public class MiscRes extends Lang
                         DeepType type = new DeepType(bin, PhpType.STRING, unescaped);
                         return list(type);
                     }))
-            , Tls.cast(NewExpressionImpl.class, expr)
+            , () -> Tls.cast(NewExpressionImpl.class, expr)
                 .map(newExp -> list(new DeepType(newExp, ctx.subCtxDirect(newExp))))
-            , Tls.cast(PhpExpression.class, expr)
+            , () -> Tls.cast(PhpExpression.class, expr)
                 .map(t -> list(new DeepType(t)))
 //            , Tls.cast(ConstantReferenceImpl.class, expr)
 //                .map(cnst -> list(new DeepType(cnst)))
-        ));
+        );
     }
 }

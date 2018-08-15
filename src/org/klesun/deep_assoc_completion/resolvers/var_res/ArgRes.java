@@ -94,37 +94,37 @@ public class ArgRes extends Lang
     private Opt<MultiType> getArgPassedTo(PhpExpression funcVar, int caretArgOrder)
     {
         return opt(funcVar.getParent())
-            .fop(parent -> Opt.fst(list(opt(null)
+            .fop(parent -> Opt.fst(() -> opt(null)
                 // like array_map($mapper, ['a' => 5, 'b' => 6])
                 // or SomeCls::doSomething($mapper)
-                , Tls.cast(ParameterListImpl.class, parent)
+                , () -> Tls.cast(ParameterListImpl.class, parent)
                     .fop(parl -> opt(parl.getParent())
                         .fop(toCast(FunctionReference.class))
                         .fop(call -> {
                             FuncCtx subCtx = trace.subCtxDirect(call);
                             int funcVarOrder = L(parl.getParameters()).indexOf(funcVar);
-                            return Opt.fst(list(opt(null)
-                                , Tls.cast(FunctionReferenceImpl.class, call)
+                            return Opt.fst(() -> opt(null)
+                                , () -> Tls.cast(FunctionReferenceImpl.class, call)
                                     .fop(func -> getArgFromNsFuncCall(func, funcVarOrder, caretArgOrder))
-                                , Tls.cast(MethodReferenceImpl.class, call)
+                                , () -> Tls.cast(MethodReferenceImpl.class, call)
                                     .fop(func -> getArgFromMethodCall(func, funcVarOrder, caretArgOrder))
                                 // go into the called function and look what
                                 // is passed to the passed func var there
-                                , L(call.multiResolve(false))
+                                , () -> L(call.multiResolve(false))
                                     .fop(res -> opt(res.getElement()))
                                     .fop(toCast(Function.class))
                                     .map(func -> new KeyUsageResolver(subCtx, 3)
                                         .resolveArgCallArrKeys(func, funcVarOrder, caretArgOrder))
                                     .fap(mt -> mt.types)
                                     .wap(types -> opt(new MultiType(types)))
-                            ));
+                            );
                         }))
                 // like $mapper(['a' => 5, 'b' => 6])
-                , Tls.cast(FunctionReferenceImpl.class, parent)
+                , () -> Tls.cast(FunctionReferenceImpl.class, parent)
                     .fop(call -> L(call.getParameters()).gat(caretArgOrder))
                     .fop(toCast(PhpExpression.class))
                     .map(arg -> new FuncCtx(trace.getSearch()).findExprType(arg))
-            )));
+            ));
     }
 
     // $getAirline = function($seg){return $seg['airline'];};
@@ -185,12 +185,12 @@ public class ArgRes extends Lang
                                     .fop(toCast(StringLiteralExpression.class))
                                     .flt(str -> str.getContents().equals(meth.getName()))
                                     .has())
-                        .fop(arr -> Opt.fst(list(
-                            new ArgRes(new FuncCtx(trace.getSearch()))
+                        .fop(arr -> Opt.fst(
+                            () -> new ArgRes(new FuncCtx(trace.getSearch()))
                                 .getInlineFuncArg(arr, argOrderInLambda),
-                            new ArgRes(new FuncCtx(trace.getSearch()))
+                            () -> new ArgRes(new FuncCtx(trace.getSearch()))
                                 .getFuncVarUsageArg(arr, argOrderInLambda)
-                        )))
+                        ))
                         .fap(mt -> mt.types)
                 ).fap(a -> a);
             })
@@ -211,11 +211,11 @@ public class ArgRes extends Lang
             .map(paramList -> paramList.getParent())
             .fop(toCast(FunctionImpl.class)) // closure
             .fop(clos -> getArgOrder(param)
-                .fop(order -> Opt.fst(list(opt(null)
-                    , getInlineFuncArg(clos.getParent(), order)
-                    , getFuncVarUsageArg(clos.getParent(), order)
-                    , getPrivateFuncUsageArg(clos, order)
-                ))))
+                .fop(order -> Opt.fst(() -> opt(null)
+                    , () -> getInlineFuncArg(clos.getParent(), order)
+                    , () -> getFuncVarUsageArg(clos.getParent(), order)
+                    , () -> getPrivateFuncUsageArg(clos, order)
+                )))
             .def(MultiType.INVALID_PSI)
             ;
     }

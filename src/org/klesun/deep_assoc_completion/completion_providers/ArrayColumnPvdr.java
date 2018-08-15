@@ -17,7 +17,6 @@ import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
@@ -87,9 +86,9 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters> im
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
-        return Opt.fst(list(
-            resolveArrayColumn(lit, funcCtx)
-        )).def(MultiType.INVALID_PSI);
+        return Opt.fst(
+            () -> resolveArrayColumn(lit, funcCtx)
+        ).def(MultiType.INVALID_PSI);
     }
 
     @Override

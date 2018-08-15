@@ -132,11 +132,11 @@ public class DocParamRes extends Lang
         String tagValue = doc.getTagValue();
         FuncCtx docCtx = new FuncCtx(ctx.getSearch());
         docCtx.fakeFileSource = opt(doc);
-        return Opt.fst(list(
-            Tls.regex("^\\s*=\\s*(.+)$", tagValue)
+        return Opt.fst(
+            () -> Tls.regex("^\\s*=\\s*(.+)$", tagValue)
                 .fop(matches -> matches.gat(0))
                 .fop(expr -> parseExpression(expr, project, docCtx)),
-            opt(doc.getParent())
+            () -> opt(doc.getParent())
                 .fop(toCast(PhpDocComment.class))
                 .fop(full -> getDocCommentText(full))
                 .fap(clean -> parseObjDoc(clean))
@@ -145,7 +145,7 @@ public class DocParamRes extends Lang
                 .wap(types -> opt(types))
                 .flt(types -> types.size() > 0)
                 .map(types -> new MultiType(types))
-        ));
+        );
     }
 
     public Opt<MultiType> resolve(PhpDocTag doc)

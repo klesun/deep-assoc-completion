@@ -90,15 +90,15 @@ public class KeyUsageResolver extends Lang
     private static Opt<Function> resolveFunc(ParameterList argList)
     {
         return opt(argList.getParent())
-            .fop(par -> Opt.fst(list(
-                Tls.cast(FunctionReference.class, par)
+            .fop(par -> Opt.fst(
+                () -> Tls.cast(FunctionReference.class, par)
                     .map(call -> call.resolve()),
-                Tls.cast(MethodReferenceImpl.class, par)
+                () -> Tls.cast(MethodReferenceImpl.class, par)
                     .map(call -> call.resolve()),
-                Tls.cast(NewExpressionImpl.class, par)
+                () -> Tls.cast(NewExpressionImpl.class, par)
                     .map(newEx -> newEx.getClassReference())
                     .map(ref -> ref.resolve())
-            ))  .fop(toCast(Function.class)));
+            )  .fop(toCast(Function.class)));
     }
 
     private static L<Variable> findVarReferences(PhpNamedElement caretVar)
@@ -117,10 +117,10 @@ public class KeyUsageResolver extends Lang
     {
         return opt(newEx.getClassReference())
             .map(ref -> ref.resolve())
-            .fop(clsPsi -> Opt.fst(list(
-                Tls.cast(Method.class, clsPsi).map(m -> m.getContainingClass()), // class has own constructor
-                Tls.cast(PhpClass.class, clsPsi) // class does not have an own constructor
-            )))
+            .fop(clsPsi -> Opt.fst(
+                () -> Tls.cast(Method.class, clsPsi).map(m -> m.getContainingClass()), // class has own constructor
+                () -> Tls.cast(PhpClass.class, clsPsi) // class does not have an own constructor
+            ))
             // Laravel's Model takes array of initial column values in constructor
             .flt(cls -> order == 0)
             .fap(cls -> {

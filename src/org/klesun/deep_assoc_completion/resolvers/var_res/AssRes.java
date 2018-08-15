@@ -98,14 +98,14 @@ public class AssRes extends Lang
 
     private static Opt<AssignmentExpressionImpl> findParentAssignment(PsiElement caretVar) {
         return opt(caretVar.getParent())
-            .fop(parent -> Opt.fst(list(
-                Tls.cast(ArrayAccessExpression.class, parent)
+            .fop(parent -> Opt.fst(
+                () -> Tls.cast(ArrayAccessExpression.class, parent)
                     .fop(acc -> findParentAssignment(acc)),
-                Tls.cast(AssignmentExpressionImpl.class, parent)
+                () -> Tls.cast(AssignmentExpressionImpl.class, parent)
                     .flt(ass -> opt(ass.getVariable())
                         .map(assVar -> caretVar.isEquivalentTo(assVar))
                         .def(false))
-            )));
+            ));
     }
 
     /**

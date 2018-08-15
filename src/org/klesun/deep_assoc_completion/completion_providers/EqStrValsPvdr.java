@@ -123,12 +123,12 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
-        return Opt.fst(list(
-            resolveEqExpr(lit, funcCtx),
-            resolveInArrayHaystack(lit, funcCtx),
-            resolveInArrayNeedle(lit, funcCtx),
-            resolveArrayIntersect(lit, funcCtx)
-        )).def(MultiType.INVALID_PSI);
+        return Opt.fst(
+            () -> resolveEqExpr(lit, funcCtx),
+            () -> resolveInArrayHaystack(lit, funcCtx),
+            () -> resolveInArrayNeedle(lit, funcCtx),
+            () -> resolveArrayIntersect(lit, funcCtx)
+        ).def(MultiType.INVALID_PSI);
     }
 
     @Override

@@ -12,7 +12,6 @@ import com.jetbrains.php.lang.psi.elements.Field;
 import com.jetbrains.php.lang.psi.elements.MemberReference;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpClassMember;
-import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
@@ -50,19 +49,19 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             .withIcon(DeepKeysPvdr.getIcon())
             .withTypeText(member.getType().filterUnknown().toString());
 
-        return Opt.fst(list(
-            Tls.cast(Method.class, member)
+        return Opt.fst(
+            () -> Tls.cast(Method.class, member)
                 .map(m -> base
                     .withInsertHandler(makeMethInsertHandler())
                     .withTailText("(" +
                         Tls.implode(", ", L(m.getParameters()).map(p -> p.getText())) +
                     ")", true))
             ,
-            Tls.cast(Field.class, member)
+            () -> Tls.cast(Field.class, member)
                 .map(f -> base
                     .withTailText(opt(f.getDefaultValue())
                         .map(def -> " = " + Tls.singleLine(def.getText(), 50)).def(""), true))
-        )).def(base);
+        ).def(base);
     }
 
     private static L<LookupElement> getDynamicProps(MultiType mt)

@@ -11,7 +11,6 @@ import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocType;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocReturnTagImpl;
-import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
@@ -40,8 +39,8 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
     {
         Opt<PhpClass> caretClass = Tls.findParent(docPsi, PhpClass.class, a -> true);
         PhpIndex idx = PhpIndex.getInstance(project);
-        return Opt.fst(list(opt(null)
-            , Tls.regex(" *([A-Za-z][A-Za-z0-9_]+)::([a-zA-Z0-9_]*?)(IntellijIdeaRulezzz.*)?", docValue)
+        return Opt.fst(() -> opt(null)
+            , () -> Tls.regex(" *([A-Za-z][A-Za-z0-9_]+)::([a-zA-Z0-9_]*?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete method
                 .map(mtch -> {
                     String clsName = mtch.gat(0).unw();
@@ -60,14 +59,14 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                             .flt(p -> metMatcher.prefixMatches(p))
                             .map(f -> f + "()"));
                 })
-            , Tls.regex(" *([A-Za-z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
+            , () -> Tls.regex(" *([A-Za-z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete class
                 .fop(m -> m.gat(0))
                 .map(CamelHumpMatcher::new)
                 .map(p -> L(idx.getAllClassNames(p))
                     .cct(list("self", "static"))
                     .map(cls -> cls + "::"))
-        ));
+        );
     }
 
     @Override

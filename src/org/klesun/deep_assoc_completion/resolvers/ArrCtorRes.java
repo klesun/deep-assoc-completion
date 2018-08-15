@@ -81,23 +81,23 @@ public class ArrCtorRes extends Lang
     public static Opt<PhpClass> resolveClass(PsiElement clsPsi)
     {
         return opt(clsPsi.getFirstChild())
-            .fop(expr -> Opt.fst(list(
-                Tls.cast(ClassConstantReferenceImpl.class, expr)
+            .fop(expr -> Opt.fst(
+                () -> Tls.cast(ClassConstantReferenceImpl.class, expr)
                     .flt(cst -> Objects.equals(cst.getName(), "class"))
                     .map(cst -> cst.getClassReference())
                     .fop(toCast(ClassReferenceImpl.class))
                     .map(clsRef -> clsRef.resolve())
                     .fop(toCast(PhpClass.class)),
-                Tls.cast(StringLiteralExpression.class, expr)
+                () -> Tls.cast(StringLiteralExpression.class, expr)
                     .map(lit -> lit.getContents())
-                    .fop(clsName -> Opt.fst(list(
-                        "self".equals(clsName)
+                    .fop(clsName -> Opt.fst(
+                        () -> "self".equals(clsName)
                             ? Tls.findParent(clsPsi, PhpClass.class, a -> true)
                             : opt(null),
-                        L(PhpIndex.getInstance(expr.getProject())
+                        () -> L(PhpIndex.getInstance(expr.getProject())
                             .getAnyByFQN(clsName)).gat(0)
-                    )))
-            )));
+                    ))
+            ));
     }
 
     /** like in [Ns\Employee::class, 'getSalary'] */

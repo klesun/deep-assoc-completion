@@ -121,15 +121,15 @@ public class Opt<T>
         }
     }
 
-    /** return result of fst successful function in the passed list */
-    public static <Ts> Opt<Ts> fst(Iterable<Opt<Ts>> attempts)
+    public static <Ts> Opt<Ts> fst(S<Opt<Ts>> ... attempts)
     {
-        for (Opt<Ts> a: attempts) {
-            if (a.has()) {
-                return a;
+        for (S<Opt<Ts>> a: attempts) {
+            Opt<Ts> result = a.get();
+            if (result.has()) {
+                return result;
             }
         }
-        return new Opt(null);
+        return new Opt<>(null);
     }
 
     /** returned by .thn() - needed since i want to limit chaining to end

@@ -11,7 +11,6 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
@@ -81,9 +80,9 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
-        return Opt.fst(list(
-            resolveArrayKeyExists(lit, funcCtx)
-        )).def(MultiType.INVALID_PSI);
+        return Opt.fst(
+            () -> resolveArrayKeyExists(lit, funcCtx)
+        ).def(MultiType.INVALID_PSI);
     }
 
     @Override
