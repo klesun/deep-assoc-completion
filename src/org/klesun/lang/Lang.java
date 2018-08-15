@@ -517,6 +517,12 @@ public class Lang
             this.s = source;
         }
 
+        public int hashCode() {return s.hashCode();}
+        public boolean equals(Object other) {
+            return Tls.cast(ListWrapper.class, other)
+                .flt(that -> that.s.equals(this.s))
+                .has();
+        }
         public int size() {return s.size();}
         public boolean isEmpty() {return s.isEmpty();}
         public boolean contains(Object o) {return s.contains(o);}
