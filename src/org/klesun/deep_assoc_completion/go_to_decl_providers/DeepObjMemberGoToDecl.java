@@ -34,7 +34,7 @@ public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandle
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
         SearchContext search = new SearchContext(editor.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
+            .setDepth(DeepKeysPvdr.getMaxDepth(false, opt(psiElement).map(psi -> psi.getProject()).def(null)));
         FuncCtx funcCtx = new FuncCtx(search);
 
         L<? extends PsiElement> psiTargets = opt(psiElement)

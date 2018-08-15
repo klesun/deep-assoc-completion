@@ -34,6 +34,8 @@ public class RemoveUnusedUsesSaveHandler implements FileDocumentManagerListener
         for (Project project : ProjectManager.getInstance().getOpenProjects()) {
             if (DeepSettings.inst(project).removeUnusedImportsOnSaveEnabled) {
                 PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
+                if (psiFile == null) continue;
+
                 PhpUnusedAliasInspection inspection = new PhpUnusedAliasInspection();
                 InspectionManager manager = InspectionManager.getInstance(psiFile.getProject());
                 List<ProblemDescriptor> checked = L(inspection.processFile(psiFile, manager))
