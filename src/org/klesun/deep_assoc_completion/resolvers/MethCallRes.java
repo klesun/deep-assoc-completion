@@ -126,14 +126,21 @@ public class MethCallRes extends Lang
 
     public static F<FuncCtx, L<DeepType>> findMethRetType(Method meth)
     {
-        L<Method> impls = meth.isAbstract()
-            ? findOverridingMethods(meth)
-            : list(meth);
-        return (FuncCtx funcCtx) -> impls.fap(m -> list(
-            ClosRes.getReturnedValue(m, funcCtx).types,
-            opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
-                .fap(tag -> parseReturnDoc(tag, funcCtx).types)
-        ).fap(a -> a));
+        return (FuncCtx funcCtx) -> {
+            L<Method> impls = list(meth);
+            if (meth.isAbstract()) {
+                impls = findOverridingMethods(meth);
+                // ignore $this and args in implementations
+                // since there may be dozens of them (Laravel)
+                funcCtx = new FuncCtx(funcCtx.getSearch());
+            }
+            FuncCtx finalCtx = funcCtx;
+            return impls.fap(m -> list(
+                ClosRes.getReturnedValue(m, finalCtx).types,
+                opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
+                    .fap(tag -> parseReturnDoc(tag, finalCtx).types)
+            ).fap(a -> a));
+        };
     }
 
     public static L<Method> resolveMethodsNoNs(MethodReference call, FuncCtx ctx)
