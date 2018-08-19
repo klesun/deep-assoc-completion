@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.jetbrains.php.lang.psi.elements.Field;
 import com.jetbrains.php.lang.psi.elements.Function;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
@@ -11,6 +12,7 @@ import org.klesun.deep_assoc_completion.*;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
+import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -49,21 +51,31 @@ public class FieldRes extends Lang
     public MultiType resolve(FieldReferenceImpl fieldRef)
     {
         L<DeepType> result = list();
-        MultiType objMt = opt(fieldRef.getClassReference())
-            .map(ref -> ctx.clsIdeaType
-                .flt(typ -> ref.getText().equals("static"))
-                .flt(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, ref.getProject()).size() > 0)
-                .map(typ -> new MultiType(list(new DeepType(ref, typ))))
-                .def(ctx.findExprType(ref)))
-            .def(MultiType.INVALID_PSI);
+        S<MultiType> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
+            .fop(ref -> Opt.fst(
+                () -> ctx.clsIdeaType
+                    .flt(typ -> ref.getText().equals("static"))
+                    .flt(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, ref.getProject()).size() > 0)
+                    .map(typ -> new MultiType(list(new DeepType(ref, typ)))),
+                () -> opt(ctx.findExprType(ref))
+            ))
+            .def(MultiType.INVALID_PSI));
 
-        objMt.getProps()
-            .flt(prop -> prop.name.equals(fieldRef.getName()))
-            .fch(prop -> result.addAll(prop.getTypes()));
-
-        ArrCtorRes.resolveMtCls(objMt, fieldRef.getProject())
-            .fap(cls -> L(cls.getFields()))
-            .flt(f -> f.getName().equals(fieldRef.getName()))
+        L<Field> declarations = L.fst(
+            () -> L(fieldRef.multiResolve(false))
+                .map(res -> res.getElement())
+                .fop(toCast(Field.class)),
+            () -> opt(getObjMt.get())
+                .fap(mt -> ArrCtorRes.resolveMtCls(mt, fieldRef.getProject()))
+                .fap(cls -> L(cls.getFields()))
+                .flt(f -> f.getName().equals(fieldRef.getName()))
+        );
+        if (declarations.size() == 0) {
+            getObjMt.get().getProps()
+                    .flt(prop -> prop.name.equals(fieldRef.getName()))
+                    .fch(prop -> result.addAll(prop.getTypes()));
+        }
+        declarations
             .fch(resolved -> {
                 FuncCtx implCtx = new FuncCtx(ctx.getSearch());
                 Tls.cast(FieldImpl.class, resolved)
@@ -71,6 +83,16 @@ public class FieldRes extends Lang
                     .fop(toCast(PhpExpression.class))
                     .map(def -> implCtx.findExprType(def).types)
                     .thn(result::addAll);
+
+                L<Assign> docAsses = opt(resolved.getContainingClass())
+                    .map(cls -> cls.getDocComment())
+                    .fap(doc -> L(doc.getPropertyTags()))
+                    .flt(tag -> opt(tag.getProperty()).flt(pro -> pro.getName().equals(fieldRef.getName())).has())
+                    .map(tag -> {
+                        S<MultiType> getMt = () -> new DocParamRes(ctx).resolve(tag).def(MultiType.INVALID_PSI);
+                        return new Assign(list(), getMt, true, tag, tag.getType());
+                    })
+                    ;
 
                 L<Assign> asses = opt(resolved.getContainingFile())
                     .map(file -> findReferences(file, fieldRef.getName()))
@@ -92,7 +114,7 @@ public class FieldRes extends Lang
                         })
                         .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(assPsi, false)));
 
-                List<DeepType> types = AssRes.assignmentsToTypes(asses);
+                List<DeepType> types = AssRes.assignmentsToTypes(docAsses.cct(asses));
                 result.addAll(types);
             });
 

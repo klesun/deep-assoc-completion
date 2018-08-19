@@ -500,6 +500,17 @@ public class Lang
         {
             return dct((v) -> T2(makeKey.apply(v), v));
         }
+
+        public static <Ts> L<Ts> fst(S<L<Ts>> ... attempts)
+        {
+            for (S<L<Ts>> a: attempts) {
+                L<Ts> result = a.get();
+                if (result.size() > 0) {
+                    return result;
+                }
+            }
+            return list();
+        }
     }
 
     /**
