@@ -62,7 +62,9 @@ public class FieldRes extends Lang
             .def(MultiType.INVALID_PSI));
 
         L<Field> declarations = L.fst(
-            () -> L(fieldRef.multiResolve(false))
+            () -> opt(fieldRef)
+                .flt(ref -> !ref.getText().startsWith("static::")) // IDEA is bad at static:: resolution
+                .fap(ref -> L(ref.multiResolve(false)))
                 .map(res -> res.getElement())
                 .fop(toCast(Field.class)),
             () -> opt(getObjMt.get())
