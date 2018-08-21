@@ -140,7 +140,10 @@ public class FuncCtx extends Lang
 
     public FuncCtx subCtxDirect(NewExpression funcCall)
     {
-        return subCtxDirectGeneric(funcCall);
+        FuncCtx self = subCtxDirectGeneric(funcCall);
+        opt(funcCall.getClassReference())
+            .thn(ref -> self.clsIdeaType = opt(ref.getType()));
+        return self;
     }
 
     public FuncCtx subCtxDirectGeneric(ParameterListOwner funcCall)

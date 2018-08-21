@@ -1,6 +1,8 @@
 package org.klesun.deep_assoc_completion;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.psi.elements.NewExpression;
+import com.jetbrains.php.lang.psi.elements.PhpClass;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
@@ -82,10 +84,21 @@ public class DeepType extends Lang
     }
 
     /** new object creation */
-    public DeepType(PhpExpression newExp, FuncCtx ctorArgs)
+    public static DeepType makeNew(NewExpression newExp, FuncCtx ctx)
     {
-        this(newExp, newExp.getType(), null);
-        this.ctorArgs = opt(ctorArgs);
+
+        PhpType ideaType = opt(newExp.getClassReference())
+            .flt(ref -> ref.getText().equals("static"))
+            .fop(ref -> Opt.fst(
+                () -> ctx.clsIdeaType,
+                () -> Tls.findParent(ref, PhpClass.class, a -> true)
+                    .map(cls -> cls.getType())
+            ))
+            .def(newExp.getType());
+        FuncCtx ctorArgs = ctx.subCtxDirect(newExp);
+        DeepType self = new DeepType(newExp, ideaType, null);
+        self.ctorArgs = opt(ctorArgs);
+        return self;
     }
 
     public L<DeepType> getReturnTypes(FuncCtx ctx)

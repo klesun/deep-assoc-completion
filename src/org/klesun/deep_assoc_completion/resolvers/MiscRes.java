@@ -87,7 +87,7 @@ public class MiscRes extends Lang
                         return list(type);
                     }))
             , () -> Tls.cast(NewExpressionImpl.class, expr)
-                .map(newExp -> list(new DeepType(newExp, ctx.subCtxDirect(newExp))))
+                .map(newExp -> list(DeepType.makeNew(newExp, ctx)))
             , () -> Tls.cast(PhpExpression.class, expr)
                 .map(t -> list(new DeepType(t)))
 //            , Tls.cast(ConstantReferenceImpl.class, expr)
