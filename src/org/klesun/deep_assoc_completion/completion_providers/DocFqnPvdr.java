@@ -84,14 +84,18 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 String regex = "^\\s*=\\s*(.+)$";
                 if (tagValue.getParent() instanceof PhpDocReturnTagImpl) {
                     PhpDocReturnTagImpl returnTag = (PhpDocReturnTagImpl)tagValue.getParent();
+                    L<PhpDocType> docTypes = L(returnTag.getChildren())
+                        .fop(toCast(PhpDocType.class));
                     regex = "^\\s*(?:like|=|)\\s*(.+)$";
                     if (docValue.matches("::[a-zA-Z0-9_]*IntellijIdeaRulezzz")) {
                         // class name gets resolved as return type psi
-                        String typePart = L(returnTag.getChildren())
-                            .fop(toCast(PhpDocType.class))
+                        String typePart = docTypes
                             .map(typ -> typ.getText())
                             .wap(parts -> Tls.implode("", parts));
                         docValue = typePart + docValue;
+                    } else if (docTypes.size() == 0 || tagValue instanceof PhpDocType) {
+                        // do not suggest class in @return start, since IDEA already does that
+                        regex = "^\\b$"; // regex that will match nothing
                     }
                 }
                 FuncCtx ctx = new FuncCtx(search);

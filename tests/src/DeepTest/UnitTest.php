@@ -1841,11 +1841,23 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return json_decode(file_get_contents('/var/www/html/local_config.json'), true);
     }
 
+    /** @return [
+     *     'securityKey' => 'qwe123',
+     *     'loggerIp' => '192.168.0.100',
+     * ] */
+    private static function getGlobalConfig()
+    {
+        return json_decode(file_get_contents('/var/www/html/local_config.json'), true);
+    }
+
     public function provideReturnDoc()
     {
         $config = static::getLocalConfig();
         $config['fluentdPort'];
         $list[] = [$config, ['baseUrl' => [], 'isDevelopment' => [], 'fluentdIp' => [], 'fluentdPort' => []]];
+        $config2 = static::getGlobalConfig();
+        $config2[''];
+        $list[] = [$config2, ['securityKey' => [], 'loggerIp' => []]];
         return $list;
     }
 
