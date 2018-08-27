@@ -185,6 +185,159 @@ public class FuncCallRes extends Lang
                 DeepType arrt = new DeepType(call, PhpType.ARRAY);
                 arrt.listElTypes.add(() -> new MultiType(list(new DeepType(call, PhpType.STRING))));
                 result.add(arrt);
+            } else if (name.equals("curl_getinfo") && !callCtx.getArg(1).has()) {
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.addKey("url", call);
+                arrt.addKey("content_type", call);
+                arrt.addKey("http_code", call);
+                arrt.addKey("header_size", call);
+                arrt.addKey("request_size", call);
+                arrt.addKey("filetime", call);
+                arrt.addKey("ssl_verify_result", call);
+                arrt.addKey("redirect_count", call);
+                arrt.addKey("total_time", call);
+                arrt.addKey("namelookup_time", call);
+                arrt.addKey("connect_time", call);
+                arrt.addKey("pretransfer_time", call);
+                arrt.addKey("size_upload", call);
+                arrt.addKey("size_download", call);
+                arrt.addKey("speed_download", call);
+                arrt.addKey("speed_upload", call);
+                arrt.addKey("download_content_length", call);
+                arrt.addKey("upload_content_length", call);
+                arrt.addKey("starttransfer_time", call);
+                arrt.addKey("redirect_time", call);
+                arrt.addKey("certinfo", call);
+                arrt.addKey("redirect_url", call);
+                result.add(arrt);
+            } else if (name.equals("stream_get_meta_data")) {
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.addKey("timed_out", call);
+                arrt.addKey("blocked", call);
+                arrt.addKey("eof", call);
+                arrt.addKey("wrapper_type", call);
+                arrt.addKey("stream_type", call);
+                arrt.addKey("mode", call);
+                arrt.addKey("unread_bytes", call);
+                arrt.addKey("seekable", call);
+                arrt.addKey("uri", call);
+                result.add(arrt);
+            } else if (name.equals("mysqli_get_links_stats")) {
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.addKey("total", call);
+                arrt.addKey("active_plinks", call);
+                arrt.addKey("cached_plinks", call);
+                result.add(arrt);
+            } else if (name.equals("localeconv")) {
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.addKey("decimal_point", call);
+                arrt.addKey("thousands_sep", call);
+                arrt.addKey("int_curr_symbol", call);
+                arrt.addKey("currency_symbol", call);
+                arrt.addKey("mon_decimal_point", call);
+                arrt.addKey("mon_thousands_sep", call);
+                arrt.addKey("positive_sign", call);
+                arrt.addKey("negative_sign", call);
+                arrt.addKey("int_frac_digits", call);
+                arrt.addKey("frac_digits", call);
+                arrt.addKey("p_cs_precedes", call);
+                arrt.addKey("p_sep_by_space", call);
+                arrt.addKey("n_cs_precedes", call);
+                arrt.addKey("n_sep_by_space", call);
+                arrt.addKey("p_sign_posn", call);
+                arrt.addKey("n_sign_posn", call);
+                arrt.addKey("grouping", call);
+                arrt.addKey("mon_grouping", call);
+                result.add(arrt);
+            } else if (name.equals("proc_get_status")) {
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.addKey("command", call);
+                arrt.addKey("pid", call);
+                arrt.addKey("running", call);
+                arrt.addKey("signaled", call);
+                arrt.addKey("stopped", call);
+                arrt.addKey("exitcode", call);
+                arrt.addKey("termsig", call);
+                arrt.addKey("stopsig", call);
+                result.add(arrt);
+            } else if (name.equals("getrusage")) {
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.addKey("ru_oublock", call);
+                arrt.addKey("ru_inblock", call);
+                arrt.addKey("ru_msgsnd", call);
+                arrt.addKey("ru_msgrcv", call);
+                arrt.addKey("ru_maxrss", call);
+                arrt.addKey("ru_ixrss", call);
+                arrt.addKey("ru_idrss", call);
+                arrt.addKey("ru_minflt", call);
+                arrt.addKey("ru_majflt", call);
+                arrt.addKey("ru_nsignals", call);
+                arrt.addKey("ru_nvcsw", call);
+                arrt.addKey("ru_nivcsw", call);
+                arrt.addKey("ru_nswap", call);
+                arrt.addKey("ru_utime.tv_usec", call);
+                arrt.addKey("ru_utime.tv_sec", call);
+                arrt.addKey("ru_stime.tv_usec", call);
+                arrt.addKey("ru_stime.tv_sec", call);
+                result.add(arrt);
+            } else if (name.equals("error_get_last")) {
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.addKey("type", call);
+                arrt.addKey("message", call);
+                arrt.addKey("file", call);
+                arrt.addKey("line", call);
+                result.add(arrt);
+            } else if (name.equals("dns_get_record")) {
+                DeepType assoct = new DeepType(call, PhpType.ARRAY);
+                assoct.addKey("host", call);
+                assoct.addKey("class", call);
+                assoct.addKey("ttl", call);
+                assoct.addKey("type", call);
+                assoct.addKey("mname", call);
+                assoct.addKey("rname", call);
+                assoct.addKey("serial", call);
+                assoct.addKey("refresh", call);
+                assoct.addKey("retry", call);
+                assoct.addKey("expire", call);
+                assoct.addKey("minimum", call);
+                assoct.addKey("flags", call);
+                assoct.addKey("tag", call);
+                assoct.addKey("value", call);
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.listElTypes.add(() -> new MultiType(list(assoct)));
+                result.add(arrt);
+            } else if (list("stat", "fstat", "lstat").contains(name)) {
+                DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                arrt.addKey("dev", call);
+                arrt.addKey("ino", call);
+                arrt.addKey("mode", call);
+                arrt.addKey("nlink", call);
+                arrt.addKey("uid", call);
+                arrt.addKey("gid", call);
+                arrt.addKey("rdev", call);
+                arrt.addKey("size", call);
+                arrt.addKey("atime", call);
+                arrt.addKey("mtime", call);
+                arrt.addKey("ctime", call);
+                arrt.addKey("blksize", call);
+                arrt.addKey("blocks", call);
+                result.add(arrt);
+            } else if (name.equals("ob_get_status")) {
+                DeepType assoct = new DeepType(call, PhpType.ARRAY);
+                assoct.addKey("name", call);
+                assoct.addKey("type", call);
+                assoct.addKey("flags", call);
+                assoct.addKey("level", call);
+                assoct.addKey("chunk_size", call);
+                assoct.addKey("buffer_size", call);
+                assoct.addKey("buffer_used", call);
+                if (!callCtx.getArg(0).has()) {
+                    result.add(assoct);
+                } else {
+                    DeepType arrt = new DeepType(call, PhpType.ARRAY);
+                    arrt.listElTypes.add(() -> new MultiType(list(assoct)));
+                    result.add(arrt);
+                }
             } else {
                 // try to get type info from standard_2.php
                 opt(call.resolve())

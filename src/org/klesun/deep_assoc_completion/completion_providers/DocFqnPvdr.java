@@ -59,7 +59,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                             .flt(p -> metMatcher.prefixMatches(p))
                             .map(f -> f + "()"));
                 })
-            , () -> Tls.regex(" *([A-Za-z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
+            , () -> Tls.regex(" *([A-Z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete class
                 .fop(m -> m.gat(0))
                 .map(CamelHumpMatcher::new)

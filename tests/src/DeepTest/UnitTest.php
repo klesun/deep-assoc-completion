@@ -2051,6 +2051,157 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    public function provideAssocBuiltIns($handle)
+    {
+        $curlInfo = curl_getinfo($handle);
+        $list[] = [$curlInfo, [
+            'url' => [],
+            'content_type' => [],
+            'http_code' => [],
+            'header_size' => [],
+            'request_size' => [],
+            'filetime' => [],
+            'ssl_verify_result' => [],
+            'redirect_count' => [],
+            'total_time' => [],
+            'namelookup_time' => [],
+            'connect_time' => [],
+            'pretransfer_time' => [],
+            'size_upload' => [],
+            'size_download' => [],
+            'speed_download' => [],
+            'speed_upload' => [],
+            'download_content_length' => [],
+            'upload_content_length' => [],
+            'starttransfer_time' => [],
+            'redirect_time' => [],
+            'certinfo' => [],
+            'redirect_url' => [],
+        ]];
+        $streamMeta = stream_get_meta_data(STDIN);
+        $list[] = [$streamMeta, [
+            'timed_out' => [], // false,
+            'blocked' => [], // true,
+            'eof' => [], // false,
+            'wrapper_type' => [], // 'PHP',
+            'stream_type' => [], // 'STDIO',
+            'mode' => [], // 'r',
+            'unread_bytes' => [], // 0,
+            'seekable' => [], // true,
+            'uri' => [], // 'php://stdin',
+        ]];
+        $sqlLinks = mysqli_get_links_stats();
+        $list[] = [$sqlLinks, [
+            'total' => [],
+            'active_plinks' => [],
+            'cached_plinks' => [],
+        ]];
+        $localeMeta = localeconv();
+        $list[] = [$localeMeta, [
+            'decimal_point' => [], // '.',
+            'thousands_sep' => [], // '',
+            'int_curr_symbol' => [], // '',
+            'currency_symbol' => [], // '',
+            'mon_decimal_point' => [], // '',
+            'mon_thousands_sep' => [], // '',
+            'positive_sign' => [], // '',
+            'negative_sign' => [], // '',
+            'int_frac_digits' => [], // 127,
+            'frac_digits' => [], // 127,
+            'p_cs_precedes' => [], // 127,
+            'p_sep_by_space' => [], // 127,
+            'n_cs_precedes' => [], // 127,
+            'n_sep_by_space' => [], // 127,
+            'p_sign_posn' => [], // 127,
+            'n_sign_posn' => [], // 127,
+            'grouping' => [], // [],
+            'mon_grouping' => [], // [],
+        ]];
+        $procMeta = proc_get_status($handle);
+        $list[] = [$procMeta, [
+            'command' => [], // string - The command string that was passed to proc_open().
+            'pid' => [], // int - process id
+            'running' => [], // bool - TRUE if the process is still running, FALSE if it has terminated.
+            'signaled' => [], // bool - TRUE if the child process has been terminated by an uncaught signal. Always set to FALSE on Windows.
+            'stopped' => [], // bool - TRUE if the child process has been stopped by a signal. Always set to FALSE on Windows.
+            'exitcode' => [], // int - The exit code returned by the process (which is only meaningful if running is FALSE). Only first call of this function return real value, next calls return -1.
+            'termsig' => [], // int - The number of the signal that caused the child process to terminate its execution (only meaningful if signaled is TRUE).
+            'stopsig' => [], // int - The number of the signal that caused the child process to stop its execution (only meaningful if stopped is TRUE).
+        ]];
+        $rusage = getrusage();
+        $list[] = [$rusage, [
+            'ru_oublock' => [], // 528,
+            'ru_inblock' => [], // 0,
+            'ru_msgsnd' => [], // 0,
+            'ru_msgrcv' => [], // 0,
+            'ru_maxrss' => [], // 24176,
+            'ru_ixrss' => [], // 0,
+            'ru_idrss' => [], // 0,
+            'ru_minflt' => [], // 1650,
+            'ru_majflt' => [], // 0,
+            'ru_nsignals' => [], // 0,
+            'ru_nvcsw' => [], // 224,
+            'ru_nivcsw' => [], // 0,
+            'ru_nswap' => [], // 0,
+            'ru_utime.tv_usec' => [], // 52714,
+            'ru_utime.tv_sec' => [], // 0,
+            'ru_stime.tv_usec' => [], // 11714,
+            'ru_stime.tv_sec' => [], // 0,
+        ]];
+        $lastError = error_get_last();
+        $list[] = [$lastError, [
+            'type' => [], // 2,
+            'message' => [], // 'proc_get_status() expects parameter 1 to be resource, null given',
+            'file' => [], // 'php shell code',
+            'line' => [], // 1,
+        ]];
+        $dnsRecord = dns_get_record('google.com');
+        $list[] = [$dnsRecord[rand()], [
+            'host' => [], // 'google.com',
+            'class' => [], // 'IN',
+            'ttl' => [], // 60,
+            'type' => [], // 'SOA',
+            'mname' => [], // 'ns1.google.com',
+            'rname' => [], // 'dns-admin.google.com',
+            'serial' => [], // 210413966,
+            'refresh' => [], // 900,
+            'retry' => [], // 900,
+            'expire' => [], // 1800,
+            'minimum' => [],
+            'flags' => [], // 0,
+            'tag' => [], // 'issue',
+            'value' => [], // 'pki.goog▒',
+        ]];
+        $stat = stat('/home/klesun'); // same for fstat(), lstat()
+        $list[] = [$stat, [
+            'dev' => [], // 2049,
+            'ino' => [], // 13238274,
+            'mode' => [], // 16877,
+            'nlink' => [], // 30,
+            'uid' => [], // 1000,
+            'gid' => [], // 1000,
+            'rdev' => [], // 0,
+            'size' => [], // 4096,
+            'atime' => [], // 1535395568,
+            'mtime' => [], // 1535390333,
+            'ctime' => [], // 1535390333,
+            'blksize' => [], // 4096,
+            'blocks' => [], // 8,
+        ]];
+        $stat = ob_get_status(); // array of assoc arrays if true passed
+        $list[] = [$stat, [
+            'name' => [], // 'default output handler',
+            'type' => [], // 0,
+            'flags' => [], // 20592,
+            'level' => [], // 0,
+            'chunk_size' => [], // 0,
+            'buffer_size' => [], // 16384,
+            'buffer_used' => [], // 1,
+        ]];
+
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
