@@ -31,6 +31,7 @@ public class FuncCtx extends Lang
     final private EArgPsiType argPsiType;
     /** use this when you need to reference a real PSI during parsing of PHP Doc */
     public Opt<PsiElement> fakeFileSource = opt(null);
+    private L<StackTraceElement> debugCtorTrace = L();
 
     private HashMap<Integer, MultiType> cachedArgs = new HashMap<>();
 
@@ -41,6 +42,9 @@ public class FuncCtx extends Lang
         this.uniqueRef = opt(null);
         this.parent = opt(null);
         this.argPsiType = EArgPsiType.NONE;
+        if (search.debug) {
+            debugCtorTrace = L(new Exception().getStackTrace());
+        }
     }
 
     public FuncCtx(FuncCtx parentCtx, L<S<MultiType>> argGetters, @NotNull PsiElement uniqueRef, EArgPsiType argPsiType)
@@ -52,6 +56,9 @@ public class FuncCtx extends Lang
         this.argPsiType = argPsiType;
         this.fakeFileSource = opt(parentCtx)
             .fop(par -> par.fakeFileSource);
+        if (search.debug) {
+            debugCtorTrace = L(new Exception().getStackTrace());
+        }
     }
 
     private MultiType getCached(int index, S<MultiType> argGetter)
@@ -238,13 +245,17 @@ public class FuncCtx extends Lang
 
     public String toString()
     {
-        L<PsiElement> parents = L();
+        L<String> parents = L();
         FuncCtx tmp = this;
         while (tmp != null && tmp.uniqueRef.has()) {
-            parents.add(tmp.uniqueRef.unw());
+            String trace = debugCtorTrace
+                .flt(el -> !el.getClassName().endsWith("FuncCtx"))
+                .map(el -> " " + Tls.substr(el.getClassName(), -20) + " " + el.getLineNumber())
+                .gat(0).def("");
+            parents.add(tmp.uniqueRef.unw().getText() + trace);
             tmp = tmp.parent.def(null);
         }
-        return Tls.implode(" | ", parents.map(p -> Tls.singleLine(p.getText(), 600)));
+        return Tls.implode(" | ", parents.map(p -> Tls.singleLine(p, 600)));
     }
 
     /**

@@ -22,7 +22,7 @@ public class SearchContext extends Lang
     private long lastReportTime = System.nanoTime();
     private int depth = 20;
     private int initialDepth = depth;
-    private boolean debug = false;
+    public boolean debug = false;
     private Opt<Double> timeout = opt(null);
     private Opt<Project> project = opt(null);
     // for performance measurement
