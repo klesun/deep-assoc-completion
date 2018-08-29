@@ -129,7 +129,7 @@ public class MethCallRes extends Lang
         return (FuncCtx funcCtx) -> {
             L<Method> impls = list(meth);
             if (meth.isAbstract()) {
-                impls = findOverridingMethods(meth);
+                impls.addAll(findOverridingMethods(meth));
                 // ignore $this and args in implementations
                 // since there may be dozens of them (Laravel)
                 funcCtx = new FuncCtx(funcCtx.getSearch());
@@ -138,7 +138,8 @@ public class MethCallRes extends Lang
             return impls.fap(m -> list(
                 ClosRes.getReturnedValue(m, finalCtx).types,
                 opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
-                    .fap(tag -> parseReturnDoc(tag, finalCtx).types)
+                    .fap(tag -> parseReturnDoc(tag, finalCtx).types),
+                opt(m.getReturnType()).fap(rt -> list(new DeepType(rt, rt.getType())))
             ).fap(a -> a));
         };
     }

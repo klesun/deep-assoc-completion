@@ -13,4 +13,9 @@ class Konohamaru implements IKonohaCitizen
             'familyTax' => '0',
         ];
     }
+
+    public function getHonestOpinion()
+    {
+        return json_decode(file_get_contents(__DIR__.'/honest_opinion.json'));
+    }
 }

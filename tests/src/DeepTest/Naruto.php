@@ -36,4 +36,9 @@ class Naruto implements IKonohaCitizen
             'familyTax' => '0', // Naruto has no family
         ];
     }
+
+    public function getHonestOpinion()
+    {
+        return json_decode(file_get_contents('http://narutohonestopinion.org/json'));
+    }
 }

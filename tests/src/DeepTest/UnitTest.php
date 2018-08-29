@@ -562,7 +562,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
-    private static function makeKonohaCitizen()
+    private static function makeKonohaCitizen(): IKonohaCitizen
     {
         if (rand() % 2) {
             $konohanian = Naruto::kageBunshin();
@@ -2199,6 +2199,18 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
             'buffer_used' => [], // 1,
         ]];
 
+        return $list;
+    }
+
+    public function provideIfcReturnDoc()
+    {
+        $honestOpinion = static::makeKonohaCitizen()->getHonestOpinion();
+        $honestOpinion[''];
+        $list[] = [$honestOpinion, [
+            'whoShouldBeTheHokage' => [],
+            'whoStealsFromTreasury' => [],
+            'whoShouldNotExist' => [],
+        ]];
         return $list;
     }
 

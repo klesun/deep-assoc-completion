@@ -12,4 +12,13 @@ interface IKonohaCitizen
      * ]
      */
     public function payTaxes();
+
+    /**
+     * @return array [
+     *     'whoShouldBeTheHokage' => 'Kakashi',
+     *     'whoStealsFromTreasury' => 'Sakura',
+     *     'whoShouldNotExist' => 'Boruto',
+     * ]
+     */
+    public function getHonestOpinion();
 }
