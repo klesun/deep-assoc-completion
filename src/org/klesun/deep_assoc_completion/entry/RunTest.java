@@ -11,24 +11,29 @@ import com.intellij.ui.awt.RelativePoint;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import org.apache.commons.collections.CollectionUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import static org.klesun.lang.Lang.*;
 
 public class RunTest extends AnAction
 {
-    private static Opt<List<Method>> findTestDataPvdrFuncs(PsiFile psiFile)
+    private static Opt<L<Method>> findTestDataPvdrFuncs(PsiFile psiFile)
     {
-        List<Method> meths = list();
+        L<Method> meths = list();
 
         L(PhpIndex.getInstance(psiFile.getProject()).getClassesByName("UnitTest"))
             .forEach(cls -> meths.addAll(L(cls.getMethods())
@@ -37,51 +42,80 @@ public class RunTest extends AnAction
         return meths.size() > 0 ? opt(meths) : opt(null);
     }
 
+    private static Opt<L<Method>> findExactKeysTestDataPvdrFuncs(PsiFile psiFile)
+    {
+        L<Method> meths = list();
+
+        L(PhpIndex.getInstance(psiFile.getProject()).getClassesByName("ExactKeysUnitTest"))
+            .forEach(cls -> meths.addAll(L(cls.getMethods())
+                .flt(m -> m.getName().startsWith("provide"))));
+
+        return meths.size() > 0 ? opt(meths) : opt(null);
+    }
+
+    private static L<T3<CaseContext, DeepType.Key, DeepType.Key>> parseReturnedTestCase(Method func, Logger logger)
+    {
+        return ClosRes.findFunctionReturns(func)
+            .map(ret -> ret.getArgument())
+            .fop(toCast(PhpExpression.class))
+            .map(retVal -> {
+                SearchContext search = new SearchContext(retVal.getProject())
+                    .setDepth(DeepKeysPvdr.getMaxDepth(false, retVal.getProject()));
+                FuncCtx funcCtx = new FuncCtx(search);
+                return funcCtx.findExprType(retVal);
+            })
+            .fap(mt -> mt.getKey(null).types)
+            .fap((rett, i) -> {
+                CaseContext ctx = new CaseContext(logger);
+                ctx.dataProviderName = func.getName();
+                ctx.testNumber = i;
+                return opt(rett.keys.get("0"))
+                    .fap(actual -> opt(rett.keys.get("1"))
+                        .fap(expected -> list(T3(ctx, actual, expected))));
+            });
+    }
+
     @Override
     public void actionPerformed(AnActionEvent e)
     {
         long startTime = System.nanoTime();
         Logger logger = new Logger();
         logger.logMsg("Searching for \"UnitTest\" class in project...");
-        List<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
-            .fop(file -> findTestDataPvdrFuncs(file))
-            .map(funcs -> L(funcs)
-                .fap(func -> ClosRes.findFunctionReturns(func)
-                    .map(ret -> ret.getArgument())
-                    .fop(toCast(PhpExpression.class))
-                    .map(retVal -> {
-                        SearchContext search = new SearchContext(retVal.getProject())
-                            .setDepth(DeepKeysPvdr.getMaxDepth(false, retVal.getProject()));
-                        FuncCtx funcCtx = new FuncCtx(search);
-                        return funcCtx.findExprType(retVal).types;
-                    })
-                    .fap(a -> a)
-                    .fap(ltype -> L(ltype.getListElemTypes())
-                        .fop((rett, i) -> {
-                            CaseContext ctx = new CaseContext(logger);
-                            ctx.dataProviderName = func.getName();
-                            ctx.testNumber = i;
-                            return opt(rett.keys.get("0"))
-                                .fop(input -> opt(rett.keys.get("1"))
-                                    .map(output -> {
-                                        try {
-                                            return ctx.testCase(list(input), output);
-                                        } catch (RuntimeException exc) {
-                                            String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
-                                                // + "\n" + Tls.getStackTrace(exc)
-                                                ;
-                                            return list(new Error(ctx, msg));
-                                        }
-                                    }));
-                        }).fap(v -> v)
-                    )
-                ))
+        L<Error> exactKeyErrors = opt(e.getData(LangDataKeys.PSI_FILE))
+            .fop(file -> findExactKeysTestDataPvdrFuncs(file))
             .els(() -> System.out.println("Failed to find data-providing functions"))
-            .def(list());
+            .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
+            .fap(tuple -> {
+                L<String> actualKeys = tuple.b.getTypes().fap(t -> L(t.keys.keySet()));
+                L<String> expectedKeys = new MultiType(tuple.c.getTypes())
+                    .getKey(null).getStringValues();
+                try {
+                    return tuple.a.testCaseExact(actualKeys, expectedKeys);
+                } catch (RuntimeException exc) {
+                    String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
+                        // + "\n" + Tls.getStackTrace(exc)
+                        ;
+                    return list(new Error(tuple.a, msg));
+                }
+            });
+        L<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
+            .fop(file -> findTestDataPvdrFuncs(file))
+            .els(() -> System.out.println("Failed to find data-providing functions"))
+            .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
+            .fap(tuple -> {
+                try {
+                    return tuple.a.testCasePartial(list(tuple.b), tuple.c);
+                } catch (RuntimeException exc) {
+                    String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
+                        // + "\n" + Tls.getStackTrace(exc)
+                        ;
+                    return list(new Error(tuple.a, msg));
+                }
+            });
 
         double seconds = (System.nanoTime() - startTime) / 1000000000.0;
         logger.logMsg("");
-        errors.forEach(logger::logErr);
+        errors.cct(exactKeyErrors).forEach(logger::logErr);
         logger.logMsg("Done testing with " + errors.size() + " errors and " + logger.sucCnt + " OK-s in " + seconds + " s. \n");
         JBPopupFactory.getInstance()
             .createHtmlTextBalloonBuilder("<pre>" + logger.wholeText + "</pre>", MessageType.INFO, null)
@@ -103,10 +137,10 @@ public class RunTest extends AnAction
             this.logger = logger;
         }
 
-        private List<Error> testCase(List<DeepType.Key> actual, DeepType.Key expected)
+        private L<Error> testCasePartial(List<DeepType.Key> actual, DeepType.Key expected)
             throws AssertionError // in case input does not have some of output keys
         {
-            List<Error> errors = list();
+            L<Error> errors = list();
 
             DeepType expectedt = expected.getTypes().get(0);
             expectedt.keys.forEach((subKey, subExpected) -> {
@@ -120,11 +154,31 @@ public class RunTest extends AnAction
                 } else {
                     logger.logSucShort();
                     keyChain.add(subKey);
-                    testCase(havingKey.s, subExpected);
+                    testCasePartial(havingKey.s, subExpected);
                     keyChain.remove(keyChain.size() - 1);
                 }
             });
 
+            return errors;
+        }
+
+        private List<Error> testCaseExact(L<String> actual, L<String> expected)
+            throws AssertionError // in case input does not have some of output keys
+        {
+            List<Error> errors = list();
+            Collection<String> unexpectedKeys = CollectionUtils.subtract(actual, expected);
+            Collection<String> absentKeys = CollectionUtils.subtract(expected, actual);
+            if (!absentKeys.isEmpty()) {
+                errors.add(new Error(this, "Result does not have expected keys: " + Tls.implode(", ", L(absentKeys))));
+            }
+            if (!unexpectedKeys.isEmpty()) {
+                errors.add(new Error(this, "Result has unexpected keys: " + Tls.implode(", ", L(unexpectedKeys))));
+            }
+            if (unexpectedKeys.isEmpty() && absentKeys.isEmpty()) {
+                logger.logSucShort();
+            } else {
+                logger.logErrShort();
+            }
             return errors;
         }
     }

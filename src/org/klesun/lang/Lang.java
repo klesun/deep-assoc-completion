@@ -116,6 +116,10 @@ public class Lang
     {
         return new T2<Ta, Tb>(a, b);
     }
+    public static <Ta, Tb, Tc> T3<Ta, Tb, Tc> T3(Ta a, Tb b, Tc c)
+    {
+        return new T3<Ta, Tb, Tc>(a, b, c);
+    }
 
     public static <T> L<T> list(T... args)
     {

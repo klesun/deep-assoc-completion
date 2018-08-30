@@ -123,7 +123,7 @@ public class SearchContext extends Lang
         double seconds = (time - startTime) / 1000000000.0;
         if (!debug && (time - lastReportTime) / 1000000000.0 > 1.0) {
             lastReportTime = System.nanoTime();
-            System.out.println("deep-assoc-completion warning at " + time + ": type resolution takes " + seconds + " seconds " + expr.getText() + " " + expr.getClass());
+            //System.out.println("deep-assoc-completion warning at " + time + ": type resolution takes " + seconds + " seconds " + expr.getText() + " " + expr.getClass());
         }
 
         String indent = "";
