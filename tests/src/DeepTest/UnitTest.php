@@ -2054,30 +2054,36 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
 
     public function provideAssocBuiltIns($handle)
     {
+        $handle = curl_init('google.com');
+        $response = curl_exec($handle);
         $curlInfo = curl_getinfo($handle);
         $list[] = [$curlInfo, [
-            'url' => [],
-            'content_type' => [],
-            'http_code' => [],
-            'header_size' => [],
-            'request_size' => [],
-            'filetime' => [],
-            'ssl_verify_result' => [],
-            'redirect_count' => [],
-            'total_time' => [],
-            'namelookup_time' => [],
-            'connect_time' => [],
-            'pretransfer_time' => [],
-            'size_upload' => [],
-            'size_download' => [],
-            'speed_download' => [],
-            'speed_upload' => [],
-            'download_content_length' => [],
-            'upload_content_length' => [],
-            'starttransfer_time' => [],
-            'redirect_time' => [],
-            'certinfo' => [],
-            'redirect_url' => [],
+            'url' => [], // 'http://google.com/',
+            'content_type' => [], // 'text/html; charset=UTF-8',
+            'http_code' => [], // 301,
+            'header_size' => [], // 321,
+            'request_size' => [], // 49,
+            'filetime' => [], // -1,
+            'ssl_verify_result' => [], // 0,
+            'redirect_count' => [], // 0,
+            'total_time' => [], // 0.060094000000000002,
+            'namelookup_time' => [], // 0.028378,
+            'connect_time' => [], // 0.038482000000000002,
+            'pretransfer_time' => [], // 0.038517999999999997,
+            'size_upload' => [], // 0.0,
+            'size_download' => [], // 219.0,
+            'speed_download' => [], // 3650.0,
+            'speed_upload' => [], // 0.0,
+            'download_content_length' => [], // 219.0,
+            'upload_content_length' => [], // -1.0,
+            'starttransfer_time' => [], // 0.060032000000000002,
+            'redirect_time' => [], // 0.0,
+            'redirect_url' => [], // 'http://www.google.com/',
+            'primary_ip' => [], // '172.217.21.142',
+            'certinfo' => [], // [],
+            'primary_port' => [], // 80,
+            'local_ip' => [], // '10.128.8.117',
+            'local_port' => [], // 57382,
         ]];
         $streamMeta = stream_get_meta_data(STDIN);
         $list[] = [$streamMeta, [
@@ -2168,7 +2174,7 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
             'refresh' => [], // 900,
             'retry' => [], // 900,
             'expire' => [], // 1800,
-            'minimum' => [],
+            'minimum-ttl' => [],
             'flags' => [], // 0,
             'tag' => [], // 'issue',
             'value' => [], // 'pki.goog▒',
@@ -2198,6 +2204,27 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
             'chunk_size' => [], // 0,
             'buffer_size' => [], // 16384,
             'buffer_used' => [], // 1,
+        ]];
+        $imgInfo = getimagesize('avatar.png');
+        $list[] = [$imgInfo, [
+            '0' => [], // 200,
+            '1' => [], // 200,
+            '2' => [], // 3,
+            '3' => [], // 'width="200" height="200"',
+            'bits' => [], // 8,
+            'mime' => [], // 'image/png',
+            'channels' => [],
+        ]];
+        $urlInfo = parse_url('https://mail.google.com/mail/u/1/&onpage=40#inbox/FMfcgxvzKQhBBjPqwdDkmmrgBMGfHvjz?page=5');
+        $list[] = [$urlInfo, [
+            'scheme' => [], // 'https',
+            'host' => [], // 'mail.google.com',
+            'port' => [], // 80,
+            'path' => [], // '/mail/u/1/&onpage=40',
+            'fragment' => [], // 'inbox/FMfcgxvzKQhBBjPqwdDkmmrgBMGfHvjz?page=5',
+            'query' => [], //
+            'user' => [], //
+            'pass' => [], //
         ]];
 
         return $list;
