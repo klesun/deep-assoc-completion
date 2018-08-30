@@ -31,7 +31,8 @@ public class ArrCtorRes extends Lang
 
     public static Set<String> ideaTypeToFqn(@Nullable PhpType ideaType)
     {
-        return new HashSet<>(opt(ideaType).def(PhpType.EMPTY).filterUnknown().filterNull().filterMixed().filter(PhpType.OBJECT).getTypes());
+        return new HashSet<>(opt(ideaType).def(PhpType.EMPTY).filterUnknown()
+            .filterNull().filterMixed().filter(PhpType.OBJECT).getTypes());
     }
 
     public static L<PhpClass> resolveIdeaTypeCls(PhpType ideaType, Project project)
@@ -50,8 +51,7 @@ public class ArrCtorRes extends Lang
         if (resolved.size() == 0) {
             // allow no namespace in php doc class references
             PhpIndex idx = PhpIndex.getInstance(project);
-            L(mtArg.getIdeaType().filterUnknown().filterNull()
-                .filterMixed().filter(PhpType.OBJECT).getTypes()).flt(fqn -> !fqn.isEmpty())
+            L(ideaTypeToFqn(mtArg.getIdeaType())).flt(fqn -> !fqn.isEmpty())
                 .fch(clsName -> {
                     clsName = clsName.replaceAll("^\\\\", "");
                     resolved.addAll(idx.getClassesByName(clsName));

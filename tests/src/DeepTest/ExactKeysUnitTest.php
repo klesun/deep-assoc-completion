@@ -14,7 +14,7 @@ class ExactKeysUnitTest
     private static function getPnrSchema()
     {
         return new DictP([], [
-            'recordLocator' => new StringP([], []),
+            'recordLocator' => new StringP([], ['pattern' => '/^[A-Z0-9]{6}$/']),
             'passengers' => new ListP([], ['elemType' => new DictP([], [
                 'lastName' => new StringP([], []),
                 'firstName' => new StringP([], []),
@@ -28,13 +28,13 @@ class ExactKeysUnitTest
     }
 
     /** @param $pnr = ParamUtil::sample(static::getPnrSchema()) */
-//    public static function provideParamValidation($pnr)
-//    {
-//        // should suggest: 'recordLocator', 'passengers', 'itinerary'
-//        // should not suggest: 'elemType'
-//        $pnr[''];
-//        return [
-//            [$pnr, ['recordLocator', 'passengers', 'itinerary']],
-//        ];
-//    }
+    public static function provideParamValidation($pnr)
+    {
+        // should suggest: 'recordLocator', 'passengers', 'itinerary'
+        // should not suggest: 'elemType'
+        $pnr[''];
+        return [
+            [$pnr, ['recordLocator', 'passengers', 'itinerary']],
+        ];
+    }
 }

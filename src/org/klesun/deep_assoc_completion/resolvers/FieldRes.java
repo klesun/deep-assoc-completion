@@ -3,11 +3,9 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.jetbrains.php.lang.psi.elements.Field;
-import com.jetbrains.php.lang.psi.elements.Function;
-import com.jetbrains.php.lang.psi.elements.Method;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
@@ -18,6 +16,7 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.List;
+import java.util.Set;
 
 public class FieldRes extends Lang
 {
@@ -46,6 +45,17 @@ public class FieldRes extends Lang
         Opt<Function> aFunc = Tls.findParent(a, Function.class, v -> true);
         Opt<Function> bFunc = Tls.findParent(b, Function.class, v -> true);
         return aFunc.equals(bFunc);
+    }
+
+    // when you do instanceof, IDEA type acquires the class, so  it may
+    // happen that args passed to an instance as instance of one class
+    // could be used in some other instanceof-ed class if we don't do this check
+    private static boolean isSameClass(FuncCtx ctx, PhpClass fieldCls)
+    {
+        // return true if ctx class is empty or ctx class constructor is in fieldCls
+        // (if fieldCls is ctx class or ctx class inherits constructor from fieldCls)
+        Set<String> ctxFqns = ArrCtorRes.ideaTypeToFqn(ctx.clsIdeaType.def(PhpType.UNSET));
+        return ctxFqns.isEmpty() || ctxFqns.contains(fieldCls.getFQN());
     }
 
     public MultiType resolve(FieldReferenceImpl fieldRef)
@@ -105,6 +115,8 @@ public class FieldRes extends Lang
                         .fop(toCast(PhpExpression.class))
                         .fop(ref -> opt(ctx.findExprType(ref)))
                         .fap(mt -> mt.getArgsPassedToCtor())
+                        .flt(ctx -> opt(resolved.getContainingClass())
+                            .map(cls -> isSameClass(ctx, cls)).def(true))
                         .wap(ctxs -> {
                             if (areInSameScope(fieldRef, assPsi)) {
                                 ctxs.add(ctx);
