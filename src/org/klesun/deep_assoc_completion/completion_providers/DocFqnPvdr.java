@@ -40,7 +40,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
         Opt<PhpClass> caretClass = Tls.findParent(docPsi, PhpClass.class, a -> true);
         PhpIndex idx = PhpIndex.getInstance(project);
         return Opt.fst(() -> opt(null)
-            , () -> Tls.regex(" *([A-Za-z][A-Za-z0-9_]+)::([a-zA-Z0-9_]*?)(IntellijIdeaRulezzz.*)?", docValue)
+            , () -> Tls.regex("(?:|.*new\\s+|.*\\(|.*\\[) *([A-Za-z][A-Za-z0-9_]+)::([a-zA-Z0-9_]*?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete method
                 .map(mtch -> {
                     String clsName = mtch.gat(0).unw();
@@ -59,7 +59,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                             .flt(p -> metMatcher.prefixMatches(p))
                             .map(f -> f + "()"));
                 })
-            , () -> Tls.regex(" *([A-Z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
+            , () -> Tls.regex("(?:|.*new\\s+|.*\\(|.*\\[) *([A-Z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete class
                 .fop(m -> m.gat(0))
                 .map(CamelHumpMatcher::new)
