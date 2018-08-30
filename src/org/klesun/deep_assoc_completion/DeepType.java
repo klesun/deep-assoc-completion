@@ -84,18 +84,8 @@ public class DeepType extends Lang
     }
 
     /** new object creation */
-    public static DeepType makeNew(NewExpression newExp, FuncCtx ctx)
+    public static DeepType makeNew(NewExpression newExp, FuncCtx ctorArgs, PhpType ideaType)
     {
-
-        PhpType ideaType = opt(newExp.getClassReference())
-            .flt(ref -> ref.getText().equals("static"))
-            .fop(ref -> Opt.fst(
-                () -> ctx.clsIdeaType,
-                () -> Tls.findParent(ref, PhpClass.class, a -> true)
-                    .map(cls -> cls.getType())
-            ))
-            .def(newExp.getType());
-        FuncCtx ctorArgs = ctx.subCtxDirect(newExp);
         DeepType self = new DeepType(newExp, ideaType, null);
         self.ctorArgs = opt(ctorArgs);
         return self;
@@ -241,5 +231,10 @@ public class DeepType extends Lang
         } else {
             return isNumber;
         }
+    }
+
+    public MultiType mt()
+    {
+        return new MultiType(list(this));
     }
 }

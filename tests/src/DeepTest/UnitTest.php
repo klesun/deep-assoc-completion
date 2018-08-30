@@ -9,6 +9,7 @@ use TestSamples\CmsSessionMemoryOverflow\CmsStatefulSession;
 use TouhouNs\ReimuHakurei;
 use TouhouNs\YakumoRan;
 
+/** @property  $reimuResult = Result::makeOk(new ReimuHakurei()) */
 class PersonStorage
 {
     public $mainPerson = ['name' => 'Vasja', 'age' => 21];
@@ -2213,6 +2214,22 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         ]];
         return $list;
     }
+
+    /** @param $citizenOpt = Result::makeOk(new ReimuHakurei()) */
+//    public function provideNoNsNew($citizenOpt)
+//    {
+//        (new PersonStorage())->reimuResult->result->demandDonuts();
+//        $citizenOpt->result->demandDonuts();
+//        $citizen->demandDonuts()[''];
+//        $honestOpinion = static::makeKonohaCitizen()->getHonestOpinion();
+//        $honestOpinion[''];
+//        $list[] = [$honestOpinion, [
+//            'whoShouldBeTheHokage' => [],
+//            'whoStealsFromTreasury' => [],
+//            'whoShouldNotExist' => [],
+//        ]];
+//        return $list;
+//    }
 
     //=============================
     // following are not implemented yet
