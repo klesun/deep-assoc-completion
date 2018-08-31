@@ -166,8 +166,8 @@ public class RunTest extends AnAction
             throws AssertionError // in case input does not have some of output keys
         {
             List<Error> errors = list();
-            Collection<String> unexpectedKeys = CollectionUtils.subtract(actual, expected);
-            Collection<String> absentKeys = CollectionUtils.subtract(expected, actual);
+            Collection<String> unexpectedKeys = CollectionUtils.subtract(new LinkedHashSet(actual), new LinkedHashSet(expected));
+            Collection<String> absentKeys = CollectionUtils.subtract(new LinkedHashSet(expected), new LinkedHashSet(actual));
             if (!absentKeys.isEmpty()) {
                 errors.add(new Error(this, "Result does not have expected keys: " + Tls.implode(", ", L(absentKeys))));
             }
