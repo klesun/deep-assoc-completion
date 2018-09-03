@@ -782,6 +782,17 @@ class DeepKeysTest
         // don't have 'key3' used in the function
         $mapped = array_map($mapping, $records);
     }
+
+    private static function testArrayKeysGoTo()
+    {
+        $arr = ['itinerary' => ['KIVKBP', 'KBPRIX'], 'paxes' => ['Vova', 'Petja']];
+        $keys = array_keys($arr);
+        $newArr = [];
+        foreach ($keys as $key) {
+            $newArr[$key] = 'new value';
+        }
+        $newArr['itinerary'];
+    }
 }
 
 function main()

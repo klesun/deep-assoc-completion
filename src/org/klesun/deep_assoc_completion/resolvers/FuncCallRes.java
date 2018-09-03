@@ -171,8 +171,9 @@ public class FuncCallRes extends Lang
                 result.add(type);
             } else if (name.equals("array_keys")) {
                 DeepType arrt = new DeepType(call, PhpType.ARRAY);
-                arrt.listElTypes.add(() -> callCtx.getArgMt(0).getKeyNames()
-                    .map(keyName -> new DeepType(call, PhpType.STRING, keyName))
+                arrt.listElTypes.add(() -> callCtx.getArgMt(0).types
+                    .fap(t -> L(t.keys.values()))
+                    .map(k -> new DeepType(k.definition, PhpType.STRING, k.name))
                     .wap(types -> new MultiType(types)));
                 result.add(arrt);
             } else if (name.equals("func_get_args")) {
