@@ -8,7 +8,12 @@ import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.ui.DialogBuilder;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
 import com.jetbrains.php.lang.psi.elements.Function;
+import com.jetbrains.php.lang.psi.elements.Method;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
@@ -55,18 +60,34 @@ public class GoToNthTest extends AnAction
         askForText(msg, (testNumStr) -> opt(toInt(testNumStr).def(0))
             .fop(testNum -> psiFileOpt
                 .fop(psiFile -> caretOpt
-                    .map(caret -> opt(psiFile.findElementAt(caret.getOffset()))
-                        .fop(psi -> Tls.findParent(psi, Function.class, a -> true))
-                        .map(func -> ClosRes.getReturnedValue(func, funcCtx))
-                        .map(mt -> mt.getEl().getKey("0")) // first arg passed to the testing function
-                        .fop(argMt -> argMt.types.gat(testNum))
-                        .thn(test -> {
-                            caret.moveToOffset(test.definition.getTextOffset());
-                            caret.getEditor().getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
-                        })
-                        .els(() -> {
-                            // TODO: show properly to the user with a pop-up or something
-                            System.out.println("Failed to find " + testNum + "-th test in this function");
-                        })))));
+                    .map(caret -> {
+                        L<Method> allMeths = L(PsiTreeUtil.findChildrenOfType(psiFile, Method.class));
+                        L<String> dataProviders = allMeths
+                            .fop(meth -> opt(meth.getDocComment()))
+                            .fop(toCast(PhpDocCommentImpl.class))
+                            .fap(doc -> L(doc.getDocTagByClass(PhpDocDataProviderImpl.class)))
+                            .fap(tag -> L(tag.getChildren()))
+                            .fop(toCast(PhpDocRefImpl.class))
+                            .map(ref -> ref.getText())
+                            ;
+                        L<Method> pvdrMeths = allMeths.flt(m -> dataProviders.contains(m.getName()));
+
+                        Opt<Method> caretFuncOpt = opt(psiFile.findElementAt(caret.getOffset()))
+                            .fop(psi -> Tls.findParent(psi, Method.class, a -> true));
+                        return caretFuncOpt.fap(func -> pvdrMeths.flt(m -> m.equals(func)))
+                            .cct(pvdrMeths).cct(caretFuncOpt)
+                            .map(func -> ClosRes.getReturnedValue(func, funcCtx))
+                            .map(mt -> mt.getEl().getKey("0")) // first arg passed to the testing function
+                            .fop(argMt -> argMt.types.gat(testNum))
+                            .fst()
+                            .thn(test -> {
+                                caret.moveToOffset(test.definition.getTextOffset());
+                                caret.getEditor().getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);
+                            })
+                            .els(() -> {
+                                // TODO: show properly to the user with a pop-up or something
+                                System.out.println("Failed to find " + testNum + "-th test in this function");
+                            });
+                    }))));
     }
 }

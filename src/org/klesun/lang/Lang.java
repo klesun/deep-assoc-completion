@@ -443,6 +443,11 @@ public class Lang
             return list(this.s, more).fap(a -> a);
         }
 
+        public L<T> cct(Opt<T> more)
+        {
+            return cct(more.fap(a -> list(a)));
+        }
+
         public <U extends Comparable> L<T> srt(F<T, U> makeValue)
         {
             L<U> weights = map(makeValue);
