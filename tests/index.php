@@ -764,6 +764,45 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    private static function bookHotelSegments($params)
+    {
+        $remarks = [];
+        $remarks[] = $params['remarks'][0]['text'];
+        $remarks[] = $params['remarks'][1]['text'];
+        $query = http_build_query([
+            'last_name' => $params['lastName'],
+            'first_name' => $params['firstName'],
+            'remarks' => $remarks,
+            'segments' => array_map(function($seg){return [
+                'date' => $seg['date'],
+                'fare_basis' => $seg['fareBasis'],
+                'vendor' => $seg['vendor'],
+                'property_code' => $seg['propertyCode'],
+            ];}, $params['segments']),
+        ]);
+        return file_get_contents('http://midiana.lv/?'.$query);
+    }
+
+    private static function testUsedKeysArray()
+    {
+        static::bookHotelSegments([
+            'remarks' => [
+                // should suggest: text
+                '' => 'DEV TESTING PLS IGNORE',
+            ],
+            'segments' => [
+                '0' => [
+                    // should suggest: date, fareBasis, vendor, propertyCode
+                    '' => '2018-12-10',
+                ],
+                [
+                    // should suggest: date, fareBasis, vendor, propertyCode
+                    '' => '2018-12-10',
+                ],
+            ],
+        ]);
+    }
+
     private static function testUndefinedKeyError()
     {
         $record = ['a' => 6, 'b' => 8];
