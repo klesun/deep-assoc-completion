@@ -64,7 +64,16 @@ public class KeyUsageResolver extends Lang
                 findUsedIndexes(meth, arg.getName())
                     .map(idx -> idx.getValue())
                     .fop(toCast(StringLiteralExpressionImpl.class))
-                    .wap(lits -> makeAssoc(arg, lits.map(l -> T2(l.getContents(), l)))).mt().types,
+                    .wap(lits -> {
+                        DeepType assoct = new DeepType(arg, PhpType.ARRAY);
+                        lits.fch(lit -> {
+                            S<MultiType> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
+                                .map(acc -> new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnExpr(acc)).def(MultiType.INVALID_PSI);
+                            assoct.addKey(lit.getContents(), lit)
+                                .addType(getType, PhpType.UNSET);
+                        });
+                        return assoct;
+                    }).mt().types,
                 opt(arg.getDocComment())
                     .map(doc -> doc.getParamTagByName(arg.getName()))
                     .fop(doc -> new DocParamRes(fakeCtx).resolve(doc))
@@ -215,7 +224,18 @@ public class KeyUsageResolver extends Lang
                 .fap(var -> list(
                     new VarRes(fakeCtx).getDocType(var).types,
                     findKeysUsedOnVar(var).types
-                ).fap(a -> a))
+                ).fap(a -> a)),
+            // assoc array in an assoc array
+            opt(arrCtor.getParent())
+                .fop(toCast(PhpPsiElementImpl.class))
+                .map(val -> val.getParent())
+                .fop(toCast(ArrayHashElement.class))
+                .fap(hash -> opt(hash.getKey())
+                    .fop(toCast(StringLiteralExpression.class))
+                    .fap(lit -> opt(hash.getParent())
+                        .fop(toCast(ArrayCreationExpression.class))
+                        .map(outerArr -> resolve(outerArr))
+                        .fap(outerMt -> outerMt.getKey(lit.getContents()).types)))
         ).fap(a -> a).wap(MultiType::new);
     }
 }

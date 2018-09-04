@@ -669,10 +669,6 @@ class DeepKeysTest
         $navCmdTypes = ['a' => 5, 'b' => 6, 'asd', '']; // should not suggest numbers
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     /**
      * @param stdClass $argRow {
      *      @property int id some description
@@ -744,7 +740,7 @@ class DeepKeysTest
             '' => 'Bob',
             'outfitMaterials' => [
                 // should suggest: "wood", "wool", "iron", etc...
-                '',
+                'wool',
             ],
             'underling' => self::spawnUnderling([
                 // should suggest: "name", "enemyName", etc...
@@ -752,6 +748,21 @@ class DeepKeysTest
             ]),
         ]);
     }
+
+    private static function testArrayKeysGoTo()
+    {
+        $arr = ['itinerary' => ['KIVKBP', 'KBPRIX'], 'paxes' => ['Vova', 'Petja']];
+        $keys = array_keys($arr);
+        $newArr = [];
+        foreach ($keys as $key) {
+            $newArr[$key] = 'new value';
+        }
+        $newArr['itinerary'];
+    }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function testUndefinedKeyError()
     {
@@ -781,17 +792,6 @@ class DeepKeysTest
         // should report error since $records elements
         // don't have 'key3' used in the function
         $mapped = array_map($mapping, $records);
-    }
-
-    private static function testArrayKeysGoTo()
-    {
-        $arr = ['itinerary' => ['KIVKBP', 'KBPRIX'], 'paxes' => ['Vova', 'Petja']];
-        $keys = array_keys($arr);
-        $newArr = [];
-        foreach ($keys as $key) {
-            $newArr[$key] = 'new value';
-        }
-        $newArr['itinerary'];
     }
 }
 
