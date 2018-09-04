@@ -1,7 +1,10 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
+import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
@@ -28,14 +31,15 @@ public class KeyUsageResolver extends Lang
         this.depthLeft = depthLeft;
     }
 
-    private static L<String> resolveReplaceKeys(ParameterList argList, int order)
+    private static MultiType resolveReplaceKeys(ParameterList argList, int order)
     {
         SearchContext search = new SearchContext(argList.getProject());
         FuncCtx ctx = new FuncCtx(search);
         return L(argList.getParameters())
             .flt((psi, i) -> i < order)
             .fop(toCast(PhpExpression.class))
-            .fap(exp -> ctx.findExprType(exp).getKeyNames());
+            .fap(exp -> ctx.findExprType(exp).types)
+            .wap(MultiType::new);
 
     }
 
@@ -52,23 +56,22 @@ public class KeyUsageResolver extends Lang
                 .map(varUsage -> acc.getIndex()));
     }
 
-    public L<String> resolveArgUsedKeys(Function meht, int argOrder)
+    public MultiType resolveArgUsedKeys(Function meth, int argOrder)
     {
-        return L(meht.getParameters()).gat(argOrder)
+        return L(meth.getParameters()).gat(argOrder)
             .fop(toCast(ParameterImpl.class))
-            .map(arg -> list(
-                findUsedIndexes(meht, arg.getName())
+            .fap(arg -> list(
+                findUsedIndexes(meth, arg.getName())
                     .map(idx -> idx.getValue())
                     .fop(toCast(StringLiteralExpressionImpl.class))
-                    .map(lit -> lit.getContents()),
+                    .wap(lits -> makeAssoc(arg, lits.map(l -> T2(l.getContents(), l)))).mt().types,
                 opt(arg.getDocComment())
                     .map(doc -> doc.getParamTagByName(arg.getName()))
                     .fop(doc -> new DocParamRes(fakeCtx).resolve(doc))
-                    .map(mt -> mt.getKeyNames())
-                    .def(L()),
-                new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnVar(arg)
-            ).fap(a -> a))
-            .def(L());
+                    .fap(mt -> mt.types),
+                new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnVar(arg).types
+            )).fap(a -> a)
+            .wap(MultiType::new);
     }
 
     // not sure this method belongs here... and name should be changed
@@ -111,9 +114,18 @@ public class KeyUsageResolver extends Lang
             ).flt(varUsage -> caretVar.getName().equals(varUsage.getName())));
     }
 
+    public static DeepType makeAssoc(PsiElement psi, L<T2<String, PsiElement>> keys)
+    {
+        DeepType assoct = new DeepType(psi, PhpType.ARRAY);
+        for (T2<String, PsiElement> key: keys) {
+            assoct.addKey(key.a, key.b);
+        }
+        return assoct;
+    }
+
     // add completion from new SomeClass() that depends
     // on class itself, not on the constructor function
-    private L<String> findClsMagicCtorUsedKeys(NewExpressionImpl newEx, int order)
+    private MultiType findClsMagicCtorUsedKeys(NewExpressionImpl newEx, int order)
     {
         return opt(newEx.getClassReference())
             .map(ref -> ref.resolve())
@@ -131,12 +143,13 @@ public class KeyUsageResolver extends Lang
                     return list();
                 } else {
                     Set<String> inherited = new HashSet<>(supers.fap(s -> L(s.getOwnFields()).map(f -> f.getName())));
-                    return L(cls.getOwnFields())
+                    return makeAssoc(newEx, L(cls.getOwnFields())
                         .flt(fld -> !fld.getModifier().isPrivate())
                         .flt(fld -> !inherited.contains(fld.getName()))
-                        .map(fld -> fld.getName());
+                        .map(fld -> T2(fld.getName(), fld))).mt().types;
                 }
-            });
+            })
+            .wap(MultiType::new);
     }
 
     private static L<? extends Function> getImplementations(Function meth)
@@ -147,7 +160,7 @@ public class KeyUsageResolver extends Lang
         return result;
     }
 
-    private L<String> findKeysUsedOnExpr(PhpExpression arrCtor)
+    private MultiType findKeysUsedOnExpr(PhpExpression arrCtor)
     {
         return opt(arrCtor.getParent())
             .fop(toCast(ParameterList.class))
@@ -156,51 +169,53 @@ public class KeyUsageResolver extends Lang
                 return resolveFunc(argList)
                     .fap(meth -> list(
                         getImplementations(meth)
-                            .fap(ipl -> resolveArgUsedKeys(ipl, order)),
+                            .fap(ipl -> resolveArgUsedKeys(ipl, order).types),
                         opt(meth.getName())
                             .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
-                            .fap(n -> resolveReplaceKeys(argList, order))
+                            .fap(n -> resolveReplaceKeys(argList, order).types)
                     ).fap(a -> a))
                     .cct(opt(argList.getParent())
                         .fop(toCast(NewExpressionImpl.class))
-                        .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order)));
-            });
+                        .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types));
+            })
+            .wap(MultiType::new);
     }
 
-    private L<String> findKeysUsedOnVar(PhpNamedElement caretVar)
+    private MultiType findKeysUsedOnVar(PhpNamedElement caretVar)
     {
         if (depthLeft < 1) {
-            return list();
+            return MultiType.INVALID_PSI;
         }
         return findVarReferences(caretVar)
             .flt(ref -> ref.getTextOffset() > caretVar.getTextOffset())
             .fop(toCast(Variable.class))
-            .fap(refVar -> findKeysUsedOnExpr(refVar));
+            .fap(refVar -> findKeysUsedOnExpr(refVar).types)
+            .wap(MultiType::new);
     }
 
-    public L<String> resolve(ArrayCreationExpression arrCtor)
+    public MultiType resolve(ArrayCreationExpression arrCtor)
     {
         SearchContext fakeSearch = new SearchContext(arrCtor.getProject());
         FuncCtx fakeCtx = new FuncCtx(fakeSearch);
 
         // TODO: handle nested arrays
         return list(
-            findKeysUsedOnExpr(arrCtor),
+            findKeysUsedOnExpr(arrCtor).types,
             opt(arrCtor.getParent())
                 .fop(toCast(BinaryExpression.class))
                 .flt(sum -> arrCtor.isEquivalentTo(sum.getRightOperand()))
                 .map(sum -> sum.getLeftOperand())
                 .fop(toCast(PhpExpression.class))
-                .fap(exp -> fakeCtx.findExprType(exp).getKeyNames()),
+                .fap(exp -> fakeCtx.findExprType(exp).types),
             opt(arrCtor.getParent())
                 .fop(toCast(AssignmentExpression.class))
                 .flt(ass -> arrCtor.isEquivalentTo(ass.getValue()))
                 .map(ass -> ass.getVariable())
                 .fop(toCast(Variable.class))
                 .fap(var -> list(
-                    new VarRes(fakeCtx).getDocType(var).getKeyNames(),
-                    findKeysUsedOnVar(var)
+                    new VarRes(fakeCtx).getDocType(var).types,
+                    findKeysUsedOnVar(var).types
                 ).fap(a -> a))
-        ).fap(a -> a);
+        ).fap(a -> a).wap(MultiType::new);
     }
 }

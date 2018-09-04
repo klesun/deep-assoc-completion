@@ -465,7 +465,7 @@ class DeepKeysTest
     {
         $params = [
             // should suggest: "docType", "docCountry", "docNumber", "gender", "dob", "lastName", "firstName"
-            '' => 123,
+            'gender' => 123,
         ];
         $cmd = self::makeAddSsrCmd($params);
     }
