@@ -740,12 +740,22 @@ class DeepKeysTest
             '' => 'Bob',
             'outfitMaterials' => [
                 // should suggest: "wood", "wool", "iron", etc...
-                'wool',
+                '' => '',
             ],
             'underling' => self::spawnUnderling([
                 // should suggest: "name", "enemyName", etc...
                 '' => 'Jim',
             ]),
+        ]);
+        \DeepTest\ExactKeysUnitTest::provideParamValidation([
+            'itinerary' => [
+                [
+                    'lastName' => '',
+                ],
+            ],
+            'commission' => [
+                '' => '',
+            ],
         ]);
     }
 

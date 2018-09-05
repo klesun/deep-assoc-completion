@@ -202,6 +202,10 @@ class ExactKeysUnitTest
                 'to' => new StringP([], []),
                 'date' => new StringP([], []),
             ])]),
+            'commission' => new DictP([], [
+                'units' => new StringP([], []),
+                'value' => new StringP([], []),
+            ]),
         ]);
     }
 

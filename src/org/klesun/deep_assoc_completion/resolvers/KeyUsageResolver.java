@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.stubs.StubElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
@@ -229,13 +230,25 @@ public class KeyUsageResolver extends Lang
             opt(arrCtor.getParent())
                 .fop(toCast(PhpPsiElementImpl.class))
                 .map(val -> val.getParent())
-                .fop(toCast(ArrayHashElement.class))
-                .fap(hash -> opt(hash.getKey())
-                    .fop(toCast(StringLiteralExpression.class))
-                    .fap(lit -> opt(hash.getParent())
+                .fap(par -> {
+                    Opt<String> key = opt(null);
+                    if (par instanceof ArrayHashElement) {
+                        key = opt(((ArrayHashElement)par).getKey())
+                            .fop(toCast(StringLiteralExpression.class))
+                            .map(lit -> lit.getContents());
+                        par = par.getParent();
+                    } else {
+                        int order = L(par.getChildren())
+                            .fop(toCast(PhpPsiElementImpl.class))
+                            .indexOf(par);
+                        key = order > -1 ? opt(order + "") : opt(null);
+                    }
+                    Opt<String> keyf = key;
+                    return opt(par)
                         .fop(toCast(ArrayCreationExpression.class))
                         .map(outerArr -> resolve(outerArr))
-                        .fap(outerMt -> outerMt.getKey(lit.getContents()).types)))
+                        .fap(outerMt -> outerMt.getKey(keyf.def(null)).types);
+                })
         ).fap(a -> a).wap(MultiType::new);
     }
 }
