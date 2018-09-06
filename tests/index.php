@@ -770,10 +770,6 @@ class DeepKeysTest
         $newArr['itinerary'];
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     private static function bookHotelSegments($params)
     {
         $remarks = [];
@@ -797,21 +793,27 @@ class DeepKeysTest
     {
         static::bookHotelSegments([
             'remarks' => [
-                // should suggest: text
-                '' => 'DEV TESTING PLS IGNORE',
+                [
+                    // should suggest: text
+                    '' => 'DEV TESTING PLS IGNORE',
+                ],
             ],
             'segments' => [
-                '0' => [
+                [
                     // should suggest: date, fareBasis, vendor, propertyCode
                     '' => '2018-12-10',
                 ],
-                [
+                '1' => [
                     // should suggest: date, fareBasis, vendor, propertyCode
                     '' => '2018-12-10',
                 ],
             ],
         ]);
     }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function testUndefinedKeyError()
     {

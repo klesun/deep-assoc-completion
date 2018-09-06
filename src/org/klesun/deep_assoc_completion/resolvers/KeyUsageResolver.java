@@ -41,7 +41,6 @@ public class KeyUsageResolver extends Lang
             .fop(toCast(PhpExpression.class))
             .fap(exp -> ctx.findExprType(exp).types)
             .wap(MultiType::new);
-
     }
 
     private static L<ArrayIndex> findUsedIndexes(Function meth, String varName)
@@ -182,7 +181,17 @@ public class KeyUsageResolver extends Lang
                             .fap(ipl -> resolveArgUsedKeys(ipl, order).types),
                         opt(meth.getName())
                             .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
-                            .fap(n -> resolveReplaceKeys(argList, order).types)
+                            .fap(n -> resolveReplaceKeys(argList, order).types),
+                        opt(meth.getName())
+                            .flt(n -> n.equals("array_map"))
+                            .map(n -> L(argList.getParameters()))
+                            .flt(args -> args.indexOf(arrCtor) == 1)
+                            .fop(args -> args.gat(0))
+                            .fop(func -> Tls.cast(PhpExpressionImpl.class, func)
+                                .map(expr -> expr.getFirstChild())
+                                .fop(toCast(Function.class))) // TODO: support in a var
+                            .map(func -> resolveArgUsedKeys(func, 0).getInArray(argList))
+                            .fap(t -> list(t))
                     ).fap(a -> a))
                     .cct(opt(argList.getParent())
                         .fop(toCast(NewExpressionImpl.class))
@@ -203,12 +212,35 @@ public class KeyUsageResolver extends Lang
             .wap(MultiType::new);
     }
 
+    private MultiType resolveOuterArray(PhpPsiElementImpl val) {
+        return opt(val.getParent())
+            .fop(par -> {
+                Opt<String> key;
+                if (par instanceof ArrayHashElement) {
+                    key = opt(((ArrayHashElement) par).getKey())
+                        .fop(toCast(StringLiteralExpression.class))
+                        .map(lit -> lit.getContents());
+                    par = par.getParent();
+                } else {
+                    int order = L(par.getChildren())
+                        .fop(toCast(PhpPsiElementImpl.class))
+                        .indexOf(par);
+                    key = order > -1 ? opt(order + "") : opt(null);
+                }
+                Opt<String> keyf = key;
+                return opt(par)
+                    .fop(toCast(ArrayCreationExpression.class))
+                    .map(outerArr -> resolve(outerArr))
+                    .map(outerMt -> outerMt.getKey(keyf.def(null)));
+            })
+            .def(MultiType.INVALID_PSI);
+    }
+
     public MultiType resolve(ArrayCreationExpression arrCtor)
     {
         SearchContext fakeSearch = new SearchContext(arrCtor.getProject());
         FuncCtx fakeCtx = new FuncCtx(fakeSearch);
 
-        // TODO: handle nested arrays
         return list(
             findKeysUsedOnExpr(arrCtor).types,
             opt(arrCtor.getParent())
@@ -229,26 +261,7 @@ public class KeyUsageResolver extends Lang
             // assoc array in an assoc array
             opt(arrCtor.getParent())
                 .fop(toCast(PhpPsiElementImpl.class))
-                .map(val -> val.getParent())
-                .fap(par -> {
-                    Opt<String> key = opt(null);
-                    if (par instanceof ArrayHashElement) {
-                        key = opt(((ArrayHashElement)par).getKey())
-                            .fop(toCast(StringLiteralExpression.class))
-                            .map(lit -> lit.getContents());
-                        par = par.getParent();
-                    } else {
-                        int order = L(par.getChildren())
-                            .fop(toCast(PhpPsiElementImpl.class))
-                            .indexOf(par);
-                        key = order > -1 ? opt(order + "") : opt(null);
-                    }
-                    Opt<String> keyf = key;
-                    return opt(par)
-                        .fop(toCast(ArrayCreationExpression.class))
-                        .map(outerArr -> resolve(outerArr))
-                        .fap(outerMt -> outerMt.getKey(keyf.def(null)).types);
-                })
+                .fap(val -> resolveOuterArray(val).types)
         ).fap(a -> a).wap(MultiType::new);
     }
 }
