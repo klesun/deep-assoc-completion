@@ -37,18 +37,13 @@ import static org.klesun.lang.Lang.*;
  */
 public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> implements GotoDeclarationHandler
 {
-    private static LookupElement makeLookupBase(String keyName, String type)
-    {
-        return LookupElementBuilder.create(keyName)
-            .bold()
-            .withIcon(DeepKeysPvdr.getIcon())
-            .withTypeText("from usage");
-    }
-
     private static LookupElement makeLookup(DeepType.Key keyEntry)
     {
-        String type = keyEntry.getTypes().gat(0).map(t -> t.briefType.toString()).def("unknown");
-        return makeLookupBase(keyEntry.name, type);
+        String type = keyEntry.getTypes().gat(0).map(t -> t.briefType.toString()).def("from usage");
+        return LookupElementBuilder.create(keyEntry.name)
+            .bold()
+            .withIcon(DeepKeysPvdr.getIcon())
+            .withTypeText(type);
     }
 
     private static Opt<ArrayCreationExpression> assertArrCtorKey(PsiElement caretPsi)

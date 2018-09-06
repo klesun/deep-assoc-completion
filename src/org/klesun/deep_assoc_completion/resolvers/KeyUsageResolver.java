@@ -190,8 +190,11 @@ public class KeyUsageResolver extends Lang
                             .fop(func -> Tls.cast(PhpExpressionImpl.class, func)
                                 .map(expr -> expr.getFirstChild())
                                 .fop(toCast(Function.class))) // TODO: support in a var
-                            .map(func -> resolveArgUsedKeys(func, 0).getInArray(argList))
-                            .fap(t -> list(t))
+                            .fap(func -> {
+                                DeepType arrt = new DeepType(argList, PhpType.ARRAY);
+                                arrt.anyKeyElTypes.add(() -> resolveArgUsedKeys(func, 0));
+                                return list(arrt);
+                            })
                     ).fap(a -> a))
                     .cct(opt(argList.getParent())
                         .fop(toCast(NewExpressionImpl.class))
