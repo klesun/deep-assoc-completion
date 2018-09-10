@@ -12,6 +12,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpTypeProvider3;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
 

@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.helpers;
 
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 
 import static org.klesun.lang.Lang.list;
@@ -13,9 +14,9 @@ public class KeyType
     public enum EKeyType {STRING, INTEGER, UNKNOWN}
 
     final public EKeyType keyType;
-    final private Lang.L<DeepType> types;
+    final private L<DeepType> types;
 
-    private KeyType(EKeyType keyType, @NotNull Lang.L<DeepType> types)
+    private KeyType(EKeyType keyType, @NotNull L<DeepType> types)
     {
         this.keyType = keyType;
         this.types = types;
@@ -40,12 +41,12 @@ public class KeyType
         return new KeyType(EKeyType.UNKNOWN, list());
     }
 
-    public Lang.L<String> getNames()
+    public L<String> getNames()
     {
         return new MultiType(types).getStringValues();
     }
 
-    public Lang.Dict<Lang.L<DeepType>> getNameToMt()
+    public Lang.Dict<L<DeepType>> getNameToMt()
     {
         return types.gop(t -> opt(t.stringValue));
     }

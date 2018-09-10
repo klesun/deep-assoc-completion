@@ -20,7 +20,8 @@ import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
-import org.klesun.lang.Lang.*;
+import org.klesun.lang.L;
+
 import static org.klesun.lang.Lang.*;
 import org.klesun.lang.Opt;
 

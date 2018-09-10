@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.lang.L;
 
 import static org.klesun.lang.Lang.*;
 

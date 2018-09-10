@@ -16,6 +16,7 @@ import com.jetbrains.php.lang.inspections.PhpUnusedAliasInspection;
 import com.jetbrains.php.lang.psi.elements.PhpUse;
 import com.jetbrains.php.lang.psi.elements.impl.PhpUseListImpl;
 import org.jetbrains.annotations.NotNull;
+import org.klesun.lang.L;
 import org.klesun.lang.Tls;
 
 import java.util.List;

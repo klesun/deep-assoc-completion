@@ -10,10 +10,10 @@ import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.parser.PhpElementTypes;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
+import org.klesun.lang.L;
 import org.klesun.lang.Tls;
 
-import static org.klesun.lang.Lang.L;
-import static org.klesun.lang.Lang.toCast;
+import static org.klesun.lang.Lang.*;
 
 /**
  * provides method references in such expressions:

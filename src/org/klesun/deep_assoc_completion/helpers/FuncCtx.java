@@ -8,6 +8,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -24,7 +25,7 @@ public class FuncCtx extends Lang
     final private Opt<FuncCtx> parent;
     final private Opt<PsiElement> uniqueRef;
     final private SearchContext search;
-    final private L<Lang.S<MultiType>> argGetters;
+    final private L<S<MultiType>> argGetters;
     private L<Integer> variadicOrders = L();
     public Opt<Lang.S<MultiType>> instGetter = opt(null);
     public Opt<PhpType> clsIdeaType = opt(null);

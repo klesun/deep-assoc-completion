@@ -3,7 +3,6 @@ package org.klesun.deep_assoc_completion.go_to_decl_providers;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
@@ -21,11 +20,11 @@ import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
+import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 
 /**

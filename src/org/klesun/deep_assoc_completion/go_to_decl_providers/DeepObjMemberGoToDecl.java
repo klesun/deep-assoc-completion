@@ -7,12 +7,12 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.MemberReference;
 import com.jetbrains.php.lang.psi.elements.PhpClass;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 
 /**

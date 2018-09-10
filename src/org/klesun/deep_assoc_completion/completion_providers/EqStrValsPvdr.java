@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
-import org.klesun.lang.Lang;
+import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 
 import java.util.HashSet;
@@ -39,7 +39,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
                 .withTypeText(type);
     }
 
-    private static Lang.L<LookupElement> makeOptions(MultiType mt)
+    private static L<LookupElement> makeOptions(MultiType mt)
     {
         return mt.getStringValues().map(strVal -> makeLookupBase(strVal, "string"));
     }

@@ -15,6 +15,7 @@ import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 

@@ -1,7 +1,6 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.stubs.StubElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
@@ -10,6 +9,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
+import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;

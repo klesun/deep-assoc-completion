@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_assoc_completion.DeepTypeResolver;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
+import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;

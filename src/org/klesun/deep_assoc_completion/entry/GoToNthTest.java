@@ -12,11 +12,11 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
-import com.jetbrains.php.lang.psi.elements.Function;
 import com.jetbrains.php.lang.psi.elements.Method;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
+import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 

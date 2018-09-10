@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
