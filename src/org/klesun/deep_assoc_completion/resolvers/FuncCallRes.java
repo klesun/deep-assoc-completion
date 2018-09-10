@@ -14,6 +14,7 @@ import org.klesun.deep_assoc_completion.ScopeFinder;
 import org.klesun.deep_assoc_completion.helpers.ArgOrder;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.lang.Dict;
 import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;

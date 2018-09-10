@@ -2,8 +2,8 @@ package org.klesun.deep_assoc_completion.helpers;
 
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.lang.Dict;
 import org.klesun.lang.L;
-import org.klesun.lang.Lang;
 
 import static org.klesun.lang.Lang.list;
 import static org.klesun.lang.Lang.opt;
@@ -46,7 +46,7 @@ public class KeyType
         return new MultiType(types).getStringValues();
     }
 
-    public Lang.Dict<L<DeepType>> getNameToMt()
+    public Dict<L<DeepType>> getNameToMt()
     {
         return types.gop(t -> opt(t.stringValue));
     }

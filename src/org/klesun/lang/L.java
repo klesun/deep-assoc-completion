@@ -11,7 +11,7 @@ import java.util.function.Predicate;
  * the class (yeah, less performance, but easier to read)
  * some integration with Opt class
  */
-public class L<@NonNull T> extends Lang.ListWrapper<T> implements List<T>
+public class L<@NonNull T> extends ListWrapper<T> implements List<T>
 {
     L(List<T> source)
     {
@@ -183,7 +183,7 @@ public class L<@NonNull T> extends Lang.ListWrapper<T> implements List<T>
         return this;
     }
     /** group values by passed function. could be used to get read of duplicate values */
-    public Lang.Dict<L<T>> grp(Lang.F<T, String> getHash)
+    public Dict<L<T>> grp(Lang.F<T, String> getHash)
     {
         LinkedHashMap<String, L<T>> grouped = new LinkedHashMap<>();
         for (T val: this) {
@@ -193,10 +193,10 @@ public class L<@NonNull T> extends Lang.ListWrapper<T> implements List<T>
             }
             grouped.get(hash).add(val);
         }
-        return new Lang.Dict<>(grouped);
+        return new Dict<>(grouped);
     }
     /** "group thru optional - skip null keys" */
-    public Lang.Dict<L<T>> gop(Lang.F<T, Opt<String>> getHash)
+    public Dict<L<T>> gop(Lang.F<T, Opt<String>> getHash)
     {
         return fop(v -> getHash.apply(v).map(k -> Lang.T2(k,v)))
             .grp(p -> p.a).map(pairs -> pairs.map(p -> p.b));
@@ -264,13 +264,13 @@ public class L<@NonNull T> extends Lang.ListWrapper<T> implements List<T>
     }
 
     /** for "dict" - maps each value to a key-value pair using the passed function */
-    public <Tnew> Lang.Dict<Tnew> dct(Lang.F<T, Lang.T2<String, Tnew>> makeKey)
+    public <Tnew> Dict<Tnew> dct(Lang.F<T, Lang.T2<String, Tnew>> makeKey)
     {
-        return new Lang.Dict<>(this.map(makeKey));
+        return new Dict<>(this.map(makeKey));
     }
 
     /** make dict with same values mapped by key returned by the func */
-    public Lang.Dict<T> key(Lang.F<T, String> makeKey)
+    public Dict<T> key(Lang.F<T, String> makeKey)
     {
         return dct((v) -> Lang.T2(makeKey.apply(v), v));
     }
