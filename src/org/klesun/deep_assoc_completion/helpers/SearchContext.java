@@ -2,7 +2,6 @@ package org.klesun.deep_assoc_completion.helpers;
 
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_assoc_completion.DeepTypeResolver;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
@@ -20,8 +19,8 @@ public class SearchContext extends Lang
     // parametrized fields
     private long startTime = System.nanoTime();
     private long lastReportTime = System.nanoTime();
-    private int depth = 20;
-    private int initialDepth = depth;
+    public int depthLeft = 20;
+    public int initialDepth = depthLeft;
     public boolean debug = false;
     private Opt<Double> timeout = opt(null);
     private Opt<Project> project = opt(null);
@@ -42,7 +41,7 @@ public class SearchContext extends Lang
 
     public SearchContext setDepth(int depth)
     {
-        this.depth = initialDepth = depth;
+        this.depthLeft = initialDepth = depth;
         return this;
     }
 
@@ -127,7 +126,7 @@ public class SearchContext extends Lang
         }
 
         String indent = "";
-        for (int i = 0; i < initialDepth - depth; ++i) {
+        for (int i = 0; i < initialDepth - depthLeft; ++i) {
             indent += " ";
         }
         if (debug) {
@@ -135,10 +134,10 @@ public class SearchContext extends Lang
             String fileText = expr.getContainingFile().getText();
             int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
             StackTraceElement caller = new Exception().getStackTrace()[2];
-            System.out.println(depth + " " + Tls.singleLine(expr.getText(), 120) + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber() + " ### " + funcCtx);
+            System.out.println(depthLeft + " " + Tls.singleLine(expr.getText(), 120) + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber() + " ### " + funcCtx);
         }
 
-        if (depth <= 0) {
+        if (depthLeft <= 0) {
             return opt(null);
         } else if (++expressionsResolved > getMaxExpressions()) {
             /** @debug */
@@ -150,14 +149,14 @@ public class SearchContext extends Lang
             System.out.println(indent + "## Timed out " + seconds + " " + expr.getClass() + " " + Tls.singleLine(expr.getText(), 50) + " " + expr.getContainingFile().getName() + ":" + phpLineNum);
             return opt(null);
         }
-        --depth;
+        --depthLeft;
         psiTrace.add(expr);
         if (isRecursion()) {
             if (debug) {
                 System.out.println(indent + "** CIRCULAR REFERENCE DETECTED");
             }
             psiTrace.remove(psiTrace.size() - 1);
-            ++depth;
+            ++depthLeft;
             return opt(MultiType.CIRCULAR_REFERENCE);
         }
         long startTime = System.nanoTime();
@@ -175,7 +174,7 @@ public class SearchContext extends Lang
         }
 
         psiTrace.remove(psiTrace.size() - 1);
-        ++depth;
+        ++depthLeft;
 
         if (debug) {
             long elapsed = System.nanoTime() - startTime;

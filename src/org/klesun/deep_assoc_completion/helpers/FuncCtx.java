@@ -130,6 +130,15 @@ public class FuncCtx extends Lang
         return result;
     }
 
+    public MultiType limitResolve(int limit, PhpExpression expr)
+    {
+        int oldDepth = search.depthLeft;
+        search.setDepth(Math.min(oldDepth, limit));
+        MultiType result = search.findExprType(expr, this).def(new MultiType(L()));
+        search.setDepth(oldDepth);
+        return result;
+    }
+
     public FuncCtx subCtxDirect(FunctionReference funcCall)
     {
         FuncCtx self = subCtxDirectGeneric(funcCall);

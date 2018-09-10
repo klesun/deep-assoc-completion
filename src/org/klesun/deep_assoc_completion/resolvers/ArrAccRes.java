@@ -26,11 +26,11 @@ public class ArrAccRes extends Lang
         return opt(keyAccess.getIndex())
             .map(v -> v.getValue())
             .fop(toCast(PhpExpression.class))
-            .map(v -> {
+            .map(keyPsi -> {
                 // resolving key type can be a complex operation - we don't
                 // want that if we already know that mt has no known key names
                 @Nullable String keyName = mt.getKeyNames().size() > 0
-                    ? ctx.findExprType(v).getStringValue()
+                    ? ctx.limitResolve(10, keyPsi).getStringValue()
                     : null;
                 return mt.getKey(keyName);
             })

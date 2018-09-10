@@ -197,7 +197,7 @@ class ExactKeysUnitTest
                 'lastName' => new StringP([], []),
                 'firstName' => new StringP([], []),
             ])]),
-            'itinerary' => new ListP([], ['elemType' => new ListP([], [
+            'itinerary' => new ListP([], ['elemType' => new DictP([], [
                 'from' => new StringP([], []),
                 'to' => new StringP([], []),
                 'date' => new StringP([], []),
@@ -214,9 +214,9 @@ class ExactKeysUnitTest
     {
         // should suggest: 'recordLocator', 'passengers', 'itinerary'
         // should not suggest: 'elemType'
-        $pnr[''];
         return [
-            [$pnr, ['recordLocator', 'passengers', 'itinerary']],
+            [$pnr, ['recordLocator', 'passengers', 'itinerary', 'commission']],
+            [$pnr['commission'], ['units', 'value']],
         ];
     }
 
