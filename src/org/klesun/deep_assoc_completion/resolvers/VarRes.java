@@ -206,8 +206,7 @@ public class VarRes extends Lang
                             return new Assign(list(), mtg, true, refPsi, param.getType());
                         }));
             })
-            .end(ass -> ass.didSurelyHappen && ass.keys.size() == 0)
-            ;
+            .end(ass -> ass.didSurelyHappen && ass.keys.size() == 0);
 
         DeepType typeFromIdea = new DeepType(variable);
         Opt<MultiType> thisType = opt(variable)
