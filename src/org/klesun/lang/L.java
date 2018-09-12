@@ -285,4 +285,9 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
         }
         return Lang.list();
     }
+
+    public It<T> itr()
+    {
+        return new It<>(s);
+    }
 }

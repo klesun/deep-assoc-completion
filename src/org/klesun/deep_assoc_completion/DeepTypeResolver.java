@@ -25,7 +25,7 @@ public class DeepTypeResolver extends Lang
         return Opt.fst(
             () -> opt(null) // for coma formatting
             , () -> Tls.cast(VariableImpl.class, expr)
-                .map(v -> new VarRes(ctx).resolve(v))
+                .map(v -> new VarRes(ctx).resolve(v).arr())
             , () -> Tls.cast(ArrayCreationExpressionImpl.class, expr)
                 .map(arr -> list(new ArrCtorRes(ctx).resolve(arr)))
             , () -> Tls.cast(FunctionReferenceImpl.class, expr)
@@ -35,7 +35,7 @@ public class DeepTypeResolver extends Lang
             , () -> Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .map(keyAccess -> new ArrAccRes(ctx).resolve(keyAccess).types)
             , () -> Tls.cast(FieldReferenceImpl.class, expr)
-                .map(fieldRef -> new FieldRes(ctx).resolve(fieldRef).types)
+                .map(fieldRef -> new FieldRes(ctx).resolve(fieldRef).arr())
             , () -> Tls.cast(StringLiteralExpressionImpl.class, expr)
                 .map(lit -> list(new DeepType(lit)))
             , () -> Tls.cast(ConstantReferenceImpl.class, expr)

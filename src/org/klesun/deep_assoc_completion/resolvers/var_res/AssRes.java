@@ -10,10 +10,7 @@ import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import java.util.List;
 
@@ -52,13 +49,9 @@ public class AssRes extends Lang
         }
     }
 
-    public static L<DeepType> assignmentsToTypes(List<Assign> asses)
+    public static It<DeepType> assignmentsToTypes(Iterable<Assign> asses)
     {
-        L<DeepType> resultTypes = list();
-        for (Assign ass: asses) {
-            resultTypes.addAll(makeType(L(ass.keys), ass.assignedType, ass.psi, ass.briefType).types);
-        }
-        return resultTypes;
+        return It(asses).fap(ass -> makeType(L(ass.keys), ass.assignedType, ass.psi, ass.briefType).types);
     }
 
     // null in key chain means index (when it is number or variable, not named key)

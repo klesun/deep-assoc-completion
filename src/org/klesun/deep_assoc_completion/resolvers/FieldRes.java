@@ -11,10 +11,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import java.util.List;
 import java.util.Set;
@@ -59,9 +56,8 @@ public class FieldRes extends Lang
         return ctxFqns.isEmpty() || ctxFqns.contains(fieldCls.getFQN());
     }
 
-    public MultiType resolve(FieldReferenceImpl fieldRef)
+    public It<DeepType> resolve(FieldReferenceImpl fieldRef)
     {
-        L<DeepType> result = list();
         S<MultiType> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
             .fop(ref -> Opt.fst(
                 () -> ctx.clsIdeaType
@@ -83,33 +79,28 @@ public class FieldRes extends Lang
                 .fap(cls -> L(cls.getFields()))
                 .flt(f -> f.getName().equals(fieldRef.getName()))
         );
+        It<DeepType> propDocTs = It(list());
         if (declarations.size() == 0) {
-            getObjMt.get().getProps()
-                    .flt(prop -> prop.name.equals(fieldRef.getName()))
-                    .fch(prop -> result.addAll(prop.getTypes()));
+            propDocTs = getObjMt.get().getProps().itr()
+                .flt(prop -> prop.name.equals(fieldRef.getName()))
+                .fap(prop -> prop.getTypes());
         }
-        declarations
-            .fch(resolved -> {
+        It<DeepType> declTypes = declarations.itr()
+            .fap(resolved -> {
                 FuncCtx implCtx = new FuncCtx(ctx.getSearch());
-                Tls.cast(FieldImpl.class, resolved)
+                It<DeepType> defTs = Tls.cast(FieldImpl.class, resolved).itr()
                     .map(fld -> fld.getDefaultValue())
                     .fop(toCast(PhpExpression.class))
-                    .map(def -> implCtx.findExprType(def).types)
-                    .thn(result::addAll);
+                    .fap(def -> implCtx.findExprType(def).types);
 
-                L<Assign> docAsses = opt(resolved.getContainingClass())
-                    .map(cls -> cls.getDocComment())
+                It<DeepType> docTs = opt(resolved.getContainingClass()).itr()
+                    .fop(cls -> opt(cls.getDocComment()))
                     .fap(doc -> L(doc.getPropertyTags()))
                     .flt(tag -> opt(tag.getProperty()).flt(pro -> pro.getName().equals(fieldRef.getName())).has())
-                    .map(tag -> {
-                        S<MultiType> getMt = () -> new DocParamRes(ctx).resolve(tag).def(MultiType.INVALID_PSI);
-                        return new Assign(list(), getMt, true, tag, tag.getType());
-                    })
-                    ;
+                    .fap(tag -> new DocParamRes(ctx).resolve(tag).def(MultiType.INVALID_PSI).types);
 
-                L<Assign> asses = opt(resolved.getContainingFile())
-                    .map(file -> findReferences(file, fieldRef.getName()))
-                    .def(L())
+                It<Assign> asses = opt(resolved.getContainingFile()).itr()
+                    .fap(file -> findReferences(file, fieldRef.getName()))
                     .fap(assPsi -> Tls.findParent(assPsi, Method.class, a -> true)
                         .flt(meth -> meth.getName().equals("__construct"))
                         .map(meth -> fieldRef.getClassReference())
@@ -129,11 +120,12 @@ public class FieldRes extends Lang
                         })
                         .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(assPsi, false)));
 
-                List<DeepType> types = AssRes.assignmentsToTypes(docAsses.cct(asses));
-                result.addAll(types);
+                return It.cct(
+                    defTs, docTs,
+                    AssRes.assignmentsToTypes(asses)
+                );
             });
 
-        return new MultiType(result);
+        return It.cct(propDocTs, declTypes);
     }
-
 }

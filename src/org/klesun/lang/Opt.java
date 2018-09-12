@@ -53,10 +53,20 @@ public class Opt<T>
         );
     }
 
+    public L<T> arr()
+    {
+        return fap(a -> list(a));
+    }
+
     /** transform opt to array */
     public <Tnew> L<Tnew> fap(F<T, L<Tnew>> f)
     {
         return uni((val) -> f.apply(val), () -> list());
+    }
+
+    public It<T> itr()
+    {
+        return It(arr());
     }
 
     /**

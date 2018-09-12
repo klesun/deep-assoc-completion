@@ -152,12 +152,22 @@ public class Lang
     {
         List<T> list = list();
         source.forEach(list::add);
-        return new L(list);
+        return new L<>(list);
     }
 
     public static <T> L<T> L()
     {
         return new L<T>(new ArrayList<T>());
+    }
+
+    public static <T> It<T> It(Iterable<T> source)
+    {
+        return new It<>(source);
+    }
+
+    public static <T> It<T> It(T[] source)
+    {
+        return new It<T>(source);
     }
 
 }

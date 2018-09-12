@@ -258,7 +258,7 @@ public class KeyUsageResolver extends Lang
                 .map(ass -> ass.getVariable())
                 .fop(toCast(Variable.class))
                 .fap(var -> list(
-                    new VarRes(fakeCtx).getDocType(var).types,
+                    new VarRes(fakeCtx).getDocType(var).arr(),
                     findKeysUsedOnVar(var).types
                 ).fap(a -> a)),
             // assoc array in an assoc array

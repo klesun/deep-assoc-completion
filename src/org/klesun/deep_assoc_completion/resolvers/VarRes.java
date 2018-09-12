@@ -15,10 +15,7 @@ import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.ArgRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -169,69 +166,57 @@ public class VarRes extends Lang
             .fop(res -> opt(res.getElement()));
     }
 
-    public MultiType getDocType(Variable variable)
+    public It<DeepType> getDocType(Variable variable)
     {
-        L<PsiElement> references = findDeclarations(variable)
-            .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable));
-
-        return references
+        return findDeclarations(variable).itr()
+            .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable))
             .fop(toCast(PhpDocVarImpl.class))
-            .mop(varDoc -> varDoc.getParent())
+            .fop(varDoc -> opt(varDoc.getParent()))
             .fop(toCast(PhpDocTag.class))
             .fop(docTag -> new DocParamRes(ctx).resolve(docTag))
-            .fap(mt -> mt.types)
-            .wap(MultiType::new);
+            .fap(mt -> mt.types);
     }
 
-    public List<DeepType> resolve(Variable variable)
+    public It<DeepType> resolve(Variable variable)
     {
-        List<Assign> revAsses = list();
         L<PsiElement> references = findDeclarations(variable)
             .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable));
 
         // @var docs are a special case since they give type
         // info from any position (above/below/right of/left of the var declaration)
-        L<DeepType> docTypes = getDocType(variable).types;
+        It<DeepType> docTypes = getDocType(variable);
 
-        for (int i = references.size() - 1; i >= 0; --i) {
-            // TODO: make sure closure `use`-s don't incorrectly use wrong context argument generics
-            PsiElement refPsi = references.get(i);
-            boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
-            Opt<Assign> assignOpt = Opt.fst(() -> opt(null)
-                , () -> (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
-                , () -> assertArrayUnshift(refPsi)
-                , () -> assertForeachElement(refPsi)
-                    .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
-                , () -> assertTupleAssignment(refPsi)
-                    .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
-                , () -> assertPregMatchResult(refPsi)
-                    .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi, PhpType.ARRAY))
-                , () -> Tls.cast(ParameterImpl.class, refPsi)
-                    .map(param -> {
-                        S<MultiType> mtg = () -> new ArgRes(ctx).resolveArg(param);
-                        return new Assign(list(), mtg, true, refPsi, param.getType());
-                    })
-            );
-            if (assignOpt.has()) {
-                Assign ass = assignOpt.unw();
-                revAsses.add(ass);
-                if (didSurelyHappen && ass.keys.size() == 0) {
-                    // direct assignment, everything before it is meaningless
-                    break;
-                }
-            }
-        }
+        // TODO: reverse them back once done testing iterators. Performance is
+        // performance, but keys must be suggested in same order as declared
+        It<Assign> revAssIt = new It<>(references.rvr())
+            .fop(refPsi -> {
+                boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
+                return Opt.fst(() -> opt(null)
+                    , () -> (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
+                    , () -> assertArrayUnshift(refPsi)
+                    , () -> assertForeachElement(refPsi)
+                        .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
+                    , () -> assertTupleAssignment(refPsi)
+                        .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
+                    , () -> assertPregMatchResult(refPsi)
+                        .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi, PhpType.ARRAY))
+                    , () -> Tls.cast(ParameterImpl.class, refPsi)
+                        .map(param -> {
+                            S<MultiType> mtg = () -> new ArgRes(ctx).resolveArg(param);
+                            return new Assign(list(), mtg, true, refPsi, param.getType());
+                        }));
+            })
+            .end(ass -> ass.didSurelyHappen && ass.keys.size() == 0)
+            ;
 
-        List<Assign> assignments = list();
-        for (int i = revAsses.size() - 1; i >= 0; --i) {
-            assignments.add(revAsses.get(i));
-        }
         DeepType typeFromIdea = new DeepType(variable);
         Opt<MultiType> thisType = opt(variable)
             .flt(vari -> vari.getText().equals("$this"))
             .fop(vari -> ctx.instGetter.map(g -> g.get()));
-        return AssRes.assignmentsToTypes(assignments)
-            .cct(docTypes).cct(list(typeFromIdea))
-            .cct(thisType.fap(a -> a.types));
+        return It.cct(
+            docTypes, list(typeFromIdea),
+            thisType.fap(a -> a.types),
+            AssRes.assignmentsToTypes(revAssIt)
+        );
     }
 }
