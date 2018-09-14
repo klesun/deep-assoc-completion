@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 
 import static org.klesun.lang.Lang.*;
@@ -36,7 +37,7 @@ public class ArrFuncRefPvdr extends CompletionProvider<CompletionParameters>
             .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
         FuncCtx funcCtx = new FuncCtx(search);
         long startTime = System.nanoTime();
-        L<Method> methods = opt(parameters.getPosition().getParent())
+        It<Method> methods = opt(parameters.getPosition().getParent())
             .fap(literal -> opt(literal.getParent())
                 .map(arrVal -> arrVal.getParent())
                 .fop(toCast(ArrayCreationExpressionImpl.class))

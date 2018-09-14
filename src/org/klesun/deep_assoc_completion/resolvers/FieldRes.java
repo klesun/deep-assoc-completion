@@ -13,7 +13,6 @@ import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
 
-import java.util.List;
 import java.util.Set;
 
 public class FieldRes extends Lang
@@ -73,11 +72,11 @@ public class FieldRes extends Lang
                 .flt(ref -> !ref.getText().startsWith("static::")) // IDEA is bad at static:: resolution
                 .fap(ref -> L(ref.multiResolve(false)))
                 .map(res -> res.getElement())
-                .fop(toCast(Field.class)),
+                .fop(toCast(Field.class)).arr(),
             () -> opt(getObjMt.get())
                 .fap(mt -> ArrCtorRes.resolveMtCls(mt, fieldRef.getProject()))
                 .fap(cls -> L(cls.getFields()))
-                .flt(f -> f.getName().equals(fieldRef.getName()))
+                .flt(f -> f.getName().equals(fieldRef.getName())).arr()
         );
         It<DeepType> propDocTs = It(list());
         if (declarations.size() == 0) {
@@ -109,23 +108,19 @@ public class FieldRes extends Lang
                         .fap(mt -> mt.getArgsPassedToCtor())
                         .flt(ctx -> opt(resolved.getContainingClass())
                             .map(cls -> isSameClass(ctx, cls)).def(true))
-                        .wap(ctxs -> {
-                            if (areInSameScope(fieldRef, assPsi)) {
-                                ctxs.add(ctx);
-                            }
-                            if (ctxs.size() == 0) {
-                                ctxs = list(implCtx);
-                            }
-                            return ctxs;
-                        })
+                        .wap(ctxs -> It.cnc(
+                            ctxs,
+                            Tls.ifi(areInSameScope(fieldRef, assPsi), () -> list(ctx)),
+                            Tls.ifi(!ctxs.has(), () -> list(implCtx))
+                        ))
                         .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(assPsi, false)));
 
-                return It.cct(
+                return It.cnc(
                     defTs, docTs,
                     AssRes.assignmentsToTypes(asses)
                 );
             });
 
-        return It.cct(propDocTs, declTypes);
+        return It.cnc(propDocTs, declTypes);
     }
 }

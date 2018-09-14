@@ -15,10 +15,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.icons.DeepIcons;
-import org.klesun.lang.Dict;
-import org.klesun.lang.L;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import javax.swing.*;
 import java.net.URL;
@@ -174,8 +171,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
             mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "");
         });
-        L<DeepType> indexTypes = mt.types.fap(t -> t.getListElemTypes());
-        if (indexTypes.size() > 0) {
+        It<DeepType> indexTypes = mt.types.itr().fap(t -> t.getListElemTypes());
+        if (indexTypes.has()) {
             String typeText = new MultiType(indexTypes).getBriefValueText(BRIEF_TYPE_MAX_LEN);
             String ideaType = new MultiType(indexTypes).getIdeaType().filterUnknown().toStringResolved();
             if (mt.hasNumberIndexes()) {

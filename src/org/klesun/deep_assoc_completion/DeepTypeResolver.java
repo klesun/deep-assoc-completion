@@ -20,22 +20,22 @@ import org.klesun.lang.Tls;
 public class DeepTypeResolver extends Lang
 {
     /** @debug */
-    public static Opt<L<DeepType>> resolveIn(PsiElement expr, FuncCtx ctx)
+    public static Opt<Iterable<DeepType>> resolveIn(PsiElement expr, FuncCtx ctx)
     {
         return Opt.fst(
             () -> opt(null) // for coma formatting
             , () -> Tls.cast(VariableImpl.class, expr)
-                .map(v -> new VarRes(ctx).resolve(v).arr())
+                .map(v -> new VarRes(ctx).resolve(v))
             , () -> Tls.cast(ArrayCreationExpressionImpl.class, expr)
                 .map(arr -> new ArrCtorRes(ctx).resolve(arr).mt().types)
             , () -> Tls.cast(FunctionReferenceImpl.class, expr)
-                .map(call -> new FuncCallRes(ctx).resolve(call).arr())
+                .map(call -> new FuncCallRes(ctx).resolve(call))
             , () -> Tls.cast(MethodReferenceImpl.class, expr)
                 .map(call -> new MethCallRes(ctx).resolveCall(call).types)
             , () -> Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .map(keyAccess -> new ArrAccRes(ctx).resolve(keyAccess).types)
             , () -> Tls.cast(FieldReferenceImpl.class, expr)
-                .map(fieldRef -> new FieldRes(ctx).resolve(fieldRef).arr())
+                .map(fieldRef -> new FieldRes(ctx).resolve(fieldRef))
             , () -> Tls.cast(StringLiteralExpressionImpl.class, expr)
                 .map(lit -> list(new DeepType(lit)))
             , () -> Tls.cast(ConstantReferenceImpl.class, expr)
@@ -75,6 +75,6 @@ public class DeepTypeResolver extends Lang
                     .map(num -> list(new DeepType(casted, num))))
             // leave rest to MiscRes
             , () -> new MiscRes(ctx).resolve(expr)
-        ).map(ts -> L(ts));
+        );
     }
 }

@@ -20,6 +20,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -76,7 +77,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         long startTime = System.nanoTime();
-        L<DeepType.Key> usedKeys = assertArrCtorKey(parameters.getPosition())
+        It<DeepType.Key> usedKeys = assertArrCtorKey(parameters.getPosition())
             .fap(arrCtor -> {
                 L<String> alreadyDeclared = L(arrCtor.getHashElements())
                     .fop(el -> opt(el.getKey()))
@@ -125,7 +126,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
                 .fap(arrCtor -> resolve(arrCtor, false, editor)
                     .types.fap(t -> L(t.keys.values()))
                     .flt(k -> lit.getContents().equals(k.name))
-                    .map(k -> k.definition)));
+                    .map(k -> k.definition))).arr();
 
         removeDuplicates(psiTargets);
 

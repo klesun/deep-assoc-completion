@@ -9,10 +9,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -113,7 +110,7 @@ public class KeyUsageResolver extends Lang
             )  .fop(toCast(Function.class)));
     }
 
-    private static L<Variable> findVarReferences(PhpNamedElement caretVar)
+    private static It<Variable> findVarReferences(PhpNamedElement caretVar)
     {
         return Tls.findParent(caretVar, Function.class, a -> true)
             .fap(meth -> Tls.findChildren(
@@ -161,12 +158,13 @@ public class KeyUsageResolver extends Lang
             .wap(MultiType::new);
     }
 
-    private static L<? extends Function> getImplementations(Function meth)
+    private static It<? extends Function> getImplementations(Function meth)
     {
-        L<Function> result = Tls.cast(Method.class, meth)
-            .fap(m -> MethCallRes.findOverridingMethods(m)).map(a -> a);
-        result.add(meth);
-        return result;
+        return It.cnc(
+            Tls.cast(Method.class, meth)
+                .fap(m -> MethCallRes.findOverridingMethods(m)).map(a -> a),
+            list(meth)
+        );
     }
 
     private MultiType findKeysUsedOnExpr(PhpExpression arrCtor)

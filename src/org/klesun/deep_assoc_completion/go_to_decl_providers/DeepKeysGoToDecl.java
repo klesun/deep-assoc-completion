@@ -20,10 +20,7 @@ import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import java.util.*;
 
@@ -55,12 +52,12 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         }
     }
 
-    private static L<PsiElement> resolveAssocKey(PsiElement psiElement, FuncCtx funcCtx)
+    private static It<PsiElement> resolveAssocKey(PsiElement psiElement, FuncCtx funcCtx)
     {
-        return opt(psiElement)
+        return opt(psiElement).itr()
             .map(psi -> psi.getParent())
             .fop(toCast(PhpExpression.class))
-            .fap(literal -> Lang.opt(literal.getParent())
+            .fap(literal -> Lang.opt(literal.getParent()).itr()
                 .fop(Lang.toCast(ArrayIndex.class))
                 .map(index -> index.getParent())
                 .fop(Lang.toCast(ArrayAccessExpressionImpl.class))
@@ -75,7 +72,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 }));
     }
 
-    private static L<PsiElement> resolveMethCall(PsiElement psiElement, FuncCtx ctx)
+    private static It<PsiElement> resolveMethCall(PsiElement psiElement, FuncCtx ctx)
     {
         return opt(psiElement)
             .map(psi -> psi.getParent())
@@ -84,7 +81,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
             .map(a -> a);
     }
 
-    private static L<PsiElement> resolveDocAt(PsiElement psiElement, int mouseOffset)
+    private static It<PsiElement> resolveDocAt(PsiElement psiElement, int mouseOffset)
     {
         String prefix = "<?php\n$arg ";
         return opt(psiElement)
@@ -101,10 +98,10 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 ctx.fakeFileSource = opt(doc);
 
                 return opt(file.findElementAt(offset))
-                    .fap(psi -> list(
+                    .fap(psi -> It.cnc(
                         resolveAssocKey(psi, ctx),
                         resolveMethCall(psi, ctx)
-                    ).fap(a -> a));
+                    ));
             });
     }
 
@@ -141,7 +138,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 }
                 removeDuplicates(psiTargets);
                 return psiTargets.map(psi -> truncateOnLineBreak(psi));
-            });
+            }).arr();
         return result.toArray(new PsiElement[result.size()]);
     }
 

@@ -130,10 +130,10 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters> im
         L<PsiElement> psiTargets = opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
-            .map(literal -> resolve(literal, false, editor).types
+            .fap(literal -> resolve(literal, false, editor).types
                 .fop(arrayType -> getKey(arrayType.keys, literal.getContents()))
                 .map(keyRec -> keyRec.definition))
-            .def(L());
+            .arr();
 
         removeDuplicates(psiTargets);
 

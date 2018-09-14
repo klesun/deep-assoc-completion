@@ -94,7 +94,17 @@ public class Lang
     /** i HATE writing "new " before every usage! */
     public static <T> Opt<T> opt(T value)
     {
-        return new Opt(value);
+        return new Opt<>(value);
+    }
+
+    public static <T> Opt<T> som(T value)
+    {
+        return new Opt(value, true);
+    }
+
+    public static <T> Opt<T> non()
+    {
+        return new Opt(null, false);
     }
 
     public static <T> Opt<T> getKey(Map<String, T> dict, String key)
@@ -168,6 +178,11 @@ public class Lang
     public static <T> It<T> It(T[] source)
     {
         return new It<T>(source);
+    }
+
+    public static <T> It<T> It()
+    {
+        return new It<>(list());
     }
 
 }

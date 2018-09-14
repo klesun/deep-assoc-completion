@@ -97,7 +97,7 @@ public class FuncCtx extends Lang
             if (orderObj.isVariadic) {
                 return uniqueRef.map(ref -> fromVariadic.unw().getInArray(ref)).map(t -> new MultiType(list(t)));
             } else {
-                return opt(fromVariadic.fap(mt -> mt.types).wap(MultiType::new));
+                return opt(fromVariadic.itr().fap(mt -> mt.types).wap(MultiType::new));
             }
         } else if (!orderObj.isVariadic) {
             int index = orderObj.order;

@@ -3,11 +3,9 @@ package org.klesun.deep_assoc_completion.helpers;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.NonNull;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -30,18 +28,17 @@ public class MultiType extends Lang
 
     private boolean isGettingKey = false;
 
-    public MultiType(L<DeepType> types, REASON reason)
+    public MultiType(Iterable<DeepType> types, REASON reason)
     {
         // there sometimes appear thousands of duplicates
         // I'm not sure I'm good mathematician enough to find
         // out the algorithm that would not produce them with
         // all these recursions, so I'm just removing dupes here
-        LinkedHashSet distinct = new LinkedHashSet<>(types);
-
-        this.types = L(distinct);
+        Set occurences = new HashSet<>();
+        this.types = L(It(types).unq());
         this.reason = reason;
     }
-    public MultiType(L<DeepType> types)
+    public MultiType(Iterable<DeepType> types)
     {
         this(types, REASON.OK);
     }
@@ -56,13 +53,17 @@ public class MultiType extends Lang
 
     public String getStringValue()
     {
-        if (types.size() == 1) {
-            return types.get(0).stringValue;
-        } else {
-            return null;
+        int i = 0;
+        @Nullable String value = null;
+        for (DeepType t: types) {
+            if (i > 0) return null;
+            value = t.stringValue;
+            ++i;
         }
+        return value;
     }
 
+    // TODO: return iterator
     public L<String> getStringValues()
     {
         return types.fop(t -> opt(t.stringValue));
@@ -80,37 +81,31 @@ public class MultiType extends Lang
         }
         isGettingKey = true;
 
-        L<DeepType> keyTypes = list();
-        if (keyName != null) {
-            // if keyName is a constant string - return type of this key only
-            types.fop(type -> Lang.getKey(type.keys, keyName))
-                .fap(v -> v.getTypes())
-                .fch(t -> keyTypes.add(t));
-            if (Tls.isNum(keyName)) {
-                types.fap(t -> t.listElTypes).fch(t -> keyTypes.addAll(t.get().types));
-            }
-        } else {
-            // if keyName is a var - return types of all keys
-            types.fap(t -> L(t.keys.values()))
-                .fap(v -> v.getTypes())
-                .fch(t -> keyTypes.add(t));
-            types.fap(t -> t.listElTypes).fch(t -> keyTypes.addAll(t.get().types));
-        }
-        types.fap(t -> t.anyKeyElTypes).fch(t -> keyTypes.addAll(t.get().types));
-        types.fop(t -> opt(t.briefType.elementType().filterUnknown().filterMixed())
-            .flt(it -> !it.isEmpty())
-            .map(it -> new DeepType(t.definition, it, false)))
-            .fch(t -> keyTypes.add(t));
+        It<DeepType> keyTsIt = It.cnc(
+            Tls.ife(keyName != null, () -> It.cnc(
+                types.fop(type -> Lang.getKey(type.keys, keyName))
+                    .fap(v -> v.getTypes()),
+                Tls.ifi(Tls.isNum(keyName), () -> types.fap(t -> t.listElTypes).fap(t -> t.get().types))
+            ), () -> It.cnc(
+                types.fap(t -> L(t.keys.values()))
+                    .fap(v -> v.getTypes()),
+                types.fap(t -> t.listElTypes).fap(t -> t.get().types)
+            )),
+            types.fap(t -> t.anyKeyElTypes).fap(t -> t.get().types),
+            types.fop(t -> opt(t.briefType.elementType().filterUnknown().filterMixed())
+                .flt(it -> !it.isEmpty())
+                .map(it -> new DeepType(t.definition, it, false)))
+        );
 
         isGettingKey = false;
-        return new MultiType(keyTypes);
+        return new MultiType(keyTsIt);
     }
 
     public PhpType getKeyBriefType(@NonNull String keyName)
     {
         PhpType ideaType = new PhpType();
         Map<PsiElement, L<PhpType>> psiToType = new LinkedHashMap<>();
-        L<DeepType.Key> keyObjs = types.fop(t -> Lang.getKey(t.keys, keyName));
+        It<DeepType.Key> keyObjs = types.itr().fop(t -> Lang.getKey(t.keys, keyName));
         // getting rid of duplicates, temporary solution
         // TODO: 7681 types!!! and only 2 of them are actually unique. should do something
         keyObjs.fch(k -> psiToType.put(k.definition, k.getBriefTypes()));
@@ -132,6 +127,7 @@ public class MultiType extends Lang
         return names;
     }
 
+    // TODO: return iterator
     public L<DeepType.Key> getProps()
     {
         return types.fap(t -> t.props.vls());
@@ -146,6 +142,7 @@ public class MultiType extends Lang
 
     public String getBriefValueText(int maxLen, Set<DeepType> circularRefs)
     {
+        L<DeepType> types = L(this.types);
         if (types.any(circularRefs::contains)) {
             return "*circ*";
         }
@@ -192,7 +189,7 @@ public class MultiType extends Lang
 
     public String varExport()
     {
-        return DeepType.varExport(types);
+        return DeepType.varExport(L(types));
     }
 
     public boolean hasNumberIndexes()
@@ -205,6 +202,7 @@ public class MultiType extends Lang
         return types.any(t -> t.isNumber());
     }
 
+    // TODO: return iterator
     public L<FuncCtx> getArgsPassedToCtor()
     {
         return types.fop(t -> t.ctorArgs);

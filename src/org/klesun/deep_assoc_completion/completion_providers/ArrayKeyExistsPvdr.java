@@ -124,11 +124,11 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
         L<PsiElement> psiTargets = opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
-            .map(lit -> resolve(lit, false, editor)
+            .fap(lit -> resolve(lit, false, editor)
                 .types.fap(t -> L(t.keys.values()))
                 .flt(k -> lit.getContents().equals(k.name))
                 .map(t -> t.definition))
-            .def(list());
+            .arr();
 
         removeDuplicates(psiTargets);
 

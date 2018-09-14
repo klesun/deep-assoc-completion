@@ -52,7 +52,7 @@ public class ArrFuncRefGoToDecl extends Lang implements GotoDeclarationHandler
                             .flt(meth -> !meth.isStatic()))))
                 .fap(a -> a)
                 .flt(meth -> meth.getName().equals(literal.getContents()))
-            );
+            ).arr();
 
         return psiTargets.toArray(new PsiElement[psiTargets.size()]);
     }

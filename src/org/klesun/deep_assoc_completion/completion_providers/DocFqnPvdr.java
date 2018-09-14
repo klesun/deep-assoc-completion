@@ -15,11 +15,10 @@ import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
-
-import java.util.*;
 
 import static org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr.getMaxDepth;
 import static org.klesun.lang.Lang.*;
@@ -36,7 +35,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
         return result;
     }
 
-    private Opt<List<String>> extractTypedFqnPart(String docValue, Project project, PsiElement docPsi)
+    private Opt<It<String>> extractTypedFqnPart(String docValue, Project project, PsiElement docPsi)
     {
         Opt<PhpClass> caretClass = Tls.findParent(docPsi, PhpClass.class, a -> true);
         PhpIndex idx = PhpIndex.getInstance(project);
@@ -46,27 +45,29 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 .map(mtch -> {
                     String clsName = mtch.gat(0).unw();
                     PrefixMatcher metMatcher = new CamelHumpMatcher(mtch.gat(1).unw());
-                    return L(idx.getClassesByName(clsName))
-                        .cct(L(idx.getInterfacesByName(clsName)))
-                        .cct(L(idx.getTraitsByName(clsName)))
-                        .cct(caretClass.fap(cls -> list(cls)))
-                        .flt(cls -> clsName.equals(cls.getName()) ||
-                                    clsName.endsWith("\\" + cls.getName()) ||
-                                    (clsName.equals("self") || clsName.equals("static")) &&
-                                    cls.isEquivalentTo(caretClass.def(null)))
-                        .fap(cls -> L(cls.getOwnMethods())
-                            .srt(m -> makeMethOrderValue(m))
-                            .map(m -> m.getName())
-                            .flt(p -> metMatcher.prefixMatches(p))
-                            .map(f -> f + "()"));
+                    return It.cnc(
+                        idx.getClassesByName(clsName),
+                        idx.getInterfacesByName(clsName),
+                        idx.getTraitsByName(clsName),
+                        caretClass.fap(cls -> list(cls))
+                    ).flt(cls -> clsName.equals(cls.getName()) ||
+                        clsName.endsWith("\\" + cls.getName()) ||
+                        (clsName.equals("self") || clsName.equals("static")) &&
+                        cls.isEquivalentTo(caretClass.def(null))
+                    ).fap(cls -> L(cls.getOwnMethods())
+                        .srt(m -> makeMethOrderValue(m))
+                        .map(m -> m.getName())
+                        .flt(p -> metMatcher.prefixMatches(p))
+                        .map(f -> f + "()"));
                 })
             , () -> Tls.regex("(?:|.*new\\s+|.*\\(|.*\\[) *([A-Z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete class
                 .fop(m -> m.gat(0))
                 .map(CamelHumpMatcher::new)
-                .map(p -> L(idx.getAllClassNames(p))
-                    .cct(list("self", "static"))
-                    .map(cls -> cls + "::"))
+                .map(p -> It.cnc(
+                    idx.getAllClassNames(p),
+                    list("self", "static")
+                ).map(cls -> cls + "::"))
         );
     }
 

@@ -18,6 +18,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -85,7 +86,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         result.runRemainingContributors(parameters, otherSourceResult -> {
             builtIns.add(otherSourceResult.getLookupElement());
         });
-        L<? extends PhpClassMember> members = list();
+        It<? extends PhpClassMember> members = It(list());
         if (builtIns.size() == 0) {
             SearchContext search = new SearchContext(parameters)
                 .setDepth(DeepKeysPvdr.getMaxDepth(parameters));

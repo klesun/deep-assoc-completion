@@ -41,9 +41,9 @@ public class VarRes extends Lang
         return result;
     }
 
-    private static L<DeepType> makeRegexNameCaptureTypes(List<DeepType> regexTypes)
+    private static It<DeepType> makeRegexNameCaptureTypes(It<DeepType> regexTypes)
     {
-        return L(regexTypes)
+        return regexTypes
             .fop(strt -> opt(strt.stringValue)
                 .map(s -> parseRegexNameCaptures(s))
                 .map(names -> {
@@ -119,7 +119,7 @@ public class VarRes extends Lang
                 .map(v -> v.getFirstPsiChild())
                 .fop(toCast(PhpExpression.class))
                 .map(val -> ctx.findExprType(val).types)
-                .flt(types -> types.size() > 0)
+                .flt(types -> types.has())
                 .fop(arrts -> opt(multi.getVariables())
                     .fop(vars -> {
                         for (Integer i = 0; i < vars.size(); ++i) {
@@ -153,7 +153,7 @@ public class VarRes extends Lang
             .fop(toCast(PhpExpression.class))
             .map(regexPsi -> () -> {
                 MultiType mt = ctx.findExprType(regexPsi);
-                L<DeepType> matchesType = makeRegexNameCaptureTypes(mt.types);
+                It<DeepType> matchesType = makeRegexNameCaptureTypes(mt.types.itr());
                 return new MultiType(matchesType);
             });
     }
@@ -212,9 +212,9 @@ public class VarRes extends Lang
         Opt<MultiType> thisType = opt(variable)
             .flt(vari -> vari.getText().equals("$this"))
             .fop(vari -> ctx.instGetter.map(g -> g.get()));
-        return It.cct(
+        return It.cnc(
             docTypes, list(typeFromIdea),
-            thisType.fap(a -> a.types),
+            thisType.itr().fap(a -> a.types),
             AssRes.assignmentsToTypes(revAssIt)
         );
     }

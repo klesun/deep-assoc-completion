@@ -144,7 +144,7 @@ public class DocParamRes extends Lang
                 .flt(prop -> nameMatches(prop, doc))
                 .fop(prop -> propDescToType(prop.desc, doc))
                 .wap(types -> opt(types))
-                .flt(types -> types.size() > 0)
+                .flt(types -> types.has())
                 .map(types -> new MultiType(types))
         );
     }

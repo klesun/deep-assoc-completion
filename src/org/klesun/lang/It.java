@@ -1,7 +1,6 @@
 package org.klesun.lang;
 
-import java.util.Arrays;
-import java.util.Iterator;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -18,61 +17,232 @@ import static org.klesun.lang.Lang.*;
  */
 public class It<A> implements Iterable<A>
 {
-    final private Stream<A> source;
+    private Opt<Iterator<A>> iterator = non();
+    private Iterable<A> source;
+    private boolean disposed = false;
 
     public It(Stream<A> sourceStream)
     {
-        this.source = sourceStream;
+        this.source = sourceStream::iterator;
     }
 
     public It(Iterable<A> sourceIter)
     {
-        this(StreamSupport.stream(sourceIter.spliterator(), false));
+        this.source = sourceIter;
     }
 
     public It(A[] source)
     {
-        this(Arrays.stream(source));
+        this(() -> new Iterator<A>() {
+            private int pos = 0;
+            public boolean hasNext() {
+                return source.length > pos;
+            }
+            public A next() {
+                return source[pos++];
+            }
+        });
     }
 
-    public static <B> It<B> cct(Iterable<B>... args)
+    public static <B> It<B> cnc(Iterable<B>... args)
     {
-        return new It<>(Arrays.stream(args)
-            .flatMap(iter -> StreamSupport.stream(iter.spliterator(), false)));
+        L<Iterator<B>> sources = L(args).map(arr -> arr.iterator());
+        Iterable<B> iter = () -> new Iterator<B>() {
+            public boolean hasNext() {
+                return sources.any(it -> it.hasNext());
+            }
+            public B next() {
+                for (Iterator<B> it: sources) {
+                    if (it.hasNext()) {
+                        return it.next();
+                    }
+                }
+                throw new NoSuchElementException("huj");
+            }
+        };
+        return new It<>(iter);
+        //return new It<>(Arrays.stream(args)
+        //    .flatMap(iter -> StreamSupport.stream(iter.spliterator(), false)));
+    }
+
+    /** don't use this unless you just want to check if it is empty */
+    private Iterator<A> getIterator()
+    {
+        if (!iterator.has()) {
+            iterator = som(source.iterator());
+        }
+        return iterator.unw();
+    }
+
+    private Iterator<A> dispose()
+    {
+        if (disposed) {
+            throw new NoSuchElementException("Tried to re-use disposed iterator");
+        }
+        Iterator<A> iter = getIterator();
+        disposed = true;
+        this.iterator = non();
+        return iter;
+    }
+
+    private Stream<A> disposeStream()
+    {
+        return StreamSupport.stream(
+            Spliterators.spliteratorUnknownSize(dispose(), Spliterator.ORDERED),
+            false);
+    }
+
+    public It<A> cct(Iterable<A> more)
+    {
+        return It.cnc(this, more);
     }
 
     public <B> It<B> map(F<A, B> mapper)
     {
-        return new It<>(source.map(mapper));
+        return map((el, i) -> mapper.apply(el));
+        //return new It<>(disposeStream().map(mapper));
+    }
+
+    public <B> It<B> map(F2<A, Integer, B> mapper)
+    {
+        Iterator<A> sourceIt = dispose();
+        return new It<>(() -> new Iterator<B>(){
+            int pos = 0;
+            public boolean hasNext() {
+                return sourceIt.hasNext();
+            }
+            public B next() {
+                return mapper.apply(sourceIt.next(), ++pos);
+            }
+        });
+//        Mutable<Integer> mutI = new Mutable<>(0);
+//        return new It<>(disposeStream().map(el -> {
+//            int i = mutI.get();
+//            mutI.set(i + 1);
+//            return mapper.apply(el, i);
+//        }));
     }
 
     public It<A> flt(Predicate<A> pred)
     {
-        return new It<>(source.filter(pred));
-    }
-
-    public <B> It<B> fop(F<A, Opt<B>> convert)
-    {
-        return new It<>(source.map(convert)
-            .flatMap(a -> a.arr().stream()));
+        Iterator<A> sourceIt = dispose();
+        return new It<>(() -> new Iterator<A>(){
+            Opt<A> current = non();
+            private Opt<A> getCurrent() {
+                if (!current.has()) {
+                    while (sourceIt.hasNext()) {
+                        A value = sourceIt.next();
+                        if (pred.test(value)) {
+                            this.current = som(value);
+                            break;
+                        }
+                    }
+                }
+                return this.current;
+            }
+            public boolean hasNext() {
+                return getCurrent().has();
+            }
+            public A next() {
+                A value = getCurrent().unw();
+                current = non();
+                return value;
+            }
+        });
+//        return new It<>(disposeStream().filter(pred));
     }
 
     public <B> It<B> fap(F<A, Iterable<B>> flatten)
     {
-        return new It<>(source.map(flatten)
-            .flatMap(a -> StreamSupport.stream(a.spliterator(), false)));
+        Iterator<A> sourceIt = dispose();
+        return new It<>(() -> new Iterator<B>(){
+            Iterator<B> current = new L<B>().iterator();
+            private Opt<S<B>> getNextSup() {
+                if (current.hasNext()) {
+                    return som(() -> current.next());
+                } else {
+                    while (sourceIt.hasNext()) {
+                        current = flatten.apply(sourceIt.next()).iterator();
+                        if (current.hasNext()) {
+                            return som(() -> current.next());
+                        }
+                    }
+                    return non();
+                }
+            }
+            public boolean hasNext() {
+                return getNextSup().has();
+            }
+            public B next() {
+                return getNextSup().unw().get();
+            }
+        });
+
+//        return new It<>(disposeStream().map(flatten)
+//            .flatMap(a -> StreamSupport.stream(a.spliterator(), false)));
     }
 
-    public Opt<A> fst()
+    public <B> It<B> fop(F<A, Opt<B>> convert)
     {
-        return source.findFirst()
-            .map(val -> opt(val))
-            .orElse(opt(null));
+        return map(convert).fap(a -> a.itr());
+    }
+
+    public It<A> unq()
+    {
+        Set occurences = new HashSet<>();
+        return flt(t -> {
+            if (occurences.contains(t)) {
+                return false;
+            } else {
+                occurences.add(t);
+                return true;
+            }
+        });
+    }
+
+    public It<A> def(Iterable<A> fallback)
+    {
+        return has() ? this : It(fallback);
+    }
+
+    public void fch(C<A> f)
+    {
+        dispose().forEachRemaining(f);
+        //disposeStream().forEach(f);
+    }
+
+//    public Opt<A> fst()
+//    {
+//        return disposeStream().findFirst()
+//            .map(val -> opt(val))
+//            .orElse(opt(null));
+//    }
+
+    public <B> B wap(F<It<A>, B> wrapper)
+    {
+        return wrapper.apply(this);
+    }
+
+    public boolean has()
+    {
+        return getIterator().hasNext();
     }
 
     public L<A> arr()
     {
-        return L(this);
+        L<A> arr = L(source);
+        source = arr;
+        return arr;
+    }
+
+    public boolean any(Predicate<A> pred)
+    {
+        return arr().any(pred);
+    }
+
+    public boolean all(Predicate<A> pred)
+    {
+        return arr().all((v,i) -> pred.test(v));
     }
 
     // end stream at element that matches the predicate
@@ -80,15 +250,15 @@ public class It<A> implements Iterable<A>
     public It<A> end(Predicate<A> pred)
     {
         Mutable<Boolean> ended = new Mutable<>(false);
-        return new It<>(source.filter(el -> {
+        return flt(el -> {
             boolean isEnd = ended.get();
             ended.set(pred.test(el));
             return !isEnd;
-        }));
+        });
     }
 
     public Iterator<A> iterator()
     {
-        return source.iterator();
+        return dispose();
     }
 }

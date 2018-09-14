@@ -51,7 +51,7 @@ public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandle
                         .flt(prop -> prop.name.equals(mem.getName()))
                         .map(prop -> prop.definition)
                 ).fap(a -> a))
-            );
+            ).arr();
 
         return psiTargets.toArray(new PsiElement[psiTargets.size()]);
     }

@@ -9,16 +9,14 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProvi
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.ArgOrder;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 public class ArgRes extends Lang
 {
@@ -245,39 +243,46 @@ public class ArgRes extends Lang
         MultiType result = new MultiType(L());
         int order = getArgOrder(param).def(-1);
 
-        opt(param.getParent())
+        It<ParameterImpl> decls = It.cnc(
             // get doc comments from the initial abstract method if any
-            .fop(Tls.toCast(ParameterListImpl.class))
-            .map(lst -> lst.getParent())
-            .fop(Tls.toCast(MethodImpl.class))
-            .fop(meth -> opt(meth.getContainingClass())
-                .map(cls -> L(cls.getImplementedInterfaces())
-                    .fap(ifc -> L(ifc.getMethods()))
-                    .flt(ifcMeth -> meth.getName().equals(ifcMeth.getName()))))
-            .def(list())
-            .fop(meth -> L(meth.getParameters()).gat(order))
-            .fop(Tls.toCast(ParameterImpl.class))
+            opt(param.getParent()).itr()
+                .fop(Tls.toCast(ParameterListImpl.class))
+                .map(lst -> lst.getParent())
+                .fop(Tls.toCast(MethodImpl.class))
+                .fap(meth -> opt(meth.getContainingClass())
+                    .fap(cls -> It(cls.getImplementedInterfaces())
+                        .fap(ifc -> L(ifc.getMethods()))
+                        .flt(ifcMeth -> meth.getName().equals(ifcMeth.getName()))))
+                .fop(meth -> L(meth.getParameters()).gat(order))
+                .fop(Tls.toCast(ParameterImpl.class)),
             // get doc from current method
-            .cct(list(param))
+            list(param)
+        );
+
+        It<DeepType> docTit = decls
             .fop(arg -> opt(arg.getDocComment()))
             .fop(doc -> opt(doc.getParamTagByName(param.getName())))
             .fop(doc -> new DocParamRes(trace).resolve(doc))
-            .fch(mt -> result.types.addAll(mt.types))
+            .fap(mt -> mt.types)
             ;
-        result.types.addAll(resolveFromDataProviderDoc(param).types);
+        It<DeepType> genericTit = It();
         if (!trace.hasArgs()) {
             // passed args not known - if caret was inside this function
-            result.types.addAll(peekOutside(param).types);
+            genericTit = peekOutside(param).types.itr();
         } else {
-            getArgOrder(param)
-                .thn(i -> {
+            genericTit = getArgOrder(param)
+                .fap(i -> {
                     if (param.getText().startsWith("...")) {
-                        result.types.addAll(trace.getArg(new ArgOrder(i, true)).fap(a -> a.types));
+                        return trace.getArg(new ArgOrder(i, true)).fap(a -> a.types);
                     } else {
-                        result.types.addAll(trace.getArg(i).fap(mt -> mt.types));
+                        return trace.getArg(i).fap(mt -> mt.types);
                     }
                 });
         }
-        return result;
+        return new MultiType(It.cnc(
+            docTit,
+            resolveFromDataProviderDoc(param).types,
+            genericTit
+        ));
     }
 }

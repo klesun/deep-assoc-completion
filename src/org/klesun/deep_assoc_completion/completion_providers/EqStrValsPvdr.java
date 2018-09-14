@@ -114,7 +114,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
                 .fop(toCast(PhpExpression.class))
                 .map(str -> funcCtx.findExprType(str).getEl())
                 .fap(mt -> mt.types)
-                .wap(types -> types.size() == 0 ? opt(null) : opt(new MultiType(types))));
+                .wap(types -> types.has() ? opt(null) : opt(new MultiType(types))));
     }
 
     private MultiType resolve(StringLiteralExpression lit, boolean isAutoPopup, Editor editor)
@@ -169,10 +169,10 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
         L<PsiElement> psiTargets = opt(psiElement)
             .map(psi -> psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
-            .map(lit -> resolve(lit, false, editor)
+            .fap(lit -> resolve(lit, false, editor)
                 .types.flt(t -> lit.getContents().equals(t.stringValue))
                 .map(t -> t.definition))
-            .def(list());
+                .arr();
 
         removeDuplicates(psiTargets);
 

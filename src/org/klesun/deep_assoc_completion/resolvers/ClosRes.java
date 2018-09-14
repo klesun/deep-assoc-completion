@@ -72,7 +72,7 @@ public class ClosRes extends Lang
     {
         DeepType result = new DeepType(func, func.getLocalType(true));
         result.returnTypeGetters.add((funcCtx) ->
-            getReturnedValue(func, funcCtx).types);
+            getReturnedValue(func, funcCtx).types.arr());
         return result;
     }
 

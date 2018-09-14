@@ -117,23 +117,38 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
     /**
      * "fop" stands for flat map - flattens list by lambda
      */
-    public <Tnew> L<Tnew> fap(Lang.F<T, List<Tnew>> flatten)
+    public <Tnew> L<Tnew> fap(Lang.F<T, Iterable<Tnew>> flatten)
     {
         return fap((el, i) -> flatten.apply(el));
     }
 
-    public <Tnew> L<Tnew> fap(Lang.F2<T, Integer, List<Tnew>> flatten)
+    public <Tnew> L<Tnew> fap(Lang.F2<T, Integer, Iterable<Tnew>> flatten)
     {
         List<Tnew> result = Lang.list();
         for (int i = 0; i < s.size(); ++i) {
-            result.addAll(flatten.apply(s.get(i), i));
+            flatten.apply(s.get(i), i).forEach(result::add);
         }
         return new L<>(result);
     }
 
     public boolean any(Predicate<T> pred)
     {
-        return flt(pred).size() > 0;
+        for (T el: this) {
+            if (pred.test(el)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean has()
+    {
+        return size() > 0;
+    }
+
+    public L<T> arr()
+    {
+        return this;
     }
 
     public boolean all(Lang.F2<T, Integer, Boolean> pred)
@@ -210,13 +225,13 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
 
     public L<T> cct(Opt<T> more)
     {
-        return cct(more.fap(a -> Lang.list(a)));
+        return cct(more.arr());
     }
 
     public <U extends Comparable> L<T> srt(Lang.F<T, U> makeValue)
     {
         L<U> weights = map(makeValue);
-        L<Integer> indexes = Tls.range(0, size());
+        L<Integer> indexes = Tls.range(0, size()).arr();
         indexes.sort(Comparator.comparing(weights::get));
         return indexes.map(idx -> s.get(idx));
     }

@@ -102,6 +102,7 @@ class UnitTest
     {
         $list = [];
         $rows = Db::inst()->fetchAll('SELECT id, name, profit FROM teams LIMIT 10;');
+        $rows['0'][''];
         $list[] = [$rows['0'], ['id' => [], 'name' => [], 'profit' => []]];
         return $list;
     }

@@ -12,14 +12,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.klesun.lang.*;
 
 public class MiscRes extends Lang
 {
@@ -50,7 +43,7 @@ public class MiscRes extends Lang
             () -> opt(newExp)
                 .flt(exp -> opt(exp.getClassReference())
                     .fap(ref -> L(ref.multiResolve(false)))
-                    .size() > 0)
+                    .has())
                 .map(exp -> exp.getType())
         ).map(it -> {
             FuncCtx ctorArgs = ctx.subCtxDirect(newExp);
@@ -58,21 +51,21 @@ public class MiscRes extends Lang
         });
     }
 
-    public Opt<List<DeepType>> resolve(PsiElement expr)
+    public Opt<Iterable<DeepType>> resolve(PsiElement expr)
     {
         return Opt.fst(() -> opt(null)
             , () -> Tls.cast(TernaryExpressionImpl.class, expr)
-                .map(tern -> Stream.concat(
-                    findPsiExprType(tern.getTrueVariant()).types.stream(),
-                    findPsiExprType(tern.getFalseVariant()).types.stream()
-                ).collect(Collectors.toList()))
+                .map(tern -> It.cnc(
+                    findPsiExprType(tern.getTrueVariant()).types,
+                    findPsiExprType(tern.getFalseVariant()).types
+                ))
             , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("??") || op.getText().equals("?:"))
-                    .map(op -> Stream.concat(
-                        findPsiExprType(bin.getLeftOperand()).types.stream(),
-                        findPsiExprType(bin.getRightOperand()).types.stream()
-                    ).collect(Collectors.toList())))
+                    .map(op -> It.cnc(
+                        findPsiExprType(bin.getLeftOperand()).types,
+                        findPsiExprType(bin.getRightOperand()).types
+                    )))
             , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("-")
@@ -91,13 +84,12 @@ public class MiscRes extends Lang
                         MultiType lmt = findPsiExprType(bin.getLeftOperand());
                         MultiType rmt = findPsiExprType(bin.getRightOperand());
                         L<DeepType> types = L();
-                        if (lmt.types.cct(rmt.types).any(t -> t.isNumber())) {
-                            types.add(new DeepType(bin, PhpType.NUMBER));
+                        It<DeepType> tit = It.cnc(lmt.types, rmt.types);
+                        if (tit.any(t -> t.isNumber())) {
+                            return list(new DeepType(bin, PhpType.NUMBER));
                         } else {
-                            types.addAll(lmt.types);
-                            types.addAll(rmt.types);
+                            return tit;
                         }
-                        return types;
                     }))
             , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())

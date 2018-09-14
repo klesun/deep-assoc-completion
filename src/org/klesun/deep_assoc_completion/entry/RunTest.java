@@ -18,6 +18,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -82,7 +83,7 @@ public class RunTest extends AnAction
         long startTime = System.nanoTime();
         Logger logger = new Logger();
         logger.logMsg("Searching for \"UnitTest\" class in project...");
-        L<Error> exactKeyErrors = opt(e.getData(LangDataKeys.PSI_FILE))
+        It<Error> exactKeyErrors = opt(e.getData(LangDataKeys.PSI_FILE))
             .fop(file -> findExactKeysTestDataPvdrFuncs(file))
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
@@ -99,7 +100,7 @@ public class RunTest extends AnAction
                     return list(new Error(tuple.a, msg));
                 }
             });
-        L<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
+        It<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
             .fop(file -> findTestDataPvdrFuncs(file))
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
@@ -114,10 +115,11 @@ public class RunTest extends AnAction
                 }
             });
 
-        double seconds = (System.nanoTime() - startTime) / 1000000000.0;
+        L<Error> msgs = It.cnc(errors, exactKeyErrors).arr();
         logger.logMsg("");
-        errors.cct(exactKeyErrors).forEach(logger::logErr);
-        logger.logMsg("Done testing with " + errors.size() + " errors and " + logger.sucCnt + " OK-s in " + seconds + " s. \n");
+        msgs.fch(logger::logErr);
+        double seconds = (System.nanoTime() - startTime) / 1000000000.0;
+        logger.logMsg("Done testing with " + logger.errCnt + " errors and " + logger.sucCnt + " OK-s in " + seconds + " s. \n");
         JBPopupFactory.getInstance()
             .createHtmlTextBalloonBuilder("<pre>" + logger.wholeText + "</pre>", MessageType.INFO, null)
             .setFadeoutTime(300 * 1000)
@@ -205,6 +207,7 @@ public class RunTest extends AnAction
         String wholeText = "";
         int caret = 0;
         int sucCnt = 0;
+        int errCnt = 0;
 
         void logMsg(String msg)
         {
@@ -237,6 +240,7 @@ public class RunTest extends AnAction
         void logErrShort()
         {
             printWrapped("E");
+            ++errCnt;
         }
 
         void logSucShort()

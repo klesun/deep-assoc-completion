@@ -11,10 +11,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;
@@ -43,27 +40,30 @@ public class ArrCtorRes extends Lang
             .fop(rvd -> opt(rvd));
     }
 
-    public static L<PhpClass> resolveMtCls(MultiType mtArg, Project project)
+    public static It<PhpClass> resolveMtCls(MultiType mtArg, Project project)
     {
-        L<PhpClass> resolved = opt(mtArg)
+        It<PhpClass> resolved = opt(mtArg)
             .map(mt -> mt.getIdeaType())
             .map(tpe -> resolveIdeaTypeCls(tpe, project))
             .fap(clses -> clses);
-        if (resolved.size() == 0) {
+        if (!resolved.has()) {
             // allow no namespace in php doc class references
             PhpIndex idx = PhpIndex.getInstance(project);
-            L(ideaTypeToFqn(mtArg.getIdeaType())).flt(fqn -> !fqn.isEmpty())
-                .fch(clsName -> {
+            return It(ideaTypeToFqn(mtArg.getIdeaType()))
+                .flt(fqn -> !fqn.isEmpty())
+                .fap(clsName -> {
                     clsName = clsName.replaceAll("^\\\\", "");
-                    resolved.addAll(idx.getClassesByName(clsName));
-                    resolved.addAll(idx.getInterfacesByName(clsName));
-                    resolved.addAll(idx.getInterfacesByName(clsName));
+                    return It.cnc(
+                        idx.getClassesByName(clsName),
+                        idx.getInterfacesByName(clsName),
+                        idx.getInterfacesByName(clsName)
+                    );
                 });
         }
         return resolved;
     }
 
-    public L<PhpClass> resolveObjCls(PhpExpression expr)
+    public It<PhpClass> resolveObjCls(PhpExpression expr)
     {
         MultiType mt = opt(expr)
             .map(xpr -> ctx.findExprType(xpr))
@@ -71,7 +71,7 @@ public class ArrCtorRes extends Lang
         return resolveMtCls(mt, expr.getProject());
     }
 
-    public L<PhpClass> resolveInstance(PsiElement instExpr)
+    public It<PhpClass> resolveInstance(PsiElement instExpr)
     {
         return opt(instExpr.getFirstChild())
             .fop(toCast(PhpExpression.class))
@@ -102,7 +102,7 @@ public class ArrCtorRes extends Lang
     }
 
     /** like in [Ns\Employee::class, 'getSalary'] */
-    private L<Method> resolveMethodFromArray(L<PsiElement> refParts)
+    private It<Method> resolveMethodFromArray(L<PsiElement> refParts)
     {
         return refParts.gat(1)
             .map(psi -> psi.getFirstChild())

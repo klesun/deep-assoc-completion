@@ -74,11 +74,12 @@ public class GoToNthTest extends AnAction
 
                         Opt<Method> caretFuncOpt = opt(psiFile.findElementAt(caret.getOffset()))
                             .fop(psi -> Tls.findParent(psi, Method.class, a -> true));
-                        return caretFuncOpt.fap(func -> pvdrMeths.flt(m -> m.equals(func)))
+                        return caretFuncOpt
+                            .fap(func -> pvdrMeths.flt(m -> m.equals(func))).arr()
                             .cct(pvdrMeths).cct(caretFuncOpt)
                             .map(func -> ClosRes.getReturnedValue(func, funcCtx))
                             .map(mt -> mt.getEl().getKey("0")) // first arg passed to the testing function
-                            .fop(argMt -> argMt.types.gat(testNum))
+                            .fop(argMt -> argMt.types.arr().gat(testNum))
                             .fst()
                             .thn(test -> {
                                 caret.moveToOffset(test.definition.getTextOffset());

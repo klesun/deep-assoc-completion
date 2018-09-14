@@ -78,7 +78,7 @@ public class FuncCallRes extends Lang
         ) {
             mapRetType.anyKeyElTypes.add(getElMt);
         }
-        return It.cct(list(mapRetType), eachTMapped);
+        return It.cnc(list(mapRetType), eachTMapped);
     }
 
     private DeepType array_combine(FuncCtx callCtx, FunctionReferenceImpl call)
@@ -385,7 +385,8 @@ public class FuncCallRes extends Lang
                 return callCtx.getArgMt(0).getEl().types;
             } else if (name.equals("array_merge")) {
                 return Tls.range(0, params.length)
-                    .fap(i -> callCtx.getArg(i).fap(mt -> mt.types));
+                    .fop(i -> callCtx.getArg(i))
+                    .fap(mt -> mt.types).map(a -> a);
             } else if (name.equals("array_column")) {
                 MultiType elType = callCtx.getArgMt(0).getEl();
                 @Nullable String keyName = callCtx.getArgMt(1).getStringValue();
@@ -411,21 +412,21 @@ public class FuncCallRes extends Lang
                     .wap(types -> new MultiType(types)));
                 return list(arrt);
             } else if (name.equals("func_get_args")) {
-                return ctx.getArg(new ArgOrder(0, true)).fap(a -> a.types);
+                return ctx.getArg(new ArgOrder(0, true)).itr().fap(a -> a.types);
             } else if (name.equals("func_get_arg")) {
-                return callCtx.getArg(0)
+                return callCtx.getArg(0).itr()
                     .fop(mt -> opt(mt.getStringValue()))
                     .flt(str -> Tls.isNum(str))
                     .map(str -> Integer.parseInt(str))
                     .fop(order -> ctx.getArg(order))
-                    .fap(mt -> mt.types);
+                    .fap(mt -> mt.types).map(a -> a);
             } else if (name.equals("call_user_func_array")) {
                 FuncCtx newCtx = lParams.gat(1)
                     .fop(toCast(PhpExpression.class))
                     .map(args -> ctx.subCtxIndirect(args))
                     .def(new FuncCtx(ctx.getSearch()));
                 return callCtx.getArgMt(0).types
-                    .fap(t -> t.getReturnTypes(newCtx));
+                    .fap(t -> t.getReturnTypes(newCtx)).map(a -> a);
             } else if (name.equals("explode")) {
                 DeepType arrt = new DeepType(call, PhpType.ARRAY);
                 arrt.listElTypes.add(() -> new MultiType(list(new DeepType(call, PhpType.STRING))));
@@ -468,17 +469,15 @@ public class FuncCallRes extends Lang
     public It<DeepType> resolve(FunctionReferenceImpl funcCall)
     {
         FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
-        return It.cct(
+        return It.cnc(
             findBuiltInFuncCallType(funcCall),
-            opt(funcCall.getFirstChild())
+            opt(funcCall.getFirstChild()).itr()
                 .fop(toCast(PhpExpression.class))
                 .map(funcVar -> ctx.findExprType(funcVar))
-                .map(mt -> mt.types.fap(t -> t.getReturnTypes(funcCtx)))
-                .def(L()),
-            opt(funcCall.resolve())
+                .fap(mt -> mt.types.fap(t -> t.getReturnTypes(funcCtx))),
+            opt(funcCall.resolve()).itr()
                 .fop(Tls.toCast(FunctionImpl.class))
-                .map(func -> new ClosRes(ctx).resolve(func).getReturnTypes(funcCtx))
-                .def(L())
+                .fap(func -> new ClosRes(ctx).resolve(func).getReturnTypes(funcCtx))
         );
     }
 }

@@ -179,7 +179,7 @@ public class SearchContext extends Lang
 
         if (debug) {
             long elapsed = System.nanoTime() - startTime;
-            System.out.println(indent + "* " + result.fap(a -> a.types).size() +
+            System.out.println(indent + "* " + result.fap(a -> a.types).arr().size() +
                 " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()) + " : " + Tls.implode(", ", result.fap(a -> a.getKeyNames())));
         }
 

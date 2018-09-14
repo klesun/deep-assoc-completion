@@ -1,5 +1,6 @@
 package org.klesun.lang;
 
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import static org.klesun.lang.Lang.*;
@@ -13,6 +14,7 @@ import static org.klesun.lang.Lang.*;
  */
 public class Opt<T>
 {
+    final private boolean has;
     final private T value;
 
     /**
@@ -20,13 +22,20 @@ public class Opt<T>
      */
     public Opt(T value)
     {
+        this.has = value != null;
+        this.value = value;
+    }
+
+    public Opt(T value, boolean has)
+    {
+        this.has = has;
         this.value = value;
     }
 
     /** is value present? */
     public boolean has()
     {
-        return value != null;
+        return has;
     }
 
     /** transform value if present */
@@ -55,13 +64,13 @@ public class Opt<T>
 
     public L<T> arr()
     {
-        return fap(a -> list(a));
+        return L(fap(a -> list(a)));
     }
 
     /** transform opt to array */
-    public <Tnew> L<Tnew> fap(F<T, L<Tnew>> f)
+    public <Tnew> It<Tnew> fap(F<T, Iterable<Tnew>> f)
     {
-        return uni((val) -> f.apply(val), () -> list());
+        return uni((val) -> It(f.apply(val)), () -> It(list()));
     }
 
     public It<T> itr()
@@ -104,7 +113,7 @@ public class Opt<T>
         if (has()) {
             return value;
         } else {
-            throw new RuntimeException("Tried to unwrap when value not present");
+            throw new NoSuchElementException("Tried to unwrap when value not present");
         }
     }
 

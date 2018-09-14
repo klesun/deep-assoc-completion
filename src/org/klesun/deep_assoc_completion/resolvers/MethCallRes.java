@@ -13,10 +13,7 @@ import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.MultiType;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -94,23 +91,23 @@ public class MethCallRes extends Lang
 
     private MultiType findBuiltInRetType(Method meth, FuncCtx argCtx, MethodReference methCall)
     {
-        L<DeepType> types = L();
+        It<DeepType> types = It(list());
         String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
         if (clsNme.equals("PDO") && meth.getName().equals("query") ||
             clsNme.equals("PDO") && meth.getName().equals("prepare")
         ) {
-            L<DeepType> parsedSql = argCtx.getArg(0)
+            It<DeepType> parsedSql = argCtx.getArg(0)
                 .fap(mt -> mt.types)
                 .fop(type -> parseSqlSelect(type, meth.getProject()));
             DeepType type = new DeepType(methCall);
-            type.pdoTypes.addAll(parsedSql);
-            types.add(type);
+            parsedSql.fch(type.pdoTypes::add);
+            types = It(list(type));
         } else if (clsNme.equals("PDOStatement") && meth.getName().equals("fetch")) {
-            L<DeepType> pdoTypes = opt(methCall.getClassReference())
+            It<DeepType> pdoTypes = opt(methCall.getClassReference())
                 .fop(toCast(PhpExpression.class))
                 .map(obj -> ctx.findExprType(obj))
                 .fap(mt -> mt.types.fap(t -> t.pdoTypes));
-            types.addAll(pdoTypes);
+            types = It(pdoTypes);
         }
         return new MultiType(types);
     }
@@ -145,7 +142,7 @@ public class MethCallRes extends Lang
         };
     }
 
-    public static L<Method> resolveMethodsNoNs(MethodReference call, FuncCtx ctx)
+    public static It<Method> resolveMethodsNoNs(MethodReference call, FuncCtx ctx)
     {
         String cls = opt(call.getClassReference()).map(c -> c.getText()).def("");
         String mth = opt(call.getName()).def("");
@@ -155,23 +152,23 @@ public class MethCallRes extends Lang
                 .map(clsPsi -> clsPsi.getFQN())
                 .def(cls);
         }
-        return L(MethCallRes.resolveMethodsNoNs(cls, mth, call.getProject()));
+        return MethCallRes.resolveMethodsNoNs(cls, mth, call.getProject());
     }
 
-    private static L<Method> resolveMethodsNoNs(String partialFqn, String func, Project proj)
+    private static It<Method> resolveMethodsNoNs(String partialFqn, String func, Project proj)
     {
         PhpIndex idx = PhpIndex.getInstance(proj);
         String justName = L(partialFqn.split("\\\\")).lst().unw();
-        return new L<PhpClass>()
-            .cct(L(idx.getClassesByName(justName)))
-            .cct(L(idx.getInterfacesByName(justName)))
-            .cct(L(idx.getTraitsByName(justName)))
-            .flt(cls -> cls.getFQN().endsWith(partialFqn))
+        return It.cnc(
+            L(idx.getClassesByName(justName)),
+            L(idx.getInterfacesByName(justName)),
+            L(idx.getTraitsByName(justName))
+        ).flt(cls -> cls.getFQN().endsWith(partialFqn))
             .fap(cls -> L(cls.getMethods()))
             .flt(m -> Objects.equals(m.getName(), func));
     }
 
-    private L<Method> findReferenced(MethodReferenceImpl fieldRef, FuncCtx ctx)
+    private It<Method> findReferenced(MethodReferenceImpl fieldRef, FuncCtx ctx)
     {
 //         return opt(fieldRef.resolve()).fop(toCast(Method.class));
         return opt(fieldRef.getClassReference())
@@ -183,16 +180,16 @@ public class MethCallRes extends Lang
             .flt(f -> f.getName().equals(fieldRef.getName()));
     }
 
-    private Opt<L<Method>> resolveMethodFromCall(MethodReferenceImpl call, FuncCtx ctx)
+    private Opt<It<Method>> resolveMethodFromCall(MethodReferenceImpl call, FuncCtx ctx)
     {
         return Opt.fst(() -> opt(null)
-            , () -> opt(findReferenced(call, ctx)).flt(found -> found.size() > 0)
-            , () -> opt(L(call.multiResolve(false)))
+            , () -> opt(findReferenced(call, ctx)).flt(found -> found.has())
+            , () -> opt(It(call.multiResolve(false)))
                 .map(l -> l.map(v -> v.getElement()))
                 .map(l -> l.fop(toCast(Method.class)))
-                .flt(l -> l.s.size() > 0)
+                .flt(l -> l.has())
             , () -> opt(resolveMethodsNoNs(call, ctx))
-                .flt(l -> l.s.size() > 0)
+                .flt(l -> l.has())
         );
     }
 
@@ -200,11 +197,11 @@ public class MethCallRes extends Lang
     {
         FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
         L<DeepType> rtypes = resolveMethodFromCall(funcCall, ctx)
-            .map(funcs -> list(
-                funcs.fap(func -> findMethRetType(func).apply(funcCtx)),
-                funcs.fap(func -> findBuiltInRetType(func, funcCtx, funcCall).types)
-            ).fap(a -> a))
-            .def(list());
+            .fap(funcs -> funcs)
+            .fap(func -> It.cnc(
+                findMethRetType(func).apply(funcCtx),
+                findBuiltInRetType(func, funcCtx, funcCall).types
+            )).arr();
         return new MultiType(rtypes);
     }
 }

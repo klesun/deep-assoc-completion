@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 /**
  * provides static functions that would
@@ -122,8 +123,9 @@ public class Tls extends Lang
         }
     }
 
-    public static String implode(String delimiter, L<String> values)
+    public static String implode(String delimiter, Iterable<String> valueIt)
     {
+        L<String> values = L(valueIt);
         String result = "";
         for (int i = 0; i < values.size(); ++i) {
             result += values.get(i);
@@ -159,13 +161,9 @@ public class Tls extends Lang
         };
     }
 
-    public static L<Integer> range(int l, int r)
+    public static It<Integer> range(int l, int r)
     {
-        L<Integer> result = L();
-        for (int i = l; i < r; ++i) {
-            result.add(i);
-        }
-        return result;
+        return new It<>(IntStream.range(l, r).boxed());
     }
 
     /**
@@ -191,5 +189,23 @@ public class Tls extends Lang
     {
         PhpType type = exp.getType();
         return type;
+    }
+
+    public static <T> T ife(boolean cond, S<T> then, S<T> els)
+    {
+        if (cond) {
+            return then.get();
+        } else {
+            return els.get();
+        }
+    }
+
+    public static <T> Iterable<T> ifi(boolean cond, S<Iterable<T>> then)
+    {
+        if (cond) {
+            return then.get();
+        } else {
+            return list();
+        }
     }
 }
