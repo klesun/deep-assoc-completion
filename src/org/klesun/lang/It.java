@@ -17,7 +17,7 @@ import static org.klesun.lang.Lang.*;
  */
 public class It<A> implements Iterable<A>
 {
-    private Opt<Iterator<A>> iterator = non();
+    private Opt<Iterator<A>> iterator = Lang.non();
     private Iterable<A> source;
     private boolean disposed = false;
 
@@ -42,6 +42,11 @@ public class It<A> implements Iterable<A>
                 return source[pos++];
             }
         });
+    }
+
+    public static <B> It<B> non()
+    {
+        return new It<>(list());
     }
 
     public static <B> It<B> cnc(Iterable<B>... args)
@@ -81,7 +86,7 @@ public class It<A> implements Iterable<A>
         }
         Iterator<A> iter = getIterator();
         disposed = true;
-        this.iterator = non();
+        this.iterator = Lang.non();
         return iter;
     }
 

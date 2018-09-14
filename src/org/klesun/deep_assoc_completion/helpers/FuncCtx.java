@@ -127,7 +127,8 @@ public class FuncCtx extends Lang
     @NotNull
     public MultiType findExprType(PhpExpression expr)
     {
-        MultiType result = search.findExprType(expr, this).def(new MultiType(L()));
+        // TODO: return iterable
+        MultiType result = new MultiType(search.findExprType(expr, this));
         return result;
     }
 
@@ -135,7 +136,7 @@ public class FuncCtx extends Lang
     {
         int oldDepth = search.depthLeft;
         search.setDepth(Math.min(oldDepth, limit));
-        MultiType result = search.findExprType(expr, this).def(new MultiType(L()));
+        MultiType result = new MultiType(search.findExprType(expr, this));
         search.setDepth(oldDepth);
         return result;
     }

@@ -3,12 +3,10 @@ package org.klesun.deep_assoc_completion.helpers;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.DeepTypeResolver;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
@@ -28,7 +26,7 @@ public class SearchContext extends Lang
     // for performance measurement
     private int expressionsResolved = 0;
     final public L<PhpExpression> psiTrace = L();
-    final private Map<FuncCtx, Map<PhpExpression, MultiType>> ctxToExprToResult = new HashMap<>();
+    final private Map<FuncCtx, Map<PhpExpression, Iterable<DeepType>>> ctxToExprToResult = new HashMap<>();
 
     public SearchContext(@Nullable Project project)
     {
@@ -93,7 +91,7 @@ public class SearchContext extends Lang
         return false;
     }
 
-    private Opt<MultiType> takeFromCache(FuncCtx ctx, PhpExpression expr)
+    private Opt<Iterable<DeepType>> takeFromCache(FuncCtx ctx, PhpExpression expr)
     {
         if (!ctxToExprToResult.containsKey(ctx)) {
             return opt(null);
@@ -101,11 +99,11 @@ public class SearchContext extends Lang
         if (!ctxToExprToResult.get(ctx).containsKey(expr)) {
             return opt(null);
         }
-        MultiType mt = ctxToExprToResult.get(ctx).get(expr);
+        Iterable<DeepType> mt = ctxToExprToResult.get(ctx).get(expr);
         return opt(mt);
     }
 
-    private void putToCache(FuncCtx ctx, PhpExpression expr, MultiType result)
+    private void putToCache(FuncCtx ctx, PhpExpression expr, Iterable<DeepType> result)
     {
         if (!ctxToExprToResult.containsKey(ctx)) {
             ctxToExprToResult.put(ctx, new HashMap<>());
@@ -116,7 +114,7 @@ public class SearchContext extends Lang
         ctxToExprToResult.get(ctx).put(expr, result);
     }
 
-    public Opt<MultiType> findExprType(PhpExpression expr, FuncCtx funcCtx)
+    public Iterable<DeepType> findExprType(PhpExpression expr, FuncCtx funcCtx)
     {
         /** @debug */
         long time = System.nanoTime();
@@ -139,16 +137,16 @@ public class SearchContext extends Lang
         }
 
         if (depthLeft <= 0) {
-            return opt(null);
+            return It.non();
         } else if (++expressionsResolved > getMaxExpressions()) {
             /** @debug */
             System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
-            return opt(null);
+            return It.non();
         } else if (timeout.flt(tout -> seconds > tout).has()) {
             String fileText = expr.getContainingFile().getText();
             int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
             System.out.println(indent + "## Timed out " + seconds + " " + expr.getClass() + " " + Tls.singleLine(expr.getText(), 50) + " " + expr.getContainingFile().getName() + ":" + phpLineNum);
-            return opt(null);
+            return It.non();
         }
         --depthLeft;
         psiTrace.add(expr);
@@ -158,20 +156,21 @@ public class SearchContext extends Lang
             }
             psiTrace.remove(psiTrace.size() - 1);
             ++depthLeft;
-            return opt(MultiType.CIRCULAR_REFERENCE);
+            return It.non();
         }
         long startTime = System.nanoTime();
 
-        Opt<MultiType> result = takeFromCache(funcCtx, expr);
+        Opt<Iterable<DeepType>> result = takeFromCache(funcCtx, expr);
         if (result.has()) {
             if (debug) {
                 System.out.println(indent + "<< TAKING RESULT FROM CACHE");
             }
         } else {
-            putToCache(funcCtx, expr, MultiType.CIRCULAR_REFERENCE);
-            result = DeepTypeResolver.resolveIn(expr, funcCtx)
-                .map(ts -> new MultiType(ts));
-            result.thn(mt -> putToCache(funcCtx, expr, mt));
+            putToCache(funcCtx, expr, list());
+            Iterable<DeepType> mit = DeepTypeResolver.resolveIn(expr, funcCtx)
+                .fap(a -> a).wap(tit -> new MemoizingIterable<>(tit.iterator()));
+            result = som(mit);
+            result.thn(mt -> putToCache(funcCtx, expr, mit));
         }
 
         psiTrace.remove(psiTrace.size() - 1);
@@ -179,11 +178,11 @@ public class SearchContext extends Lang
 
         if (debug) {
             long elapsed = System.nanoTime() - startTime;
-            System.out.println(indent + "* " + result.fap(a -> a.types).arr().size() +
-                " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()) + " : " + Tls.implode(", ", result.fap(a -> a.getKeyNames())));
+            System.out.println(indent + "* " + result.fap(a -> a).arr().size() +
+                " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()) + " : " + Tls.implode(", ", result.map(MultiType::new).fap(a -> a.getKeyNames())));
         }
 
-        return result;
+        return result.def(It.non());
     }
 
     public int getExpressionsResolved()
