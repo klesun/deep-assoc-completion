@@ -228,6 +228,10 @@ public class It<A> implements Iterable<A>
         return wrapper.apply(this);
     }
 
+    public Opt<A> fst() {
+        return has() ? Lang.som(dispose().next()) : Lang.non();
+    }
+
     public boolean has()
     {
         return getIterator().hasNext();

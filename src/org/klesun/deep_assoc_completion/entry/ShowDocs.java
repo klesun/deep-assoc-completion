@@ -20,6 +20,7 @@ import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Tls;
 
@@ -31,15 +32,15 @@ import static org.klesun.lang.Lang.*;
 
 public class ShowDocs extends AnAction
 {
-    public static List<DeepType> findPsiType(PsiElement psi)
+    public static It<DeepType> findPsiType(PsiElement psi)
     {
         SearchContext search = new SearchContext(psi.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(false, psi.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
-        return list(
+        return It.cnc(
             Tls.cast(PhpExpression.class, psi)
-                .fap(expr -> funcCtx.findExprType(expr).types),
+                .fap(expr -> funcCtx.findExprType(expr)),
             Tls.cast(Parameter.class, psi)
                 .fap(par -> {
                     int order = opt(par.getParent()).fop(toCast(ParameterList.class))
@@ -55,7 +56,7 @@ public class ShowDocs extends AnAction
                             return list(arrt);
                         });
                 })
-        ).fap(a -> a);
+        );
     }
 
     public void actionPerformed(AnActionEvent e)
@@ -64,7 +65,7 @@ public class ShowDocs extends AnAction
             .fop(psiFile -> opt(e.getData(LangDataKeys.CARET))
                 .map(caret -> psiFile.findElementAt(caret.getOffset())))
             .map(psi -> psi instanceof LeafPsiElement ? psi.getParent() : psi)
-            .map(psi -> DeepType.varExport(findPsiType(psi)))
+            .map(psi -> DeepType.varExport(findPsiType(psi).arr()))
             .def("There is no file opened to describe a php variable");
 
         System.out.println(doc);

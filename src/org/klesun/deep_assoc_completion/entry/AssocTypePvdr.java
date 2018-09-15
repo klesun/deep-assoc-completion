@@ -11,6 +11,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.resolve.types.PhpTypeProvider3;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.lang.L;
 import org.klesun.lang.Lang;
@@ -71,7 +72,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         try {
             result = Tls.cast(PhpExpression.class, psi)
                 .map(exp -> funcCtx.findExprType(exp))
-                .map(mt -> mt.getIdeaType())
+                .map(tit -> Mt.getIdeaTypeSt(tit))
                 .def(null);
         } catch (Throwable exc) {
             // throwing some exceptions further would cause class to become undefined

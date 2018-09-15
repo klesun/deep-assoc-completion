@@ -11,7 +11,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.KeyType;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.ArgRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
@@ -49,7 +49,7 @@ public class VarRes extends Lang
                 .map(names -> {
                     DeepType t = new DeepType(strt.definition, PhpType.ARRAY);
                     names.forEach(n -> t.addKey(n, strt.definition)
-                        .addType(() -> new MultiType(list(new DeepType(strt.definition, PhpType.STRING))), PhpType.STRING));
+                        .addType(() -> new Mt(list(new DeepType(strt.definition, PhpType.STRING))), PhpType.STRING));
                     return t;
                 }));
     }
@@ -70,18 +70,18 @@ public class VarRes extends Lang
                 return args.gat(1)
                     .flt(asd -> isCaretArr)
                     .fop(Tls.toCast(PhpExpression.class))
-                    .map(el -> new Assign(keys, () -> ctx.findExprType(el), false, el, Tls.getIdeaType(el)));
+                    .map(el -> new Assign(keys, () -> ctx.findExprType(el).wap(Mt::new), false, el, Tls.getIdeaType(el)));
             });
     }
 
-    private Opt<S<MultiType>> assertForeachElement(PsiElement varRef)
+    private Opt<S<Mt>> assertForeachElement(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fop(toCast(ForeachImpl.class))
             .fop(fch -> opt(fch.getArray())
                 .fop(toCast(PhpExpression.class))
                 .map(arr -> () -> {
-                    MultiType arrt = ctx.findExprType(arr);
+                    Mt arrt = ctx.findExprType(arr).wap(Mt::new);
                     L<Variable> tuple = L(fch.getVariables());
                     Opt<Variable> keyVarOpt = opt(fch.getKey())
                         // IDEA breaks on list() - should help her
@@ -96,7 +96,7 @@ public class VarRes extends Lang
                         if (varRef.isEquivalentTo(keyVarOpt.unw())) {
                             return arrt.types.fap(t -> L(t.keys.values()))
                                 .map(keyObj -> new DeepType(keyObj.definition, PhpType.STRING, keyObj.name))
-                                .wap(MultiType::new);
+                                .wap(Mt::new);
                         }
                     }
                     if (tuple.size() > 1) {
@@ -110,7 +110,7 @@ public class VarRes extends Lang
                 }));
     }
 
-    private Opt<S<MultiType>> assertTupleAssignment(PsiElement varRef)
+    private Opt<S<Mt>> assertTupleAssignment(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fop(toCast(MultiassignmentExpressionImpl.class))
@@ -118,7 +118,7 @@ public class VarRes extends Lang
                 /** array creation is wrapped inside an "expression impl" */
                 .map(v -> v.getFirstPsiChild())
                 .fop(toCast(PhpExpression.class))
-                .map(val -> ctx.findExprType(val).types)
+                .map(val -> ctx.findExprType(val))
                 .flt(types -> types.has())
                 .fop(arrts -> opt(multi.getVariables())
                     .fop(vars -> {
@@ -135,11 +135,11 @@ public class VarRes extends Lang
                         .fap(v -> v)
                     )
                 )
-                .map(mtgs -> () -> new MultiType(mtgs.fap(g -> g.get().types)))
+                .map(mtgs -> () -> new Mt(mtgs.fap(g -> g.get().types)))
             );
     }
 
-    private Opt<S<MultiType>> assertPregMatchResult(PsiElement varRef)
+    private Opt<S<Mt>> assertPregMatchResult(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fop(toCast(ParameterListImpl.class))
@@ -152,9 +152,9 @@ public class VarRes extends Lang
             .fop(fun -> L(fun.getParameters()).fst())
             .fop(toCast(PhpExpression.class))
             .map(regexPsi -> () -> {
-                MultiType mt = ctx.findExprType(regexPsi);
-                It<DeepType> matchesType = makeRegexNameCaptureTypes(mt.types.itr());
-                return new MultiType(matchesType);
+                It<DeepType> mt = ctx.findExprType(regexPsi);
+                It<DeepType> matchesType = makeRegexNameCaptureTypes(mt);
+                return new Mt(matchesType);
             });
     }
 
@@ -173,8 +173,7 @@ public class VarRes extends Lang
             .fop(toCast(PhpDocVarImpl.class))
             .fop(varDoc -> opt(varDoc.getParent()))
             .fop(toCast(PhpDocTag.class))
-            .fop(docTag -> new DocParamRes(ctx).resolve(docTag))
-            .fap(mt -> mt.types);
+            .fap(docTag -> new DocParamRes(ctx).resolve(docTag));
     }
 
     public It<DeepType> resolve(Variable variable)
@@ -202,14 +201,14 @@ public class VarRes extends Lang
                         .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi, PhpType.ARRAY))
                     , () -> Tls.cast(ParameterImpl.class, refPsi)
                         .map(param -> {
-                            S<MultiType> mtg = () -> new ArgRes(ctx).resolveArg(param);
+                            S<Mt> mtg = () -> new ArgRes(ctx).resolveArg(param);
                             return new Assign(list(), mtg, true, refPsi, param.getType());
                         }));
             })
             .end(ass -> ass.didSurelyHappen && ass.keys.size() == 0);
 
         DeepType typeFromIdea = new DeepType(variable);
-        Opt<MultiType> thisType = opt(variable)
+        Opt<Mt> thisType = opt(variable)
             .flt(vari -> vari.getText().equals("$this"))
             .fop(vari -> ctx.instGetter.map(g -> g.get()));
         return It.cnc(

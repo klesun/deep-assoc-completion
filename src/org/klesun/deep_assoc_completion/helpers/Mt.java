@@ -17,18 +17,18 @@ import java.util.*;
  * like getKey(), elToArr(), arToEl() - all the
  * static functions that take list of typeGetters
  */
-public class MultiType extends Lang
+public class Mt extends Lang
 {
     static enum REASON {OK, CIRCULAR_REFERENCE, FAILED_TO_RESOLVE, DEPTH_LIMIT, INVALID_PSI}
-    public static MultiType CIRCULAR_REFERENCE = new MultiType(L(), REASON.CIRCULAR_REFERENCE);
-    public static MultiType INVALID_PSI = new MultiType(L(), REASON.INVALID_PSI);
+    public static Mt CIRCULAR_REFERENCE = new Mt(L(), REASON.CIRCULAR_REFERENCE);
+    public static Mt INVALID_PSI = new Mt(L(), REASON.INVALID_PSI);
 
     private REASON reason;
     final public L<DeepType> types;
 
     private boolean isGettingKey = false;
 
-    public MultiType(Iterable<DeepType> types, REASON reason)
+    public Mt(Iterable<DeepType> types, REASON reason)
     {
         // there sometimes appear thousands of duplicates
         // I'm not sure I'm good mathematician enough to find
@@ -38,29 +38,41 @@ public class MultiType extends Lang
         this.types = L(It(types).unq());
         this.reason = reason;
     }
-    public MultiType(Iterable<DeepType> types)
+    public Mt(Iterable<DeepType> types)
     {
         this(types, REASON.OK);
+    }
+
+    public static DeepType getInArraySt(It<DeepType> types, PsiElement call)
+    {
+        DeepType result = new DeepType(call, PhpType.ARRAY);
+        result.listElTypes.add(() -> new Mt(types));
+        return result;
     }
 
     /** transforms type T to T[] */
     public DeepType getInArray(PsiElement call)
     {
-        DeepType result = new DeepType(call, PhpType.ARRAY);
-        result.listElTypes.add(() -> new MultiType(types));
-        return result;
+        return getInArraySt(It(types), call);
     }
 
-    public String getStringValue()
+    public static String getStringValueSt(Iterable<DeepType> types)
     {
         int i = 0;
         @Nullable String value = null;
         for (DeepType t: types) {
-            if (i > 0) return null;
+            if (i > 0 && !Objects.equals(t.stringValue, value)) {
+                return null;
+            }
             value = t.stringValue;
             ++i;
         }
         return value;
+    }
+
+    public String getStringValue()
+    {
+        return getStringValueSt(types);
     }
 
     // TODO: return iterator
@@ -69,36 +81,46 @@ public class MultiType extends Lang
         return types.fop(t -> opt(t.stringValue));
     }
 
-    public MultiType getEl()
+    public static It<DeepType> getElSt(DeepType arrt)
+    {
+        return getKeySt(arrt, null);
+    }
+
+    public Mt getEl()
     {
         return getKey(null);
     }
 
-    public MultiType getKey(String keyName)
+    public static It<DeepType> getKeySt(DeepType type, @Nullable String keyName)
+    {
+        return It.cnc(
+            Tls.ife(keyName != null, () -> It.cnc(
+                Lang.getKey(type.keys, keyName)
+                    .fap(v -> v.getTypes()),
+                Tls.ifi(Tls.isNum(keyName), () -> type.listElTypes.fap(t -> t.get().types))
+            ), () -> It.cnc(
+                It(type.keys.values())
+                    .fap(v -> v.getTypes()),
+                type.listElTypes.fap(t -> t.get().types)
+            )),
+            type.anyKeyElTypes.fap(t -> t.get().types),
+            opt(type.briefType.elementType().filterUnknown().filterMixed())
+                .flt(it -> !it.isEmpty()).itr()
+                .map(it -> new DeepType(type.definition, it, false))
+        );
+    }
+
+    public Mt getKey(String keyName)
     {
         if (isGettingKey) { // see issue #45
-            return MultiType.CIRCULAR_REFERENCE;
+            return Mt.CIRCULAR_REFERENCE;
         }
         isGettingKey = true;
 
-        It<DeepType> keyTsIt = It.cnc(
-            Tls.ife(keyName != null, () -> It.cnc(
-                types.fop(type -> Lang.getKey(type.keys, keyName))
-                    .fap(v -> v.getTypes()),
-                Tls.ifi(Tls.isNum(keyName), () -> types.fap(t -> t.listElTypes).fap(t -> t.get().types))
-            ), () -> It.cnc(
-                types.fap(t -> L(t.keys.values()))
-                    .fap(v -> v.getTypes()),
-                types.fap(t -> t.listElTypes).fap(t -> t.get().types)
-            )),
-            types.fap(t -> t.anyKeyElTypes).fap(t -> t.get().types),
-            types.fop(t -> opt(t.briefType.elementType().filterUnknown().filterMixed())
-                .flt(it -> !it.isEmpty())
-                .map(it -> new DeepType(t.definition, it, false)))
-        );
+        L<DeepType> keyTsIt = types.fap(t -> getKeySt(t, keyName));
 
         isGettingKey = false;
-        return new MultiType(keyTsIt);
+        return new Mt(keyTsIt);
     }
 
     public PhpType getKeyBriefType(@NonNull String keyName)
@@ -133,11 +155,16 @@ public class MultiType extends Lang
         return types.fap(t -> t.props.vls());
     }
 
-    public PhpType getIdeaType()
+    public static PhpType getIdeaTypeSt(It<DeepType> types)
     {
         PhpType ideaType = new PhpType();
         types.map(t -> t.briefType).fch(ideaType::add);
         return ideaType;
+    }
+
+    public PhpType getIdeaType()
+    {
+        return getIdeaTypeSt(It(types));
     }
 
     public String getBriefValueText(int maxLen, Set<DeepType> circularRefs)
@@ -200,11 +227,5 @@ public class MultiType extends Lang
     public boolean isInt()
     {
         return types.any(t -> t.isNumber());
-    }
-
-    // TODO: return iterator
-    public L<FuncCtx> getArgsPassedToCtor()
-    {
-        return types.fop(t -> t.ctorArgs);
     }
 }

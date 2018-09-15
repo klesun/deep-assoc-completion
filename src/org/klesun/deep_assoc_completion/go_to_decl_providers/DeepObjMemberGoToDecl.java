@@ -10,6 +10,7 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.L;
@@ -43,7 +44,7 @@ public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandle
             .flt(mem -> mem.multiResolve(false).length == 0)
             .fap(mem -> opt(mem.getFirstChild())
                 .fop(toCast(PhpExpression.class))
-                .map(exp -> funcCtx.findExprType(exp))
+                .map(exp -> funcCtx.findExprType(exp).wap(Mt::new))
                 .fap(mt -> list(
                     ArrCtorRes.resolveMtCls(mt, mem.getProject())
                         .fap(cls -> resolveMember(cls, mem.getName())),

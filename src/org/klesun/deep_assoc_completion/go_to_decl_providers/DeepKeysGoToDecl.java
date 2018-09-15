@@ -14,9 +14,10 @@ import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
@@ -64,9 +65,8 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 .map(expr -> expr.getValue())
                 .fop(toCast(PhpExpression.class))
                 .fap(srcExpr -> {
-                    String key = funcCtx.findExprType(literal).getStringValue();
-                    MultiType arrMt = funcCtx.findExprType(srcExpr);
-                    return arrMt.types
+                    String key = funcCtx.findExprType(literal).wap(Mt::getStringValueSt);
+                    return funcCtx.findExprType(srcExpr)
                         .fop(arrt -> opt(arrt.keys.get(key)))
                         .map(k -> k.definition);
                 }));
@@ -105,7 +105,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
             });
     }
 
-    private static Opt<MultiType> resolveDocResult(PsiElement psiElement)
+    private static It<DeepType> resolveDocResult(PsiElement psiElement)
     {
         SearchContext search = new SearchContext(psiElement.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
@@ -113,7 +113,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 
         return opt(psiElement)
             .fop(v -> Tls.findParent(v, PhpDocParamTag.class, psi -> true))
-            .fop(tag -> new DocParamRes(funcCtx).resolve(tag));
+            .fap(tag -> new DocParamRes(funcCtx).resolve(tag));
     }
 
     @Nullable
@@ -133,8 +133,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                     .fch(psi -> psiTargets.add(psi));
                 if (psiTargets.size() == 0) {
                     resolveDocResult(psiElement)
-                        .map(mt -> mt.types)
-                        .thn(types -> types.forEach(t -> psiTargets.add(t.definition)));
+                        .fch(t -> psiTargets.add(t.definition));
                 }
                 removeDuplicates(psiTargets);
                 return psiTargets.map(psi -> truncateOnLineBreak(psi));

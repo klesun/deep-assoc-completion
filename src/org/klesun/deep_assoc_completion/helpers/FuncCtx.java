@@ -8,10 +8,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,16 +22,16 @@ public class FuncCtx extends Lang
     final private Opt<FuncCtx> parent;
     final private Opt<PsiElement> uniqueRef;
     final private SearchContext search;
-    final private L<S<MultiType>> argGetters;
+    final private L<S<Mt>> argGetters;
     private L<Integer> variadicOrders = L();
-    public Opt<Lang.S<MultiType>> instGetter = opt(null);
+    public Opt<Lang.S<Mt>> instGetter = opt(null);
     public Opt<PhpType> clsIdeaType = opt(null);
     final private EArgPsiType argPsiType;
     /** use this when you need to reference a real PSI during parsing of PHP Doc */
     public Opt<PsiElement> fakeFileSource = opt(null);
     private L<StackTraceElement> debugCtorTrace = L();
 
-    private HashMap<Integer, MultiType> cachedArgs = new HashMap<>();
+    private HashMap<Integer, Mt> cachedArgs = new HashMap<>();
 
     public FuncCtx(SearchContext search)
     {
@@ -48,7 +45,7 @@ public class FuncCtx extends Lang
         }
     }
 
-    public FuncCtx(FuncCtx parentCtx, L<S<MultiType>> argGetters, @NotNull PsiElement uniqueRef, EArgPsiType argPsiType)
+    public FuncCtx(FuncCtx parentCtx, L<S<Mt>> argGetters, @NotNull PsiElement uniqueRef, EArgPsiType argPsiType)
     {
         this.argGetters = argGetters;
         this.search = parentCtx.search;
@@ -62,23 +59,23 @@ public class FuncCtx extends Lang
         }
     }
 
-    private MultiType getCached(int index, S<MultiType> argGetter)
+    private Mt getCached(int index, S<Mt> argGetter)
     {
         if (!cachedArgs.containsKey(index)) {
-            cachedArgs.put(index, MultiType.CIRCULAR_REFERENCE);
-            MultiType mt = argGetter.get();
+            cachedArgs.put(index, Mt.CIRCULAR_REFERENCE);
+            Mt mt = argGetter.get();
             cachedArgs.replace(index, mt);
         }
         return cachedArgs.get(index);
     }
 
-    private Opt<MultiType> getPassedVariadicPart(int order)
+    private Opt<Mt> getPassedVariadicPart(int order)
     {
         return variadicOrders.fst()
             .flt(firstVari -> firstVari <= order)
             .map(firstVari -> argGetters.fap((get, i) -> {
                 if (i >= firstVari) {
-                    MultiType mt = getCached(order, get);
+                    Mt mt = getCached(order, get);
                     if (variadicOrders.contains(i)) {
                         mt = mt.getEl();
                     }
@@ -87,17 +84,17 @@ public class FuncCtx extends Lang
                     return list();
                 }
             }))
-            .map(types -> new MultiType(types));
+            .map(types -> new Mt(types));
     }
 
-    public Opt<MultiType> getArg(ArgOrder orderObj)
+    public Opt<Mt> getArg(ArgOrder orderObj)
     {
-        Opt<MultiType> fromVariadic = getPassedVariadicPart(orderObj.order);
+        Opt<Mt> fromVariadic = getPassedVariadicPart(orderObj.order);
         if (fromVariadic.has()) {
             if (orderObj.isVariadic) {
-                return uniqueRef.map(ref -> fromVariadic.unw().getInArray(ref)).map(t -> new MultiType(list(t)));
+                return uniqueRef.map(ref -> fromVariadic.unw().getInArray(ref)).map(t -> new Mt(list(t)));
             } else {
-                return opt(fromVariadic.itr().fap(mt -> mt.types).wap(MultiType::new));
+                return opt(fromVariadic.itr().fap(mt -> mt.types).wap(Mt::new));
             }
         } else if (!orderObj.isVariadic) {
             int index = orderObj.order;
@@ -109,34 +106,32 @@ public class FuncCtx extends Lang
                     .map((argGetter, i) -> getCached(i, argGetter))
                     .fch((mt, i) -> allArgs.addKey(i + "", ref)
                         .addType(() -> mt, mt.getIdeaType()));
-                return new MultiType(list(allArgs));
+                return new Mt(list(allArgs));
             });
         }
     }
 
-    public Opt<MultiType> getArg(Integer index)
+    public Opt<Mt> getArg(Integer index)
     {
         return getArg(new ArgOrder(index, false));
     }
 
-    public MultiType getArgMt(Integer index)
+    public Mt getArgMt(Integer index)
     {
-        return getArg(new ArgOrder(index, false)).def(MultiType.INVALID_PSI);
+        return getArg(new ArgOrder(index, false)).def(Mt.INVALID_PSI);
     }
 
     @NotNull
-    public MultiType findExprType(PhpExpression expr)
+    public It<DeepType> findExprType(PhpExpression expr)
     {
-        // TODO: return iterable
-        MultiType result = new MultiType(search.findExprType(expr, this));
-        return result;
+        return It(search.findExprType(expr, this));
     }
 
-    public MultiType limitResolve(int limit, PhpExpression expr)
+    public It<DeepType> limitResolve(int limit, PhpExpression expr)
     {
         int oldDepth = search.depthLeft;
         search.setDepth(Math.min(oldDepth, limit));
-        MultiType result = new MultiType(search.findExprType(expr, this));
+        It<DeepType> result = It(search.findExprType(expr, this));
         search.setDepth(oldDepth);
         return result;
     }
@@ -150,7 +145,7 @@ public class FuncCtx extends Lang
                 if (ref instanceof ClassReference) {
                     self.clsIdeaType = opt(ref.getType());
                 } else {
-                    self.instGetter = opt(() -> findExprType(ref));
+                    self.instGetter = opt(() -> new Mt(findExprType(ref)));
                 }
             });
         return self;
@@ -167,8 +162,8 @@ public class FuncCtx extends Lang
     public FuncCtx subCtxDirectGeneric(ParameterListOwner funcCall)
     {
         L<PsiElement> psiArgs = L(funcCall.getParameters());
-        L<S<MultiType>> argGetters = psiArgs.map((psi) -> () -> Tls.cast(PhpExpression.class, psi)
-            .uni(arg -> findExprType(arg), () -> MultiType.INVALID_PSI));
+        L<S<Mt>> argGetters = psiArgs.map((psi) -> () -> Tls.cast(PhpExpression.class, psi)
+            .uni(arg -> new Mt(findExprType(arg)), () -> Mt.INVALID_PSI));
         FuncCtx subCtx = new FuncCtx(this, argGetters, funcCall, EArgPsiType.DIRECT);
         psiArgs.fch((arg, i) -> {
             if (opt(arg.getPrevSibling()).map(sib -> sib.getText()).def("").equals("...")) {
@@ -181,15 +176,15 @@ public class FuncCtx extends Lang
     /** context from args passed in array for example in array_map or array_filter */
     public FuncCtx subCtxSingleArgArr(PhpExpression argArr)
     {
-        L<S<MultiType>> argGetters = list(() -> findExprType(argArr).getEl());
+        L<S<Mt>> argGetters = list(() -> findExprType(argArr).fap(Mt::getElSt).wap(Mt::new));
         return new FuncCtx(this, argGetters, argArr, EArgPsiType.ARR);
     }
 
     /** when you have expression PSI and it is not directly passed to the func, ex. call_user_func_array() */
     public FuncCtx subCtxIndirect(PhpExpression args)
     {
-        S<MultiType> getMt = Tls.onDemand(() -> findExprType(args));
-        L<S<MultiType>> argGetters = list();
+        S<Mt> getMt = Tls.onDemand(() -> new Mt(findExprType(args)));
+        L<S<Mt>> argGetters = list();
         // always 10 arguments, got any problem?
         // it probably should be done correctly one day...
         for (int i = 0; i < 10; ++i) {
@@ -249,7 +244,7 @@ public class FuncCtx extends Lang
     }
 
     /** for debug */
-    public L<MultiType> getArgs()
+    public L<Mt> getArgs()
     {
         return argGetters.map(g -> g.get());
     }

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.ArgOrder;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
@@ -44,7 +44,7 @@ public class ArgRes extends Lang
             .flt(varUsage -> caretVar.getName().equals(varUsage.getName()));
     }
 
-    private Opt<MultiType> getArgFromNsFuncCall(FunctionReferenceImpl call, int argOrderOfLambda, int argOrderInLambda)
+    private Opt<Mt> getArgFromNsFuncCall(FunctionReferenceImpl call, int argOrderOfLambda, int argOrderInLambda)
     {
         PsiElement[] params = call.getParameters();
         if (argOrderOfLambda == 0 && params.length > 1) {
@@ -52,7 +52,7 @@ public class ArgRes extends Lang
             if (argOrderInLambda == 0 && "array_map".equals(call.getName())) {
                 return L(call.getParameters()).gat(1)
                     .fop(toCast(PhpExpression.class))
-                    .map(arr -> new FuncCtx(trace.getSearch()).findExprType(arr).getEl());
+                    .map(arr -> new FuncCtx(trace.getSearch()).findExprType(arr).fap(Mt::getElSt).wap(Mt::new));
             }
         } else if (argOrderOfLambda == 1 && params.length > 1) {
             // functions where array is passed in the first argument
@@ -65,13 +65,13 @@ public class ArgRes extends Lang
             ) {
                 return L(call.getParameters()).gat(0)
                     .fop(toCast(PhpExpression.class))
-                    .map(arr -> new FuncCtx(trace.getSearch()).findExprType(arr).getEl());
+                    .map(arr -> new FuncCtx(trace.getSearch()).findExprType(arr).fap(Mt::getElSt).wap(Mt::new));
             }
         }
         return opt(null);
     }
 
-    private Opt<MultiType> getArgFromMethodCall(MethodReferenceImpl call, int argOrderOfLambda, int argOrderInLambda)
+    private Opt<Mt> getArgFromMethodCall(MethodReferenceImpl call, int argOrderOfLambda, int argOrderInLambda)
     {
         PsiElement[] params = call.getParameters();
         if (argOrderOfLambda == 0 && params.length > 1 && argOrderInLambda == 0) {
@@ -84,13 +84,14 @@ public class ArgRes extends Lang
             ) {
                 return L(call.getParameters()).gat(1)
                     .fop(toCast(PhpExpression.class))
-                    .map(arr -> new FuncCtx(trace.getSearch()).findExprType(arr).getEl());
+                    .map(arr -> new FuncCtx(trace.getSearch())
+                        .findExprType(arr).fap(Mt::getElSt).wap(Mt::new));
             }
         }
         return opt(null);
     }
 
-    private Opt<MultiType> getArgPassedTo(PhpExpression funcVar, int caretArgOrder)
+    private Opt<Mt> getArgPassedTo(PhpExpression funcVar, int caretArgOrder)
     {
         return opt(funcVar.getParent())
             .fop(parent -> Opt.fst(() -> opt(null)
@@ -115,20 +116,20 @@ public class ArgRes extends Lang
                                     .map(func -> new KeyUsageResolver(subCtx, 3)
                                         .resolveArgCallArrKeys(func, funcVarOrder, caretArgOrder))
                                     .fap(mt -> mt.types)
-                                    .wap(types -> opt(new MultiType(types)))
+                                    .wap(types -> opt(new Mt(types)))
                             );
                         }))
                 // like $mapper(['a' => 5, 'b' => 6])
                 , () -> Tls.cast(FunctionReferenceImpl.class, parent)
                     .fop(call -> L(call.getParameters()).gat(caretArgOrder))
                     .fop(toCast(PhpExpression.class))
-                    .map(arg -> new FuncCtx(trace.getSearch()).findExprType(arg))
+                    .map(arg -> new FuncCtx(trace.getSearch()).findExprType(arg).wap(Mt::new))
             ));
     }
 
     // $getAirline = function($seg){return $seg['airline'];};
     // array_map($getAirline, $segments);
-    private Opt<MultiType> getFuncVarUsageArg(PsiElement closEpxr, int argOrderInLambda)
+    private Opt<Mt> getFuncVarUsageArg(PsiElement closEpxr, int argOrderInLambda)
     {
         return opt(closEpxr)
             .map(expr -> expr.getParent())
@@ -147,11 +148,11 @@ public class ArgRes extends Lang
                         .fop(toCast(VariableImpl.class))
                         .fop(ref -> getArgPassedTo(ref, argOrderInLambda));
                 })
-                .map(mts -> new MultiType(mts.fap(mt -> mt.types))));
+                .map(mts -> new Mt(mts.fap(mt -> mt.types))));
     }
 
     // $result = static::doSomething($args);
-    private Opt<MultiType> getPrivateFuncUsageArg(FunctionImpl func, int argOrderInLambda)
+    private Opt<Mt> getPrivateFuncUsageArg(FunctionImpl func, int argOrderInLambda)
     {
         // it would be nice to also infer arg type when function is
         // called with array_map([$this, 'doStuff'], $args) one day...
@@ -163,17 +164,16 @@ public class ArgRes extends Lang
             .flt(a -> func.getParameters().length > 0)
             .map(meth -> {
                 PsiFile file = func.getContainingFile();
-                return list(
-                    L(PsiTreeUtil.findChildrenOfType(file, MethodReferenceImpl.class))
+                return It.cnc(
+                    It(PsiTreeUtil.findChildrenOfType(file, MethodReferenceImpl.class))
                         .flt(call -> meth.getName().equals(call.getName()))
                         .flt(call -> opt(call.getClassReference()).map(ref -> ref.getText())
                             .flt(txt -> txt.equals("$this") || txt.equals("self") || txt.equals("static"))
                             .has())
                         .fop(call -> L(call.getParameters()).gat(argOrderInLambda))
                         .fop(toCast(PhpExpression.class))
-                        .map(arg -> new FuncCtx(trace.getSearch()).findExprType(arg))
-                        .fap(mt -> mt.types),
-                    L(PsiTreeUtil.findChildrenOfType(file, ArrayCreationExpressionImpl.class))
+                        .fap(arg -> new FuncCtx(trace.getSearch()).findExprType(arg)),
+                    It(PsiTreeUtil.findChildrenOfType(file, ArrayCreationExpressionImpl.class))
                         .flt(arr -> arr.getChildren().length == 2
                                 && L(arr.getChildren()).gat(0)
                                     .flt(psi -> psi.getText().equals("$this")
@@ -191,20 +191,20 @@ public class ArgRes extends Lang
                                 .getFuncVarUsageArg(arr, argOrderInLambda)
                         ))
                         .fap(mt -> mt.types)
-                ).fap(a -> a);
+                );
             })
-            .map(types -> new MultiType(types));
+            .map(types -> new Mt(types));
     }
 
     // array_map(function($seg){return $seg['airline'];}, $segments);
-    private Opt<MultiType> getInlineFuncArg(@Nullable PsiElement funcExpr, int argOrderInLambda)
+    private Opt<Mt> getInlineFuncArg(@Nullable PsiElement funcExpr, int argOrderInLambda)
     {
         return opt(funcExpr)
             .fop(toCast(PhpExpression.class))
             .fop(call -> getArgPassedTo(call, argOrderInLambda));
     }
 
-    private MultiType peekOutside(ParameterImpl param)
+    private Mt peekOutside(ParameterImpl param)
     {
         return opt(param.getParent())
             .map(paramList -> paramList.getParent())
@@ -215,11 +215,11 @@ public class ArgRes extends Lang
                     , () -> getFuncVarUsageArg(clos.getParent(), order)
                     , () -> getPrivateFuncUsageArg(clos, order)
                 )))
-            .def(MultiType.INVALID_PSI)
+            .def(Mt.INVALID_PSI)
             ;
     }
 
-    private MultiType resolveFromDataProviderDoc(ParameterImpl param)
+    private Mt resolveFromDataProviderDoc(ParameterImpl param)
     {
         return opt(param.getDocComment())
             .fop(toCast(PhpDocCommentImpl.class))
@@ -232,15 +232,15 @@ public class ArgRes extends Lang
             .map(ref -> ref.resolve())
             .fop(toCast(MethodImpl.class))
             .map(met -> ClosRes.getReturnedValue(met, new FuncCtx(trace.getSearch())).types)
-            .map(ts -> new MultiType(ts).getEl())
+            .map(ts -> new Mt(ts).getEl())
             .fop(mt -> getArgOrder(param)
                 .map(order -> mt.getKey(order + "")))
-            .def(MultiType.INVALID_PSI);
+            .def(Mt.INVALID_PSI);
     }
 
-    public MultiType resolveArg(ParameterImpl param)
+    public Mt resolveArg(ParameterImpl param)
     {
-        MultiType result = new MultiType(L());
+        Mt result = new Mt(L());
         int order = getArgOrder(param).def(-1);
 
         It<ParameterImpl> decls = It.cnc(
@@ -262,8 +262,7 @@ public class ArgRes extends Lang
         It<DeepType> docTit = decls
             .fop(arg -> opt(arg.getDocComment()))
             .fop(doc -> opt(doc.getParamTagByName(param.getName())))
-            .fop(doc -> new DocParamRes(trace).resolve(doc))
-            .fap(mt -> mt.types)
+            .fap(doc -> new DocParamRes(trace).resolve(doc))
             ;
         It<DeepType> genericTit = It();
         if (!trace.hasArgs()) {
@@ -279,7 +278,7 @@ public class ArgRes extends Lang
                     }
                 });
         }
-        return new MultiType(It.cnc(
+        return new Mt(It.cnc(
             docTit,
             resolveFromDataProviderDoc(param).types,
             genericTit

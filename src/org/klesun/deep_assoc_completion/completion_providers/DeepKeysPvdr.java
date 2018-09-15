@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.icons.DeepIcons;
 import org.klesun.lang.*;
@@ -123,7 +123,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    public static MultiType resolveAtPsi(PsiElement caretPsi, FuncCtx funcCtx)
+    public static It<DeepType> resolveAtPsi(PsiElement caretPsi, FuncCtx funcCtx)
     {
         return opt(caretPsi.getParent())
             .map(litRaw -> litRaw.getParent())
@@ -132,13 +132,12 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .fop(toCast(ArrayAccessExpression.class))
             .map(expr -> expr.getValue())
             .fop(toCast(PhpExpression.class))
-            .map(srcExpr -> funcCtx.findExprType(srcExpr))
-            .def(MultiType.INVALID_PSI);
+            .fap(srcExpr -> funcCtx.findExprType(srcExpr));
     }
 
-    public static LookupElement makeFullLookup(MultiType mt, String keyName)
+    public static LookupElement makeFullLookup(Mt mt, String keyName)
     {
-        MultiType keyMt = mt.getKey(keyName);
+        Mt keyMt = mt.getKey(keyName);
         String briefValue = keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
         String ideaTypeStr = keyMt.getIdeaType().filterUnknown().toStringResolved();
         return makePaddedLookup(keyName, ideaTypeStr, briefValue);
@@ -157,7 +156,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .uni(l -> false, () -> true); // else just inside []
 
         long startTime = System.nanoTime();
-        MultiType mt = resolveAtPsi(caretPsi, new FuncCtx(search));
+        Mt mt = resolveAtPsi(caretPsi, new FuncCtx(search)).wap(Mt::new);
 
         L<String> keyNames = mt.getKeyNames();
         L<MutableLookup> lookups = L();
@@ -173,8 +172,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         });
         It<DeepType> indexTypes = mt.types.itr().fap(t -> t.getListElemTypes());
         if (indexTypes.has()) {
-            String typeText = new MultiType(indexTypes).getBriefValueText(BRIEF_TYPE_MAX_LEN);
-            String ideaType = new MultiType(indexTypes).getIdeaType().filterUnknown().toStringResolved();
+            String typeText = new Mt(indexTypes).getBriefValueText(BRIEF_TYPE_MAX_LEN);
+            String ideaType = new Mt(indexTypes).getIdeaType().filterUnknown().toStringResolved();
             if (mt.hasNumberIndexes()) {
                 for (int k = 0; k < 5; ++k) {
                     result.addElement(makePaddedLookup(k + "", ideaType, typeText));

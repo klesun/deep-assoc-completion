@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.lang.It;
@@ -64,7 +64,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
                 )));
     }
 
-    private MultiType resolve(ArrayCreationExpression lit, boolean isAutoPopup, Editor editor)
+    private Mt resolve(ArrayCreationExpression lit, boolean isAutoPopup, Editor editor)
     {
         SearchContext search = new SearchContext(lit.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));

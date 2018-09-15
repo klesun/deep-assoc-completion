@@ -15,7 +15,7 @@ import com.jetbrains.php.lang.psi.elements.PhpClassMember;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.It;
@@ -66,7 +66,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         ).def(base);
     }
 
-    private static L<LookupElement> getDynamicProps(MultiType mt)
+    private static L<LookupElement> getDynamicProps(Mt mt)
     {
         return mt.getProps().dct(p -> T2(p.name, p)).vls()
             .map(prop -> LookupElementBuilder.create(prop.name)
@@ -97,7 +97,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                 .map(mem -> mem.getClassReference())
                 .fap(ref -> {
                     // IDEA did not resolve the class on it's own - worth trying Deep resolution
-                    MultiType mt = funcCtx.findExprType(ref);
+                    Mt mt = funcCtx.findExprType(ref).wap(Mt::new);
                     result.addAllElements(getDynamicProps(mt));
                     return ArrCtorRes.resolveMtCls(mt, ref.getProject())
                         .fap(cls -> list(

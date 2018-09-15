@@ -11,7 +11,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
 public class MiscRes extends Lang
@@ -23,14 +23,13 @@ public class MiscRes extends Lang
         this.ctx = ctx;
     }
 
-    private MultiType findPsiExprType(PsiElement psi)
+    private It<DeepType> findPsiExprType(PsiElement psi)
     {
         return Tls.cast(PhpExpression.class, psi)
-            .map(casted -> ctx.findExprType(casted))
-            .def(new MultiType(L()));
+            .fap(casted -> ctx.findExprType(casted));
     }
 
-    private Opt<MultiType> resolveNew(NewExpression newExp)
+    private Opt<Mt> resolveNew(NewExpression newExp)
     {
         return Opt.fst(
             () -> opt(newExp.getClassReference())
@@ -56,15 +55,15 @@ public class MiscRes extends Lang
         return Opt.fst(() -> opt(null)
             , () -> Tls.cast(TernaryExpressionImpl.class, expr)
                 .map(tern -> It.cnc(
-                    findPsiExprType(tern.getTrueVariant()).types,
-                    findPsiExprType(tern.getFalseVariant()).types
+                    findPsiExprType(tern.getTrueVariant()),
+                    findPsiExprType(tern.getFalseVariant())
                 ))
             , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("??") || op.getText().equals("?:"))
                     .map(op -> It.cnc(
-                        findPsiExprType(bin.getLeftOperand()).types,
-                        findPsiExprType(bin.getRightOperand()).types
+                        findPsiExprType(bin.getLeftOperand()),
+                        findPsiExprType(bin.getRightOperand())
                     )))
             , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
@@ -81,10 +80,10 @@ public class MiscRes extends Lang
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("+"))
                     .map(op -> {
-                        MultiType lmt = findPsiExprType(bin.getLeftOperand());
-                        MultiType rmt = findPsiExprType(bin.getRightOperand());
-                        L<DeepType> types = L();
-                        It<DeepType> tit = It.cnc(lmt.types, rmt.types);
+                        It<DeepType> tit = It.cnc(
+                            findPsiExprType(bin.getLeftOperand()),
+                            findPsiExprType(bin.getRightOperand())
+                        );
                         if (tit.any(t -> t.isNumber())) {
                             return list(new DeepType(bin, PhpType.NUMBER));
                         } else {
@@ -95,9 +94,9 @@ public class MiscRes extends Lang
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("."))
                     .map(op -> {
-                        MultiType lmt = findPsiExprType(bin.getLeftOperand());
-                        MultiType rmt = findPsiExprType(bin.getRightOperand());
-                        String ccted = opt(lmt.getStringValue()).def("") + opt(rmt.getStringValue()).def("");
+                        It<DeepType> lmt = findPsiExprType(bin.getLeftOperand());
+                        It<DeepType> rmt = findPsiExprType(bin.getRightOperand());
+                        String ccted = opt(Mt.getStringValueSt(lmt)).def("") + opt(Mt.getStringValueSt(rmt)).def("");
                         String unescaped = StringEscapeUtils.unescapeJava(ccted); // PHP ~ java
                         DeepType type = new DeepType(bin, PhpType.STRING, unescaped);
                         return list(type);

@@ -8,7 +8,7 @@ import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
 import java.util.*;
@@ -24,8 +24,8 @@ public class DeepType extends Lang
     // just like array keys, but dynamic object properties
     public final Dict<Key> props = new Dict<>(L());
     // possible typeGetters of list element
-    public L<S<MultiType>> anyKeyElTypes = new L<>();
-    public L<S<MultiType>> listElTypes = new L<>();
+    public L<S<Mt>> anyKeyElTypes = new L<>();
+    public L<S<Mt>> listElTypes = new L<>();
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
@@ -116,7 +116,7 @@ public class DeepType extends Lang
     public static class Key
     {
         final public String name;
-        final private L<S<MultiType>> typeGetters = L();
+        final private L<S<Mt>> typeGetters = L();
         // to get quick built-in type info
         final private L<PhpType> briefTypes = L();
         // where Go To Definition will lead
@@ -128,7 +128,7 @@ public class DeepType extends Lang
             this.definition = definition;
         }
 
-        public void addType(S<MultiType> getter, PhpType briefType)
+        public void addType(S<Mt> getter, PhpType briefType)
         {
             typeGetters.add(Tls.onDemand(getter));
             briefTypes.add(briefType);
@@ -144,7 +144,7 @@ public class DeepType extends Lang
             return briefTypes;
         }
 
-        public L<S<MultiType>> getTypeGetters()
+        public L<S<Mt>> getTypeGetters()
         {
             return typeGetters;
         }
@@ -230,8 +230,8 @@ public class DeepType extends Lang
         }
     }
 
-    public MultiType mt()
+    public Mt mt()
     {
-        return new MultiType(list(this));
+        return new Mt(list(this));
     }
 }

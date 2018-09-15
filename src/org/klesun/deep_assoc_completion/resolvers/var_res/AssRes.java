@@ -9,7 +9,7 @@ import org.klesun.deep_assoc_completion.Assign;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.KeyType;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
 import java.util.List;
@@ -27,7 +27,7 @@ public class AssRes extends Lang
         this.ctx = ctx;
     }
 
-    private static MultiType makeType(L<KeyType> keys, S<MultiType> getType, PsiElement psi, PhpType briefType)
+    private static Mt makeType(L<KeyType> keys, S<Mt> getType, PsiElement psi, PhpType briefType)
     {
         if (keys.size() == 0) {
             return getType.get();
@@ -45,7 +45,7 @@ public class AssRes extends Lang
             } else {
                 arr.anyKeyElTypes.add(() -> makeType(furtherKeys, getType, psi, briefType));
             }
-            return new MultiType(list(arr));
+            return new Mt(list(arr));
         }
     }
 
@@ -55,7 +55,7 @@ public class AssRes extends Lang
     }
 
     // null in key chain means index (when it is number or variable, not named key)
-    private Opt<T2<List<KeyType>, S<MultiType>>> collectKeyAssignment(AssignmentExpressionImpl ass)
+    private Opt<T2<List<KeyType>, S<Mt>>> collectKeyAssignment(AssignmentExpressionImpl ass)
     {
         Opt<ArrayAccessExpressionImpl> nextKeyOpt = opt(ass.getVariable())
             .fop(toCast(ArrayAccessExpressionImpl.class));
@@ -69,7 +69,7 @@ public class AssRes extends Lang
                 .map(index -> index.getValue())
                 .fop(toCast(PhpExpression.class))
                 .map(key -> ctx.findExprType(key))
-                .map(mt -> KeyType.mt(mt))
+                .map(tit -> KeyType.mt(new Mt(tit)))
                 .def(KeyType.integer());
             reversedKeys.add(name);
 
@@ -85,7 +85,7 @@ public class AssRes extends Lang
         return opt(ass.getValue())
             .fop(toCast(PhpExpression.class))
             .map(value -> T2(keys, S(() -> {
-                MultiType mt = ctx.findExprType(value);
+                Mt mt = ctx.findExprType(value).wap(Mt::new);
                 return mt;
             })));
     }

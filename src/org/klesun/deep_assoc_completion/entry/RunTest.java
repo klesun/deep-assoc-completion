@@ -15,7 +15,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.lang.It;
@@ -60,13 +60,13 @@ public class RunTest extends AnAction
         return ClosRes.findFunctionReturns(func)
             .map(ret -> ret.getArgument())
             .fop(toCast(PhpExpression.class))
-            .map(retVal -> {
+            .fap(retVal -> {
                 SearchContext search = new SearchContext(retVal.getProject())
                     .setDepth(DeepKeysPvdr.getMaxDepth(false, retVal.getProject()));
                 FuncCtx funcCtx = new FuncCtx(search);
                 return funcCtx.findExprType(retVal);
             })
-            .fap(mt -> mt.getKey(null).types)
+            .fap(t -> Mt.getKeySt(t, null))
             .fap((rett, i) -> {
                 CaseContext ctx = new CaseContext(logger);
                 ctx.dataProviderName = func.getName();
@@ -89,7 +89,7 @@ public class RunTest extends AnAction
             .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
             .fap(tuple -> {
                 L<String> actualKeys = tuple.b.getTypes().fap(t -> L(t.keys.keySet()));
-                L<String> expectedKeys = new MultiType(tuple.c.getTypes())
+                L<String> expectedKeys = new Mt(tuple.c.getTypes())
                     .getKey(null).getStringValues();
                 try {
                     return tuple.a.testCaseExact(actualKeys, expectedKeys);

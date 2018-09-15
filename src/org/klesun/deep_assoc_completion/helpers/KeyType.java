@@ -8,7 +8,7 @@ import org.klesun.lang.L;
 import static org.klesun.lang.Lang.list;
 import static org.klesun.lang.Lang.opt;
 
-/** is there actually a point in having this and MultiType as two separate classes? */
+/** is there actually a point in having this and Mt as two separate classes? */
 public class KeyType
 {
     public enum EKeyType {STRING, INTEGER, UNKNOWN}
@@ -22,7 +22,7 @@ public class KeyType
         this.types = types;
     }
 
-    public static KeyType mt(MultiType mt)
+    public static KeyType mt(Mt mt)
     {
         return mt.getStringValues().size() > 0
             ? new KeyType(EKeyType.STRING, mt.types)
@@ -43,7 +43,7 @@ public class KeyType
 
     public L<String> getNames()
     {
-        return new MultiType(types).getStringValues();
+        return new Mt(types).getStringValues();
     }
 
     public Dict<L<DeepType>> getNameToMt()

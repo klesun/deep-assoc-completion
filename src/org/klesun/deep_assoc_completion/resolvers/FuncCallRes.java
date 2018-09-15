@@ -13,7 +13,7 @@ import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.ScopeFinder;
 import org.klesun.deep_assoc_completion.helpers.ArgOrder;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
 import javax.annotation.Nullable;
@@ -25,13 +25,6 @@ public class FuncCallRes extends Lang
     public FuncCallRes(FuncCtx ctx)
     {
         this.ctx = ctx;
-    }
-
-    private MultiType findPsiExprType(PsiElement psi)
-    {
-        return Tls.cast(PhpExpression.class, psi)
-            .map(casted -> ctx.findExprType(casted))
-            .def(new MultiType(L()));
     }
 
     private static L<VariableImpl> findVarRefsInFunc(GroupStatement meth, String varName)
@@ -55,15 +48,15 @@ public class FuncCallRes extends Lang
     private It<DeepType> array_map(FuncCtx callCtx, FunctionReferenceImpl call)
     {
         DeepType mapRetType = new DeepType(call);
-        MultiType arrMt = callCtx.getArgMt(1);
+        Mt arrMt = callCtx.getArgMt(1);
         FuncCtx subCtx = L(call.getParameters()).gat(1)
             .fop(array -> Tls.cast(PhpExpression.class, array))
             .uni(argArr -> ctx.subCtxSingleArgArr(argArr),
                 () -> new FuncCtx(ctx.getSearch())
             );
-        S<MultiType> getElMt = () -> callCtx.getArgMt(0).types
+        S<Mt> getElMt = () -> callCtx.getArgMt(0).types
             .fap(t -> t.getReturnTypes(subCtx))
-            .wap(MultiType::new);
+            .wap(Mt::new);
         It<DeepType> eachTMapped = arrMt.types.itr().map(t -> {
             DeepType mapped = new DeepType(t.definition, PhpType.ARRAY);
             t.keys.forEach((k, v) -> mapped.addKey(k, v.definition)
@@ -86,7 +79,7 @@ public class FuncCallRes extends Lang
         DeepType combine = new DeepType(call, PhpType.ARRAY);
         Dict<L<DeepType>> keyToTypes = callCtx.getArgMt(0).getEl().types
             .gop(t -> opt(t.stringValue));
-        S<MultiType> getElMt = () -> callCtx.getArgMt(1).getEl();
+        S<Mt> getElMt = () -> callCtx.getArgMt(1).getEl();
         PhpType ideaElType = L(call.getParameters()).gat(1)
             .fop(toCast(PhpExpression.class))
             .map(e -> e.getType()).def(PhpType.MIXED);
@@ -113,8 +106,8 @@ public class FuncCallRes extends Lang
                             refs.map(var -> Tls.getIdeaType(var)).fch(briefType::add);
                             arrt.addKey(varName, call)
                                 .addType(() -> refs
-                                    .fap(ref -> ctx.findExprType(ref).types)
-                                    .wap(MultiType::new), briefType);
+                                    .fap(ref -> ctx.findExprType(ref))
+                                    .wap(Mt::new), briefType);
                         }
                     })));
         return arrt;
@@ -139,7 +132,7 @@ public class FuncCallRes extends Lang
         DeepType assoct = new DeepType(psi, PhpType.ARRAY);
         for (T2<String, PhpType> key: keys) {
             DeepType deepType = new DeepType(psi, key.b);
-            MultiType mt = new MultiType(list(deepType));
+            Mt mt = new Mt(list(deepType));
             assoct.addKey(key.a, psi).addType(() -> mt, key.b);
         }
         return assoct;
@@ -291,7 +284,7 @@ public class FuncCallRes extends Lang
             T2("value", PhpType.STRING)
         ));
         DeepType arrt = new DeepType(call, PhpType.ARRAY);
-        arrt.listElTypes.add(() -> new MultiType(list(assoct)));
+        arrt.listElTypes.add(() -> new Mt(list(assoct)));
         return arrt;
     }
 
@@ -329,7 +322,7 @@ public class FuncCallRes extends Lang
             return assoct;
         } else {
             DeepType arrt = new DeepType(call, PhpType.ARRAY);
-            arrt.listElTypes.add(() -> new MultiType(list(assoct)));
+            arrt.listElTypes.add(() -> new Mt(list(assoct)));
             return arrt;
         }
     }
@@ -388,7 +381,7 @@ public class FuncCallRes extends Lang
                     .fop(i -> callCtx.getArg(i))
                     .fap(mt -> mt.types).map(a -> a);
             } else if (name.equals("array_column")) {
-                MultiType elType = callCtx.getArgMt(0).getEl();
+                Mt elType = callCtx.getArgMt(0).getEl();
                 @Nullable String keyName = callCtx.getArgMt(1).getStringValue();
                 DeepType type = new DeepType(call);
                 type.listElTypes.add(() -> elType.getKey(keyName));
@@ -409,7 +402,7 @@ public class FuncCallRes extends Lang
                 arrt.listElTypes.add(() -> callCtx.getArgMt(0).types
                     .fap(t -> L(t.keys.values()))
                     .map(k -> new DeepType(k.definition, PhpType.STRING, k.name))
-                    .wap(types -> new MultiType(types)));
+                    .wap(types -> new Mt(types)));
                 return list(arrt);
             } else if (name.equals("func_get_args")) {
                 return ctx.getArg(new ArgOrder(0, true)).itr().fap(a -> a.types);
@@ -429,7 +422,7 @@ public class FuncCallRes extends Lang
                     .fap(t -> t.getReturnTypes(newCtx)).map(a -> a);
             } else if (name.equals("explode")) {
                 DeepType arrt = new DeepType(call, PhpType.ARRAY);
-                arrt.listElTypes.add(() -> new MultiType(list(new DeepType(call, PhpType.STRING))));
+                arrt.listElTypes.add(() -> new Mt(list(new DeepType(call, PhpType.STRING))));
                 return list(arrt);
             } else if (name.equals("curl_getinfo") && !callCtx.getArg(1).has()) {
                 return list(curl_getinfo(call));
@@ -473,8 +466,8 @@ public class FuncCallRes extends Lang
             findBuiltInFuncCallType(funcCall),
             opt(funcCall.getFirstChild()).itr()
                 .fop(toCast(PhpExpression.class))
-                .map(funcVar -> ctx.findExprType(funcVar))
-                .fap(mt -> mt.types.fap(t -> t.getReturnTypes(funcCtx))),
+                .fap(funcVar -> ctx.findExprType(funcVar))
+                .fap(t -> t.getReturnTypes(funcCtx)),
             opt(funcCall.resolve()).itr()
                 .fop(Tls.toCast(FunctionImpl.class))
                 .fap(func -> new ClosRes(ctx).resolve(func).getReturnTypes(funcCtx))

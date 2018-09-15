@@ -11,7 +11,7 @@ import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
 
@@ -85,11 +85,11 @@ public class MethCallRes extends Lang
                     }
                 });
         }).fch(name -> parsedType.addKey(name, ctx.getRealPsi(strType.definition))
-            .addType(() -> new MultiType(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
+            .addType(() -> new Mt(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
         return opt(parsedType);
     }
 
-    private MultiType findBuiltInRetType(Method meth, FuncCtx argCtx, MethodReference methCall)
+    private Mt findBuiltInRetType(Method meth, FuncCtx argCtx, MethodReference methCall)
     {
         It<DeepType> types = It(list());
         String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
@@ -105,21 +105,21 @@ public class MethCallRes extends Lang
         } else if (clsNme.equals("PDOStatement") && meth.getName().equals("fetch")) {
             It<DeepType> pdoTypes = opt(methCall.getClassReference())
                 .fop(toCast(PhpExpression.class))
-                .map(obj -> ctx.findExprType(obj))
-                .fap(mt -> mt.types.fap(t -> t.pdoTypes));
+                .fap(obj -> ctx.findExprType(obj))
+                .fap(t -> t.pdoTypes);
             types = It(pdoTypes);
         }
-        return new MultiType(types);
+        return new Mt(types);
     }
 
-    private static MultiType parseReturnDoc(PhpDocReturnTag returnDoc, FuncCtx funcCtx)
+    private static It<DeepType> parseReturnDoc(PhpDocReturnTag returnDoc, FuncCtx funcCtx)
     {
         FuncCtx docCtx = new FuncCtx(funcCtx.getSearch());
         docCtx.fakeFileSource = opt(returnDoc);
         return Tls.regex("^\\s*(like\\s*|=|)((?:\\[|[a-zA-Z]+[\\(:]|new\\s+).*)$", returnDoc.getTagValue())
             .fop(match -> match.gat(1))
             .fop(expr -> DocParamRes.parseExpression(expr, returnDoc.getProject(), docCtx))
-            .def(MultiType.INVALID_PSI);
+            .def(It.non());
     }
 
     public static F<FuncCtx, L<DeepType>> findMethRetType(Method meth)
@@ -133,12 +133,12 @@ public class MethCallRes extends Lang
                 funcCtx = new FuncCtx(funcCtx.getSearch());
             }
             FuncCtx finalCtx = funcCtx;
-            return impls.fap(m -> list(
+            return impls.fap(m -> It.cnc(
                 ClosRes.getReturnedValue(m, finalCtx).types,
                 opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
-                    .fap(tag -> parseReturnDoc(tag, finalCtx).types),
+                    .fap(tag -> parseReturnDoc(tag, finalCtx)),
                 opt(m.getReturnType()).fap(rt -> list(new DeepType(rt, rt.getType())))
-            ).fap(a -> a));
+            ));
         };
     }
 
@@ -193,7 +193,7 @@ public class MethCallRes extends Lang
         );
     }
 
-    public MultiType resolveCall(MethodReferenceImpl funcCall)
+    public Mt resolveCall(MethodReferenceImpl funcCall)
     {
         FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
         L<DeepType> rtypes = resolveMethodFromCall(funcCall, ctx)
@@ -202,6 +202,6 @@ public class MethCallRes extends Lang
                 findMethRetType(func).apply(funcCtx),
                 findBuiltInRetType(func, funcCtx, funcCall).types
             )).arr();
-        return new MultiType(rtypes);
+        return new Mt(rtypes);
     }
 }

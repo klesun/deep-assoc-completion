@@ -6,7 +6,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
@@ -29,15 +29,15 @@ public class KeyUsageResolver extends Lang
         this.depthLeft = depthLeft;
     }
 
-    private static MultiType resolveReplaceKeys(ParameterList argList, int order)
+    private static Mt resolveReplaceKeys(ParameterList argList, int order)
     {
         SearchContext search = new SearchContext(argList.getProject());
         FuncCtx ctx = new FuncCtx(search);
         return L(argList.getParameters())
             .flt((psi, i) -> i < order)
             .fop(toCast(PhpExpression.class))
-            .fap(exp -> ctx.findExprType(exp).types)
-            .wap(MultiType::new);
+            .fap(exp -> ctx.findExprType(exp))
+            .wap(Mt::new);
     }
 
     private static L<ArrayIndex> findUsedIndexes(Function meth, String varName)
@@ -53,7 +53,7 @@ public class KeyUsageResolver extends Lang
                 .map(varUsage -> acc.getIndex()));
     }
 
-    public MultiType resolveArgUsedKeys(Function meth, int argOrder)
+    public Mt resolveArgUsedKeys(Function meth, int argOrder)
     {
         return L(meth.getParameters()).gat(argOrder)
             .fop(toCast(ParameterImpl.class))
@@ -64,8 +64,8 @@ public class KeyUsageResolver extends Lang
                     .wap(lits -> {
                         DeepType assoct = new DeepType(arg, PhpType.ARRAY);
                         lits.fch(lit -> {
-                            S<MultiType> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
-                                .map(acc -> new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnExpr(acc)).def(MultiType.INVALID_PSI);
+                            S<Mt> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
+                                .map(acc -> new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnExpr(acc)).def(Mt.INVALID_PSI);
                             assoct.addKey(lit.getContents(), lit)
                                 .addType(getType, PhpType.UNSET);
                         });
@@ -73,15 +73,14 @@ public class KeyUsageResolver extends Lang
                     }).mt().types,
                 opt(arg.getDocComment())
                     .map(doc -> doc.getParamTagByName(arg.getName()))
-                    .fop(doc -> new DocParamRes(fakeCtx).resolve(doc))
-                    .fap(mt -> mt.types),
+                    .fap(doc -> new DocParamRes(fakeCtx).resolve(doc)),
                 new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnVar(arg).types
             )).fap(a -> a)
-            .wap(MultiType::new);
+            .wap(Mt::new);
     }
 
     // not sure this method belongs here... and name should be changed
-    public MultiType resolveArgCallArrKeys(Function meth, int funcVarArgOrder, int caretArgOrder)
+    public Mt resolveArgCallArrKeys(Function meth, int funcVarArgOrder, int caretArgOrder)
     {
         return L(meth.getParameters()).gat(funcVarArgOrder)
             .fop(toCast(ParameterImpl.class))
@@ -92,8 +91,8 @@ public class KeyUsageResolver extends Lang
             .fop(toCast(FunctionReference.class))
             .fop(call -> L(call.getParameters()).gat(caretArgOrder))
             .fop(toCast(PhpExpression.class))
-            .fap(exp -> fakeCtx.findExprType(exp).types)
-            .wap(MultiType::new);
+            .fap(exp -> fakeCtx.findExprType(exp))
+            .wap(Mt::new);
     }
 
     private static Opt<Function> resolveFunc(ParameterList argList)
@@ -131,7 +130,7 @@ public class KeyUsageResolver extends Lang
 
     // add completion from new SomeClass() that depends
     // on class itself, not on the constructor function
-    private MultiType findClsMagicCtorUsedKeys(NewExpressionImpl newEx, int order)
+    private Mt findClsMagicCtorUsedKeys(NewExpressionImpl newEx, int order)
     {
         return opt(newEx.getClassReference())
             .map(ref -> ref.resolve())
@@ -155,7 +154,7 @@ public class KeyUsageResolver extends Lang
                         .map(fld -> T2(fld.getName(), fld))).mt().types;
                 }
             })
-            .wap(MultiType::new);
+            .wap(Mt::new);
     }
 
     private static It<? extends Function> getImplementations(Function meth)
@@ -167,7 +166,7 @@ public class KeyUsageResolver extends Lang
         );
     }
 
-    private MultiType findKeysUsedOnExpr(PhpExpression arrCtor)
+    private Mt findKeysUsedOnExpr(PhpExpression arrCtor)
     {
         return opt(arrCtor.getParent())
             .fop(toCast(ParameterList.class))
@@ -198,22 +197,22 @@ public class KeyUsageResolver extends Lang
                         .fop(toCast(NewExpressionImpl.class))
                         .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types));
             })
-            .wap(MultiType::new);
+            .wap(Mt::new);
     }
 
-    private MultiType findKeysUsedOnVar(PhpNamedElement caretVar)
+    private Mt findKeysUsedOnVar(PhpNamedElement caretVar)
     {
         if (depthLeft < 1) {
-            return MultiType.INVALID_PSI;
+            return Mt.INVALID_PSI;
         }
         return findVarReferences(caretVar)
             .flt(ref -> ref.getTextOffset() > caretVar.getTextOffset())
             .fop(toCast(Variable.class))
             .fap(refVar -> findKeysUsedOnExpr(refVar).types)
-            .wap(MultiType::new);
+            .wap(Mt::new);
     }
 
-    private MultiType resolveOuterArray(PhpPsiElementImpl val) {
+    private Mt resolveOuterArray(PhpPsiElementImpl val) {
         return opt(val.getParent())
             .fop(par -> {
                 Opt<String> key;
@@ -234,10 +233,10 @@ public class KeyUsageResolver extends Lang
                     .map(outerArr -> resolve(outerArr))
                     .map(outerMt -> outerMt.getKey(keyf.def(null)));
             })
-            .def(MultiType.INVALID_PSI);
+            .def(Mt.INVALID_PSI);
     }
 
-    public MultiType resolve(ArrayCreationExpression arrCtor)
+    public Mt resolve(ArrayCreationExpression arrCtor)
     {
         SearchContext fakeSearch = new SearchContext(arrCtor.getProject());
         FuncCtx fakeCtx = new FuncCtx(fakeSearch);
@@ -249,7 +248,7 @@ public class KeyUsageResolver extends Lang
                 .flt(sum -> arrCtor.isEquivalentTo(sum.getRightOperand()))
                 .map(sum -> sum.getLeftOperand())
                 .fop(toCast(PhpExpression.class))
-                .fap(exp -> fakeCtx.findExprType(exp).types),
+                .fap(exp -> fakeCtx.findExprType(exp)),
             opt(arrCtor.getParent())
                 .fop(toCast(AssignmentExpression.class))
                 .flt(ass -> arrCtor.isEquivalentTo(ass.getValue()))
@@ -263,6 +262,6 @@ public class KeyUsageResolver extends Lang
             opt(arrCtor.getParent())
                 .fop(toCast(PhpPsiElementImpl.class))
                 .fap(val -> resolveOuterArray(val).types)
-        ).fap(a -> a).wap(MultiType::new);
+        ).fap(a -> a).wap(Mt::new);
     }
 }

@@ -10,7 +10,7 @@ import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
 import javax.annotation.Nullable;
@@ -40,7 +40,7 @@ public class ArrCtorRes extends Lang
             .fop(rvd -> opt(rvd));
     }
 
-    public static It<PhpClass> resolveMtCls(MultiType mtArg, Project project)
+    public static It<PhpClass> resolveMtCls(Mt mtArg, Project project)
     {
         It<PhpClass> resolved = opt(mtArg)
             .map(mt -> mt.getIdeaType())
@@ -65,9 +65,9 @@ public class ArrCtorRes extends Lang
 
     public It<PhpClass> resolveObjCls(PhpExpression expr)
     {
-        MultiType mt = opt(expr)
-            .map(xpr -> ctx.findExprType(xpr))
-            .def(MultiType.INVALID_PSI);
+        Mt mt = opt(expr)
+            .fap(xpr -> ctx.findExprType(xpr))
+            .wap(Mt::new);
         return resolveMtCls(mt, expr.getProject());
     }
 
@@ -135,16 +135,16 @@ public class ArrCtorRes extends Lang
                 // i believe this is likely to change in future - so we try both cases
                 .elf(() -> opt(valuePsi.getFirstChild()).fop(toCast(PhpExpression.class)))
                 .thn(val -> arrayType.addKey(i + "", ctx.getRealPsi(val))
-                    .addType(() -> ctx.findExprType(val), Tls.getIdeaType(val))));
+                    .addType(() -> ctx.findExprType(val).wap(Mt::new), Tls.getIdeaType(val))));
 
         // keyed elements
         L(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
             .fop(toCast(PhpExpression.class))
             .thn(v -> {
-                S<MultiType> getType = S(() -> ctx.findExprType(v));
+                S<Mt> getType = S(() -> ctx.findExprType(v).wap(Mt::new));
                 opt(keyRec.getKey())
                     .fop(toCast(PhpExpression.class))
-                    .map(keyPsi -> ctx.findExprType(keyPsi).types)
+                    .map(keyPsi -> ctx.findExprType(keyPsi))
                     .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
                     .thn(keyStrValues -> {
                         if (keyStrValues.size() > 0) {

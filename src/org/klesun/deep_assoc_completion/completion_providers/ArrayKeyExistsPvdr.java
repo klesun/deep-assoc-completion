@@ -17,10 +17,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 import java.util.HashSet;
 import java.util.List;
@@ -30,7 +32,7 @@ import static org.klesun.lang.Lang.*;
 
 public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters> implements GotoDeclarationHandler
 {
-    private static LookupElement makeLookupBase(String keyName, String type)
+    private static LookupElementBuilder makeLookupBase(String keyName, String type)
     {
         return LookupElementBuilder.create(keyName)
                 .bold()
@@ -44,27 +46,30 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
         return makeLookupBase(keyEntry.name, type);
     }
 
-    private static L<LookupElement> makeOptions(MultiType mt)
+    private static It<LookupElement> makeOptions(It<DeepType> tit)
     {
-        L<LookupElement> result = L();
         Set<String> suggested = new HashSet<>();
-        for (DeepType type: mt.types) {
-            for (DeepType.Key keyEntry: type.keys.values()) {
-                String key = keyEntry.name;
-                if (suggested.contains(key)) continue;
-                suggested.add(key);
-                result.add(makeLookup(keyEntry));
-            }
-            L(type.getListElemTypes()).gat(0).flt(t -> type.keys.size() == 0).thn(t -> {
-                for (int k = 0; k < 5; ++k) {
-                    result.add(makeLookupBase(k + "", t.briefType.toString()));
+        Mutable<Boolean> hadArrt = new Mutable<>(false);
+        return tit.fap(type -> It.cnc(
+            It(type.keys.values())
+                .flt(k -> !suggested.contains(k.name))
+                .map(k -> {
+                    suggested.add(k.name);
+                    return makeLookup(k);
+                }),
+            It(type.getListElemTypes()).fst().flt(t -> type.keys.size() == 0).fap(t -> {
+                if (!hadArrt.get()) {
+                    hadArrt.set(true);
+                    return Tls.range(0, 5).map(k -> makeLookupBase(k + "",
+                        t.briefType.toString()).withBoldness(false));
+                } else {
+                    return list();
                 }
-            });
-        }
-        return result;
+            })
+        ));
     }
 
-    private static Opt<MultiType> resolveArrayKeyExists(StringLiteralExpression literal, FuncCtx funcCtx)
+    private static It<DeepType> resolveArrayKeyExists(StringLiteralExpression literal, FuncCtx funcCtx)
     {
         return opt(literal.getParent())
             .map(argList -> argList.getParent())
@@ -72,30 +77,29 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
             .flt(call -> list("array_key_exists", "key_exists").contains(call.getName()))
             .fop(call -> L(call.getParameters()).gat(1))
             .fop(toCast(PhpExpression.class))
-            .map(arr -> funcCtx.findExprType(arr));
+            .fap(arr -> funcCtx.findExprType(arr));
     }
 
-    private MultiType resolve(StringLiteralExpression lit, boolean isAutoPopup, Editor editor)
+    private It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup, Editor editor)
     {
         SearchContext search = new SearchContext(lit.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
-        return Opt.fst(
-            () -> resolveArrayKeyExists(lit, funcCtx)
-        ).def(MultiType.INVALID_PSI);
+        return It.cnc(
+            resolveArrayKeyExists(lit, funcCtx)
+        );
     }
 
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         long startTime = System.nanoTime();
-        MultiType mt = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
+        It<DeepType> tit = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
             .fop(toCast(StringLiteralExpression.class))
-            .map(lit -> resolve(lit, parameters.isAutoPopup(), parameters.getEditor()))
-            .def(MultiType.INVALID_PSI);
+            .fap(lit -> resolve(lit, parameters.isAutoPopup(), parameters.getEditor()));
 
-        makeOptions(mt).fch(result::addElement);
+        makeOptions(tit).fch(result::addElement);
         long elapsed = System.nanoTime() - startTime;
         result.addLookupAdvertisement("Resolved in " + (elapsed / 1000000000.0) + " seconds");
     }
@@ -125,7 +129,7 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
             .map(psi -> psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
             .fap(lit -> resolve(lit, false, editor)
-                .types.fap(t -> L(t.keys.values()))
+                .fap(t -> L(t.keys.values()))
                 .flt(k -> lit.getContents().equals(k.name))
                 .map(t -> t.definition))
             .arr();

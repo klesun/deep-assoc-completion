@@ -3,8 +3,10 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.lang.It;
 import org.klesun.lang.Lang;
 
 public class ArrAccRes extends Lang
@@ -16,24 +18,21 @@ public class ArrAccRes extends Lang
         this.ctx = ctx;
     }
 
-    public MultiType resolve(ArrayAccessExpressionImpl keyAccess)
+    public It<DeepType> resolve(ArrayAccessExpressionImpl keyAccess)
     {
-        MultiType mt = opt(keyAccess.getValue())
+        It<DeepType> tit = opt(keyAccess.getValue())
             .fop(toCast(PhpExpression.class))
-            .map(expr -> ctx.findExprType(expr))
-            .def(MultiType.INVALID_PSI);
+            .fap(expr -> ctx.findExprType(expr));
 
-        return opt(keyAccess.getIndex())
+        return opt(keyAccess.getIndex()).itr()
             .map(v -> v.getValue())
             .fop(toCast(PhpExpression.class))
-            .map(keyPsi -> {
+            .fap(keyPsi -> {
                 // resolving key type can be a complex operation - we don't
                 // want that if we already know that mt has no known key names
-                @Nullable String keyName = mt.getKeyNames().size() > 0
-                    ? ctx.limitResolve(10, keyPsi).getStringValue()
-                    : null;
-                return mt.getKey(keyName);
-            })
-            .def(MultiType.INVALID_PSI);
+                @Nullable String keyName = ctx.limitResolve(10, keyPsi)
+                    .wap(Mt::getStringValueSt);
+                return tit.fap(t -> Mt.getKeySt(t, keyName));
+            });
     }
 }

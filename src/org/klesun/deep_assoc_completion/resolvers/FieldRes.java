@@ -8,7 +8,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
@@ -57,15 +57,15 @@ public class FieldRes extends Lang
 
     public It<DeepType> resolve(FieldReferenceImpl fieldRef)
     {
-        S<MultiType> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
+        S<Mt> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
             .fop(ref -> Opt.fst(
                 () -> ctx.clsIdeaType
                     .flt(typ -> ref.getText().equals("static"))
                     .flt(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, ref.getProject()).size() > 0)
-                    .map(typ -> new MultiType(list(new DeepType(ref, typ)))),
-                () -> opt(ctx.findExprType(ref))
+                    .map(typ -> new Mt(list(new DeepType(ref, typ)))),
+                () -> opt(ctx.findExprType(ref).wap(Mt::new))
             ))
-            .def(MultiType.INVALID_PSI));
+            .def(Mt.INVALID_PSI));
 
         L<Field> declarations = L.fst(
             () -> opt(fieldRef)
@@ -90,13 +90,13 @@ public class FieldRes extends Lang
                 It<DeepType> defTs = Tls.cast(FieldImpl.class, resolved).itr()
                     .map(fld -> fld.getDefaultValue())
                     .fop(toCast(PhpExpression.class))
-                    .fap(def -> implCtx.findExprType(def).types);
+                    .fap(def -> implCtx.findExprType(def));
 
                 It<DeepType> docTs = opt(resolved.getContainingClass()).itr()
                     .fop(cls -> opt(cls.getDocComment()))
                     .fap(doc -> L(doc.getPropertyTags()))
                     .flt(tag -> opt(tag.getProperty()).flt(pro -> pro.getName().equals(fieldRef.getName())).has())
-                    .fap(tag -> new DocParamRes(ctx).resolve(tag).def(MultiType.INVALID_PSI).types);
+                    .fap(tag -> new DocParamRes(ctx).resolve(tag));
 
                 It<Assign> asses = opt(resolved.getContainingFile()).itr()
                     .fap(file -> findReferences(file, fieldRef.getName()))
@@ -104,8 +104,8 @@ public class FieldRes extends Lang
                         .flt(meth -> meth.getName().equals("__construct"))
                         .map(meth -> fieldRef.getClassReference())
                         .fop(toCast(PhpExpression.class))
-                        .fop(ref -> opt(ctx.findExprType(ref)))
-                        .fap(mt -> mt.getArgsPassedToCtor())
+                        .fap(ref -> ctx.findExprType(ref))
+                        .fop(t -> t.ctorArgs)
                         .flt(ctx -> opt(resolved.getContainingClass())
                             .map(cls -> isSameClass(ctx, cls)).def(true))
                         .wap(ctxs -> It.cnc(

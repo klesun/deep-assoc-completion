@@ -14,11 +14,8 @@ import com.jetbrains.php.lang.psi.elements.Statement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.lang.*;
 
 public class DocParamRes extends Lang
 {
@@ -103,8 +100,8 @@ public class DocParamRes extends Lang
             props.fch(prop -> type.addProp(prop.name, decl)
                 .addType(
                     () -> propDescToType(prop.desc, decl)
-                        .map(t -> new MultiType(list(t)))
-                        .def(MultiType.INVALID_PSI),
+                        .map(t -> new Mt(list(t)))
+                        .def(Mt.INVALID_PSI),
                     new PhpType().add("\\" + prop.type))
                 );
 
@@ -114,7 +111,7 @@ public class DocParamRes extends Lang
         }
     }
 
-    public static Opt<MultiType> parseExpression(String expr, Project project, FuncCtx docCtx)
+    public static Opt<It<DeepType>> parseExpression(String expr, Project project, FuncCtx docCtx)
     {
         // adding "$arg = " so anonymous functions were parsed as expressions
         expr = "<?php\n$arg = " + expr + ";";
@@ -128,7 +125,7 @@ public class DocParamRes extends Lang
             .map(ex -> docCtx.findExprType(ex));
     }
 
-    private Opt<MultiType> parseDoc(PhpDocTag doc, Project project)
+    private Opt<It<DeepType>> parseDoc(PhpDocTag doc, Project project)
     {
         String tagValue = doc.getTagValue();
         FuncCtx docCtx = new FuncCtx(ctx.getSearch());
@@ -145,12 +142,11 @@ public class DocParamRes extends Lang
                 .fop(prop -> propDescToType(prop.desc, doc))
                 .wap(types -> opt(types))
                 .flt(types -> types.has())
-                .map(types -> new MultiType(types))
         );
     }
 
-    public Opt<MultiType> resolve(PhpDocTag doc)
+    public It<DeepType> resolve(PhpDocTag doc)
     {
-        return parseDoc(doc, doc.getProject());
+        return parseDoc(doc, doc.getProject()).fap(a -> a);
     }
 }

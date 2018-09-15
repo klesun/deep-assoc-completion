@@ -5,7 +5,8 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.MultiType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
@@ -49,23 +50,22 @@ public class ClosRes extends Lang
         return result;
     }
 
-    public static MultiType getReturnedValue(PsiElement funcBody, FuncCtx ctx)
+    public static Mt getReturnedValue(PsiElement funcBody, FuncCtx ctx)
     {
-        return list(
+        return It.cnc(
             findFunctionReturns(funcBody)
                 .fop(ret -> opt(ret.getArgument()))
                 .fop(toCast(PhpExpression.class))
-                .map(val -> ctx.findExprType(val)),
+                .fap(val -> ctx.findExprType(val)),
             findFunctionYields(funcBody)
-                .fop(yld -> opt(yld.getArgument())
+                .fap(yld -> opt(yld.getArgument()).itr()
                     .fop(toCast(PhpExpression.class))
                     .map(val -> ctx.findExprType(val))
-                    .map(mt -> opt(yld.getText())
+                    .fap(tit -> opt(yld.getText())
                         .fop(txt -> Tls.regex("yield\\s+from[^A-Za-z].*", txt))
-                        .map(txt -> mt)
-                        .def(new MultiType(list(mt.getInArray(funcBody)))))
+                        .uni(txt -> tit, () -> list(Mt.getInArraySt(tit, funcBody))))
                 )
-        ).fap(a -> a).fap(mt -> mt.types).wap(MultiType::new);
+        ).wap(types -> new Mt(types));
     }
 
     public DeepType resolve(FunctionImpl func)
