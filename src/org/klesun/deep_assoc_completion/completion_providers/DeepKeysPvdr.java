@@ -172,8 +172,9 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         });
         It<DeepType> indexTypes = mt.types.itr().fap(t -> t.getListElemTypes());
         if (indexTypes.has()) {
-            String typeText = new Mt(indexTypes).getBriefValueText(BRIEF_TYPE_MAX_LEN);
-            String ideaType = new Mt(indexTypes).getIdeaType().filterUnknown().toStringResolved();
+            Mt idxMt = new Mt(indexTypes);
+            String typeText = idxMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
+            String ideaType = idxMt.getIdeaType().filterUnknown().toStringResolved();
             if (mt.hasNumberIndexes()) {
                 for (int k = 0; k < 5; ++k) {
                     result.addElement(makePaddedLookup(k + "", ideaType, typeText));

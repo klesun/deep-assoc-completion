@@ -20,7 +20,8 @@ public class SearchContext extends Lang
     private long lastReportTime = System.nanoTime();
     public int depthLeft = 20;
     public int initialDepth = depthLeft;
-    public boolean debug = false;
+    final public static boolean DEBUG_DEFAULT = false;
+    public boolean debug = DEBUG_DEFAULT;
     private Opt<Double> timeout = opt(null);
     private Opt<Project> project = opt(null);
     // for performance measurement
@@ -129,6 +130,8 @@ public class SearchContext extends Lang
             indent += " ";
         }
         if (debug) {
+            // pretty useless now, actually, after we moved to iterators
+            // I guess a new "context" should be created on each expression, not just function call to know the depth
             System.out.print(indent);
             String fileText = expr.getContainingFile().getText();
             int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
@@ -136,6 +139,10 @@ public class SearchContext extends Lang
             System.out.println(depthLeft + " " + Tls.singleLine(expr.getText(), 120) + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber() + " ### " + funcCtx);
         }
 
+        // TODO: add to config
+        if (funcCtx.getCallStackLength() > 12) {
+            return It.non();
+        }
         if (depthLeft <= 0) {
             return It.non();
         } else if (++expressionsResolved > getMaxExpressions()) {
@@ -178,8 +185,8 @@ public class SearchContext extends Lang
 
         if (debug) {
             long elapsed = System.nanoTime() - startTime;
-            System.out.println(indent + "* " + result.fap(a -> a).arr().size() +
-                " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()) + " : " + Tls.implode(", ", result.map(Mt::new).fap(a -> a.getKeyNames())));
+            System.out.println(indent + "* " + /*result.fap(a -> a).arr().size() +*/
+                " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()) + " : " /*+ Tls.implode(", ", result.map(Mt::new).fap(a -> a.getKeyNames()))*/);
         }
 
         return result.def(It.non());

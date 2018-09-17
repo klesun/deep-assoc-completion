@@ -264,6 +264,17 @@ public class FuncCtx extends Lang
         return Tls.implode(" | ", parents.map(p -> Tls.singleLine(p, 600)));
     }
 
+    public int getCallStackLength()
+    {
+        int callStackLength = 0;
+        FuncCtx tmp = this;
+        while (tmp != null) {
+            ++callStackLength;
+            tmp = tmp.parent.def(null);
+        }
+        return callStackLength;
+    }
+
     /**
      * when you parse text, attempts to go to a PSI
      * in it will lead you to a fake foo.bar file

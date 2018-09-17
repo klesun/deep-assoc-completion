@@ -1,5 +1,7 @@
 package org.klesun.lang;
 
+import org.klesun.deep_assoc_completion.helpers.SearchContext;
+
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -19,6 +21,7 @@ public class It<A> implements Iterable<A>
 {
     private Opt<Iterator<A>> iterator = Lang.non();
     private Iterable<A> source;
+    private Opt<Exception> disposedAt = Lang.non();
     private boolean disposed = false;
 
     public It(Stream<A> sourceStream)
@@ -82,7 +85,12 @@ public class It<A> implements Iterable<A>
     private Iterator<A> dispose()
     {
         if (disposed) {
-            throw new NoSuchElementException("Tried to re-use disposed iterator");
+            RuntimeException exc = new NoSuchElementException("Tried to re-use disposed iterator");
+            disposedAt.thn(exc::initCause);
+            throw exc;
+        }
+        if (SearchContext.DEBUG_DEFAULT) {
+            disposedAt = som(new Exception());
         }
         Iterator<A> iter = getIterator();
         disposed = true;
