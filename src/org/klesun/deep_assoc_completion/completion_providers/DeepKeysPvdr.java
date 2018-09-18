@@ -156,20 +156,33 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .uni(l -> false, () -> true); // else just inside []
 
         long startTime = System.nanoTime();
-        Mt mt = resolveAtPsi(caretPsi, new FuncCtx(search)).wap(Mt::new);
-
-        L<String> keyNames = mt.getKeyNames();
+        Mutable<Long> firstTime = new Mutable<>(-1L);
         L<MutableLookup> lookups = L();
         // preliminary keys without type - they may be at least 3 times faster in some cases
-        keyNames.fch((keyName, i) -> {
-            LookupElement justName = makePaddedLookup(keyName, "resolving...", "");
-            MutableLookup mutLookup = new MutableLookup(justName, includeQuotes);
-            result.addElement(PrioritizedLookupElement.withPriority(mutLookup, 2000 - i));
-            lookups.add(mutLookup);
 
-            String briefTypeRaw = mt.getKeyBriefType(keyName).filterUnknown().toStringResolved();
-            mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "");
+        It<DeepType> tit = resolveAtPsi(caretPsi, new FuncCtx(search));
+        L<DeepType> types = list();
+        Set<String> keyNames = new LinkedHashSet<>();
+        tit.fch(t -> {
+            types.add(t);
+            t.keys.values().forEach(k -> {
+                String keyName = k.name;
+                if (!keyNames.contains(keyName)) {
+                    if (firstTime.get() == -1) {
+                        firstTime.set(System.nanoTime() - startTime);
+                    }
+                    keyNames.add(keyName);
+                    LookupElement justName = makePaddedLookup(keyName, "resolving...", "");
+                    MutableLookup mutLookup = new MutableLookup(justName, includeQuotes);
+                    result.addElement(PrioritizedLookupElement.withPriority(mutLookup, 2000 - keyNames.size()));
+                    lookups.add(mutLookup);
+
+                    String briefTypeRaw = Mt.getKeyBriefTypeSt(k.getBriefTypes()).filterUnknown().toStringResolved();
+                    mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "");
+                }
+            });
         });
+        Mt mt = new Mt(types);
         It<DeepType> indexTypes = mt.types.itr().fap(t -> t.getListElemTypes());
         if (indexTypes.has()) {
             Mt idxMt = new Mt(indexTypes);
@@ -207,13 +220,14 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // following code calculates deeper type info for
         // completion options and updates them in the dialog
 
-        Dict<LookupElement> nameToNewLookup = keyNames.key(keyName -> keyName)
+        Dict<LookupElement> nameToNewLookup = L(keyNames).key(keyName -> keyName)
             .map(keyName -> makeFullLookup(mt, keyName));
 
         lookups.fch(l -> nameToNewLookup.gat(l.getKeyName()).thn(newL -> l.lookupData = newL));
 
         long elapsed = System.nanoTime() - startTime;
-        result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
+        result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() +
+            " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0));
 
         if (search.getExpressionsResolved() > 100) {
             System.out.println("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");

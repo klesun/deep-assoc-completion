@@ -123,6 +123,13 @@ public class Mt extends Lang
         return new Mt(keyTsIt);
     }
 
+    public static PhpType getKeyBriefTypeSt(Iterable<PhpType> ideaTypes)
+    {
+        PhpType ideaType = new PhpType();
+        ideaTypes.forEach(ideaType::add);
+        return ideaType;
+    }
+
     public PhpType getKeyBriefType(@NonNull String keyName)
     {
         PhpType ideaType = new PhpType();
