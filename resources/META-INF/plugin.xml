@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.09.05.001</version>
+    <version>2018.09.19.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,12 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Improve key usage based completion - suggest in nested arrays too</li>
-        <li>Improve "To N-th Test" action - use any @dataProvider func in file if caret function does not have the test case</li>
-        <li>Implement Go To key usage, Not just completion</li>
-        <li>Go To key definition rather than array_keys expression</li>
-        <li>Fix: Check the class to which constructor args are passed. Since IDEA may create a paradox with `$var = new SomeCls(); if ($var instanceof SomeOtherClass) {...}` causing keys to resolve as if args passed to `SomeCls` were passed to `SomeOtherCls`</li>
-        <li>Provide class/method name completion in docs inside () and []</li>
+        <li>Return iterators in map/filter/flatMap/etc... to resolve next key only after we've shown the preceding key. Supposed to be faster...</li>
     </ul>
     ]]>
     </change-notes>
