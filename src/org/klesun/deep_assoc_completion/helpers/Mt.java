@@ -203,8 +203,8 @@ public class Mt extends Lang
             briefValues.add("[" + getEl().getBriefValueText(maxLen, circularRefs) + "]");
         }
         if (briefValues.isEmpty() && types.size() > 0) {
-            L<String> psiParts = types.flt(t -> t.isExactPsi).map(t -> Tls.singleLine(t.definition.getText(), 40));
-            briefValues.add(Tls.implode("|", psiParts.grp(a -> a).kys()));
+            It<String> psiParts = types.flt(t -> t.isExactPsi).map(t -> Tls.singleLine(t.definition.getText(), 40));
+            briefValues.add(Tls.implode("|", psiParts.arr().grp(a -> a).kys()));
         }
         String fullStr = Tls.implode("|", briefValues);
 

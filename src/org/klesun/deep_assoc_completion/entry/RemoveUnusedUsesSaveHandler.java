@@ -16,6 +16,7 @@ import com.jetbrains.php.lang.inspections.PhpUnusedAliasInspection;
 import com.jetbrains.php.lang.psi.elements.PhpUse;
 import com.jetbrains.php.lang.psi.elements.impl.PhpUseListImpl;
 import org.jetbrains.annotations.NotNull;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Tls;
 
@@ -39,12 +40,12 @@ public class RemoveUnusedUsesSaveHandler implements FileDocumentManagerListener
 
                 PhpUnusedAliasInspection inspection = new PhpUnusedAliasInspection();
                 InspectionManager manager = InspectionManager.getInstance(psiFile.getProject());
-                List<ProblemDescriptor> checked = L(inspection.processFile(psiFile, manager))
+                It<ProblemDescriptor> checked = L(inspection.processFile(psiFile, manager))
                     .flt(problem ->
                         problem.getDescriptionTemplate().contains("never used") &&
                         !problem.getDescriptionTemplate().contains("not necessary")); // same namespace, keep
 
-                L<T2<Integer, Integer>> unuseRanges = L(checked)
+                It<T2<Integer, Integer>> unuseRanges = checked
                     .map(problem -> problem.getPsiElement())
                     .fop(toCast(PhpUse.class))
                     .fop(psi -> Tls.findParent(psi, PhpUseListImpl.class, a -> true))
@@ -58,7 +59,7 @@ public class RemoveUnusedUsesSaveHandler implements FileDocumentManagerListener
 
                 ApplicationManager.getApplication().runWriteAction(() ->
                     CommandProcessor.getInstance().runUndoTransparentAction(() ->
-                        unuseRanges.srt(r -> -r.a) // start from the end to not mess up range indexes
+                        unuseRanges.arr().srt(r -> -r.a) // start from the end to not mess up range indexes
                             .fch(range -> document.deleteString(range.a, range.b))));
             }
         }

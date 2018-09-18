@@ -122,7 +122,7 @@ public class ArrCtorRes extends Lang
         DeepType arrayType = new DeepType(expr);
 
         L<PsiElement> orderedParams = L(expr.getChildren())
-            .flt(psi -> !(psi instanceof ArrayHashElement));
+            .flt(psi -> !(psi instanceof ArrayHashElement)).arr();
 
         resolveMethodFromArray(orderedParams)
             .map(meth -> MethCallRes.findMethRetType(meth))

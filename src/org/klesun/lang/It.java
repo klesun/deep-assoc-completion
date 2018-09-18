@@ -54,23 +54,23 @@ public class It<A> implements Iterable<A>
 
     public static <B> It<B> cnc(Iterable<B>... args)
     {
-        L<Iterator<B>> sources = L(args).map(arr -> arr.iterator());
-        Iterable<B> iter = () -> new Iterator<B>() {
-            public boolean hasNext() {
-                return sources.any(it -> it.hasNext());
-            }
-            public B next() {
-                for (Iterator<B> it: sources) {
-                    if (it.hasNext()) {
-                        return it.next();
-                    }
-                }
-                throw new NoSuchElementException("huj");
-            }
-        };
-        return new It<>(iter);
-        //return new It<>(Arrays.stream(args)
-        //    .flatMap(iter -> StreamSupport.stream(iter.spliterator(), false)));
+//        L<Iterator<B>> sources = L(args).map(arr -> arr.iterator());
+//        Iterable<B> iter = () -> new Iterator<B>() {
+//            public boolean hasNext() {
+//                return sources.any(it -> it.hasNext());
+//            }
+//            public B next() {
+//                for (Iterator<B> it: sources) {
+//                    if (it.hasNext()) {
+//                        return it.next();
+//                    }
+//                }
+//                throw new NoSuchElementException("huj");
+//            }
+//        };
+//        return new It<>(iter);
+        return new It<>(Arrays.stream(args)
+            .flatMap(iter -> StreamSupport.stream(iter.spliterator(), false)));
     }
 
     /** don't use this unless you just want to check if it is empty */
@@ -136,7 +136,7 @@ public class It<A> implements Iterable<A>
         }));
     }
 
-    public It<A> flt(Predicate<A> pred)
+    public It<A> flt(F2<A, Integer, Boolean> pred)
     {
 //        Iterator<A> sourceIt = dispose();
 //        return new It<>(() -> new Iterator<A>(){
@@ -162,7 +162,17 @@ public class It<A> implements Iterable<A>
 //                return value;
 //            }
 //        });
-        return new It<>(disposeStream().filter(pred));
+        Mutable<Integer> mutI = new Mutable<>(0);
+        return new It<>(disposeStream().filter(el -> {
+            int i = mutI.get();
+            mutI.set(i + 1);
+            return pred.apply(el, i);
+        }));
+    }
+
+    public It<A> flt(Predicate<A> pred)
+    {
+        return flt((el, i) -> pred.test(el));
     }
 
     public <B> It<B> fap(F2<A, Integer, Iterable<B>> flatten)
@@ -264,12 +274,30 @@ public class It<A> implements Iterable<A>
 
     public boolean any(Predicate<A> pred)
     {
-        return arr().any(pred);
+        Iterable<A> iter = this::dispose;
+        for (A el: iter) {
+            if (pred.test(el)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean all(F2<A, Integer, Boolean> pred)
+    {
+        Iterable<A> iter = this::dispose;
+        int i = 0;
+        for (A el: iter) {
+            if (!pred.apply(el, i++)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean all(Predicate<A> pred)
     {
-        return arr().all((v,i) -> pred.test(v));
+        return all((el, i) -> pred.test(el));
     }
 
     // end stream at element that matches the predicate

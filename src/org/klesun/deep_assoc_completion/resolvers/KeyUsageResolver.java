@@ -120,7 +120,7 @@ public class KeyUsageResolver extends Lang
             ).flt(varUsage -> caretVar.getName().equals(varUsage.getName())));
     }
 
-    public static DeepType makeAssoc(PsiElement psi, L<T2<String, PsiElement>> keys)
+    public static DeepType makeAssoc(PsiElement psi, Iterable<T2<String, PsiElement>> keys)
     {
         DeepType assoct = new DeepType(psi, PhpType.ARRAY);
         for (T2<String, PsiElement> key: keys) {

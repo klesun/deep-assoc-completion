@@ -33,26 +33,22 @@ import static org.klesun.lang.Lang.*;
 
 public class RunTest extends AnAction
 {
-    private static Opt<L<Method>> findTestDataPvdrFuncs(PsiFile psiFile)
+    private static Opt<It<Method>> findTestDataPvdrFuncs(PsiFile psiFile)
     {
-        L<Method> meths = list();
+        It<Method> meths = It(PhpIndex.getInstance(psiFile.getProject()).getClassesByName("UnitTest"))
+            .fap(cls -> cls.getMethods())
+            .flt(m -> m.getName().startsWith("provide"));
 
-        L(PhpIndex.getInstance(psiFile.getProject()).getClassesByName("UnitTest"))
-            .forEach(cls -> meths.addAll(L(cls.getMethods())
-                .flt(m -> m.getName().startsWith("provide"))));
-
-        return meths.size() > 0 ? opt(meths) : opt(null);
+        return meths.has() ? opt(meths) : opt(null);
     }
 
-    private static Opt<L<Method>> findExactKeysTestDataPvdrFuncs(PsiFile psiFile)
+    private static Opt<It<Method>> findExactKeysTestDataPvdrFuncs(PsiFile psiFile)
     {
-        L<Method> meths = list();
+        It<Method> meths = It(PhpIndex.getInstance(psiFile.getProject()).getClassesByName("ExactKeysUnitTest"))
+            .fap(cls -> cls.getMethods())
+            .flt(m -> m.getName().startsWith("provide"));
 
-        L(PhpIndex.getInstance(psiFile.getProject()).getClassesByName("ExactKeysUnitTest"))
-            .forEach(cls -> meths.addAll(L(cls.getMethods())
-                .flt(m -> m.getName().startsWith("provide"))));
-
-        return meths.size() > 0 ? opt(meths) : opt(null);
+        return meths.has() ? opt(meths) : opt(null);
     }
 
     private static It<T3<CaseContext, DeepType.Key, DeepType.Key>> parseReturnedTestCase(Method func, Logger logger)

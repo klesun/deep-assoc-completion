@@ -24,7 +24,7 @@ public class FieldRes extends Lang
         this.ctx = ctx;
     }
 
-    private static L<FieldReferenceImpl> findReferences(PsiFile file, String name)
+    private static It<FieldReferenceImpl> findReferences(PsiFile file, String name)
     {
         // ReferenceSearch seems to cause freezes
 //        SearchScope scope = GlobalSearchScope.fileScope(
@@ -33,7 +33,7 @@ public class FieldRes extends Lang
 //        );
 //        return ReferencesSearch.search(decl, scope, false).findAll();
 
-        return L(PsiTreeUtil.findChildrenOfType(file, FieldReferenceImpl.class))
+        return It(PsiTreeUtil.findChildrenOfType(file, FieldReferenceImpl.class))
             .flt(ref -> name.equals(ref.getName()));
     }
 

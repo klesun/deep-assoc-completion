@@ -197,7 +197,7 @@ public class DeepType extends Lang
         } else if (indexTypes.size() > 0) {
             result = "[" + varExport(indexTypes, level, circularRefs) + "]";
         } else if (briefTypes.size() > 0) {
-            L<String> briefs = L(new HashSet(briefTypes)).flt(t -> !"".equals(t));
+            It<String> briefs = L(new HashSet<>(briefTypes)).flt(t -> !"".equals(t));
             result = "'" + Tls.implode("|", briefs) + "'";
         }
         result += L(types).fop(t -> t.ctorArgs)

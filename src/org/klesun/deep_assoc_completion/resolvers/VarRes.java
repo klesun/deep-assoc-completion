@@ -178,7 +178,7 @@ public class VarRes extends Lang
 
     public It<DeepType> resolve(Variable variable)
     {
-        L<PsiElement> references = findDeclarations(variable)
+        It<PsiElement> references = findDeclarations(variable)
             .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable));
 
         // @var docs are a special case since they give type
@@ -202,7 +202,8 @@ public class VarRes extends Lang
                             S<Mt> mtg = () -> new ArgRes(ctx).resolveArg(param);
                             return new Assign(list(), mtg, true, refPsi, param.getType());
                         }));
-            });
+            })
+            .arr();
         int lastDeclPos = -1;
         for (int i = 0; i < asses.size(); ++i) {
             if (asses.get(i).didSurelyHappen &&

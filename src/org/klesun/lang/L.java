@@ -47,18 +47,12 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
         return size() > 0 ? this : fallback;
     }
 
-    public L<T> flt(Lang.F2<T, Integer, Boolean> pred)
+    public It<T> flt(Lang.F2<T, Integer, Boolean> pred)
     {
-        L<T> result = Lang.list();
-        for (int i = 0; i < size(); ++i) {
-            if (pred.apply(get(i), i)) {
-                result.add(get(i));
-            }
-        }
-        return result;
+        return Lang.It(this).flt(pred);
     }
 
-    public L<T> flt(Predicate<T> pred)
+    public It<T> flt(Predicate<T> pred)
     {
         return flt((val, i) -> pred.test(val));
     }
@@ -129,12 +123,7 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
 
     public boolean any(Predicate<T> pred)
     {
-        for (T el: this) {
-            if (pred.test(el)) {
-                return true;
-            }
-        }
-        return false;
+        return Lang.It(this).any(pred);
     }
 
     public boolean has()
@@ -149,7 +138,7 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
 
     public boolean all(Lang.F2<T, Integer, Boolean> pred)
     {
-        return map(pred).flt(b -> b).size() == this.size();
+        return Lang.It(this).all(pred);
     }
 
     /**

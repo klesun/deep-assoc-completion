@@ -75,7 +75,7 @@ public class GoToNthTest extends AnAction
                             .map(ref -> ref.getText())
                             .wap(sit -> Sets.newHashSet(sit))
                             ;
-                        L<Method> pvdrMeths = allMeths.flt(m -> dataProviders.contains(m.getName()));
+                        L<Method> pvdrMeths = allMeths.flt(m -> dataProviders.contains(m.getName())).arr();
 
                         Opt<Method> caretFuncOpt = opt(psiFile.findElementAt(caret.getOffset()))
                             .fop(psi -> Tls.findParent(psi, Method.class, a -> true));

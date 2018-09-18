@@ -257,7 +257,7 @@ public class FuncCtx extends Lang
             String trace = debugCtorTrace
                 .flt(el -> !el.getClassName().endsWith("FuncCtx"))
                 .map(el -> " " + Tls.substr(el.getClassName(), -20) + " " + el.getLineNumber())
-                .gat(0).def("");
+                .fst().def("");
             parents.add(tmp.uniqueRef.unw().getText() + trace);
             tmp = tmp.parent.def(null);
         }
