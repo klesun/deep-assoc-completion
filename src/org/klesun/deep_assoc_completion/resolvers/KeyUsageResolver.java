@@ -190,7 +190,7 @@ public class KeyUsageResolver extends Lang
                                 .fop(toCast(Function.class))) // TODO: support in a var
                             .fap(func -> {
                                 DeepType arrt = new DeepType(argList, PhpType.ARRAY);
-                                arrt.anyKeyElTypes.add(() -> resolveArgUsedKeys(func, 0));
+                                arrt.anyKeyElTypes.add(Tls.onDemand(() -> resolveArgUsedKeys(func, 0)));
                                 return list(arrt);
                             })
                     ).fap(a -> a))

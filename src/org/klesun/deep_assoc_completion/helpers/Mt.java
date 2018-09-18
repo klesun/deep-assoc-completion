@@ -46,7 +46,7 @@ public class Mt extends Lang
     public static DeepType getInArraySt(It<DeepType> types, PsiElement call)
     {
         DeepType result = new DeepType(call, PhpType.ARRAY);
-        result.listElTypes.add(() -> new Mt(types));
+        result.listElTypes.add(Tls.onDemand(() -> new Mt(types)));
         return result;
     }
 

@@ -142,7 +142,7 @@ public class ArrCtorRes extends Lang
         L(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
             .fop(toCast(PhpExpression.class))
             .thn(v -> {
-                S<Mt> getType = S(() -> ctx.findExprType(v).wap(Mt::new));
+                S<Mt> getType = Tls.onDemand(() -> ctx.findExprType(v).wap(Mt::new));
                 opt(keyRec.getKey())
                     .fop(toCast(PhpExpression.class))
                     .map(keyPsi -> ctx.findExprType(keyPsi))

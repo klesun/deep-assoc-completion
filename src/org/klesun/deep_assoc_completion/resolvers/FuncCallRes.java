@@ -54,9 +54,9 @@ public class FuncCallRes extends Lang
             .uni(argArr -> ctx.subCtxSingleArgArr(argArr),
                 () -> new FuncCtx(ctx.getSearch())
             );
-        S<Mt> getElMt = () -> callCtx.getArgMt(0).types
+        S<Mt> getElMt = Tls.onDemand(() -> callCtx.getArgMt(0).types
             .fap(t -> t.getReturnTypes(subCtx))
-            .wap(Mt::new);
+            .wap(Mt::new));
         It<DeepType> eachTMapped = arrMt.types.itr().map(t -> {
             DeepType mapped = new DeepType(t.definition, PhpType.ARRAY);
             t.keys.forEach((k, v) -> mapped.addKey(k, v.definition)
@@ -79,7 +79,7 @@ public class FuncCallRes extends Lang
         DeepType combine = new DeepType(call, PhpType.ARRAY);
         Dict<L<DeepType>> keyToTypes = callCtx.getArgMt(0).getEl().types
             .gop(t -> opt(t.stringValue));
-        S<Mt> getElMt = () -> callCtx.getArgMt(1).getEl();
+        S<Mt> getElMt = Tls.onDemand(() -> callCtx.getArgMt(1).getEl());
         PhpType ideaElType = L(call.getParameters()).gat(1)
             .fop(toCast(PhpExpression.class))
             .map(e -> e.getType()).def(PhpType.MIXED);
@@ -381,10 +381,12 @@ public class FuncCallRes extends Lang
                     .fop(i -> callCtx.getArg(i))
                     .fap(mt -> mt.types).map(a -> a);
             } else if (name.equals("array_column")) {
-                Mt elType = callCtx.getArgMt(0).getEl();
-                @Nullable String keyName = callCtx.getArgMt(1).getStringValue();
                 DeepType type = new DeepType(call);
-                type.listElTypes.add(() -> elType.getKey(keyName));
+                type.listElTypes.add(Tls.onDemand(() -> {
+                    Mt elType = callCtx.getArgMt(0).getEl();
+                    @Nullable String keyName = callCtx.getArgMt(1).getStringValue();
+                    return elType.getKey(keyName);
+                }));
                 return list(type);
             } else if (name.equals("array_chunk")) {
                 result.add(callCtx.getArgMt(0).getInArray(call));
@@ -399,10 +401,10 @@ public class FuncCallRes extends Lang
                 return list(implode(callCtx, call));
             } else if (name.equals("array_keys")) {
                 DeepType arrt = new DeepType(call, PhpType.ARRAY);
-                arrt.listElTypes.add(() -> callCtx.getArgMt(0).types
+                arrt.listElTypes.add(Tls.onDemand(() -> callCtx.getArgMt(0).types
                     .fap(t -> L(t.keys.values()))
                     .map(k -> new DeepType(k.definition, PhpType.STRING, k.name))
-                    .wap(types -> new Mt(types)));
+                    .wap(types -> new Mt(types))));
                 return list(arrt);
             } else if (name.equals("func_get_args")) {
                 return ctx.getArg(new ArgOrder(0, true)).itr().fap(a -> a.types);
