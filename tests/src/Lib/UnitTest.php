@@ -222,28 +222,6 @@ class UnitTest
         return $list;
     }
 
-    public function provideOptionChain()
-    {
-        $result = \Lib\Result::makeOk(['a' => 1])
-            ->map(function($value1){return $value1 + ['b' => 2];})->unwrap()[''];
-
-        $result = \Lib\Result::makeOk(['a' => 1])
-            ->map(function($value1){return $value1 + ['b' => 2];})
-            ->filter(function($value4){return $value4[''];});
-
-        $result = \Lib\Result::makeOk(['a' => 1])
-            ->map(function($value1){return $value1 + ['b' => 2];})
-            ->map(function($value2){return $value2 + ['c' => 3];})
-            ->map(function($value3){return $value3 + ['d' => 4];})
-            ->filter(function($value4){return $value4[''];})
-            ->map(function($value4){return $value4 + ['e' => 5];})
-        ;
-        $result->result[''];
-        $result->unwrap()[''];
-        $list[] = [$result->unwrap(), ['a' => [], 'b' => [], 'c' => [], 'd' => [], 'e' => []]];
-        return $list;
-    }
-
     public static function provideInstRecursion()
     {
         $schema = new DictP([], [

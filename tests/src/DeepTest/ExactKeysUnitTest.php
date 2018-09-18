@@ -863,4 +863,53 @@ class ExactKeysUnitTest
         $list[] = [$result, ['id', 'name', 'price']];
         return $list;
     }
+
+    public function provideOptionChain()
+    {
+        $result = \Lib\Result::makeOk(['a' => 1])
+            ->map(function($value1){return $value1 + ['b' => 2];})->unwrap()[''];
+
+        $result = \Lib\Result::makeOk(['a' => 1])
+            ->map(function($value1){return $value1 + ['b' => 2];})
+            ->filter(function($value4){return $value4[''];});
+
+        $result = \Lib\Result::makeOk(['a' => 1])
+            ->map(function($value1){return $value1 + ['b' => 2];})
+            ->map(function($value2){return $value2 + ['c' => 3];})
+            ->map(function($value3){return $value3 + ['d' => 4];})
+            ->filter(function($value4){return $value4[''];})
+            ->map(function($value4){return $value4 + ['e' => 5];})
+            ->map(function($value4){return $value4 + ['f' => 5];})
+            ->map(function($value4){return $value4 + ['g' => 5];})
+            ->map(function($value4){return $value4 + ['h' => 5];})
+            ->map(function($value4){return $value4 + ['i' => 5];})
+            ->map(function($value4){return $value4 + ['j' => 5];})
+            ->map(function($value4){return $value4 + ['k' => 5];})
+            ->map(function($value4){return $value4 + ['l' => 5];})
+            ->map(function($value4){return $value4 + ['m' => 5];})
+            ->map(function($value4){return $value4 + ['n' => 5];})
+            ->map(function($value4){return $value4 + ['o' => 5];})
+            ->map(function($value4){return $value4 + ['p' => 5];})
+            ->map(function($value4){return $value4 + ['q' => 5];})
+            ->map(function($value4){return $value4 + ['r' => 5];})
+            ->filter(function($value4){return $value4[''];})
+            ->map(function($value4){return $value4 + ['s' => 5];})
+//            ->map(function($value4){return $value4 + ['t' => 5];})
+//            ->map(function($value4){return $value4 + ['u' => 5];})
+//            ->map(function($value4){return $value4 + ['v' => 5];})
+//            ->map(function($value4){return $value4 + ['w' => 5];})
+//            ->map(function($value4){return $value4 + ['x' => 5];})
+//            ->map(function($value4){return $value4 + ['y' => 5];})
+//            ->map(function($value4){return $value4 + ['z' => 5];})
+//            ->map(function($value4){return $value4 + ['a1' => 5];})
+//            ->map(function($value4){return $value4 + ['a2' => 5];})
+        ;
+        $result->result[''];
+        $result->unwrap()[''];
+        $list[] = [$result->unwrap(), [
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+            // 't', 'u', 'v', 'w', 'x', 'y', 'z', 'a1', 'a2'
+        ]];
+        return $list;
+    }
 }

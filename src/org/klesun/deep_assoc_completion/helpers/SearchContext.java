@@ -140,7 +140,7 @@ public class SearchContext extends Lang
         }
 
         // TODO: add to config
-        if (funcCtx.getCallStackLength() > 12) {
+        if (funcCtx.getCallStackLength() > 9) { // on <= 6 tests fail
             return It.non();
         }
         if (depthLeft <= 0) {
