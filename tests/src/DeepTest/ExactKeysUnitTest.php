@@ -155,6 +155,7 @@ class ExactKeysUnitTest
             'blocks', // 8,
         ]];
         $stat = ob_get_status(); // array of assoc arrays if true passed
+        $stat[''];
         $list[] = [$stat, [
             'name', // 'default output handler',
             'type', // 0,
@@ -185,7 +186,6 @@ class ExactKeysUnitTest
             'user', //
             'pass', //
         ]];
-
         return $list;
     }
 

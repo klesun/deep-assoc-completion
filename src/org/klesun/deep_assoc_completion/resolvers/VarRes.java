@@ -185,9 +185,7 @@ public class VarRes extends Lang
         // info from any position (above/below/right of/left of the var declaration)
         It<DeepType> docTypes = getDocType(variable);
 
-        // TODO: reverse them back once done testing iterators. Performance is
-        // performance, but keys must be suggested in same order as declared
-        It<Assign> revAssIt = new It<>(references.rvr())
+        L<Assign> asses = references
             .fop(refPsi -> {
                 boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
                 return Opt.fst(() -> opt(null)
@@ -204,8 +202,18 @@ public class VarRes extends Lang
                             S<Mt> mtg = () -> new ArgRes(ctx).resolveArg(param);
                             return new Assign(list(), mtg, true, refPsi, param.getType());
                         }));
-            })
-            .end(ass -> ass.didSurelyHappen && ass.keys.size() == 0);
+            });
+        int lastDeclPos = -1;
+        for (int i = 0; i < asses.size(); ++i) {
+            if (asses.get(i).didSurelyHappen &&
+                asses.get(i).keys.size() == 0
+            ) {
+                lastDeclPos = i;
+            }
+        }
+        if (lastDeclPos > -1) {
+            asses = asses.sub(lastDeclPos);
+        }
 
         DeepType typeFromIdea = new DeepType(variable);
         Opt<Mt> thisType = opt(variable)
@@ -214,7 +222,7 @@ public class VarRes extends Lang
         return It.cnc(
             docTypes, list(typeFromIdea),
             thisType.itr().fap(a -> a.types),
-            AssRes.assignmentsToTypes(revAssIt)
+            AssRes.assignmentsToTypes(asses)
         );
     }
 }
