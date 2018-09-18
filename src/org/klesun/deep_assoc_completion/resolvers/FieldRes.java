@@ -61,7 +61,7 @@ public class FieldRes extends Lang
             .fop(ref -> Opt.fst(
                 () -> ctx.clsIdeaType
                     .flt(typ -> ref.getText().equals("static"))
-                    .flt(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, ref.getProject()).size() > 0)
+                    .flt(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, ref.getProject()).has())
                     .map(typ -> new Mt(list(new DeepType(ref, typ)))),
                 () -> opt(ctx.findExprType(ref).wap(Mt::new))
             ))
@@ -80,7 +80,7 @@ public class FieldRes extends Lang
         );
         It<DeepType> propDocTs = It(list());
         if (declarations.size() == 0) {
-            propDocTs = getObjMt.get().getProps().itr()
+            propDocTs = getObjMt.get().getProps()
                 .flt(prop -> prop.name.equals(fieldRef.getName()))
                 .fap(prop -> prop.getTypes());
         }

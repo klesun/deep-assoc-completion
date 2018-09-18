@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.fest.util.Sets;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -40,7 +41,7 @@ public class KeyUsageResolver extends Lang
             .wap(Mt::new);
     }
 
-    private static L<ArrayIndex> findUsedIndexes(Function meth, String varName)
+    private static It<ArrayIndex> findUsedIndexes(Function meth, String varName)
     {
         return Tls.findChildren(
             meth.getLastChild(),
@@ -57,7 +58,7 @@ public class KeyUsageResolver extends Lang
     {
         return L(meth.getParameters()).gat(argOrder)
             .fop(toCast(ParameterImpl.class))
-            .fap(arg -> list(
+            .fap(arg -> It.cnc(
                 findUsedIndexes(meth, arg.getName())
                     .map(idx -> idx.getValue())
                     .fop(toCast(StringLiteralExpressionImpl.class))
@@ -69,13 +70,13 @@ public class KeyUsageResolver extends Lang
                             assoct.addKey(lit.getContents(), lit)
                                 .addType(getType, PhpType.UNSET);
                         });
-                        return assoct;
-                    }).mt().types,
+                        return list(assoct);
+                    }),
                 opt(arg.getDocComment())
                     .map(doc -> doc.getParamTagByName(arg.getName()))
                     .fap(doc -> new DocParamRes(fakeCtx).resolve(doc)),
                 new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnVar(arg).types
-            )).fap(a -> a)
+            ))
             .wap(Mt::new);
     }
 
@@ -147,7 +148,7 @@ public class KeyUsageResolver extends Lang
                 if (!isModel) {
                     return list();
                 } else {
-                    Set<String> inherited = new HashSet<>(supers.fap(s -> L(s.getOwnFields()).map(f -> f.getName())));
+                    Set<String> inherited = Sets.newHashSet(supers.fap(s -> L(s.getOwnFields()).map(f -> f.getName())));
                     return makeAssoc(newEx, L(cls.getOwnFields())
                         .flt(fld -> !fld.getModifier().isPrivate())
                         .flt(fld -> !inherited.contains(fld.getName()))

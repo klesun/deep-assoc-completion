@@ -111,24 +111,20 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
         for (int i = 0; i < s.size(); ++i) {
             convert.apply(s.get(i), i).thn(result::add);
         }
-        return new L(result);
+        return new L<>(result);
     }
 
     /**
      * "fop" stands for flat map - flattens list by lambda
      */
-    public <Tnew> L<Tnew> fap(Lang.F<T, Iterable<Tnew>> flatten)
+    public <Tnew> It<Tnew> fap(Lang.F<T, Iterable<Tnew>> flatten)
     {
         return fap((el, i) -> flatten.apply(el));
     }
 
-    public <Tnew> L<Tnew> fap(Lang.F2<T, Integer, Iterable<Tnew>> flatten)
+    public <Tnew> It<Tnew> fap(Lang.F2<T, Integer, Iterable<Tnew>> flatten)
     {
-        List<Tnew> result = Lang.list();
-        for (int i = 0; i < s.size(); ++i) {
-            flatten.apply(s.get(i), i).forEach(result::add);
-        }
-        return new L<>(result);
+        return itr().fap(flatten);
     }
 
     public boolean any(Predicate<T> pred)
@@ -218,9 +214,9 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
     }
 
     /** stands for "concatenate" */
-    public L<T> cct(List<T> more)
+    public L<T> cct(Iterable<T> more)
     {
-        return Lang.list(this.s, more).fap(a -> a);
+        return It.cnc(s, more).arr();
     }
 
     public L<T> cct(Opt<T> more)

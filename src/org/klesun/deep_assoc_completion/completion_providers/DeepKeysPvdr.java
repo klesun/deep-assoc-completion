@@ -137,7 +137,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
     public static LookupElement makeFullLookup(Mt mt, String keyName)
     {
-        Mt keyMt = mt.getKey(keyName);
+        Mt keyMt = mt.types.fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::new);
         String briefValue = keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
         String ideaTypeStr = keyMt.getIdeaType().filterUnknown().toStringResolved();
         return makePaddedLookup(keyName, ideaTypeStr, briefValue);

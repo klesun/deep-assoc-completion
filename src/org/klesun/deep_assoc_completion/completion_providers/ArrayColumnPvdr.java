@@ -48,7 +48,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters> im
 
     private static LookupElement makeLookup(DeepType.Key keyEntry)
     {
-        String type = keyEntry.getTypes().gat(0).map(t -> t.briefType.toString()).def("unknown");
+        String type = keyEntry.getTypes().fst().map(t -> t.briefType.toString()).def("unknown");
         return makeLookupBase(keyEntry.name, type);
     }
 

@@ -52,7 +52,7 @@ public class MethCallRes extends Lang
         return L(parent.getDbChildren(DasObject.class, kind));
     }
 
-    private static L<String> getTableColumns(String table, Project project)
+    private static It<String> getTableColumns(String table, Project project)
     {
         return L(DbPsiFacade.getInstance(project).getDataSources())
             .fap(src -> L(src.getModel().getModelRoots()))
@@ -122,7 +122,7 @@ public class MethCallRes extends Lang
             .def(It.non());
     }
 
-    public static F<FuncCtx, L<DeepType>> findMethRetType(Method meth)
+    public static F<FuncCtx, It<DeepType>> findMethRetType(Method meth)
     {
         return (FuncCtx funcCtx) -> {
             L<Method> impls = list(meth);

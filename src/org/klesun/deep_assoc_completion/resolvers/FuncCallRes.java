@@ -27,7 +27,7 @@ public class FuncCallRes extends Lang
         this.ctx = ctx;
     }
 
-    private static L<VariableImpl> findVarRefsInFunc(GroupStatement meth, String varName)
+    private static It<VariableImpl> findVarRefsInFunc(GroupStatement meth, String varName)
     {
         return Tls.findChildren(
             meth, VariableImpl.class,
@@ -99,7 +99,7 @@ public class FuncCallRes extends Lang
                     .map(keyt -> keyt.getStringValue())
                     .thn(varName -> {
                         L<VariableImpl> refs = findVarRefsInFunc(scope, varName)
-                            .flt(ref -> ScopeFinder.didPossiblyHappen(ref, call))
+                            .flt(ref -> ScopeFinder.didPossiblyHappen(ref, call)).arr()
                             ;
                         if (refs.size() > 0) {
                             PhpType briefType = new PhpType();
@@ -116,7 +116,7 @@ public class FuncCallRes extends Lang
     private DeepType implode(FuncCtx callCtx, FunctionReferenceImpl call)
     {
         String delim = callCtx.getArgMt(0).getStringValues().gat(0).def(" ");
-        L<String> parts = callCtx.getArgMt(1).types
+        It<String> parts = callCtx.getArgMt(1).types
             .fap(t -> L(t.keys.values()))
             .fap(kv -> kv.getTypes())
             .fop(t -> opt(t.stringValue));

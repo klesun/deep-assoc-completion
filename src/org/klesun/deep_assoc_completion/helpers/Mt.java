@@ -117,7 +117,7 @@ public class Mt extends Lang
         }
         isGettingKey = true;
 
-        L<DeepType> keyTsIt = types.fap(t -> getKeySt(t, keyName));
+        L<DeepType> keyTsIt = types.fap(t -> getKeySt(t, keyName)).arr();
 
         isGettingKey = false;
         return new Mt(keyTsIt);
@@ -149,8 +149,7 @@ public class Mt extends Lang
         return names;
     }
 
-    // TODO: return iterator
-    public L<DeepType.Key> getProps()
+    public It<DeepType.Key> getProps()
     {
         return types.fap(t -> t.props.vls());
     }
@@ -193,7 +192,7 @@ public class Mt extends Lang
                 .map(s -> (types.all((t,i) -> t.definition.getText().equals(s)))
                     ? s : "'" + s + "'")));
         }
-        if (types.any(t -> t.getListElemTypes().size() > 0)) {
+        if (types.any(t -> t.getListElemTypes().has())) {
             briefValues.add("[" + getEl().getBriefValueText(maxLen, circularRefs) + "]");
         }
         if (briefValues.isEmpty() && types.size() > 0) {

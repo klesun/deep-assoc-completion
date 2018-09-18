@@ -33,14 +33,13 @@ public class ArgRes extends Lang
             .map(list -> L(list.getParameters()).indexOf(param));
     }
 
-    private static L<VariableImpl> findVarReferences(VariableImpl caretVar)
+    private static It<VariableImpl> findVarReferences(VariableImpl caretVar)
     {
         return Tls.findParent(caretVar, GroupStatementImpl.class, a -> true)
-            .map(funcBody -> Tls.findChildren(
+            .fap(funcBody -> Tls.findChildren(
                 funcBody, VariableImpl.class,
                 subPsi -> !(subPsi instanceof FunctionImpl)
             ))
-            .def(L())
             .flt(varUsage -> caretVar.getName().equals(varUsage.getName()));
     }
 
@@ -141,8 +140,7 @@ public class ArgRes extends Lang
                     int startOffset = nextSt.getTextOffset();
                     return opt(ass.getVariable())
                         .fop(toCast(VariableImpl.class))
-                        .map(variable -> findVarReferences(variable))
-                        .def(L())
+                        .fap(variable -> findVarReferences(variable))
                         .fop(res -> opt(res.getElement()))
                         .flt(ref -> ref.getTextOffset() >= startOffset)
                         .fop(toCast(VariableImpl.class))

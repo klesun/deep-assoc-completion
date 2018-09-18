@@ -55,7 +55,7 @@ public class RunTest extends AnAction
         return meths.size() > 0 ? opt(meths) : opt(null);
     }
 
-    private static L<T3<CaseContext, DeepType.Key, DeepType.Key>> parseReturnedTestCase(Method func, Logger logger)
+    private static It<T3<CaseContext, DeepType.Key, DeepType.Key>> parseReturnedTestCase(Method func, Logger logger)
     {
         return ClosRes.findFunctionReturns(func)
             .map(ret -> ret.getArgument())
@@ -88,7 +88,7 @@ public class RunTest extends AnAction
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
             .fap(tuple -> {
-                L<String> actualKeys = tuple.b.getTypes().fap(t -> L(t.keys.keySet()));
+                L<String> actualKeys = tuple.b.getTypes().fap(t -> L(t.keys.keySet())).arr();
                 L<String> expectedKeys = new Mt(tuple.c.getTypes())
                     .getKey(null).getStringValues();
                 try {
@@ -140,24 +140,22 @@ public class RunTest extends AnAction
             this.logger = logger;
         }
 
-        private L<Error> testCasePartial(List<DeepType.Key> actual, DeepType.Key expected)
-            throws AssertionError // in case input does not have some of output keys
-        {
+        private L<Error> testCasePartial(List<DeepType.Key> actual, DeepType.Key expected) {
             L<Error> errors = list();
 
-            DeepType expectedt = expected.getTypes().get(0);
+            DeepType expectedt = expected.getTypes().fst().unw();
             expectedt.keys.forEach((subKey, subExpected) -> {
-                L<DeepType.Key> havingKey = L(actual)
-                    .fap(krecs -> L(krecs.getTypes())
-                        .fop(t -> opt(t.keys.get(subKey))).s);
+                It<DeepType.Key> havingKey = It(actual)
+                    .fap(krecs -> krecs.getTypes())
+                    .fop(t -> opt(t.keys.get(subKey)));
 
-                if (havingKey.s.size() == 0) {
+                if (!havingKey.has()) {
                     logger.logErrShort();
                     errors.add(new Error(this, "No such key: " + subKey));
                 } else {
                     logger.logSucShort();
                     keyChain.add(subKey);
-                    testCasePartial(havingKey.s, subExpected);
+                    testCasePartial(havingKey.arr(), subExpected);
                     keyChain.remove(keyChain.size() - 1);
                 }
             });
@@ -165,9 +163,7 @@ public class RunTest extends AnAction
             return errors;
         }
 
-        private List<Error> testCaseExact(L<String> actual, L<String> expected)
-            throws AssertionError // in case input does not have some of output keys
-        {
+        private List<Error> testCaseExact(L<String> actual, L<String> expected) {
             List<Error> errors = list();
             Collection<String> unexpectedKeys = CollectionUtils.subtract(new LinkedHashSet(actual), new LinkedHashSet(expected));
             Collection<String> absentKeys = CollectionUtils.subtract(new LinkedHashSet(expected), new LinkedHashSet(actual));

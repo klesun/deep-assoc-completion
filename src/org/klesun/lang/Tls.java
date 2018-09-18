@@ -65,7 +65,7 @@ public class Tls extends Lang
         return opt(null);
     }
 
-    public static <T extends PsiElement> L<T> findChildren(
+    public static <T extends PsiElement> It<T> findChildren(
         PsiElement parent,
         Class<T> cls,
         Predicate<PsiElement> goDeeperPred
@@ -75,7 +75,7 @@ public class Tls extends Lang
                 .fap(c -> findChildren(c, cls, goDeeperPred))
                 .cct(list(parent).fop(toCast(cls)));
         } else {
-            return L();
+            return It.non();
         }
     }
 

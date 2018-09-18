@@ -165,7 +165,7 @@ public class It<A> implements Iterable<A>
         return new It<>(disposeStream().filter(pred));
     }
 
-    public <B> It<B> fap(F<A, Iterable<B>> flatten)
+    public <B> It<B> fap(F2<A, Integer, Iterable<B>> flatten)
     {
 //        Iterator<A> sourceIt = dispose();
 //        return new It<>(() -> new Iterator<B>(){
@@ -190,9 +190,19 @@ public class It<A> implements Iterable<A>
 //                return getNextSup().unw().get();
 //            }
 //        });
-
-        return new It<>(disposeStream().map(flatten)
+        Mutable<Integer> mutI = new Mutable<>(0);
+        return new It<>(disposeStream()
+            .map(el -> {
+                int i = mutI.get();
+                mutI.set(i + 1);
+                return flatten.apply(el, i);
+            })
             .flatMap(a -> StreamSupport.stream(a.spliterator(), false)));
+    }
+
+    public <B> It<B> fap(F<A, Iterable<B>> flatten)
+    {
+        return fap((el, i) -> flatten.apply(el));
     }
 
     public <B> It<B> fop(F<A, Opt<B>> convert)
@@ -247,8 +257,8 @@ public class It<A> implements Iterable<A>
 
     public L<A> arr()
     {
-        L<A> arr = L(source);
-        source = arr;
+        L<A> arr = L();
+        dispose().forEachRemaining(arr::add);
         return arr;
     }
 

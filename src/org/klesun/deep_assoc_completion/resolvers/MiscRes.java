@@ -80,10 +80,10 @@ public class MiscRes extends Lang
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("+"))
                     .map(op -> {
-                        It<DeepType> tit = It.cnc(
+                        L<DeepType> tit = It.cnc(
                             findPsiExprType(bin.getLeftOperand()),
                             findPsiExprType(bin.getRightOperand())
-                        );
+                        ).arr();
                         if (tit.any(t -> t.isNumber())) {
                             return list(new DeepType(bin, PhpType.NUMBER));
                         } else {

@@ -33,7 +33,7 @@ public class ArrCtorRes extends Lang
             .filterNull().filterMixed().filter(PhpType.OBJECT).getTypes());
     }
 
-    public static L<PhpClass> resolveIdeaTypeCls(PhpType ideaType, Project project)
+    public static It<PhpClass> resolveIdeaTypeCls(PhpType ideaType, Project project)
     {
         return L(ideaTypeToFqn(ideaType))
             .fap(clsPath -> L(PhpIndex.getInstance(project).getAnyByFQN(clsPath)))
@@ -126,7 +126,8 @@ public class ArrCtorRes extends Lang
 
         resolveMethodFromArray(orderedParams)
             .map(meth -> MethCallRes.findMethRetType(meth))
-            .fch(retTypeGetter -> arrayType.returnTypeGetters.add(retTypeGetter));
+            .fch(retTypeGetter -> arrayType.returnTypeGetters
+                .add((ctx) -> retTypeGetter.apply(ctx).arr()));
 
         // indexed elements
         orderedParams

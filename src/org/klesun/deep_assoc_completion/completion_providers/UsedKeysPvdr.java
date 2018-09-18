@@ -41,7 +41,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
 {
     private static LookupElement makeLookup(DeepType.Key keyEntry)
     {
-        String type = keyEntry.getTypes().gat(0).map(t -> t.briefType.toString()).def("from usage");
+        String type = keyEntry.getTypes().fst().map(t -> t.briefType.toString()).def("from usage");
         return LookupElementBuilder.create(keyEntry.name)
             .bold()
             .withIcon(DeepKeysPvdr.getIcon())

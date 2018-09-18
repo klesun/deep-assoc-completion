@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.entry;
 
+import com.google.common.collect.Sets;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
@@ -21,6 +22,9 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import javax.swing.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.klesun.lang.Lang.*;
 
@@ -62,13 +66,14 @@ public class GoToNthTest extends AnAction
                 .fop(psiFile -> caretOpt
                     .map(caret -> {
                         L<Method> allMeths = L(PsiTreeUtil.findChildrenOfType(psiFile, Method.class));
-                        L<String> dataProviders = allMeths
+                        Set<String> dataProviders = allMeths
                             .fop(meth -> opt(meth.getDocComment()))
                             .fop(toCast(PhpDocCommentImpl.class))
                             .fap(doc -> L(doc.getDocTagByClass(PhpDocDataProviderImpl.class)))
                             .fap(tag -> L(tag.getChildren()))
                             .fop(toCast(PhpDocRefImpl.class))
                             .map(ref -> ref.getText())
+                            .wap(sit -> Sets.newHashSet(sit))
                             ;
                         L<Method> pvdrMeths = allMeths.flt(m -> dataProviders.contains(m.getName()));
 

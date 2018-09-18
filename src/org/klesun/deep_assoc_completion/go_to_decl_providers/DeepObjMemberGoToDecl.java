@@ -13,6 +13,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 
@@ -22,7 +23,7 @@ import org.klesun.lang.Lang;
  */
 public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandler
 {
-    private L<? extends PsiElement> resolveMember(PhpClass cls, String name)
+    private It<? extends PsiElement> resolveMember(PhpClass cls, String name)
     {
         return list(
             L(cls.getFields()).flt(f -> f.getName().equals(name)),

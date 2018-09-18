@@ -88,13 +88,12 @@ public class DeepType extends Lang
         return self;
     }
 
-    public L<DeepType> getReturnTypes(FuncCtx ctx)
+    public It<DeepType> getReturnTypes(FuncCtx ctx)
     {
-        L<DeepType> result = returnTypeGetters.fap(g -> g.apply(ctx));
-        return result;
+        return returnTypeGetters.fap(g -> g.apply(ctx));
     }
 
-    public L<DeepType> getListElemTypes()
+    public It<DeepType> getListElemTypes()
     {
         return listElTypes.cct(anyKeyElTypes).fap(s -> s.get().types);
     }
@@ -134,7 +133,7 @@ public class DeepType extends Lang
             briefTypes.add(briefType);
         }
 
-        public L<DeepType> getTypes()
+        public It<DeepType> getTypes()
         {
             return typeGetters.fap(g -> g.get().types);
         }
@@ -169,7 +168,7 @@ public class DeepType extends Lang
         circularRefs.addAll(types);
 
         LinkedHashMap<String, List<DeepType>> mergedKeys = new LinkedHashMap<>();
-        Set<String> mergedProps = new HashSet<>(L(types).fap(t -> t.props.kys()));
+        Set<String> mergedProps = new HashSet<>(L(types).fap(t -> t.props.kys()).arr());
         List<DeepType> indexTypes = list();
         List<String> briefTypes = list();
 
@@ -178,7 +177,7 @@ public class DeepType extends Lang
                 if (!mergedKeys.containsKey(k)) {
                     mergedKeys.put(k, list());
                 }
-                mergedKeys.get(k).addAll(v.getTypes());
+                v.getTypes().fch(mergedKeys.get(k)::add);
             });
             t.getListElemTypes().forEach(indexTypes::add);
             briefTypes.add(opt(t.stringValue).def(t.briefType.filterUnknown().toString()));

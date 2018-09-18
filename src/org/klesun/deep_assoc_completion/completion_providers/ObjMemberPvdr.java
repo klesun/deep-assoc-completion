@@ -68,7 +68,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
 
     private static L<LookupElement> getDynamicProps(Mt mt)
     {
-        return mt.getProps().dct(p -> T2(p.name, p)).vls()
+        return mt.getProps().arr().dct(p -> T2(p.name, p)).vls()
             .map(prop -> LookupElementBuilder.create(prop.name)
                 .bold()
                 .withIcon(PhpIcons.FIELD)
