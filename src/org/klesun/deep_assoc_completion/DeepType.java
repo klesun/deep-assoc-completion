@@ -31,7 +31,8 @@ public class DeepType extends Lang
     // slowly migrating returnTypes from constant values to a function
     // list of functions that take arg list and return list of return types
     public final L<F<FuncCtx, L<DeepType>>> returnTypeGetters = L();
-    public final L<DeepType> pdoTypes = L();
+    public final L<DeepType> pdoFetchTypes = L();
+    public final LinkedHashSet<String> pdoBindVars = new LinkedHashSet<>();
     public Opt<FuncCtx> ctorArgs = opt(null);
     public final @Nullable String stringValue;
     public final PsiElement definition;

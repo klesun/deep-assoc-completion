@@ -15,7 +15,9 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
 
+import java.util.Iterator;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MethCallRes extends Lang
@@ -61,7 +63,7 @@ public class MethCallRes extends Lang
             .map(col -> col.getName());
     }
 
-    private Opt<DeepType> parseSqlSelect(DeepType strType, Project project)
+    private DeepType parseSqlSelect(DeepType strType, Project project)
     {
         DeepType parsedType = new DeepType(strType.definition, PhpType.ARRAY);
         String sql = opt(strType.stringValue).def("");
@@ -85,7 +87,25 @@ public class MethCallRes extends Lang
                 });
         }).fch(name -> parsedType.addKey(name, ctx.getRealPsi(strType.definition))
             .addType(() -> new Mt(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
-        return opt(parsedType);
+        return parsedType;
+    }
+
+    private static It<String> getBindVars(DeepType sqlStrT)
+    {
+        Matcher matcher = Pattern.compile(":([A-Za-z_][A-Za-z0-9_]*)")
+            .matcher(opt(sqlStrT.stringValue).def(""));
+        boolean hasFirst = matcher.find();
+        return It(() -> new Iterator<String>() {
+            boolean hasNext = hasFirst;
+            public boolean hasNext() {
+                return hasNext;
+            }
+            public String next() {
+                String var = matcher.group(1);
+                hasNext = matcher.find();
+                return var;
+            }
+        });
     }
 
     private Mt findBuiltInRetType(Method meth, FuncCtx argCtx, MethodReference methCall)
@@ -95,17 +115,20 @@ public class MethCallRes extends Lang
         if (clsNme.equals("PDO") && meth.getName().equals("query") ||
             clsNme.equals("PDO") && meth.getName().equals("prepare")
         ) {
-            It<DeepType> parsedSql = argCtx.getArg(0)
-                .fap(mt -> mt.types)
-                .fop(type -> parseSqlSelect(type, meth.getProject()));
             DeepType type = new DeepType(methCall);
-            parsedSql.fch(el -> type.pdoTypes.add(el));
+            argCtx.getArg(0)
+                .fap(mt -> mt.types)
+                .fch(strType -> {
+                    DeepType fetchType = parseSqlSelect(strType, meth.getProject());
+                    type.pdoFetchTypes.add(fetchType);
+                    getBindVars(strType).fch(type.pdoBindVars::add);
+                });
             types = It(list(type));
         } else if (clsNme.equals("PDOStatement") && meth.getName().equals("fetch")) {
             It<DeepType> pdoTypes = opt(methCall.getClassReference())
                 .fop(toCast(PhpExpression.class))
                 .fap(obj -> ctx.findExprType(obj))
-                .fap(t -> t.pdoTypes);
+                .fap(t -> t.pdoFetchTypes);
             types = It(pdoTypes);
         }
         return new Mt(types);

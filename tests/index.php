@@ -811,6 +811,24 @@ class DeepKeysTest
         ]);
     }
 
+    private static function testPdoUsedColonParams()
+    {
+        $connection = new \PDO("blablabla");
+        $connection
+            ->prepare('SELECT * FROM delete_me WHERE name = :name AND price < :price;')
+            ->execute([
+                // should suggest: name, price
+                '' => '123',
+            ]);
+        \Lib\Db::inst()->exec(implode(PHP_EOL, [
+            'SELECT * FROM delete_me WHERE name = :name AND price < 90.00;',
+        ]), [
+            // should suggest: name, price
+            '' => '123',
+        ]);
+
+    }
+
     //============================
     // not implemented follow
     //============================

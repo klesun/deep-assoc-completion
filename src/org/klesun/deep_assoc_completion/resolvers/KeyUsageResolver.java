@@ -12,7 +12,6 @@ import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -30,14 +29,12 @@ public class KeyUsageResolver extends Lang
         this.depthLeft = depthLeft;
     }
 
-    private static Mt resolveReplaceKeys(ParameterList argList, int order)
+    private Mt resolveReplaceKeys(ParameterList argList, int order)
     {
-        SearchContext search = new SearchContext(argList.getProject());
-        FuncCtx ctx = new FuncCtx(search);
         return L(argList.getParameters())
             .flt((psi, i) -> i < order)
             .fop(toCast(PhpExpression.class))
-            .fap(exp -> ctx.findExprType(exp))
+            .fap(exp -> fakeCtx.findExprType(exp))
             .wap(Mt::new);
     }
 
@@ -167,6 +164,37 @@ public class KeyUsageResolver extends Lang
         );
     }
 
+    private It<DeepType> findKeysUsedInArrayMap(Function meth, ParameterList argList, PhpExpression arrCtor)
+    {
+        return opt(meth.getName())
+            .flt(n -> n.equals("array_map"))
+            .map(n -> L(argList.getParameters()))
+            .flt(args -> args.indexOf(arrCtor) == 1)
+            .fop(args -> args.gat(0))
+            .fop(func -> Tls.cast(PhpExpressionImpl.class, func)
+                .map(expr -> expr.getFirstChild())
+                .fop(toCast(Function.class))) // TODO: support in a var
+            .fap(func -> {
+                DeepType arrt = new DeepType(argList, PhpType.ARRAY);
+                arrt.anyKeyElTypes.add(Tls.onDemand(() -> resolveArgUsedKeys(func, 0)));
+                return list(arrt);
+            });
+    }
+
+    private It<DeepType> findKeysUsedInPdoExec(Function meth, ParameterList argList, PhpExpression arrCtor)
+    {
+        return Tls.cast(Method.class, meth)
+            .flt(m -> "\\PDOStatement".equals(opt(m.getContainingClass()).map(cls -> cls.getFQN()).def("")))
+            .flt(m -> "execute".equals(m.getName()))
+            .flt(m -> L(argList.getParameters()).indexOf(arrCtor) == 0)
+            .fop(m -> opt(argList.getParent()))
+            .fop(toCast(MethodReference.class))
+            .fop(methRef -> opt(methRef.getClassReference()))
+            .fap(clsRef -> fakeCtx.findExprType(clsRef))
+            .map(pdostt -> makeAssoc(pdostt.definition, It(pdostt.pdoBindVars)
+                .map(varName -> T2(varName, pdostt.definition))));
+    }
+
     private Mt findKeysUsedOnExpr(PhpExpression arrCtor)
     {
         return opt(arrCtor.getParent())
@@ -174,29 +202,18 @@ public class KeyUsageResolver extends Lang
             .fap(argList -> {
                 int order = L(argList.getParameters()).indexOf(arrCtor);
                 return resolveFunc(argList)
-                    .fap(meth -> list(
+                    .fap(meth -> It.cnc(
                         getImplementations(meth)
                             .fap(ipl -> resolveArgUsedKeys(ipl, order).types),
                         opt(meth.getName())
                             .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
                             .fap(n -> resolveReplaceKeys(argList, order).types),
-                        opt(meth.getName())
-                            .flt(n -> n.equals("array_map"))
-                            .map(n -> L(argList.getParameters()))
-                            .flt(args -> args.indexOf(arrCtor) == 1)
-                            .fop(args -> args.gat(0))
-                            .fop(func -> Tls.cast(PhpExpressionImpl.class, func)
-                                .map(expr -> expr.getFirstChild())
-                                .fop(toCast(Function.class))) // TODO: support in a var
-                            .fap(func -> {
-                                DeepType arrt = new DeepType(argList, PhpType.ARRAY);
-                                arrt.anyKeyElTypes.add(Tls.onDemand(() -> resolveArgUsedKeys(func, 0)));
-                                return list(arrt);
-                            })
-                    ).fap(a -> a))
-                    .cct(opt(argList.getParent())
-                        .fop(toCast(NewExpressionImpl.class))
-                        .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types));
+                        findKeysUsedInArrayMap(meth, argList, arrCtor),
+                        findKeysUsedInPdoExec(meth, argList, arrCtor),
+                        opt(argList.getParent())
+                            .fop(toCast(NewExpressionImpl.class))
+                            .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types)
+                    ));
             })
             .wap(Mt::new);
     }
@@ -255,10 +272,10 @@ public class KeyUsageResolver extends Lang
                 .flt(ass -> arrCtor.isEquivalentTo(ass.getValue()))
                 .map(ass -> ass.getVariable())
                 .fop(toCast(Variable.class))
-                .fap(var -> list(
-                    new VarRes(fakeCtx).getDocType(var).arr(),
+                .fap(var -> It.cnc(
+                    new VarRes(fakeCtx).getDocType(var),
                     findKeysUsedOnVar(var).types
-                ).fap(a -> a)),
+                )),
             // assoc array in an assoc array
             opt(arrCtor.getParent())
                 .fop(toCast(PhpPsiElementImpl.class))

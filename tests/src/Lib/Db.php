@@ -41,6 +41,15 @@ class Db
         }
     }
 
+    public function exec($sql, $params = null)
+    {
+        if ($params === null) {
+            return $this->connection->exec($sql);
+        } else {
+            return $this->connection->prepare($sql)->execute($params);
+        }
+    }
+
     public function fetchAll($sql, $params = null)
     {
         try {
