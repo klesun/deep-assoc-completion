@@ -13,6 +13,7 @@ import com.jetbrains.php.lang.psi.elements.MemberReference;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpClassMember;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.fest.util.Sets;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -66,7 +67,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         ).def(base);
     }
 
-    private static L<LookupElement> getDynamicProps(Mt mt)
+    private static It<LookupElement> getDynamicProps(Mt mt)
     {
         return mt.getProps().arr().dct(p -> T2(p.name, p)).vls()
             .map(prop -> LookupElementBuilder.create(prop.name)
@@ -98,7 +99,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                 .fap(ref -> {
                     // IDEA did not resolve the class on it's own - worth trying Deep resolution
                     Mt mt = funcCtx.findExprType(ref).wap(Mt::new);
-                    result.addAllElements(getDynamicProps(mt));
+                    getDynamicProps(mt).fch(el -> result.addElement(el));
                     return ArrCtorRes.resolveMtCls(mt, ref.getProject())
                         .fap(cls -> list(
                             L(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
@@ -113,7 +114,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             String msg = "Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds";
             result.addLookupAdvertisement(msg);
         }
-        Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()));
+        Set<String> suggested = Sets.newHashSet(builtIns.map(l -> l.getLookupString()));
         members.map(m -> makeLookup(m))
             .flt(l -> !suggested.contains(l.getLookupString()))
             .fch(result::addElement);

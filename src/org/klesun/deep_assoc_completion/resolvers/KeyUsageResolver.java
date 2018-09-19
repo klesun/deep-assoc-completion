@@ -223,9 +223,9 @@ public class KeyUsageResolver extends Lang
                         .map(lit -> lit.getContents());
                     par = par.getParent();
                 } else {
-                    int order = L(par.getChildren())
+                    int order = It(par.getChildren())
                         .fop(toCast(PhpPsiElementImpl.class))
-                        .indexOf(par);
+                        .arr().indexOf(par);
                     key = order > -1 ? opt(order + "") : opt(null);
                 }
                 Opt<String> keyf = key;

@@ -86,7 +86,7 @@ public class RunTest extends AnAction
             .fap(tuple -> {
                 L<String> actualKeys = tuple.b.getTypes().fap(t -> L(t.keys.keySet())).arr();
                 L<String> expectedKeys = new Mt(tuple.c.getTypes())
-                    .getKey(null).getStringValues();
+                    .getKey(null).getStringValues().arr();
                 try {
                     return tuple.a.testCaseExact(actualKeys, expectedKeys);
                 } catch (RuntimeException exc) {

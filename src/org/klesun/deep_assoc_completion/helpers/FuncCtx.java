@@ -162,8 +162,11 @@ public class FuncCtx extends Lang
     public FuncCtx subCtxDirectGeneric(ParameterListOwner funcCall)
     {
         L<PsiElement> psiArgs = L(funcCall.getParameters());
-        L<S<Mt>> argGetters = psiArgs.map((psi) -> () -> Tls.cast(PhpExpression.class, psi)
-            .uni(arg -> new Mt(findExprType(arg)), () -> Mt.INVALID_PSI));
+        L<S<Mt>> argGetters = psiArgs.map((psi) -> S(() ->
+            Tls.cast(PhpExpression.class, psi) .uni(
+                arg -> new Mt(findExprType(arg)),
+                () -> Mt.INVALID_PSI)
+        )).arr();
         FuncCtx subCtx = new FuncCtx(this, argGetters, funcCall, EArgPsiType.DIRECT);
         psiArgs.fch((arg, i) -> {
             if (opt(arg.getPrevSibling()).map(sib -> sib.getText()).def("").equals("...")) {
@@ -244,9 +247,9 @@ public class FuncCtx extends Lang
     }
 
     /** for debug */
-    public L<Mt> getArgs()
+    public It<Mt> getArgs()
     {
-        return argGetters.map(g -> g.get());
+        return Tls.range(0, argGetters.size()).map(i -> getCached(i, argGetters.get(i)));
     }
 
     public String toString()

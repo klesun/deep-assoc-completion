@@ -36,13 +36,12 @@ public class MethCallRes extends Lang
         return callCls.equals(cls) && callMet.equals(mth);
     }
 
-    public static L<Method> findOverridingMethods(Method meth)
+    public static It<Method> findOverridingMethods(Method meth)
     {
         return opt(PhpIndex.getInstance(meth.getProject()))
             .fop(idx -> opt(meth.getContainingClass())
                 .map(cls -> idx.getAllSubclasses(cls.getFQN())))
-            .map(clses -> L(clses))
-            .def(L())
+            .fap(clses -> L(clses))
             .fop(cls -> opt(cls.findMethodByName(meth.getName())));
     }
 
@@ -100,7 +99,7 @@ public class MethCallRes extends Lang
                 .fap(mt -> mt.types)
                 .fop(type -> parseSqlSelect(type, meth.getProject()));
             DeepType type = new DeepType(methCall);
-            parsedSql.fch(type.pdoTypes::add);
+            parsedSql.fch(el -> type.pdoTypes.add(el));
             types = It(list(type));
         } else if (clsNme.equals("PDOStatement") && meth.getName().equals("fetch")) {
             It<DeepType> pdoTypes = opt(methCall.getClassReference())
@@ -125,9 +124,9 @@ public class MethCallRes extends Lang
     public static F<FuncCtx, It<DeepType>> findMethRetType(Method meth)
     {
         return (FuncCtx funcCtx) -> {
-            L<Method> impls = list(meth);
+            It<Method> impls = It(list(meth));
             if (meth.isAbstract()) {
-                impls.addAll(findOverridingMethods(meth));
+                impls = It.cnc(list(meth), findOverridingMethods(meth));
                 // ignore $this and args in implementations
                 // since there may be dozens of them (Laravel)
                 funcCtx = new FuncCtx(funcCtx.getSearch());

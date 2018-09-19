@@ -87,8 +87,8 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 String regex = "^\\s*=\\s*(.+)$";
                 if (tagValue.getParent() instanceof PhpDocReturnTagImpl) {
                     PhpDocReturnTagImpl returnTag = (PhpDocReturnTagImpl)tagValue.getParent();
-                    L<PhpDocType> docTypes = L(returnTag.getChildren())
-                        .fop(toCast(PhpDocType.class));
+                    L<PhpDocType> docTypes = It(returnTag.getChildren())
+                        .fop(toCast(PhpDocType.class)).arr();
                     regex = "^\\s*(?:like|=|)\\s*(.+)$";
                     if (docValue.matches("::[a-zA-Z0-9_]*IntellijIdeaRulezzz")) {
                         // class name gets resolved as return type psi

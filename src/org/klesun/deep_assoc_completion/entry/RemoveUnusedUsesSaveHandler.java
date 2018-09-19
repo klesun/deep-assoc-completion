@@ -49,9 +49,9 @@ public class RemoveUnusedUsesSaveHandler implements FileDocumentManagerListener
                     .map(problem -> problem.getPsiElement())
                     .fop(toCast(PhpUse.class))
                     .fop(psi -> Tls.findParent(psi, PhpUseListImpl.class, a -> true))
-                    .flt(lst -> L(lst.getChildren())
+                    .flt(lst -> It(lst.getChildren())
                         .fop(toCast(PhpUse.class))
-                        .size() == 1) // just one name on this use line
+                        .arr().size() == 1) // just one name on this use line
                     .map(unuse -> unuse.getTextRange())
                     .map(r -> T2(r.getStartOffset(), r.getEndOffset() + 1))
                     .flt(p -> document.getText(new TextRange(p.a, p.b)).endsWith("\n"))

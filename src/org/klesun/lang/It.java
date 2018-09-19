@@ -215,6 +215,11 @@ public class It<A> implements Iterable<A>
         return fap((el, i) -> flatten.apply(el));
     }
 
+    public <B> It<B> fop(F2<A, Integer, Opt<B>> convert)
+    {
+        return map(convert).fap(a -> a.itr());
+    }
+
     public <B> It<B> fop(F<A, Opt<B>> convert)
     {
         return map(convert).fap(a -> a.itr());
@@ -242,6 +247,16 @@ public class It<A> implements Iterable<A>
     {
         dispose().forEachRemaining(f);
         //disposeStream().forEach(f);
+    }
+
+    public void fch(C2<A, Integer> f)
+    {
+        Mutable<Integer> mutI = new Mutable<>(0);
+        dispose().forEachRemaining(el -> {
+            int i = mutI.get();
+            mutI.set(i + 1);
+            f.accept(el, i);
+        });
     }
 
 //    public Opt<A> fst()

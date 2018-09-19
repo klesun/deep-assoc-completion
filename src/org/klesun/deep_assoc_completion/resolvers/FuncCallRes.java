@@ -115,7 +115,7 @@ public class FuncCallRes extends Lang
 
     private DeepType implode(FuncCtx callCtx, FunctionReferenceImpl call)
     {
-        String delim = callCtx.getArgMt(0).getStringValues().gat(0).def(" ");
+        String delim = callCtx.getArgMt(0).getStringValues().fst().def(" ");
         It<String> parts = callCtx.getArgMt(1).types
             .fap(t -> L(t.keys.values()))
             .fap(kv -> kv.getTypes())

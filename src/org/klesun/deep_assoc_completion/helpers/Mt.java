@@ -75,8 +75,7 @@ public class Mt extends Lang
         return getStringValueSt(types);
     }
 
-    // TODO: return iterator
-    public L<String> getStringValues()
+    public It<String> getStringValues()
     {
         return types.fop(t -> opt(t.stringValue));
     }
@@ -192,10 +191,10 @@ public class Mt extends Lang
                 briefValues.add("{" + Tls.implode(", ", keyNames.map(k -> k + ":")) + "}");
             }
         }
-        L<String> strvals = types.fop(t -> opt(t.stringValue));
-        if (strvals.size() > 0) {
+        It<String> strvals = types.fop(t -> opt(t.stringValue));
+        if (strvals.has()) {
             briefValues.add(Tls.implode("|", strvals
-                .grp(a -> a).kys()
+                .arr().grp(a -> a).kys()
                 .map(s -> (types.all((t,i) -> t.definition.getText().equals(s)))
                     ? s : "'" + s + "'")));
         }

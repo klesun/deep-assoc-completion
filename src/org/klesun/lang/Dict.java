@@ -24,7 +24,7 @@ public class Dict<T> implements Map<String, T>
     }
 
     public <Tnew> Dict<Tnew> map(Lang.F2<T, String, Tnew> f) {
-        return new Dict<>(Lang.L(entrySet()).map(e -> Lang.T2(e.getKey(), f.apply(e.getValue(), e.getKey()))));
+        return new Dict<>(Lang.L(entrySet()).map(e -> Lang.T2(e.getKey(), f.apply(e.getValue(), e.getKey()))).arr());
     }
     public <Tnew> Dict<Tnew> map(Lang.F<T, Tnew> f) {
         return this.map((v,k) -> f.apply(v));
@@ -43,11 +43,11 @@ public class Dict<T> implements Map<String, T>
         return result;
     }
     // "values"
-    public L<T> vls() {
+    public It<T> vls() {
         return prs().map(p -> p.b);
     }
     // "keys"
-    public L<String> kys() {
+    public It<String> kys() {
         return prs().map(p -> p.a);
     }
     // "flat map filter optional"
@@ -59,7 +59,7 @@ public class Dict<T> implements Map<String, T>
         return prs()
             .fop(t -> convert.apply(t.b, t.a)
                 .map(newVal -> Lang.T2(t.a, newVal)))
-            .dct(a -> a);
+            .arr().dct(a -> a);
     }
     // "get at"
     public Opt<T> gat(String key) {

@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.helpers;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.lang.Dict;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 
 import static org.klesun.lang.Lang.list;
@@ -24,7 +25,7 @@ public class KeyType
 
     public static KeyType mt(Mt mt)
     {
-        return mt.getStringValues().size() > 0
+        return mt.getStringValues().has()
             ? new KeyType(EKeyType.STRING, mt.types)
             : (mt.isInt()
                 ? KeyType.integer()
@@ -41,7 +42,7 @@ public class KeyType
         return new KeyType(EKeyType.UNKNOWN, list());
     }
 
-    public L<String> getNames()
+    public It<String> getNames()
     {
         return new Mt(types).getStringValues();
     }

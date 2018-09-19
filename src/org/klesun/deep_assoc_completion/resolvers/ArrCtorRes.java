@@ -148,7 +148,7 @@ public class ArrCtorRes extends Lang
                     .map(keyPsi -> ctx.findExprType(keyPsi))
                     .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
                     .thn(keyStrValues -> {
-                        if (keyStrValues.size() > 0) {
+                        if (keyStrValues.has()) {
                             keyStrValues.fch(key -> arrayType
                                 .addKey(key, ctx.getRealPsi(keyRec))
                                 .addType(getType, Tls.getIdeaType(v)));

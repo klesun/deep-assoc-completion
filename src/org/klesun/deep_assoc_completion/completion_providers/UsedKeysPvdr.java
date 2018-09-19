@@ -13,6 +13,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import org.fest.util.Sets;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
@@ -79,10 +80,10 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
         long startTime = System.nanoTime();
         It<DeepType.Key> usedKeys = assertArrCtorKey(parameters.getPosition())
             .fap(arrCtor -> {
-                L<String> alreadyDeclared = L(arrCtor.getHashElements())
+                Set<String> alreadyDeclared = L(arrCtor.getHashElements())
                     .fop(el -> opt(el.getKey()))
                     .fop(toCast(StringLiteralExpressionImpl.class))
-                    .map(lit -> lit.getContents());
+                    .map(lit -> lit.getContents()).wap(Sets::newHashSet);
                 return resolve(arrCtor, parameters.isAutoPopup(), parameters.getEditor())
                     .types.fap(t -> L(t.keys.values()))
                     .flt(k -> !alreadyDeclared.contains(k.name));

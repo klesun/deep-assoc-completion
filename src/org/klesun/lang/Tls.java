@@ -172,7 +172,7 @@ public class Tls extends Lang
      */
     public static String singleLine(String text, int length)
     {
-        L<String> lines = L(text.split("\n")).map(String::trim);
+        It<String> lines = L(text.split("\n")).map(String::trim);
         return Tls.substr(Tls.implode(" ", lines), 0, length);
     }
 

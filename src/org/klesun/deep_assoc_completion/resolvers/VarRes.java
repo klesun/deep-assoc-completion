@@ -158,17 +158,17 @@ public class VarRes extends Lang
             });
     }
 
-    private static L<PsiElement> findDeclarations(Variable variable)
+    private static It<PsiElement> findDeclarations(Variable variable)
     {
         // if this line is still here when you read this, that means I
         // decided to just do DumbService::isDumb() check in Type Provider
-        return L(variable.multiResolve(false))
+        return It(variable.multiResolve(false))
             .fop(res -> opt(res.getElement()));
     }
 
     public It<DeepType> getDocType(Variable variable)
     {
-        return findDeclarations(variable).itr()
+        return findDeclarations(variable)
             .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable))
             .fop(toCast(PhpDocVarImpl.class))
             .fop(varDoc -> opt(varDoc.getParent()))

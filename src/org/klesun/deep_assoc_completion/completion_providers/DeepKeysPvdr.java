@@ -206,7 +206,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .map(n -> n.equals("")|| n.equals("IntellijIdeaRulezzz"))
             .def(false);
 
-        suggested.addAll(lookups.map(l -> l.getLookupString()));
+        lookups.map(l -> l.getLookupString()).fch(el -> suggested.add(el));
         result.runRemainingContributors(parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
             LookupElement lookup = otherSourceResult.getLookupElement();

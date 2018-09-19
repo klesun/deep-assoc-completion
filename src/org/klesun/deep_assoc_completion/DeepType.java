@@ -177,7 +177,7 @@ public class DeepType extends Lang
                 if (!mergedKeys.containsKey(k)) {
                     mergedKeys.put(k, list());
                 }
-                v.getTypes().fch(mergedKeys.get(k)::add);
+                v.getTypes().fch(el -> mergedKeys.get(k).add(el));
             });
             t.getListElemTypes().forEach(indexTypes::add);
             briefTypes.add(opt(t.stringValue).def(t.briefType.filterUnknown().toString()));
@@ -200,8 +200,8 @@ public class DeepType extends Lang
             It<String> briefs = L(new HashSet<>(briefTypes)).flt(t -> !"".equals(t));
             result = "'" + Tls.implode("|", briefs) + "'";
         }
-        result += L(types).fop(t -> t.ctorArgs)
-            .map(ctx -> Tls.implode(", ", ctx.getArgs().map(a -> a.varExport())))
+        result += It(types).fop(t -> t.ctorArgs)
+            .map(ctx -> Tls.implode(", ", ctx.getArgs().map(a -> a.varExport()))).arr()
             .grp(a -> a).kys().fst().map(argStr -> "(" + argStr + ")").def("");
         circularRefs.removeAll(types);
         return result;

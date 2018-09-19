@@ -57,19 +57,14 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
         return flt((val, i) -> pred.test(val));
     }
 
-    public <@NonNull Tnew> L<Tnew> map(Lang.F<T, @NonNull Tnew> f)
+    public <@NonNull Tnew> It<Tnew> map(Lang.F<T, @NonNull Tnew> f)
     {
-        return this.map((el, i) -> f.apply(el));
+        return Lang.It(this).map(f);
     }
 
-    public <@NonNull Tnew> L<Tnew> map(Lang.F2<T, Integer, Tnew> f)
+    public <@NonNull Tnew> It<Tnew> map(Lang.F2<T, Integer, Tnew> f)
     {
-        L<Tnew> result = Lang.L();
-        for (int i = 0; i < s.size(); ++i) {
-            T el = s.get(i);
-            result.add(f.apply(el, i));
-        }
-        return result;
+        return Lang.It(this).map(f);
     }
 
     public <Tnew> L<Tnew> mop(Lang.F<T, Tnew> f)
@@ -94,18 +89,14 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
      * "fop" stands for "Filter Optional"
      * this is a combination of map and filter
      */
-    public <Tnew> L<Tnew> fop(Lang.F<T, Opt<Tnew>> convert)
+    public <Tnew> It<Tnew> fop(Lang.F<T, Opt<Tnew>> convert)
     {
         return fop((el, i) -> convert.apply(el));
     }
 
-    public <Tnew> L<Tnew> fop(Lang.F2<T, Integer, Opt<Tnew>> convert)
+    public <Tnew> It<Tnew> fop(Lang.F2<T, Integer, Opt<Tnew>> convert)
     {
-        List<Tnew> result = Lang.list();
-        for (int i = 0; i < s.size(); ++i) {
-            convert.apply(s.get(i), i).thn(result::add);
-        }
-        return new L<>(result);
+        return Lang.It(this).fop(convert);
     }
 
     /**
@@ -198,8 +189,8 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
     /** "group thru optional - skip null keys" */
     public Dict<L<T>> gop(Lang.F<T, Opt<String>> getHash)
     {
-        return fop(v -> getHash.apply(v).map(k -> Lang.T2(k,v)))
-            .grp(p -> p.a).map(pairs -> pairs.map(p -> p.b));
+        return fop(v -> getHash.apply(v).map(k -> Lang.T2(k,v))).arr()
+            .grp(p -> p.a).map(pairs -> pairs.map(p -> p.b).arr());
     }
 
     /** stands for "concatenate" */
@@ -213,9 +204,9 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
         return cct(more.arr());
     }
 
-    public <U extends Comparable> L<T> srt(Lang.F<T, U> makeValue)
+    public <U extends Comparable> It<T> srt(Lang.F<T, U> makeValue)
     {
-        L<U> weights = map(makeValue);
+        L<U> weights = map(makeValue).arr();
         L<Integer> indexes = Tls.range(0, size()).arr();
         indexes.sort(Comparator.comparing(weights::get));
         return indexes.map(idx -> s.get(idx));
@@ -266,7 +257,7 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
     /** for "dict" - maps each value to a key-value pair using the passed function */
     public <Tnew> Dict<Tnew> dct(Lang.F<T, Lang.T2<String, Tnew>> makeKey)
     {
-        return new Dict<>(this.map(makeKey));
+        return new Dict<>(this.map(makeKey).arr());
     }
 
     /** make dict with same values mapped by key returned by the func */
