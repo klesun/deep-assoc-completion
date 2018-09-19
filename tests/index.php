@@ -821,10 +821,10 @@ class DeepKeysTest
                 '' => '123',
             ]);
         \Lib\Db::inst()->exec(implode(PHP_EOL, [
-            'SELECT * FROM delete_me WHERE name = :name AND price < 90.00;',
+            'SELECT * FROM delete_me WHERE name = :name AND price < :price;',
         ]), [
             // should suggest: name, price
-            '' => '123',
+            'price' => '123',
         ]);
 
     }

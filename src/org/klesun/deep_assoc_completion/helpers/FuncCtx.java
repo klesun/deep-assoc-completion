@@ -45,7 +45,7 @@ public class FuncCtx extends Lang
         }
     }
 
-    public FuncCtx(FuncCtx parentCtx, L<S<Mt>> argGetters, @NotNull PsiElement uniqueRef, EArgPsiType argPsiType)
+    public FuncCtx(FuncCtx parentCtx, L<S<Mt>> argGetters, PsiElement uniqueRef, EArgPsiType argPsiType)
     {
         this.argGetters = argGetters;
         this.search = parentCtx.search;
@@ -195,6 +195,11 @@ public class FuncCtx extends Lang
             argGetters.add(() -> getMt.get().getKey(key));
         }
         return new FuncCtx(this, argGetters, args, EArgPsiType.INDIRECT);
+    }
+
+    public FuncCtx subCtxEmpty()
+    {
+        return new FuncCtx(this, list(), null, EArgPsiType.NONE);
     }
 
     public boolean hasArgs()

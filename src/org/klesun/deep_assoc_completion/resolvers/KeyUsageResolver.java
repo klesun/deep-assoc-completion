@@ -51,7 +51,7 @@ public class KeyUsageResolver extends Lang
                 .map(varUsage -> acc.getIndex()));
     }
 
-    public Mt resolveArgUsedKeys(Function meth, int argOrder)
+    public Mt resolveArgUsedKeys(Function meth, int argOrder, FuncCtx nextCtx)
     {
         return L(meth.getParameters()).gat(argOrder)
             .fop(toCast(ParameterImpl.class))
@@ -63,7 +63,7 @@ public class KeyUsageResolver extends Lang
                         DeepType assoct = new DeepType(arg, PhpType.ARRAY);
                         lits.fch(lit -> {
                             S<Mt> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
-                                .map(acc -> new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnExpr(acc)).def(Mt.INVALID_PSI);
+                                .map(acc -> new KeyUsageResolver(nextCtx, depthLeft - 1).findKeysUsedOnExpr(acc)).def(Mt.INVALID_PSI);
                             assoct.addKey(lit.getContents(), lit)
                                 .addType(getType, PhpType.UNSET);
                         });
@@ -71,8 +71,8 @@ public class KeyUsageResolver extends Lang
                     }),
                 opt(arg.getDocComment())
                     .map(doc -> doc.getParamTagByName(arg.getName()))
-                    .fap(doc -> new DocParamRes(fakeCtx).resolve(doc)),
-                new KeyUsageResolver(fakeCtx, depthLeft - 1).findKeysUsedOnVar(arg).types
+                    .fap(doc -> new DocParamRes(nextCtx).resolve(doc)),
+                new KeyUsageResolver(nextCtx, depthLeft - 1).findKeysUsedOnVar(arg).types
             ))
             .wap(Mt::new);
     }
@@ -176,7 +176,7 @@ public class KeyUsageResolver extends Lang
                 .fop(toCast(Function.class))) // TODO: support in a var
             .fap(func -> {
                 DeepType arrt = new DeepType(argList, PhpType.ARRAY);
-                arrt.anyKeyElTypes.add(Tls.onDemand(() -> resolveArgUsedKeys(func, 0)));
+                arrt.anyKeyElTypes.add(Tls.onDemand(() -> resolveArgUsedKeys(func, 0, fakeCtx.subCtxSingleArgArr(arrCtor))));
                 return list(arrt);
             });
     }
@@ -201,10 +201,16 @@ public class KeyUsageResolver extends Lang
             .fop(toCast(ParameterList.class))
             .fap(argList -> {
                 int order = L(argList.getParameters()).indexOf(arrCtor);
+                Opt<PsiElement> callOpt = opt(argList.getParent());
                 return resolveFunc(argList)
                     .fap(meth -> It.cnc(
-                        getImplementations(meth)
-                            .fap(ipl -> resolveArgUsedKeys(ipl, order).types),
+                        getImplementations(meth).fap(ipl -> {
+                            FuncCtx nextCtx = callOpt.fop(call -> Opt.fst(
+                                () -> Tls.cast(MethodReference.class, call).map(casted -> fakeCtx.subCtxDirect(casted)),
+                                () -> Tls.cast(NewExpression.class, call).map(casted -> fakeCtx.subCtxDirect(casted))
+                            )).def(new FuncCtx(fakeCtx.getSearch()));
+                            return resolveArgUsedKeys(ipl, order, nextCtx).types;
+                        }),
                         opt(meth.getName())
                             .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
                             .fap(n -> resolveReplaceKeys(argList, order).types),
