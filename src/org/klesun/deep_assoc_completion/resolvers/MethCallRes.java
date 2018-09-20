@@ -43,20 +43,20 @@ public class MethCallRes extends Lang
         return opt(PhpIndex.getInstance(meth.getProject()))
             .fop(idx -> opt(meth.getContainingClass())
                 .map(cls -> idx.getAllSubclasses(cls.getFQN())))
-            .fap(clses -> L(clses))
+            .fap(clses -> clses)
             .fop(cls -> opt(cls.findMethodByName(meth.getName())));
     }
 
-    private static L<DasObject> getDasChildren(DasObject parent, ObjectKind kind)
+    private static It<DasObject> getDasChildren(DasObject parent, ObjectKind kind)
     {
         // return getDasChildren(ObjectKind.COLUMN);
-        return L(parent.getDbChildren(DasObject.class, kind));
+        return It(parent.getDbChildren(DasObject.class, kind));
     }
 
     private static It<String> getTableColumns(String table, Project project)
     {
-        return L(DbPsiFacade.getInstance(project).getDataSources())
-            .fap(src -> L(src.getModel().getModelRoots()))
+        return It(DbPsiFacade.getInstance(project).getDataSources())
+            .fap(src -> src.getModel().getModelRoots())
             .fap(root -> getDasChildren(root, ObjectKind.TABLE))
             .flt(t -> t.getName().equals(table))
             .fap(tab -> getDasChildren(tab, ObjectKind.COLUMN))
@@ -73,7 +73,7 @@ public class MethCallRes extends Lang
             () -> Tls.regex("SELECT\\s+(\\S.*)", sql, regexFlags) // partial SQL without FROM
         );
         matched.fap(matches -> {
-            L<String> fields = L(matches.gat(0).def("").split(",", -1));
+            It<String> fields = It(matches.gat(0).def("").split(",", -1));
             String table = matches.gat(1).def("");
             return fields.map(str -> str.trim())
                 .fap(f -> {
@@ -182,11 +182,11 @@ public class MethCallRes extends Lang
         PhpIndex idx = PhpIndex.getInstance(proj);
         String justName = L(partialFqn.split("\\\\")).lst().unw();
         return It.cnc(
-            L(idx.getClassesByName(justName)),
-            L(idx.getInterfacesByName(justName)),
-            L(idx.getTraitsByName(justName))
+            idx.getClassesByName(justName),
+            idx.getInterfacesByName(justName),
+            idx.getTraitsByName(justName)
         ).flt(cls -> cls.getFQN().endsWith(partialFqn))
-            .fap(cls -> L(cls.getMethods()))
+            .fap(cls -> cls.getMethods())
             .flt(m -> Objects.equals(m.getName(), func));
     }
 
@@ -198,7 +198,7 @@ public class MethCallRes extends Lang
                 .flt(typ -> obj.getText().equals("static"))
                 .fap(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, obj.getProject()))
                 .def(new ArrCtorRes(ctx).resolveObjCls(obj)))
-            .fap(cls -> L(cls.getMethods()))
+            .fap(cls -> cls.getMethods())
             .flt(f -> f.getName().equals(fieldRef.getName()));
     }
 

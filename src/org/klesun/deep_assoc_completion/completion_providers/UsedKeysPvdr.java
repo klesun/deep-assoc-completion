@@ -80,12 +80,12 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
         long startTime = System.nanoTime();
         It<DeepType.Key> usedKeys = assertArrCtorKey(parameters.getPosition())
             .fap(arrCtor -> {
-                Set<String> alreadyDeclared = L(arrCtor.getHashElements())
+                Set<String> alreadyDeclared = It(arrCtor.getHashElements())
                     .fop(el -> opt(el.getKey()))
                     .fop(toCast(StringLiteralExpressionImpl.class))
                     .map(lit -> lit.getContents()).wap(Sets::newHashSet);
                 return resolve(arrCtor, parameters.isAutoPopup(), parameters.getEditor())
-                    .types.fap(t -> L(t.keys.values()))
+                    .types.fap(t -> t.keys.values())
                     .flt(k -> !alreadyDeclared.contains(k.name));
             });
 
@@ -125,7 +125,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
             .fap(lit -> opt(lit.getFirstChild())
                 .fop(c -> assertArrCtorKey(c))
                 .fap(arrCtor -> resolve(arrCtor, false, editor)
-                    .types.fap(t -> L(t.keys.values()))
+                    .types.fap(t -> t.keys.values())
                     .flt(k -> lit.getContents().equals(k.name))
                     .map(k -> k.definition))).arr();
 

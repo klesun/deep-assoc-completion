@@ -109,7 +109,7 @@ public class ArgRes extends Lang
                                     .fop(func -> getArgFromMethodCall(func, funcVarOrder, caretArgOrder))
                                 // go into the called function and look what
                                 // is passed to the passed func var there
-                                , () -> L(call.multiResolve(false))
+                                , () -> It(call.multiResolve(false))
                                     .fop(res -> opt(res.getElement()))
                                     .fop(toCast(Function.class))
                                     .map(func -> new KeyUsageResolver(subCtx, 3)
@@ -222,11 +222,11 @@ public class ArgRes extends Lang
         return opt(param.getDocComment())
             .fop(toCast(PhpDocCommentImpl.class))
             .map(doc -> doc.getDocTagByClass(PhpDocDataProviderImpl.class))
-            .fop(tags -> L(tags).fst())
-            .fop(tag -> L(tag.getChildren())
+            .fop(tags -> It(tags).fst())
+            .fop(tag -> It(tag.getChildren())
                 .fop(toCast(PhpDocRefImpl.class))
                 .fst())
-            .fop(ref -> L(ref.getReferences()).fst())
+            .fop(ref -> It(ref.getReferences()).fst())
             .map(ref -> ref.resolve())
             .fop(toCast(MethodImpl.class))
             .map(met -> ClosRes.getReturnedValue(met, new FuncCtx(trace.getSearch())).types)
@@ -249,7 +249,7 @@ public class ArgRes extends Lang
                 .fop(Tls.toCast(MethodImpl.class))
                 .fap(meth -> opt(meth.getContainingClass())
                     .fap(cls -> It(cls.getImplementedInterfaces())
-                        .fap(ifc -> L(ifc.getMethods()))
+                        .fap(ifc -> ifc.getMethods())
                         .flt(ifcMeth -> meth.getName().equals(ifcMeth.getName()))))
                 .fop(meth -> L(meth.getParameters()).gat(order))
                 .fop(Tls.toCast(ParameterImpl.class)),

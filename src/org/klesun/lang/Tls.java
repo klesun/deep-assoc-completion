@@ -71,7 +71,7 @@ public class Tls extends Lang
         Predicate<PsiElement> goDeeperPred
     ) {
         if (goDeeperPred.test(parent)) {
-            return L(parent.getChildren())
+            return It(parent.getChildren())
                 .fap(c -> findChildren(c, cls, goDeeperPred))
                 .cct(list(parent).fop(toCast(cls)));
         } else {
@@ -172,7 +172,7 @@ public class Tls extends Lang
      */
     public static String singleLine(String text, int length)
     {
-        It<String> lines = L(text.split("\n")).map(String::trim);
+        It<String> lines = It(text.split("\n")).map(String::trim);
         return Tls.substr(Tls.implode(" ", lines), 0, length);
     }
 

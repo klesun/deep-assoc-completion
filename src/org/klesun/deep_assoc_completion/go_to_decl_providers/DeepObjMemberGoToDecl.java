@@ -26,8 +26,8 @@ public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandle
     private It<? extends PsiElement> resolveMember(PhpClass cls, String name)
     {
         return list(
-            L(cls.getFields()).flt(f -> f.getName().equals(name)),
-            L(cls.getMethods()).flt(m -> m.getName().equals(name))
+            It(cls.getFields()).flt(f -> f.getName().equals(name)),
+            It(cls.getMethods()).flt(m -> m.getName().equals(name))
         ).fap(a -> a);
     }
 

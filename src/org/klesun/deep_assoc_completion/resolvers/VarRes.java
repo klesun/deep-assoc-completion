@@ -94,7 +94,7 @@ public class VarRes extends Lang
                     if (keyVarOpt.has()) {
                         tuple = tuple.sub(1); // key was included
                         if (varRef.isEquivalentTo(keyVarOpt.unw())) {
-                            return arrt.types.fap(t -> L(t.keys.values()))
+                            return arrt.types.fap(t -> t.keys.values())
                                 .map(keyObj -> new DeepType(keyObj.definition, PhpType.STRING, keyObj.name))
                                 .wap(Mt::new);
                         }
@@ -129,7 +129,7 @@ public class VarRes extends Lang
                         }
                         return opt(null);
                     })
-                    .map(i -> L(arrts)
+                    .map(i -> arrts
                         .fop(t -> opt(t.keys.get(i + ""))
                             .map(k -> k.getTypeGetters()))
                         .fap(v -> v)

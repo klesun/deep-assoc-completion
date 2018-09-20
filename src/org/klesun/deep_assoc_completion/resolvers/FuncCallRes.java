@@ -117,7 +117,7 @@ public class FuncCallRes extends Lang
     {
         String delim = callCtx.getArgMt(0).getStringValues().fst().def(" ");
         It<String> parts = callCtx.getArgMt(1).types
-            .fap(t -> L(t.keys.values()))
+            .fap(t -> t.keys.values())
             .fap(kv -> kv.getTypes())
             .fop(t -> opt(t.stringValue));
         String joined = Tls.implode(delim, parts);
@@ -402,7 +402,7 @@ public class FuncCallRes extends Lang
             } else if (name.equals("array_keys")) {
                 DeepType arrt = new DeepType(call, PhpType.ARRAY);
                 arrt.listElTypes.add(Tls.onDemand(() -> callCtx.getArgMt(0).types
-                    .fap(t -> L(t.keys.values()))
+                    .fap(t -> t.keys.values())
                     .map(k -> new DeepType(k.definition, PhpType.STRING, k.name))
                     .wap(types -> new Mt(types))));
                 return list(arrt);

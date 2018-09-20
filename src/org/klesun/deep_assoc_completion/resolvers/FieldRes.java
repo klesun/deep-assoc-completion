@@ -70,12 +70,12 @@ public class FieldRes extends Lang
         L<Field> declarations = L.fst(
             () -> opt(fieldRef)
                 .flt(ref -> !ref.getText().startsWith("static::")) // IDEA is bad at static:: resolution
-                .fap(ref -> L(ref.multiResolve(false)))
+                .fap(ref -> It(ref.multiResolve(false)))
                 .map(res -> res.getElement())
                 .fop(toCast(Field.class)).arr(),
             () -> opt(getObjMt.get())
                 .fap(mt -> ArrCtorRes.resolveMtCls(mt, fieldRef.getProject()))
-                .fap(cls -> L(cls.getFields()))
+                .fap(cls -> cls.getFields())
                 .flt(f -> f.getName().equals(fieldRef.getName())).arr()
         );
         It<DeepType> propDocTs = It(list());
@@ -94,7 +94,7 @@ public class FieldRes extends Lang
 
                 It<DeepType> docTs = opt(resolved.getContainingClass()).itr()
                     .fop(cls -> opt(cls.getDocComment()))
-                    .fap(doc -> L(doc.getPropertyTags()))
+                    .fap(doc -> doc.getPropertyTags())
                     .flt(tag -> opt(tag.getProperty()).flt(pro -> pro.getName().equals(fieldRef.getName())).has())
                     .fap(tag -> new DocParamRes(ctx).resolve(tag));
 

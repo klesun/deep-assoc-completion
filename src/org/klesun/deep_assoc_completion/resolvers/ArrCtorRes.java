@@ -35,8 +35,8 @@ public class ArrCtorRes extends Lang
 
     public static It<PhpClass> resolveIdeaTypeCls(PhpType ideaType, Project project)
     {
-        return L(ideaTypeToFqn(ideaType))
-            .fap(clsPath -> L(PhpIndex.getInstance(project).getAnyByFQN(clsPath)))
+        return It(ideaTypeToFqn(ideaType))
+            .fap(clsPath -> PhpIndex.getInstance(project).getAnyByFQN(clsPath))
             .fop(rvd -> opt(rvd));
     }
 
@@ -95,8 +95,8 @@ public class ArrCtorRes extends Lang
                         () -> "self".equals(clsName)
                             ? Tls.findParent(clsPsi, PhpClass.class, a -> true)
                             : opt(null),
-                        () -> L(PhpIndex.getInstance(expr.getProject())
-                            .getAnyByFQN(clsName)).gat(0)
+                        () -> It(PhpIndex.getInstance(expr.getProject())
+                            .getAnyByFQN(clsName)).fst()
                     ))
             ));
     }
@@ -121,7 +121,7 @@ public class ArrCtorRes extends Lang
     {
         DeepType arrayType = new DeepType(expr);
 
-        L<PsiElement> orderedParams = L(expr.getChildren())
+        L<PsiElement> orderedParams = It(expr.getChildren())
             .flt(psi -> !(psi instanceof ArrayHashElement)).arr();
 
         resolveMethodFromArray(orderedParams)
@@ -139,14 +139,14 @@ public class ArrCtorRes extends Lang
                     .addType(() -> ctx.findExprType(val).wap(Mt::new), Tls.getIdeaType(val))));
 
         // keyed elements
-        L(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
+        It(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
             .fop(toCast(PhpExpression.class))
             .thn(v -> {
                 S<Mt> getType = Tls.onDemand(() -> ctx.findExprType(v).wap(Mt::new));
                 opt(keyRec.getKey())
                     .fop(toCast(PhpExpression.class))
                     .map(keyPsi -> ctx.findExprType(keyPsi))
-                    .map(keyTypes -> L(keyTypes).fop(t -> opt(t.stringValue)))
+                    .map(keyTypes -> keyTypes.fop(t -> opt(t.stringValue)))
                     .thn(keyStrValues -> {
                         if (keyStrValues.has()) {
                             keyStrValues.fch(key -> arrayType

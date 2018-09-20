@@ -31,7 +31,7 @@ public class KeyUsageResolver extends Lang
 
     private Mt resolveReplaceKeys(ParameterList argList, int order)
     {
-        return L(argList.getParameters())
+        return It(argList.getParameters())
             .flt((psi, i) -> i < order)
             .fop(toCast(PhpExpression.class))
             .fap(exp -> fakeCtx.findExprType(exp))
@@ -145,8 +145,8 @@ public class KeyUsageResolver extends Lang
                 if (!isModel) {
                     return list();
                 } else {
-                    Set<String> inherited = Sets.newHashSet(supers.fap(s -> L(s.getOwnFields()).map(f -> f.getName())));
-                    return makeAssoc(newEx, L(cls.getOwnFields())
+                    Set<String> inherited = Sets.newHashSet(supers.fap(s -> It(s.getOwnFields()).map(f -> f.getName())));
+                    return makeAssoc(newEx, It(cls.getOwnFields())
                         .flt(fld -> !fld.getModifier().isPrivate())
                         .flt(fld -> !inherited.contains(fld.getName()))
                         .map(fld -> T2(fld.getName(), fld))).mt().types;

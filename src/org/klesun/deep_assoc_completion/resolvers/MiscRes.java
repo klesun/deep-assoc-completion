@@ -41,7 +41,7 @@ public class MiscRes extends Lang
                 )),
             () -> opt(newExp)
                 .flt(exp -> opt(exp.getClassReference())
-                    .fap(ref -> L(ref.multiResolve(false)))
+                    .fap(ref -> It(ref.multiResolve(false)))
                     .has())
                 .map(exp -> exp.getType())
         ).map(it -> {

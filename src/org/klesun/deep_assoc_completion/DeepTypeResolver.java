@@ -43,7 +43,7 @@ public class DeepTypeResolver extends Lang
                     !cst.getText().toLowerCase().equals("null") &&
                     !cst.getText().toLowerCase().equals("true") &&
                     !cst.getText().toLowerCase().equals("false"))
-                .map(cst -> L(cst.multiResolve(false))
+                .map(cst -> It(cst.multiResolve(false))
                     .map(ref -> ref.getElement())
                     .fop(toCast(PhpDefineImpl.class))
                     .fop(def -> opt(def.getValue()))
@@ -58,7 +58,7 @@ public class DeepTypeResolver extends Lang
                 .fop(toCast(PhpExpression.class))
                 .map(val -> ctx.findExprType(val))
             , () -> Tls.cast(ClassConstantReferenceImpl.class, expr)
-                .map(cst -> L(cst.multiResolve(false))
+                .map(cst -> It(cst.multiResolve(false))
                     .map(ref -> ref.getElement())
                     .fop(toCast(ClassConstImpl.class))
                     .map(a -> a.getDefaultValue())

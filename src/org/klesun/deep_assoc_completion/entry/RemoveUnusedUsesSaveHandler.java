@@ -40,7 +40,7 @@ public class RemoveUnusedUsesSaveHandler implements FileDocumentManagerListener
 
                 PhpUnusedAliasInspection inspection = new PhpUnusedAliasInspection();
                 InspectionManager manager = InspectionManager.getInstance(psiFile.getProject());
-                It<ProblemDescriptor> checked = L(inspection.processFile(psiFile, manager))
+                It<ProblemDescriptor> checked = It(inspection.processFile(psiFile, manager))
                     .flt(problem ->
                         problem.getDescriptionTemplate().contains("never used") &&
                         !problem.getDescriptionTemplate().contains("not necessary")); // same namespace, keep

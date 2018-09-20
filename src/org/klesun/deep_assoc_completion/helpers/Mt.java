@@ -34,7 +34,6 @@ public class Mt extends Lang
         // I'm not sure I'm good mathematician enough to find
         // out the algorithm that would not produce them with
         // all these recursions, so I'm just removing dupes here
-        Set occurences = new HashSet<>();
         this.types = L(It(types).unq());
         this.reason = reason;
     }
@@ -138,7 +137,7 @@ public class Mt extends Lang
         // TODO: 7681 types!!! and only 2 of them are actually unique. should do something
         keyObjs.fch(k -> psiToType.put(k.definition, k.getBriefTypes()));
 
-        L(psiToType.values()).fap(a -> a).fch(ideaType::add);
+        It(psiToType.values()).fap(a -> a).fch(ideaType::add);
         return ideaType;
     }
 
@@ -146,7 +145,7 @@ public class Mt extends Lang
     {
         L<String> names = L();
         HashSet<String> repeations = new HashSet<>();
-        types.fap(t -> L(t.keys.keySet())).fch(name -> {
+        types.fap(t -> It(t.keys.keySet())).fch(name -> {
             if (!repeations.contains(name)) {
                 repeations.add(name);
                 names.add(name);

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import static org.klesun.lang.Lang.*;
 
 /** a convenient wrapper to Java's LinkedHashMap - with map/filter/toList/etc... methods */
 public class Dict<T> implements Map<String, T>
@@ -24,7 +25,7 @@ public class Dict<T> implements Map<String, T>
     }
 
     public <Tnew> Dict<Tnew> map(Lang.F2<T, String, Tnew> f) {
-        return new Dict<>(Lang.L(entrySet()).map(e -> Lang.T2(e.getKey(), f.apply(e.getValue(), e.getKey()))).arr());
+        return new Dict<>(It(entrySet()).map(e -> Lang.T2(e.getKey(), f.apply(e.getValue(), e.getKey()))).arr());
     }
     public <Tnew> Dict<Tnew> map(Lang.F<T, Tnew> f) {
         return this.map((v,k) -> f.apply(v));

@@ -102,8 +102,8 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                     getDynamicProps(mt).fch(el -> result.addElement(el));
                     return ArrCtorRes.resolveMtCls(mt, ref.getProject())
                         .fap(cls -> list(
-                            L(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
-                            L(cls.getFields())
+                            It(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
+                            It(cls.getFields())
                         ).fap(a -> a)
                             .flt(fld -> fld.getModifier().isPublic()
                                 || ref.getText().equals("$this"))

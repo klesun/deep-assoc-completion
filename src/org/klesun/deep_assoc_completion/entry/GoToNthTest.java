@@ -65,12 +65,12 @@ public class GoToNthTest extends AnAction
             .fop(testNum -> psiFileOpt
                 .fop(psiFile -> caretOpt
                     .map(caret -> {
-                        L<Method> allMeths = L(PsiTreeUtil.findChildrenOfType(psiFile, Method.class));
+                        L<Method> allMeths = It(PsiTreeUtil.findChildrenOfType(psiFile, Method.class)).arr();
                         Set<String> dataProviders = allMeths
                             .fop(meth -> opt(meth.getDocComment()))
                             .fop(toCast(PhpDocCommentImpl.class))
-                            .fap(doc -> L(doc.getDocTagByClass(PhpDocDataProviderImpl.class)))
-                            .fap(tag -> L(tag.getChildren()))
+                            .fap(doc -> doc.getDocTagByClass(PhpDocDataProviderImpl.class))
+                            .fap(tag -> It(tag.getChildren()))
                             .fop(toCast(PhpDocRefImpl.class))
                             .map(ref -> ref.getText())
                             .wap(sit -> Sets.newHashSet(sit))

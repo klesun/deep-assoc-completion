@@ -107,10 +107,10 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                     .fop(match -> match.gat(0))
                     // method name completion
                     .thn(expr -> extractTypedFqnPart(expr, project, tagValue)
-                        .thn(options -> L(options)
-                            .map((lookup) -> LookupElementBuilder.create(lookup)
-                                .withIcon(DeepKeysPvdr.getIcon()))
-                            .fch(result::addElement)))
+                        .fap(options -> options)
+                        .map((lookup) -> LookupElementBuilder.create(lookup)
+                            .withIcon(DeepKeysPvdr.getIcon()))
+                        .fch(result::addElement))
                     // assoc array completion
                     .map(expr -> prefix + expr + ";")
                     .map(expr -> PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr))

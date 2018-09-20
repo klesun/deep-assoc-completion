@@ -194,11 +194,11 @@ public class DeepType extends Lang
             --level;
             result += indent(level) + "]";
         } else if (mergedProps.size() > 0) {
-            result = "{" + Tls.implode(", ", L(mergedProps).map(p -> "$" + p)) + "}";
+            result = "{" + Tls.implode(", ", It(mergedProps).map(p -> "$" + p)) + "}";
         } else if (indexTypes.size() > 0) {
             result = "[" + varExport(indexTypes, level, circularRefs) + "]";
         } else if (briefTypes.size() > 0) {
-            It<String> briefs = L(new HashSet<>(briefTypes)).flt(t -> !"".equals(t));
+            It<String> briefs = It(new HashSet<>(briefTypes)).flt(t -> !"".equals(t));
             result = "'" + Tls.implode("|", briefs) + "'";
         }
         result += It(types).fop(t -> t.ctorArgs)
@@ -216,7 +216,7 @@ public class DeepType extends Lang
 
     public boolean hasNumberIndexes()
     {
-        return hasIntKeys || L(keys.values()).any(k -> Tls.regex("^\\d+$", k.name).has());
+        return hasIntKeys || It(keys.values()).any(k -> Tls.regex("^\\d+$", k.name).has());
     }
 
     public boolean isNumber()

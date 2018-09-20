@@ -153,11 +153,6 @@ public class Lang
         return new L<T>(new ArrayList<T>(Arrays.asList(source)));
     }
 
-    public static <T> L<T> L(Collection<T> source)
-    {
-        return new L(new ArrayList(source));
-    }
-
     public static <T> L<T> L(Iterable<T> source)
     {
         List<T> list = list();
@@ -177,7 +172,7 @@ public class Lang
 
     public static <T> It<T> It(T[] source)
     {
-        return new It<T>(source);
+        return new It<>(source);
     }
 
     public static <T> It<T> It()

@@ -84,7 +84,7 @@ public class RunTest extends AnAction
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
             .fap(tuple -> {
-                L<String> actualKeys = tuple.b.getTypes().fap(t -> L(t.keys.keySet())).arr();
+                L<String> actualKeys = tuple.b.getTypes().fap(t -> t.keys.keySet()).arr();
                 L<String> expectedKeys = new Mt(tuple.c.getTypes())
                     .getKey(null).getStringValues().arr();
                 try {
