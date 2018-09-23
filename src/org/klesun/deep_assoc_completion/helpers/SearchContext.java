@@ -9,7 +9,6 @@ import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.lang.*;
 
 import javax.annotation.Nullable;
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,11 +22,12 @@ public class SearchContext extends Lang
     final public static boolean DEBUG_DEFAULT = false;
     public boolean debug = DEBUG_DEFAULT;
     private Opt<Double> timeout = opt(null);
-    private Opt<Project> project = opt(null);
+    final public Opt<Project> project;
     // for performance measurement
     private int expressionsResolved = 0;
     final public L<PhpExpression> psiTrace = L();
     final private Map<FuncCtx, Map<PhpExpression, Iterable<DeepType>>> ctxToExprToResult = new HashMap<>();
+    public Opt<Integer> overrideMaxExpr = non();
 
     public SearchContext(@Nullable Project project)
     {
@@ -57,14 +57,17 @@ public class SearchContext extends Lang
         return this;
     }
 
-    private Integer getMaxExpressions()
+    public Integer getMaxExpressions()
     {
         // max expressions per single search - guard
         // against memory overflow in circular references
-        return project.map(project -> {
-            DeepSettings settings = DeepSettings.inst(project);
-            return settings.totalExpressionLimit;
-        }).def(10000);
+        return Opt.fst(
+            () -> overrideMaxExpr,
+            () -> project.map(project -> {
+                DeepSettings settings = DeepSettings.inst(project);
+                return settings.totalExpressionLimit;
+            })
+        ).def(10000);
     }
 
     private <T> boolean endsWith(L<T> superList, L<T> subList)

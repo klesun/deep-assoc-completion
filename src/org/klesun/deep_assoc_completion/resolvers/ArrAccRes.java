@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.lang.It;
 import org.klesun.lang.Lang;
 
@@ -28,9 +29,11 @@ public class ArrAccRes extends Lang
             .map(v -> v.getValue())
             .fop(toCast(PhpExpression.class))
             .fap(keyPsi -> {
+                SearchContext keySearch = new SearchContext(ctx.getSearch().project.def(null));
+                keySearch.overrideMaxExpr = som(Math.min(ctx.getSearch().getMaxExpressions() - ctx.getSearch().getExpressionsResolved() - 1, 15));
                 // resolving key type can be a complex operation - we don't
                 // want that if we already know that mt has no known key names
-                @Nullable String keyName = ctx.limitResolve(10, keyPsi)
+                @Nullable String keyName = new FuncCtx(keySearch).limitResolve(10, keyPsi)
                     .wap(Mt::getStringValueSt);
                 return tit.fap(t -> Mt.getKeySt(t, keyName));
             });
