@@ -27,35 +27,36 @@ public class AssRes extends Lang
         this.ctx = ctx;
     }
 
-    private static Mt makeType(L<KeyType> keys, S<Mt> getType, PsiElement psi, PhpType briefType)
+    private static It<DeepType> makeType(L<KeyType> keys, S<? extends Iterable<DeepType>> getType, PsiElement psi, PhpType briefType)
     {
         if (keys.size() == 0) {
-            return getType.get();
+            return It(getType.get());
         } else {
             DeepType arr = new DeepType(psi, PhpType.ARRAY);
             KeyType nextKey = keys.get(0);
             L<KeyType> furtherKeys = keys.sub(1);
             if (nextKey.keyType == KeyType.EKeyType.STRING) {
+                S<Iterable<DeepType>> memoized = Tls.onDemand(() -> new MemoizingIterable<>(getType.get().iterator()));
                 nextKey.getNameToMt().fch((types, name) ->
                     types.fch(t -> arr.addKey(name, t.definition).addType(() ->
-                        makeType(furtherKeys, getType, psi, briefType), briefType)));
+                        makeType(furtherKeys, memoized, psi, briefType).wap(Mt::new), briefType)));
             } else  if (nextKey.keyType == KeyType.EKeyType.INTEGER) {
                 arr.hasIntKeys = true;
-                arr.listElTypes.add(() -> makeType(furtherKeys, getType, psi, briefType));
+                arr.listElTypes.add(Tls.onDemand(() -> new Mt(makeType(furtherKeys, getType, psi, briefType))));
             } else {
-                arr.anyKeyElTypes.add(() -> makeType(furtherKeys, getType, psi, briefType));
+                arr.anyKeyElTypes.add(Tls.onDemand(() -> makeType(furtherKeys, getType, psi, briefType).wap(Mt::new)));
             }
-            return new Mt(list(arr));
+            return It(list(arr));
         }
     }
 
     public static It<DeepType> assignmentsToTypes(Iterable<Assign> asses)
     {
-        return It(asses).fap(ass -> makeType(L(ass.keys), ass.assignedType, ass.psi, ass.briefType).types);
+        return It(asses).fap(ass -> makeType(L(ass.keys), ass.assignedType, ass.psi, ass.briefType));
     }
 
     // null in key chain means index (when it is number or variable, not named key)
-    private Opt<T2<List<KeyType>, S<Mt>>> collectKeyAssignment(AssignmentExpressionImpl ass)
+    private Opt<T2<List<KeyType>, S<It<DeepType>>>> collectKeyAssignment(AssignmentExpressionImpl ass)
     {
         Opt<ArrayAccessExpressionImpl> nextKeyOpt = opt(ass.getVariable())
             .fop(toCast(ArrayAccessExpressionImpl.class));
@@ -84,10 +85,7 @@ public class AssRes extends Lang
 
         return opt(ass.getValue())
             .fop(toCast(PhpExpression.class))
-            .map(value -> T2(keys, S(() -> {
-                Mt mt = ctx.findExprType(value).wap(Mt::new);
-                return mt;
-            })));
+            .map(value -> T2(keys, () -> ctx.findExprType(value)));
     }
 
     private static Opt<AssignmentExpressionImpl> findParentAssignment(PsiElement caretVar) {

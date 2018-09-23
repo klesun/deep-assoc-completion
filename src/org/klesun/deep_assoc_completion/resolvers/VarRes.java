@@ -17,6 +17,7 @@ import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,15 +31,22 @@ public class VarRes extends Lang
         this.ctx = ctx;
     }
 
-    private static List<String> parseRegexNameCaptures(String regexText)
+    private static It<String> parseRegexNameCaptures(String regexText)
     {
-        List<String> result = list();
         Pattern pattern = Pattern.compile("\\(\\?P<([a-zA-Z_0-9]+)>");
         Matcher matcher = pattern.matcher(regexText);
-        while (matcher.find()) {
-            result.add(matcher.group(1));
-        }
-        return result;
+        boolean hasFirst = matcher.find();
+        return It(() -> new Iterator<String>() {
+            boolean hasNext = hasFirst;
+            public boolean hasNext() {
+                return hasNext;
+            }
+            public String next() {
+                String value = matcher.group(1);
+                hasNext = matcher.find();
+                return value;
+            }
+        });
     }
 
     private static It<DeepType> makeRegexNameCaptureTypes(It<DeepType> regexTypes)
@@ -70,18 +78,18 @@ public class VarRes extends Lang
                 return args.gat(1)
                     .flt(asd -> isCaretArr)
                     .fop(Tls.toCast(PhpExpression.class))
-                    .map(el -> new Assign(keys, () -> ctx.findExprType(el).wap(Mt::new), false, el, Tls.getIdeaType(el)));
+                    .map(el -> new Assign(keys, () -> ctx.findExprType(el), false, el, Tls.getIdeaType(el)));
             });
     }
 
-    private Opt<S<Mt>> assertForeachElement(PsiElement varRef)
+    private Opt<S<It<DeepType>>> assertForeachElement(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fop(toCast(ForeachImpl.class))
             .fop(fch -> opt(fch.getArray())
                 .fop(toCast(PhpExpression.class))
                 .map(arr -> () -> {
-                    Mt arrt = ctx.findExprType(arr).wap(Mt::new);
+                    It<DeepType> artit = ctx.findExprType(arr);
                     L<Variable> tuple = L(fch.getVariables());
                     Opt<Variable> keyVarOpt = opt(fch.getKey())
                         // IDEA breaks on list() - should help her
@@ -94,23 +102,23 @@ public class VarRes extends Lang
                     if (keyVarOpt.has()) {
                         tuple = tuple.sub(1); // key was included
                         if (varRef.isEquivalentTo(keyVarOpt.unw())) {
-                            return arrt.types.fap(t -> t.keys.values())
-                                .map(keyObj -> new DeepType(keyObj.definition, PhpType.STRING, keyObj.name))
-                                .wap(Mt::new);
+                            return artit.fap(t -> t.keys.values())
+                                .map(keyObj -> new DeepType(keyObj.definition, PhpType.STRING, keyObj.name));
                         }
                     }
                     if (tuple.size() > 1) {
-                        return arrt.getEl()
-                            .getKey(tuple.indexOf(varRef) + "");
+                        L<Variable> tuplef = tuple;
+                        return artit.fap(Mt::getElSt)
+                            .fap(elt -> Mt.getKeySt(elt, tuplef.indexOf(varRef) + ""));
                     } else {
                         // this is actually not correct since you could write list($a)
                         // or $list(,,$c), but IDEA does not parse list in foreach well
-                        return arrt.getEl();
+                        return artit.fap(Mt::getElSt);
                     }
                 }));
     }
 
-    private Opt<S<Mt>> assertTupleAssignment(PsiElement varRef)
+    private Opt<S<It<DeepType>>> assertTupleAssignment(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fop(toCast(MultiassignmentExpressionImpl.class))
@@ -130,16 +138,14 @@ public class VarRes extends Lang
                         return opt(null);
                     })
                     .map(i -> arrts
-                        .fop(t -> opt(t.keys.get(i + ""))
-                            .map(k -> k.getTypeGetters()))
-                        .fap(v -> v)
-                    )
+                        .fop(t -> opt(t.keys.get(i + "")))
+                        .fap(k -> k.getTypeGetters()))
                 )
-                .map(mtgs -> () -> new Mt(mtgs.fap(g -> g.get().types)))
+                .map(mtgs -> () -> mtgs.fap(g -> g.get().types))
             );
     }
 
-    private Opt<S<Mt>> assertPregMatchResult(PsiElement varRef)
+    private Opt<S<It<DeepType>>> assertPregMatchResult(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fop(toCast(ParameterListImpl.class))
@@ -152,9 +158,8 @@ public class VarRes extends Lang
             .fop(fun -> L(fun.getParameters()).fst())
             .fop(toCast(PhpExpression.class))
             .map(regexPsi -> () -> {
-                It<DeepType> mt = ctx.findExprType(regexPsi);
-                It<DeepType> matchesType = makeRegexNameCaptureTypes(mt);
-                return new Mt(matchesType);
+                It<DeepType> tit = ctx.findExprType(regexPsi);
+                return makeRegexNameCaptureTypes(tit);
             });
     }
 
@@ -188,7 +193,7 @@ public class VarRes extends Lang
         L<Assign> asses = references
             .fop(refPsi -> {
                 boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
-                return Opt.fst(() -> opt(null)
+                return Opt.fst(() -> non()
                     , () -> (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
                     , () -> assertArrayUnshift(refPsi)
                     , () -> assertForeachElement(refPsi)
@@ -199,7 +204,7 @@ public class VarRes extends Lang
                         .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi, PhpType.ARRAY))
                     , () -> Tls.cast(ParameterImpl.class, refPsi)
                         .map(param -> {
-                            S<Mt> mtg = () -> new ArgRes(ctx).resolveArg(param);
+                            S<It<DeepType>> mtg = () -> new ArgRes(ctx).resolveArg(param);
                             return new Assign(list(), mtg, true, refPsi, param.getType());
                         }));
             })

@@ -182,6 +182,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 }
             });
         });
+        long elapsed = System.nanoTime() - startTime;
+
         Mt mt = new Mt(types);
         It<DeepType> indexTypes = mt.types.itr().fap(t -> t.getListElemTypes());
         if (indexTypes.has()) {
@@ -225,7 +227,6 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
         lookups.fch(l -> nameToNewLookup.gat(l.getKeyName()).thn(newL -> l.lookupData = newL));
 
-        long elapsed = System.nanoTime() - startTime;
         result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() +
             " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0));
 

@@ -132,11 +132,11 @@ public class SearchContext extends Lang
         if (debug) {
             // pretty useless now, actually, after we moved to iterators
             // I guess a new "context" should be created on each expression, not just function call to know the depth
-            System.out.print(indent);
-            String fileText = expr.getContainingFile().getText();
-            int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
-            StackTraceElement caller = new Exception().getStackTrace()[2];
-            System.out.println(depthLeft + " " + Tls.singleLine(expr.getText(), 120) + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber() + " ### " + funcCtx);
+            //System.out.print(indent);
+            //String fileText = expr.getContainingFile().getText();
+            //int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
+            //StackTraceElement caller = new Exception().getStackTrace()[2];
+            //System.out.println(depthLeft + " " + Tls.singleLine(expr.getText(), 120) + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber() + " ### " + funcCtx);
         }
 
         // TODO: add to config
@@ -147,7 +147,7 @@ public class SearchContext extends Lang
             return It.non();
         } else if (++expressionsResolved > getMaxExpressions()) {
             /** @debug */
-            System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
+            //System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
             return It.non();
         } else if (timeout.flt(tout -> seconds > tout).has()) {
             String fileText = expr.getContainingFile().getText();
@@ -159,7 +159,7 @@ public class SearchContext extends Lang
         psiTrace.add(expr);
         if (isRecursion()) {
             if (debug) {
-                System.out.println(indent + "** CIRCULAR REFERENCE DETECTED");
+                //System.out.println(indent + "** CIRCULAR REFERENCE DETECTED");
             }
             psiTrace.remove(psiTrace.size() - 1);
             ++depthLeft;
@@ -170,7 +170,7 @@ public class SearchContext extends Lang
         Opt<Iterable<DeepType>> result = takeFromCache(funcCtx, expr);
         if (result.has()) {
             if (debug) {
-                System.out.println(indent + "<< TAKING RESULT FROM CACHE");
+                //System.out.println(indent + "<< TAKING RESULT FROM CACHE");
             }
         } else {
             putToCache(funcCtx, expr, list());
@@ -184,9 +184,9 @@ public class SearchContext extends Lang
         ++depthLeft;
 
         if (debug) {
-            long elapsed = System.nanoTime() - startTime;
-            System.out.println(indent + "* " + /*result.fap(a -> a).arr().size() +*/
-                " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()) + " : " /*+ Tls.implode(", ", result.map(Mt::new).fap(a -> a.getKeyNames()))*/);
+            //long elapsed = System.nanoTime() - startTime;
+            //System.out.println(indent + "* " + /*result.fap(a -> a).arr().size() +*/
+            //    " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()) + " : " /*+ Tls.implode(", ", result.map(Mt::new).fap(a -> a.getKeyNames()))*/);
         }
 
         return result.def(It.non());

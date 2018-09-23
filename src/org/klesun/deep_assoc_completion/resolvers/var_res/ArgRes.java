@@ -236,9 +236,8 @@ public class ArgRes extends Lang
             .def(Mt.INVALID_PSI);
     }
 
-    public Mt resolveArg(ParameterImpl param)
+    public It<DeepType> resolveArg(ParameterImpl param)
     {
-        Mt result = new Mt(L());
         int order = getArgOrder(param).def(-1);
 
         It<ParameterImpl> decls = It.cnc(
@@ -276,10 +275,10 @@ public class ArgRes extends Lang
                     }
                 });
         }
-        return new Mt(It.cnc(
+        return It.cnc(
             docTit,
             resolveFromDataProviderDoc(param).types,
             genericTit
-        ));
+        );
     }
 }
