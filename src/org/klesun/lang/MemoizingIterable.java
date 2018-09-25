@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.function.Predicate;
+import static org.klesun.lang.Lang.*;
 
 /**
  * a wrapper for an iterator, that remembers all retrieved elements
@@ -73,5 +75,63 @@ public class MemoizingIterable<A> implements Iterable<A>
         {
             this.value = value;
         }
+    }
+
+    public <Tnew> It<Tnew> fop(Lang.F<A, Opt<Tnew>> convert)
+    {
+        return fop((el, i) -> convert.apply(el));
+    }
+
+    public <Tnew> It<Tnew> fop(Lang.F2<A, Integer, Opt<Tnew>> convert)
+    {
+        return It(this).fop(convert);
+    }
+
+    /**
+     * "fop" stands for flat map - flattens list by lambda
+     */
+    public <Tnew> It<Tnew> fap(Lang.F<A, Iterable<Tnew>> flatten)
+    {
+        return fap((el, i) -> flatten.apply(el));
+    }
+
+    public <Tnew> It<Tnew> fap(Lang.F2<A, Integer, Iterable<Tnew>> flatten)
+    {
+        return It(this).fap(flatten);
+    }
+
+    public boolean any(Predicate<A> pred)
+    {
+        return It(this).any(pred);
+    }
+
+    public boolean has()
+    {
+        return It(this).has();
+    }
+
+    public It<A> flt(Lang.F2<A, Integer, Boolean> pred)
+    {
+        return Lang.It(this).flt(pred);
+    }
+
+    public It<A> flt(Predicate<A> pred)
+    {
+        return flt((val, i) -> pred.test(val));
+    }
+
+    public <@NonNull Tnew> It<Tnew> map(Lang.F<A, @NonNull Tnew> f)
+    {
+        return Lang.It(this).map(f);
+    }
+
+    public <@NonNull Tnew> It<Tnew> map(Lang.F2<A, Integer, Tnew> f)
+    {
+        return Lang.It(this).map(f);
+    }
+
+    public L<A> arr()
+    {
+        return It(this).arr();
     }
 }

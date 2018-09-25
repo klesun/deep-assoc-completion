@@ -185,7 +185,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         long elapsed = System.nanoTime() - startTime;
 
         Mt mt = new Mt(types);
-        It<DeepType> indexTypes = mt.types.itr().fap(t -> t.getListElemTypes());
+        It<DeepType> indexTypes = mt.types.fap(t -> t.getListElemTypes());
         if (indexTypes.has()) {
             Mt idxMt = new Mt(indexTypes);
             String typeText = idxMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);

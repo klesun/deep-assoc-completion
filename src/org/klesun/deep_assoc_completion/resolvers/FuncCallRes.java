@@ -57,7 +57,7 @@ public class FuncCallRes extends Lang
         S<Mt> getElMt = Tls.onDemand(() -> callCtx.getArgMt(0).types
             .fap(t -> t.getReturnTypes(subCtx))
             .wap(Mt::new));
-        It<DeepType> eachTMapped = arrMt.types.itr().map(t -> {
+        It<DeepType> eachTMapped = arrMt.types.map(t -> {
             DeepType mapped = new DeepType(t.definition, PhpType.ARRAY);
             t.keys.forEach((k, v) -> mapped.addKey(k, v.definition)
                 .addType(getElMt, call.getType().elementType()));
@@ -78,7 +78,7 @@ public class FuncCallRes extends Lang
     {
         DeepType combine = new DeepType(call, PhpType.ARRAY);
         Dict<L<DeepType>> keyToTypes = callCtx.getArgMt(0).getEl().types
-            .gop(t -> opt(t.stringValue));
+            .arr().gop(t -> opt(t.stringValue));
         S<Mt> getElMt = Tls.onDemand(() -> callCtx.getArgMt(1).getEl());
         PhpType ideaElType = L(call.getParameters()).gat(1)
             .fop(toCast(PhpExpression.class))

@@ -264,7 +264,7 @@ public class ArgRes extends Lang
         It<DeepType> genericTit = It();
         if (!trace.hasArgs()) {
             // passed args not known - if caret was inside this function
-            genericTit = peekOutside(param).types.itr();
+            genericTit = It(peekOutside(param).types);
         } else {
             genericTit = getArgOrder(param)
                 .fap(i -> {

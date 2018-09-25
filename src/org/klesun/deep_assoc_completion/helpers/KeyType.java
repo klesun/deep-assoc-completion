@@ -26,7 +26,7 @@ public class KeyType
     public static KeyType mt(Mt mt)
     {
         return mt.getStringValues().has()
-            ? new KeyType(EKeyType.STRING, mt.types)
+            ? new KeyType(EKeyType.STRING, mt.types.arr())
             : (mt.isInt()
                 ? KeyType.integer()
                 : KeyType.unknown());

@@ -24,7 +24,7 @@ public class Mt extends Lang
     public static Mt INVALID_PSI = new Mt(L(), REASON.INVALID_PSI);
 
     private REASON reason;
-    final public L<DeepType> types;
+    final public MemoizingIterable<DeepType> types;
 
     private boolean isGettingKey = false;
 
@@ -34,7 +34,7 @@ public class Mt extends Lang
         // I'm not sure I'm good mathematician enough to find
         // out the algorithm that would not produce them with
         // all these recursions, so I'm just removing dupes here
-        this.types = L(It(types).unq());
+        this.types = new MemoizingIterable<DeepType>(It(types).unq().iterator());
         this.reason = reason;
     }
     public Mt(Iterable<DeepType> types)
@@ -132,7 +132,7 @@ public class Mt extends Lang
     {
         PhpType ideaType = new PhpType();
         Map<PsiElement, L<PhpType>> psiToType = new LinkedHashMap<>();
-        It<DeepType.Key> keyObjs = types.itr().fop(t -> Lang.getKey(t.keys, keyName));
+        It<DeepType.Key> keyObjs = types.fop(t -> Lang.getKey(t.keys, keyName));
         // getting rid of duplicates, temporary solution
         // TODO: 7681 types!!! and only 2 of them are actually unique. should do something
         keyObjs.fch(k -> psiToType.put(k.definition, k.getBriefTypes()));
