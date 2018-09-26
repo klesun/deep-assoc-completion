@@ -90,6 +90,22 @@ public class FuncCallRes extends Lang
         return combine;
     }
 
+    private DeepType array_flip(FuncCtx callCtx, FunctionReferenceImpl call)
+    {
+        DeepType flip = new DeepType(call, PhpType.ARRAY);
+        Mt sourceMt = callCtx.getArgMt(0);
+        Mt newValueMt = sourceMt.getKeyNames()
+            .map(name -> new DeepType(call, PhpType.STRING, name)).wap(Mt::new);
+        L<String> newKeys = sourceMt.getEl().types.map(t -> t.stringValue).arr();
+        if (!newKeys.has() || newKeys.any(k -> k == null)) {
+            flip.anyKeyElTypes.add(() -> newValueMt);
+        }
+        for (String key: newKeys) {
+            flip.addKey(key, call).addType(() -> newValueMt, Mt.getIdeaTypeSt(It(newValueMt.types)));
+        }
+        return flip;
+    }
+
     private DeepType compact(FuncCtx callCtx, FunctionReferenceImpl call)
     {
         DeepType arrt = new DeepType(call, PhpType.ARRAY);
@@ -365,12 +381,15 @@ public class FuncCallRes extends Lang
                 return array_map(callCtx, call);
             } else if (name.equals("array_filter") || name.equals("array_reverse")
                     || name.equals("array_splice") || name.equals("array_slice")
-                    || name.equals("array_values")
+                    || name.equals("array_values") || name.equals("array_pad")
+                    || name.equals("array_unique")
             ) {
                 // array type unchanged
                 return callCtx.getArgMt(0).types;
             } else if (name.equals("array_combine")) {
                 return list(array_combine(callCtx, call));
+            } else if (name.equals("array_flip")) {
+                return list(array_flip(callCtx, call));
             } else if (name.equals("array_pop") || name.equals("array_shift")
                     || name.equals("current") || name.equals("end") || name.equals("next")
                     || name.equals("prev") || name.equals("reset")
@@ -392,6 +411,7 @@ public class FuncCallRes extends Lang
                 result.add(callCtx.getArgMt(0).getInArray(call));
             } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")
                     || name.equals("array_intersect_assoc") || name.equals("array_diff_assoc")
+                    || name.equals("array_diff")
             ) {
                 // do something more clever?
                 return callCtx.getArgMt(0).types;

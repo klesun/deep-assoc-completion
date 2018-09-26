@@ -189,6 +189,19 @@ class ExactKeysUnitTest
         return $list;
     }
 
+    public static function provideBuiltInStringArrFuncs()
+    {
+        $modTypes = ['passengers', 'segments', 'fareBasis', 'validatingCarrier'];
+        $uniqueModTypes = array_unique($modTypes);
+        $typeToIndex = array_flip($uniqueModTypes);
+        $indexToType = array_flip($typeToIndex);
+        $typeToIndex2 = array_flip($indexToType);
+        return [
+            [$typeToIndex, ['passengers', 'segments', 'fareBasis', 'validatingCarrier']],
+            [$typeToIndex2, ['passengers', 'segments', 'fareBasis', 'validatingCarrier']],
+        ];
+    }
+
     private static function getPnrSchema()
     {
         return new DictP([], [
