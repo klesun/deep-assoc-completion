@@ -19,10 +19,7 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
-import org.klesun.lang.It;
-import org.klesun.lang.L;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -83,16 +80,17 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        long startTime = System.nanoTime();
         L<LookupElement> builtIns = list();
         result.runRemainingContributors(parameters, otherSourceResult -> {
             builtIns.add(otherSourceResult.getLookupElement());
         });
+        SearchContext search = new SearchContext(parameters)
+            .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
+        Dict<Long> times = new Dict<>(list());
         It<? extends PhpClassMember> members = It(list());
         if (builtIns.size() == 0) {
-            SearchContext search = new SearchContext(parameters)
-                .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
             FuncCtx funcCtx = new FuncCtx(search);
-            long startTime = System.nanoTime();
             members = opt(parameters.getPosition().getParent())
                 .fop(toCast(MemberReference.class))
                 .map(mem -> mem.getClassReference())
@@ -110,14 +108,20 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                             .flt(fld -> !fld.getModifier().isStatic())
                         );
                 });
-            long elapsed = System.nanoTime() - startTime;
-            String msg = "Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds";
-            result.addLookupAdvertisement(msg);
+            times.put("iteratorDone", System.nanoTime() - startTime);
         }
         Set<String> suggested = Sets.newHashSet(builtIns.map(l -> l.getLookupString()));
         members.map(m -> makeLookup(m))
             .flt(l -> !suggested.contains(l.getLookupString()))
-            .fch(result::addElement);
+            .fch((el, i) -> {
+                if (i == 0) {
+                    times.put("firstSuggested", System.nanoTime() - startTime);
+                }
+                result.addElement(el);
+            });
+        times.put("allSuggested", System.nanoTime() - startTime);
+        result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions: " +
+            Tls.implode(", ", L(times.entrySet()).map(e -> e.getKey() + " in " + e.getValue() / 1000000000.0 + " sec")));
         result.addAllElements(builtIns); // add built-in after ours, this is important
     }
 }

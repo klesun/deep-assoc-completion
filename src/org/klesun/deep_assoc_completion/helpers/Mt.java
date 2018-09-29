@@ -115,7 +115,7 @@ public class Mt extends Lang
         }
         isGettingKey = true;
 
-        L<DeepType> keyTsIt = types.fap(t -> getKeySt(t, keyName)).arr();
+        It<DeepType> keyTsIt = types.fap(t -> getKeySt(t, keyName));
 
         isGettingKey = false;
         return new Mt(keyTsIt);

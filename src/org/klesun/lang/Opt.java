@@ -1,5 +1,6 @@
 package org.klesun.lang;
 
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -12,7 +13,7 @@ import static org.klesun.lang.Lang.*;
  *
  * if value is null, Opt is empty
  */
-public class Opt<T>
+public class Opt<T> implements Iterable<T>
 {
     final private boolean has;
     final private T value;
@@ -149,6 +150,11 @@ public class Opt<T>
             }
         }
         return new Opt<>(null);
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return itr().iterator();
     }
 
     /** returned by .thn() - needed since i want to limit chaining to end
