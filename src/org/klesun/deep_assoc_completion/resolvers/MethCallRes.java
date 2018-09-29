@@ -228,15 +228,14 @@ public class MethCallRes extends Lang
         );
     }
 
-    public Mt resolveCall(MethodReferenceImpl funcCall)
+    public It<DeepType> resolveCall(MethodReferenceImpl funcCall)
     {
         FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
-        L<DeepType> rtypes = resolveMethodFromCall(funcCall, ctx)
+        return resolveMethodFromCall(funcCall, ctx)
             .fap(funcs -> funcs)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
                 findBuiltInRetType(func, funcCtx, funcCall).types
-            )).arr();
-        return new Mt(rtypes);
+            ));
     }
 }

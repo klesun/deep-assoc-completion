@@ -31,7 +31,7 @@ public class DeepTypeResolver extends Lang
             , () -> Tls.cast(FunctionReferenceImpl.class, expr)
                 .map(call -> new FuncCallRes(ctx).resolve(call))
             , () -> Tls.cast(MethodReferenceImpl.class, expr)
-                .map(call -> new MethCallRes(ctx).resolveCall(call).types)
+                .map(call -> new MethCallRes(ctx).resolveCall(call))
             , () -> Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .map(keyAccess -> new ArrAccRes(ctx).resolve(keyAccess))
             , () -> Tls.cast(FieldReferenceImpl.class, expr)

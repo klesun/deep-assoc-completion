@@ -54,7 +54,9 @@ public class Opt<T> implements Iterable<T>
         return map(v -> f.apply(v) ? v : null);
     }
 
-    /** Flat Map - to combine Opt-s */
+    /** Flat Map - to combine Opt-s
+     * just fap() should be enough since Opt is iterable, but it
+     * does not infer properly with method references */
     public <T1> Opt<T1> fop(Lang.F<T, Opt<T1>> f)
     {
         return map(f).uni(
