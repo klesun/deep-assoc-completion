@@ -163,8 +163,10 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         It<DeepType> tit = resolveAtPsi(caretPsi, new FuncCtx(search));
         L<DeepType> types = list();
         Set<String> keyNames = new LinkedHashSet<>();
+//        tit.fst().thn(t -> {
         tit.fch(t -> {
             types.add(t);
+//            It(t.keys.values()).fst().forEach(k -> {
             t.keys.values().forEach(k -> {
                 String keyName = k.name;
                 if (!keyNames.contains(keyName)) {

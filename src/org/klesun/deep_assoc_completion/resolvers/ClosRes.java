@@ -6,10 +6,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.lang.It;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 public class ClosRes extends Lang
 {
@@ -72,8 +69,7 @@ public class ClosRes extends Lang
     {
         DeepType result = new DeepType(func, func.getLocalType(true));
         result.returnTypeGetters.add((funcCtx) ->
-            getReturnedValue(func, funcCtx).types.arr());
+            getReturnedValue(func, funcCtx).types);
         return result;
     }
-
 }
