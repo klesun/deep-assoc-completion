@@ -34,7 +34,7 @@ public class Mt extends Lang
         // I'm not sure I'm good mathematician enough to find
         // out the algorithm that would not produce them with
         // all these recursions, so I'm just removing dupes here
-        this.types = new MemoizingIterable<DeepType>(It(types).unq().iterator());
+        this.types = new MemoizingIterable<>(It(types).unq().iterator());
         this.reason = reason;
     }
     public Mt(Iterable<DeepType> types)

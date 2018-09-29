@@ -13,6 +13,7 @@ import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
 
+import java.util.Collection;
 import java.util.Set;
 
 public class FieldRes extends Lang
@@ -24,7 +25,7 @@ public class FieldRes extends Lang
         this.ctx = ctx;
     }
 
-    private static It<FieldReferenceImpl> findReferences(PsiFile file, String name)
+    private It<FieldReferenceImpl> findReferences(PsiFile file, String name)
     {
         // ReferenceSearch seems to cause freezes
 //        SearchScope scope = GlobalSearchScope.fileScope(
@@ -33,7 +34,17 @@ public class FieldRes extends Lang
 //        );
 //        return ReferencesSearch.search(decl, scope, false).findAll();
 
-        return It(PsiTreeUtil.findChildrenOfType(file, FieldReferenceImpl.class))
+        // this taks 6 milliseconds on just ApolloPnrFieldsOnDemand.php each time
+        // maybe it can be done more efficiently like iterating manually (could return iterator in such case BTW), caching or reusing IDEA's reference provider
+        // but if I remember correctly, IDEA's reference resolver was not used hee because it randomly threw exceptions
+        if (!ctx.getSearch().fileToFieldRefs.containsKey(file)) {
+            long startTime = System.nanoTime();
+            ctx.getSearch().fileToFieldRefs.put(file, PsiTreeUtil.findChildrenOfType(file, FieldReferenceImpl.class));
+            double elapsed = (System.nanoTime() - startTime) / 1000000000.0;
+            //System.out.println("found refs in " + file.getName() + " over " + elapsed + " seconds");
+        }
+        Collection<FieldReferenceImpl> refs = ctx.getSearch().fileToFieldRefs.get(file);
+        return It(refs)
             .flt(ref -> name.equals(ref.getName()));
     }
 

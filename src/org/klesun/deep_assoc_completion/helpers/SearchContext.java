@@ -2,13 +2,17 @@ package org.klesun.deep_assoc_completion.helpers;
 
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiFile;
+import com.jetbrains.php.lang.psi.elements.FieldReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.DeepTypeResolver;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.lang.*;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +32,7 @@ public class SearchContext extends Lang
     final public L<PhpExpression> psiTrace = L();
     final private Map<FuncCtx, Map<PhpExpression, Iterable<DeepType>>> ctxToExprToResult = new HashMap<>();
     public Opt<Integer> overrideMaxExpr = non();
+    final public Map<PsiFile, Collection<FieldReferenceImpl>> fileToFieldRefs = new HashMap<>();
 
     public SearchContext(@Nullable Project project)
     {
@@ -135,11 +140,11 @@ public class SearchContext extends Lang
         if (debug) {
             // pretty useless now, actually, after we moved to iterators
             // I guess a new "context" should be created on each expression, not just function call to know the depth
-            //System.out.print(indent);
-            //String fileText = expr.getContainingFile().getText();
-            //int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
-            //StackTraceElement caller = new Exception().getStackTrace()[2];
-            //System.out.println(depthLeft + " " + Tls.singleLine(expr.getText(), 120) + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber() + " ### " + funcCtx);
+            System.out.print(indent);
+            String fileText = expr.getContainingFile().getText();
+            int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
+            StackTraceElement caller = new Exception().getStackTrace()[2];
+            System.out.println(depthLeft + " " + Tls.singleLine(expr.getText(), 120) + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber() + " ### " + funcCtx);
         }
 
         // TODO: add to config
