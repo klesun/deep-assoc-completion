@@ -143,7 +143,6 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
 
         makeOptions(tit).fch(result::addElement);
         long elapsed = System.nanoTime() - startTime;
-        result.addLookupAdvertisement("Resolved in " + (elapsed / 1000000000.0) + " seconds");
     }
 
     // ================================

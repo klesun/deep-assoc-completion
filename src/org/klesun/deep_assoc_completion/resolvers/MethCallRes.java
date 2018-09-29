@@ -194,22 +194,21 @@ public class MethCallRes extends Lang
     {
         long startTime = System.nanoTime();
         It<Method> mit = opt(fieldRef.getClassReference())
-            .fop(obj -> Opt.fst(
+            .fap(obj -> It.frs(
                 () -> ctx.clsIdeaType
                     // IDEA resolve static:: incorrectly, it either treats it
                     // same as self::, either does not resolve it at all
                     .flt(typ -> obj.getText().equals("static"))
-                    .fap(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, obj.getProject()))
-                    .wap(clses -> clses.has() ? som(clses) : non()),
-                () -> som(It.cnc(
+                    .fap(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, obj.getProject())),
+                () -> It.cnc(
                     ArrCtorRes.resolveIdeaTypeCls(obj.getType(), obj.getProject()),
                     new ArrCtorRes(ctx).resolveObjCls(obj)
-                ))
+                )
             ))
-            .fap(a -> a).unq()
+            .unq()
             .fap(cls -> cls.getMethods())
             .flt(f -> f.getName().equals(fieldRef.getName()));
-        mit = mit.arr().itr();
+        //mit = mit.arr().itr();
         double elapsed = (System.nanoTime() - startTime) / 1000000000.0;
         //System.out.println("found referenceds in " + fieldRef.getName() + " over " + elapsed + " seconds " + fieldRef.getText() + " " + fieldRef.getContainingFile().getName());
         return mit;

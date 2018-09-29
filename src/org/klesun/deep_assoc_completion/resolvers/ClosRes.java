@@ -17,6 +17,21 @@ public class ClosRes extends Lang
         this.ctx = ctx;
     }
 
+    // for some reason this implementation is 100 ms slower than the one that returns a list
+//    public static It<PhpReturnImpl> findFunctionReturns(PsiElement funcBody)
+//    {
+//        return It(funcBody.getChildren()).fap(child -> {
+//            if (child instanceof Function) {
+//                return It.non(); // anonymous function, don't go deeper
+//            } else {
+//                return It.cnc(
+//                    Tls.cast(PhpReturnImpl.class, child),
+//                    findFunctionReturns(child)
+//                );
+//            }
+//        });
+//    }
+
     public static L<PhpReturnImpl> findFunctionReturns(PsiElement funcBody)
     {
         L<PhpReturnImpl> result = list();

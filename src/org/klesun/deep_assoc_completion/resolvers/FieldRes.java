@@ -78,24 +78,24 @@ public class FieldRes extends Lang
             ))
             .def(Mt.INVALID_PSI));
 
-        L<Field> declarations = L.fst(
+        It<Field> declarations = It.frs(
             () -> opt(fieldRef)
                 .flt(ref -> !ref.getText().startsWith("static::")) // IDEA is bad at static:: resolution
                 .fap(ref -> It(ref.multiResolve(false)))
                 .map(res -> res.getElement())
-                .fop(toCast(Field.class)).arr(),
+                .fop(toCast(Field.class)),
             () -> opt(getObjMt.get())
                 .fap(mt -> ArrCtorRes.resolveMtCls(mt, fieldRef.getProject()))
                 .fap(cls -> cls.getFields())
-                .flt(f -> f.getName().equals(fieldRef.getName())).arr()
+                .flt(f -> f.getName().equals(fieldRef.getName()))
         );
         It<DeepType> propDocTs = It(list());
-        if (declarations.size() == 0) {
+        if (!declarations.has()) {
             propDocTs = getObjMt.get().getProps()
                 .flt(prop -> prop.name.equals(fieldRef.getName()))
                 .fap(prop -> prop.getTypes());
         }
-        It<DeepType> declTypes = declarations.itr()
+        It<DeepType> declTypes = declarations
             .fap(resolved -> {
                 FuncCtx implCtx = new FuncCtx(ctx.getSearch());
                 It<DeepType> defTs = Tls.cast(FieldImpl.class, resolved).itr()

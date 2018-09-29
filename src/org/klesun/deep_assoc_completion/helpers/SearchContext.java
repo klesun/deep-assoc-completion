@@ -182,8 +182,11 @@ public class SearchContext extends Lang
             }
         } else {
             putToCache(funcCtx, expr, list());
-            Iterable<DeepType> mit = DeepTypeResolver.resolveIn(expr, funcCtx)
-                .fap(a -> a).wap(tit -> new MemoizingIterable<>(tit.iterator()));
+//            System.out.println("Gonna resolve " + getExpressionsResolved() + " " + expr.getText());
+            It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx).fap(a -> a);
+//            System.out.println("Got a tit " + getExpressionsResolved() + " " + expr.getText());
+            Iterable<DeepType> mit = new MemoizingIterable<>(tit.iterator());
+//            System.out.println("Got a mit " + getExpressionsResolved() + " " + expr.getText());
             result = som(mit);
             result.thn(mt -> putToCache(funcCtx, expr, mit));
         }
@@ -196,6 +199,11 @@ public class SearchContext extends Lang
             //System.out.println(indent + "* " + /*result.fap(a -> a).arr().size() +*/
             //    " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()) + " : " /*+ Tls.implode(", ", result.map(Mt::new).fap(a -> a.getKeyNames()))*/);
         }
+
+        /** @debug */
+//        if (getExpressionsResolved() == 7147) {
+//            throw new RuntimeException("so who is screwing the iterator?");
+//        }
 
         return result.def(It.non());
     }

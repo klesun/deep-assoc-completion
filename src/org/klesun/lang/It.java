@@ -52,6 +52,17 @@ public class It<A> implements Iterable<A>
         return new It<>(list());
     }
 
+    public static <B> It<B> frs(S<Iterable<B>>... args)
+    {
+        for (S<Iterable<B>> itb: args) {
+            Iterator<B> itr = itb.get().iterator();
+            if (itr.hasNext()) {
+                return It(() -> itr);
+            }
+        }
+        return non();
+    }
+
     public static <B> It<B> cnc(Iterable<B>... args)
     {
 //        L<Iterator<B>> sources = L(args).map(arr -> arr.iterator());

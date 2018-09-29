@@ -163,16 +163,18 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         It<DeepType> tit = resolveAtPsi(caretPsi, new FuncCtx(search));
         L<DeepType> types = list();
         Set<String> keyNames = new LinkedHashSet<>();
+        System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");
 //        tit.fst().thn(t -> {
         tit.fch(t -> {
+            if (firstTime.get() == -1) {
+                System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first type");
+                firstTime.set(System.nanoTime() - startTime);
+            }
             types.add(t);
 //            It(t.keys.values()).fst().forEach(k -> {
             t.keys.values().forEach(k -> {
                 String keyName = k.name;
                 if (!keyNames.contains(keyName)) {
-                    if (firstTime.get() == -1) {
-                        firstTime.set(System.nanoTime() - startTime);
-                    }
                     keyNames.add(keyName);
                     LookupElement justName = makePaddedLookup(keyName, "resolving...", "");
                     MutableLookup mutLookup = new MutableLookup(justName, includeQuotes);
@@ -231,9 +233,5 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
         result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() +
             " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0));
-
-        if (search.getExpressionsResolved() > 100) {
-            System.out.println("Resolved " + search.getExpressionsResolved() + " expressions in " + (elapsed / 1000000000.0) + " seconds");
-        }
     }
 }

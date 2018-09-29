@@ -80,15 +80,15 @@ public class MiscRes extends Lang
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("+"))
                     .map(op -> {
-                        L<DeepType> tit = It.cnc(
+                        It<DeepType> tit = It.cnc(
                             findPsiExprType(bin.getLeftOperand()),
                             findPsiExprType(bin.getRightOperand())
-                        ).arr();
-                        if (tit.any(t -> t.isNumber())) {
-                            return list(new DeepType(bin, PhpType.NUMBER));
-                        } else {
-                            return tit;
-                        }
+                        );
+                        Mutable<Boolean> isNum = new Mutable<>(false);
+                        return tit.map(t -> {
+                            isNum.set(isNum.get() || t.isNumber);
+                            return isNum.get() ? new DeepType(bin, PhpType.NUMBER) : t;
+                        });
                     }))
             , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())

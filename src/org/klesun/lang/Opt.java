@@ -73,7 +73,7 @@ public class Opt<T> implements Iterable<T>
     /** transform opt to array */
     public <Tnew> It<Tnew> fap(F<T, Iterable<Tnew>> f)
     {
-        return uni((val) -> It(f.apply(val)), () -> It(list()));
+        return uni((val) -> It(f.apply(val)), () -> It.non());
     }
 
     public It<T> itr()

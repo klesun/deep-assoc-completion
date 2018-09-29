@@ -109,7 +109,6 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters> im
 
         makeOptions(tit).fch(result::addElement);
         long elapsed = System.nanoTime() - startTime;
-        System.out.println("Resolved in " + (elapsed / 1000000000.0) + " seconds");
     }
 
     // ================================
