@@ -50,36 +50,36 @@ public class MiscRes extends Lang
         });
     }
 
-    public Opt<Iterable<DeepType>> resolve(PsiElement expr)
+    public It<DeepType> resolve(PsiElement expr)
     {
-        return Opt.fst(() -> opt(null)
-            , () -> Tls.cast(TernaryExpressionImpl.class, expr)
-                .map(tern -> It.cnc(
+        return It.cnc(It.non()
+            , Tls.cast(TernaryExpressionImpl.class, expr)
+                .fap(tern -> It.cnc(
                     findPsiExprType(tern.getTrueVariant()),
                     findPsiExprType(tern.getFalseVariant())
                 ))
-            , () -> Tls.cast(BinaryExpressionImpl.class, expr)
-                .fop(bin -> opt(bin.getOperation())
+            , Tls.cast(BinaryExpressionImpl.class, expr)
+                .fap(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("??") || op.getText().equals("?:"))
-                    .map(op -> It.cnc(
+                    .fap(op -> It.cnc(
                         findPsiExprType(bin.getLeftOperand()),
                         findPsiExprType(bin.getRightOperand())
                     )))
-            , () -> Tls.cast(BinaryExpressionImpl.class, expr)
-                .fop(bin -> opt(bin.getOperation())
+            , Tls.cast(BinaryExpressionImpl.class, expr)
+                .fap(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("-")
                         || op.getText().equals("*") || op.getText().equals("/")
                         || op.getText().equals("%") || op.getText().equals("**")
                     )
-                    .map(op -> {
+                    .fap(op -> {
                         DeepType type = new DeepType(bin, PhpType.NUMBER);
                         type.isNumber = true;
                         return list(type);
                     }))
-            , () -> Tls.cast(BinaryExpressionImpl.class, expr)
-                .fop(bin -> opt(bin.getOperation())
+            , Tls.cast(BinaryExpressionImpl.class, expr)
+                .fap(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("+"))
-                    .map(op -> {
+                    .fap(op -> {
                         It<DeepType> tit = It.cnc(
                             findPsiExprType(bin.getLeftOperand()),
                             findPsiExprType(bin.getRightOperand())
@@ -90,10 +90,10 @@ public class MiscRes extends Lang
                             return isNum.get() ? new DeepType(bin, PhpType.NUMBER) : t;
                         });
                     }))
-            , () -> Tls.cast(BinaryExpressionImpl.class, expr)
-                .fop(bin -> opt(bin.getOperation())
+            , Tls.cast(BinaryExpressionImpl.class, expr)
+                .fap(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("."))
-                    .map(op -> {
+                    .fap(op -> {
                         It<DeepType> lmt = findPsiExprType(bin.getLeftOperand());
                         It<DeepType> rmt = findPsiExprType(bin.getRightOperand());
                         String ccted = opt(Mt.getStringValueSt(lmt)).def("") + opt(Mt.getStringValueSt(rmt)).def("");
@@ -101,9 +101,9 @@ public class MiscRes extends Lang
                         DeepType type = new DeepType(bin, PhpType.STRING, unescaped);
                         return list(type);
                     }))
-            , () -> Tls.cast(NewExpressionImpl.class, expr)
+            , Tls.cast(NewExpressionImpl.class, expr)
                 .fop(newExp -> resolveNew(newExp))
-                .map(mt -> mt.types)
+                .fap(mt -> mt.types)
         );
     }
 

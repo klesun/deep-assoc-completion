@@ -67,7 +67,9 @@ public class DeepTypeResolver extends Lang
                     .map(Integer::parseInt)
                     .fap(num -> list(new DeepType(casted, num))))
             // leave rest to MiscRes
-            , () -> new MiscRes(ctx).resolve(expr).fap(a -> a)
+            , () -> new MiscRes(ctx).resolve(expr)
+            , () -> Tls.cast(MethodReferenceImpl.class, expr)
+                .fap(call -> new MethCallRes(ctx).resolveCall(call))
         );
         if (tit.has()) {
             return tit;
@@ -75,8 +77,7 @@ public class DeepTypeResolver extends Lang
 
         return Opt.fst(
             () -> opt(null) // for coma formattingx
-            , () -> Tls.cast(MethodReferenceImpl.class, expr)
-                .map(call -> new MethCallRes(ctx).resolveCall(call))
+            // I can't understand why moving this to the list above causes option chain test to fail
             , () -> Tls.cast(FieldReferenceImpl.class, expr)
                 .map(fieldRef -> new FieldRes(ctx).resolve(fieldRef))
 
