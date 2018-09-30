@@ -183,7 +183,7 @@ public class SearchContext extends Lang
         } else {
             putToCache(funcCtx, expr, list());
 //            System.out.println("Gonna resolve " + getExpressionsResolved() + " " + expr.getText());
-            It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx).fap(a -> a);
+            It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx);
 //            System.out.println("Got a tit " + getExpressionsResolved() + " " + expr.getText());
             Iterable<DeepType> mit = new MemoizingIterable<>(tit.iterator());
 //            System.out.println("Got a mit " + getExpressionsResolved() + " " + expr.getText());
