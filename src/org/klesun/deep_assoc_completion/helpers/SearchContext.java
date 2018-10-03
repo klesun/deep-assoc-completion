@@ -181,14 +181,18 @@ public class SearchContext extends Lang
                 //System.out.println(indent + "<< TAKING RESULT FROM CACHE");
             }
         } else {
-            putToCache(funcCtx, expr, list());
+            if (!overrideMaxExpr.has()) {
+                putToCache(funcCtx, expr, list());
+            }
 //            System.out.println("Gonna resolve " + getExpressionsResolved() + " " + expr.getText());
             It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx);
 //            System.out.println("Got a tit " + getExpressionsResolved() + " " + expr.getText());
             Iterable<DeepType> mit = new MemoizingIterable<>(tit.iterator());
 //            System.out.println("Got a mit " + getExpressionsResolved() + " " + expr.getText());
             result = som(mit);
-            result.thn(mt -> putToCache(funcCtx, expr, mit));
+            if (!overrideMaxExpr.has()) {
+                result.thn(mt -> putToCache(funcCtx, expr, mit));
+            }
         }
 
         psiTrace.remove(psiTrace.size() - 1);

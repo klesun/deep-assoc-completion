@@ -956,6 +956,59 @@ class ExactKeysUnitTest
         ];
     }
 
+    private static function complicateArr(array $arr)
+    {
+        $arr = array_merge([], $arr);
+        $arr = [] + $arr;
+        $arr = [$arr][0];
+        $arr = ['asd' => ['dsa' => $arr]]['asd']['dsa'];
+        $arr = array_combine(array_keys($arr), array_values($arr));
+        return $arr;
+    }
+
+    private static function getPnrData()
+    {
+        $pnrData = [
+            'currentPricing' => [
+                'parsed' => static::complicateArr([
+                    'pricingList' => static::complicateArr([
+                        static::complicateArr(['netPrice' => '200.00', 'currency' => 'USD']),
+                        static::complicateArr(['netPrice' => '200.00', 'currency' => 'USD']),
+                        static::complicateArr(['netPrice' => '200.00', 'currency' => 'USD']),
+                    ]),
+                ]),
+            ],
+        ];
+        if (rand() % 2) {
+            $pnrData = static::complicateArr($pnrData);
+        }
+        if (rand() % 2) {
+            return ['error' => 'You are not lucky ;c'];
+        } else {
+            return ['pnrData' => $pnrData];
+        }
+    }
+
+    /** @param $pnrData = static::getPnrData()['pnrData'] */
+    public static function provideForeachKeyLimitedResolutionCachingBug($pnrData)
+    {
+        // I still could not reproduce it actually without copying the whole
+        // project, but this test should cover some good corner cases nevertheless
+        foreach ($pnrData['currentPricing']['parsed']['pricingList'] as $i => $store) {
+            $pnrData['currentPricing']['parsed']['pricingList'][$i] = static::complicateArr($store);
+        }
+        foreach ($pnrData['currentPricing']['parsed']['pricingList'] as $i => $store) {
+            $pnrData['currentPricing']['parsed']['pricingList'][$i] = static::complicateArr($store);
+        }
+        $pnrData['currentPricing']['parsed']['pricingList'][0]['netPrice'];
+        return [
+            [$pnrData, ['currentPricing']],
+            [$pnrData['currentPricing'], ['parsed']],
+            [$pnrData['currentPricing']['parsed'], ['pricingList']],
+            [$pnrData['currentPricing']['parsed']['pricingList'][0], ['netPrice', 'currency']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
