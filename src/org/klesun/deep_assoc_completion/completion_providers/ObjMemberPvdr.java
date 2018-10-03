@@ -13,7 +13,6 @@ import com.jetbrains.php.lang.psi.elements.MemberReference;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpClassMember;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.fest.util.Sets;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -110,7 +109,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                 });
             times.put("iteratorDone", System.nanoTime() - startTime);
         }
-        Set<String> suggested = Sets.newHashSet(builtIns.map(l -> l.getLookupString()));
+        Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()).arr());
         members.map(m -> makeLookup(m))
             .flt(l -> !suggested.contains(l.getLookupString()))
             .fch((el, i) -> {

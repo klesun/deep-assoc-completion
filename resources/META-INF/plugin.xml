@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.09.28.001</version>
+    <version>2018.10.03.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,9 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Infer type from array_unique and array_flip</li>
-        <li>Take generic args into account when resolving used keys. Provides completion in named vars in array passed to PdoStatement</li>
-        <li>Return iterators in map/filter/flatMap/etc... to resolve next key only after we've shown the preceding key. Supposed to be faster...</li>
+        <li>Hotfix: remove accidental usages of org/fest/util/Sets</li>
     </ul>
     ]]>
     </change-notes>

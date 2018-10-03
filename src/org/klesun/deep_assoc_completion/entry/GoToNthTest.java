@@ -1,6 +1,5 @@
 package org.klesun.deep_assoc_completion.entry;
 
-import com.google.common.collect.Sets;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
@@ -73,7 +72,7 @@ public class GoToNthTest extends AnAction
                             .fap(tag -> It(tag.getChildren()))
                             .fop(toCast(PhpDocRefImpl.class))
                             .map(ref -> ref.getText())
-                            .wap(sit -> Sets.newHashSet(sit))
+                            .wap(sit -> new HashSet<>(sit.arr()))
                             ;
                         L<Method> pvdrMeths = allMeths.flt(m -> dataProviders.contains(m.getName())).arr();
 

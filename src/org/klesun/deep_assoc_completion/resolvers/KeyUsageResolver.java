@@ -4,7 +4,6 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.fest.util.Sets;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -12,6 +11,7 @@ import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -145,7 +145,7 @@ public class KeyUsageResolver extends Lang
                 if (!isModel) {
                     return list();
                 } else {
-                    Set<String> inherited = Sets.newHashSet(supers.fap(s -> It(s.getOwnFields()).map(f -> f.getName())));
+                    Set<String> inherited = new HashSet<>(supers.fap(s -> It(s.getOwnFields()).map(f -> f.getName())).arr());
                     return makeAssoc(newEx, It(cls.getOwnFields())
                         .flt(fld -> !fld.getModifier().isPrivate())
                         .flt(fld -> !inherited.contains(fld.getName()))

@@ -13,7 +13,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
-import org.fest.util.Sets;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
@@ -83,7 +82,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
                 Set<String> alreadyDeclared = It(arrCtor.getHashElements())
                     .fop(el -> opt(el.getKey()))
                     .fop(toCast(StringLiteralExpressionImpl.class))
-                    .map(lit -> lit.getContents()).wap(Sets::newHashSet);
+                    .map(lit -> lit.getContents()).wap(tit -> new HashSet<>(tit.arr()));
                 return resolve(arrCtor, parameters.isAutoPopup(), parameters.getEditor())
                     .types.fap(t -> t.keys.values())
                     .flt(k -> !alreadyDeclared.contains(k.name));
