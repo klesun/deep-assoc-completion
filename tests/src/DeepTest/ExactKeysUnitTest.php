@@ -925,4 +925,38 @@ class ExactKeysUnitTest
         ]];
         return $list;
     }
+
+    public static function provideUnknownStringConcatenation()
+    {
+        $xmlParsed = [
+            'soap:Envelope' => [
+                [
+                    'soap:Header' => [],
+                    'soap:Body' => [
+                        [
+                            'soap:Fault' => [
+                                [
+                                    'faultcode' => '1253435',
+                                    'faultstring' => 'Invalid or expired session token',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $fullRootName = array_keys($xmlParsed)[0];
+        $tuple = explode(':', $fullRootName);
+        $nsPrefix = count($tuple) === 2 ? $tuple[0] : '';
+        //$soapFault = $xmlParsed['soap:Envelope'][0]['soap:Body'][0]['soap:Fault'][0] ?? null;
+        $soapFault = $xmlParsed[$nsPrefix.'Envelope'][0][$nsPrefix.'Body'][0][$nsPrefix.'Fault'][0] ?? null;
+        $soapFault[''];
+        return [
+            [$soapFault, ['faultcode', 'faultstring']],
+        ];
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 }

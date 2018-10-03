@@ -64,6 +64,9 @@ public class Mt extends Lang
                 return null;
             }
             value = t.stringValue;
+            if (value == null) {
+                return null;
+            }
             ++i;
         }
         return value;

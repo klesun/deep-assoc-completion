@@ -14,6 +14,8 @@ import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
+import javax.annotation.Nullable;
+
 public class MiscRes extends Lang
 {
     final private FuncCtx ctx;
@@ -96,8 +98,11 @@ public class MiscRes extends Lang
                     .fap(op -> {
                         It<DeepType> lmt = findPsiExprType(bin.getLeftOperand());
                         It<DeepType> rmt = findPsiExprType(bin.getRightOperand());
-                        String ccted = opt(Mt.getStringValueSt(lmt)).def("") + opt(Mt.getStringValueSt(rmt)).def("");
-                        String unescaped = StringEscapeUtils.unescapeJava(ccted); // PHP ~ java
+                        @Nullable String unescaped = opt(Mt.getStringValueSt(lmt))
+                            .fop(lstr -> opt(Mt.getStringValueSt(rmt))
+                                .map(rstr -> lstr + rstr))
+                            .map(ccted -> StringEscapeUtils.unescapeJava(ccted)) // PHP ~ java
+                            .def(null);
                         DeepType type = new DeepType(bin, PhpType.STRING, unescaped);
                         return list(type);
                     }))
