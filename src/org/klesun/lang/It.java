@@ -65,23 +65,25 @@ public class It<A> implements Iterable<A>
 
     public static <B> It<B> cnc(Iterable<B>... args)
     {
-//        L<Iterator<B>> sources = L(args).map(arr -> arr.iterator());
-//        Iterable<B> iter = () -> new Iterator<B>() {
-//            public boolean hasNext() {
-//                return sources.any(it -> it.hasNext());
-//            }
-//            public B next() {
-//                for (Iterator<B> it: sources) {
-//                    if (it.hasNext()) {
-//                        return it.next();
-//                    }
-//                }
-//                throw new NoSuchElementException("huj");
-//            }
-//        };
-//        return new It<>(iter);
-        return new It<>(Arrays.stream(args)
-            .flatMap(iter -> StreamSupport.stream(iter.spliterator(), false)));
+        // my implementation of these functions seems to be slower than built-in Stream-s, but I can't
+        // make Stream versions to actually return a lazy iterator without instantly resolving all values
+        L<Iterator<B>> sources = L(args).map(arr -> arr.iterator()).arr();
+        Iterable<B> iter = () -> new Iterator<B>() {
+            public boolean hasNext() {
+                return sources.any(it -> it.hasNext());
+            }
+            public B next() {
+                for (Iterator<B> it: sources) {
+                    if (it.hasNext()) {
+                        return it.next();
+                    }
+                }
+                throw new NoSuchElementException("huj");
+            }
+        };
+        return new It<>(iter);
+//        return new It<>(Arrays.stream(args)
+//            .flatMap(iter -> StreamSupport.stream(iter.spliterator(), false)));
     }
 
     /** don't use this unless you just want to check if it is empty */
@@ -129,56 +131,57 @@ public class It<A> implements Iterable<A>
 
     public <B> It<B> map(F2<A, Integer, B> mapper)
     {
-//        Iterator<A> sourceIt = dispose();
-//        return new It<>(() -> new Iterator<B>(){
-//            int pos = 0;
-//            public boolean hasNext() {
-//                return sourceIt.hasNext();
-//            }
-//            public B next() {
-//                return mapper.apply(sourceIt.next(), ++pos);
-//            }
-//        });
-        Mutable<Integer> mutI = new Mutable<>(0);
-        return new It<>(disposeStream().map(el -> {
-            int i = mutI.get();
-            mutI.set(i + 1);
-            return mapper.apply(el, i);
-        }));
+        Iterator<A> sourceIt = dispose();
+        return new It<>(() -> new Iterator<B>(){
+            int pos = 0;
+            public boolean hasNext() {
+                return sourceIt.hasNext();
+            }
+            public B next() {
+                return mapper.apply(sourceIt.next(), ++pos);
+            }
+        });
+//        Mutable<Integer> mutI = new Mutable<>(0);
+//        return new It<>(disposeStream().map(el -> {
+//            int i = mutI.get();
+//            mutI.set(i + 1);
+//            return mapper.apply(el, i);
+//        }));
     }
 
     public It<A> flt(F2<A, Integer, Boolean> pred)
     {
-//        Iterator<A> sourceIt = dispose();
-//        return new It<>(() -> new Iterator<A>(){
-//            Opt<A> current = non();
-//            private Opt<A> getCurrent() {
-//                if (!current.has()) {
-//                    while (sourceIt.hasNext()) {
-//                        A value = sourceIt.next();
-//                        if (pred.test(value)) {
-//                            this.current = som(value);
-//                            break;
-//                        }
-//                    }
-//                }
-//                return this.current;
-//            }
-//            public boolean hasNext() {
-//                return getCurrent().has();
-//            }
-//            public A next() {
-//                A value = getCurrent().unw();
-//                current = non();
-//                return value;
-//            }
-//        });
-        Mutable<Integer> mutI = new Mutable<>(0);
-        return new It<>(disposeStream().filter(el -> {
-            int i = mutI.get();
-            mutI.set(i + 1);
-            return pred.apply(el, i);
-        }));
+        Iterator<A> sourceIt = dispose();
+        return new It<>(() -> new Iterator<A>(){
+            Opt<A> current = Lang.non();
+            int i = 0;
+            private Opt<A> getCurrent() {
+                if (!current.has()) {
+                    while (sourceIt.hasNext()) {
+                        A value = sourceIt.next();
+                        if (pred.apply(value, i)) {
+                            this.current = som(value);
+                            break;
+                        }
+                        ++i;
+                    }
+                }
+                return this.current;
+            }
+            public boolean hasNext() {
+                return getCurrent().has();
+            }
+            public A next() {
+                A value = getCurrent().unw();
+                current = Lang.non();
+                return value;
+            }
+        });
+//        return new It<>(disposeStream().filter(el -> {
+//            int i = mutI.get();
+//            mutI.set(i + 1);
+//            return pred.apply(el, i);
+//        }));
     }
 
     public It<A> flt(Predicate<A> pred)
@@ -188,37 +191,39 @@ public class It<A> implements Iterable<A>
 
     public <B> It<B> fap(F2<A, Integer, Iterable<B>> flatten)
     {
-//        Iterator<A> sourceIt = dispose();
-//        return new It<>(() -> new Iterator<B>(){
-//            Iterator<B> current = new L<B>().iterator();
-//            private Opt<S<B>> getNextSup() {
-//                if (current.hasNext()) {
-//                    return som(() -> current.next());
-//                } else {
-//                    while (sourceIt.hasNext()) {
-//                        current = flatten.apply(sourceIt.next()).iterator();
-//                        if (current.hasNext()) {
-//                            return som(() -> current.next());
-//                        }
-//                    }
-//                    return non();
-//                }
-//            }
-//            public boolean hasNext() {
-//                return getNextSup().has();
-//            }
-//            public B next() {
-//                return getNextSup().unw().get();
-//            }
-//        });
-        Mutable<Integer> mutI = new Mutable<>(0);
-        return new It<>(disposeStream()
-            .map(el -> {
-                int i = mutI.get();
-                mutI.set(i + 1);
-                return flatten.apply(el, i);
-            })
-            .flatMap(a -> StreamSupport.stream(a.spliterator(), false)));
+        Iterator<A> sourceIt = dispose();
+        return new It<>(() -> new Iterator<B>(){
+            Iterator<B> current = new L<B>().iterator();
+            int i = 0;
+            private Opt<S<B>> getNextSup() {
+                if (current.hasNext()) {
+                    return som(() -> current.next());
+                } else {
+                    while (sourceIt.hasNext()) {
+                        current = flatten.apply(sourceIt.next(), i).iterator();
+                        if (current.hasNext()) {
+                            return som(() -> current.next());
+                        }
+                        ++i;
+                    }
+                    return Lang.non();
+                }
+            }
+            public boolean hasNext() {
+                return getNextSup().has();
+            }
+            public B next() {
+                return getNextSup().unw().get();
+            }
+        });
+//        Mutable<Integer> mutI = new Mutable<>(0);
+//        return new It<>(disposeStream()
+//            .map(el -> {
+//                int i = mutI.get();
+//                mutI.set(i + 1);
+//                return flatten.apply(el, i);
+//            })
+//            .flatMap(a -> StreamSupport.stream(a.spliterator(), false)));
     }
 
     public <B> It<B> fap(F<A, Iterable<B>> flatten)

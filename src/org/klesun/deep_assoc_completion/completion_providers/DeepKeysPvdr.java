@@ -164,15 +164,18 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         L<DeepType> types = list();
         Set<String> keyNames = new LinkedHashSet<>();
         System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");
-//        tit.fst().thn(t -> {
+        tit.has();
+        System.out.println("checked if iterator has anything, took " + search.getExpressionsResolved() + " expressions");
+
+        // TODO: add some sleep-s between suggestions to make IDEA not so laggy during continuous type resolution
+
         tit.fch(t -> {
-            if (firstTime.get() == -1) {
-                System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first type");
-                firstTime.set(System.nanoTime() - startTime);
-            }
             types.add(t);
-//            It(t.keys.values()).fst().forEach(k -> {
             t.keys.values().forEach(k -> {
+                if (firstTime.get() == -1) {
+                    System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + t.definition.getText() + " " + Tls.implode(", ", t.keys.keySet()));
+                    firstTime.set(System.nanoTime() - startTime);
+                }
                 String keyName = k.name;
                 if (!keyNames.contains(keyName)) {
                     keyNames.add(keyName);
@@ -187,6 +190,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             });
         });
         long elapsed = System.nanoTime() - startTime;
+        System.out.println("Resolved all key names in " + search.getExpressionsResolved() + " expressions");
 
         Mt mt = new Mt(types);
         It<DeepType> indexTypes = mt.types.fap(t -> t.getListElemTypes());

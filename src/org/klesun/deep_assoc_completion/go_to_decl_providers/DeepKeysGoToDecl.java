@@ -120,25 +120,25 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
     @Override
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement nullPsi, int mouseOffset, Editor editor)
     {
-        L<PsiElement> result = opt(nullPsi)
+        It<PsiElement> psiit = opt(nullPsi)
             .fap(psiElement -> {
-                L<PsiElement> psiTargets = L();
                 SearchContext search = new SearchContext(psiElement.getProject())
                     .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
                 FuncCtx funcCtx = new FuncCtx(search);
-
-                resolveAssocKey(psiElement, funcCtx)
-                    .fch(psi -> psiTargets.add(psi));
-                resolveDocAt(psiElement, mouseOffset)
-                    .fch(psi -> psiTargets.add(psi));
-                if (psiTargets.size() == 0) {
-                    resolveDocResult(psiElement)
-                        .fch(t -> psiTargets.add(t.definition));
-                }
-                removeDuplicates(psiTargets);
-                return psiTargets.map(psi -> truncateOnLineBreak(psi));
-            }).arr();
-        return result.toArray(new PsiElement[result.size()]);
+                It<PsiElement> it = It.frs(
+                    () -> It.cnc(
+                        resolveAssocKey(psiElement, funcCtx),
+                        resolveDocAt(psiElement, mouseOffset)
+                    ),
+                    () -> resolveDocResult(psiElement)
+                        .map(t -> t.definition)
+                );
+                return it.map(psi -> truncateOnLineBreak(psi)).unq();
+            });
+        // TODO: find out if it is possible to return GoTo options one by one like we do for completion options
+        L<PsiElement> arr = psiit.fst().arr();
+        //L<PsiElement> arr = psiit.arr();
+        return arr.toArray(new PsiElement[arr.size()]);
     }
 
     @Nullable

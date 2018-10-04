@@ -35,11 +35,9 @@ public class MemoizingIterable<A> implements Iterable<A>
                 isNexting = true;
                 boolean has;
                 try {
-                    has =  current.next != null
+                    has = current.next != null
                         || source.hasNext();
                 } catch (StackOverflowError exc) {
-//                    System.out.println("zalupa overflow iterator has next " + source.toString());
-//                    System.out.println(Tls.substr(Tls.getStackTrace(), -10000));
                     throw exc;
                 }
                 isNexting = false;
