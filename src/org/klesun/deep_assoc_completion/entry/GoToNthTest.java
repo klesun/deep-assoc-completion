@@ -14,6 +14,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
 import com.jetbrains.php.lang.psi.elements.Method;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.lang.L;
@@ -81,10 +82,9 @@ public class GoToNthTest extends AnAction
                         return caretFuncOpt
                             .fap(func -> pvdrMeths.flt(m -> m.equals(func))).arr()
                             .cct(pvdrMeths).cct(caretFuncOpt)
-                            .map(func -> ClosRes.getReturnedValue(func, funcCtx))
-                            .map(mt -> mt.getEl().getKey("0")) // first arg passed to the testing function
-                            .fop(argMt -> argMt.types.arr().gat(testNum))
-                            .fst()
+                            .fap(func -> ClosRes.getReturnedValue(func, funcCtx))
+                            .fap(t -> Mt.getKeySt(t, "0")) // first arg passed to the testing function
+                            .arr().gat(testNum)
                             .thn(test -> {
                                 caret.moveToOffset(test.definition.getTextOffset());
                                 caret.getEditor().getScrollingModel().scrollToCaret(ScrollType.MAKE_VISIBLE);

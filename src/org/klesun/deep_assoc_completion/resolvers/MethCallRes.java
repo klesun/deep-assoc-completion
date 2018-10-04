@@ -108,7 +108,7 @@ public class MethCallRes extends Lang
         });
     }
 
-    private Mt findBuiltInRetType(Method meth, FuncCtx argCtx, MethodReference methCall)
+    private It<DeepType> findBuiltInRetType(Method meth, FuncCtx argCtx, MethodReference methCall)
     {
         It<DeepType> types = It(list());
         String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
@@ -131,7 +131,7 @@ public class MethCallRes extends Lang
                 .fap(t -> t.pdoFetchTypes);
             types = It(pdoTypes);
         }
-        return new Mt(types);
+        return types;
     }
 
     private static It<DeepType> parseReturnDoc(PhpDocReturnTag returnDoc, FuncCtx funcCtx)
@@ -156,7 +156,7 @@ public class MethCallRes extends Lang
             }
             FuncCtx finalCtx = funcCtx;
             return impls.fap(m -> It.cnc(
-                ClosRes.getReturnedValue(m, finalCtx).types,
+                ClosRes.getReturnedValue(m, finalCtx),
                 opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
                     .fap(tag -> parseReturnDoc(tag, finalCtx)),
                 opt(m.getReturnType()).fap(rt -> list(new DeepType(rt, rt.getType())))
@@ -234,7 +234,7 @@ public class MethCallRes extends Lang
             .fap(funcs -> funcs)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
-                findBuiltInRetType(func, funcCtx, funcCall).types
+                findBuiltInRetType(func, funcCtx, funcCall)
             ));
     }
 }

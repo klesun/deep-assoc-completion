@@ -125,7 +125,6 @@ public class SearchContext extends Lang
 
     public Iterable<DeepType> findExprType(PhpExpression expr, FuncCtx funcCtx)
     {
-        /** @debug */
         long time = System.nanoTime();
         double seconds = (time - startTime) / 1000000000.0;
         if (!debug && (time - lastReportTime) / 1000000000.0 > 1.0) {
@@ -140,7 +139,10 @@ public class SearchContext extends Lang
         if (debug) {
             // pretty useless now, actually, after we moved to iterators
             // I guess a new "context" should be created on each expression, not just function call to know the depth
-            System.out.print(indent);
+            String trace = funcCtx.getCallStack()
+                .map(ctx -> Tls.singleLine(ctx.uniqueRef.map(ref -> ref.getText()).def("(no args)"), 30))
+                .wap(calls -> Tls.implode(" -> ", calls));
+            System.out.print(trace + " | ");
             String fileText = expr.getContainingFile().getText();
             int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
             StackTraceElement caller = new Exception().getStackTrace()[2];

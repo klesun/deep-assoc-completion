@@ -829,6 +829,50 @@ class DeepKeysTest
 
     }
 
+    private static function getGalileoPnr()
+    {
+        $data = json_decode(file_get_contents('http://apollo.com/pnr/QWE123'), true);
+        return [
+            'recordLocator' => $data['recordLocator'],
+            'paxName' => $data['paxName'],
+            'itinerary' => $data['itinerary'],
+            'price' => $data['price'],
+        ];
+    }
+
+    private static function getSabrePnr()
+    {
+        $data = json_decode(file_get_contents('http://sabre.com/pnr/QWE123'), true);
+        return [
+            'recordLocator' => $data['recordLocator'],
+            'paxName' => $data['paxName'],
+            'itinerary' => $data['itinerary'],
+            'price' => $data['price'],
+        ];
+    }
+
+    private static function getAmadeusPnr()
+    {
+        $data = json_decode(file_get_contents('http://amadues.com/pnr/QWE123'), true);
+        return [
+            'recordLocator' => $data['recordLocator'],
+            'paxName' => $data['paxName'],
+            'itinerary' => $data['itinerary'],
+            'price' => $data['price'],
+        ];
+    }
+
+    /** @param $pnrs = [
+     *     static::getGalileoPnr(),
+     *     static::getSabrePnr(),
+     *     static::getAmadeusPnr(),
+     * ] */
+    private static function testIteratorResolution($pnrs)
+    {
+        $pnr = $pnrs[rand()];
+        $pnr[''];
+    }
+
     //============================
     // not implemented follow
     //============================

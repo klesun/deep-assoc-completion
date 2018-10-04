@@ -373,7 +373,6 @@ public class FuncCallRes extends Lang
     private Iterable<DeepType> findBuiltInFuncCallType(FunctionReferenceImpl call)
     {
         return opt(call.getName()).map(name -> {
-            L<DeepType> result = L();
             FuncCtx callCtx = ctx.subCtxDirect(call);
             PsiElement[] params = call.getParameters();
             L<PsiElement> lParams = L(params);
@@ -408,7 +407,7 @@ public class FuncCallRes extends Lang
                 }));
                 return list(type);
             } else if (name.equals("array_chunk")) {
-                result.add(callCtx.getArgMt(0).getInArray(call));
+                return callCtx.getArgMt(0).getInArray(call).mt().types;
             } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")
                     || name.equals("array_intersect_assoc") || name.equals("array_diff_assoc")
                     || name.equals("array_diff")
@@ -477,7 +476,6 @@ public class FuncCallRes extends Lang
                     .map(func -> new DeepType(call, getDocType(func)))
                     .itr();
             }
-            return result;
         }).def(list());
     }
 

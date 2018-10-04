@@ -5,6 +5,7 @@ import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.lang.Dict;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
+import static org.klesun.lang.Lang.*;
 
 import static org.klesun.lang.Lang.list;
 import static org.klesun.lang.Lang.opt;

@@ -20,7 +20,7 @@ public class FuncCtx extends Lang
     enum EArgPsiType {DIRECT, ARR, NONE, INDIRECT};
 
     final private Opt<FuncCtx> parent;
-    final private Opt<PsiElement> uniqueRef;
+    final public Opt<PsiElement> uniqueRef;
     final private SearchContext search;
     final private L<S<Mt>> argGetters;
     private L<Integer> variadicOrders = L();
@@ -272,15 +272,20 @@ public class FuncCtx extends Lang
         return Tls.implode(" | ", parents.map(p -> Tls.singleLine(p, 600)));
     }
 
-    public int getCallStackLength()
+    public L<FuncCtx> getCallStack()
     {
-        int callStackLength = 0;
+        L<FuncCtx> result = list();
         FuncCtx tmp = this;
         while (tmp != null) {
-            ++callStackLength;
+            result.add(tmp);
             tmp = tmp.parent.def(null);
         }
-        return callStackLength;
+        return result;
+    }
+
+    public int getCallStackLength()
+    {
+        return getCallStack().size();
     }
 
     /**

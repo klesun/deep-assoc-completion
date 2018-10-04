@@ -62,7 +62,7 @@ public class ClosRes extends Lang
         return result;
     }
 
-    public static Mt getReturnedValue(PsiElement funcBody, FuncCtx ctx)
+    public static It<DeepType> getReturnedValue(PsiElement funcBody, FuncCtx ctx)
     {
         return It.cnc(
             findFunctionReturns(funcBody)
@@ -77,14 +77,14 @@ public class ClosRes extends Lang
                         .fop(txt -> Tls.regex("yield\\s+from[^A-Za-z].*", txt))
                         .uni(txt -> tit, () -> list(Mt.getInArraySt(tit, funcBody))))
                 )
-        ).wap(types -> new Mt(types));
+        );
     }
 
     public DeepType resolve(FunctionImpl func)
     {
         DeepType result = new DeepType(func, func.getLocalType(true));
         result.returnTypeGetters.add((funcCtx) ->
-            getReturnedValue(func, funcCtx).types);
+            new MemoizingIterable<>(getReturnedValue(func, funcCtx).iterator()));
         return result;
     }
 }

@@ -78,7 +78,7 @@ public class KeyUsageResolver extends Lang
     }
 
     // not sure this method belongs here... and name should be changed
-    public Mt resolveArgCallArrKeys(Function meth, int funcVarArgOrder, int caretArgOrder)
+    public It<DeepType> resolveArgCallArrKeys(Function meth, int funcVarArgOrder, int caretArgOrder)
     {
         return L(meth.getParameters()).gat(funcVarArgOrder)
             .fop(toCast(ParameterImpl.class))
@@ -89,8 +89,7 @@ public class KeyUsageResolver extends Lang
             .fop(toCast(FunctionReference.class))
             .fop(call -> L(call.getParameters()).gat(caretArgOrder))
             .fop(toCast(PhpExpression.class))
-            .fap(exp -> fakeCtx.findExprType(exp))
-            .wap(Mt::new);
+            .fap(exp -> fakeCtx.findExprType(exp));
     }
 
     private static Opt<Function> resolveFunc(ParameterList argList)

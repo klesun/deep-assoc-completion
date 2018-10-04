@@ -43,9 +43,9 @@ public class Opt<T> implements Iterable<T>
     public <T1> Opt<T1> map(Lang.F<T, T1> f)
     {
         if (has()) {
-            return new Opt(f.apply(value));
+            return new Opt<>(f.apply(value));
         } else {
-            return new Opt(null);
+            return new Opt<>(null);
         }
     }
 
@@ -61,7 +61,7 @@ public class Opt<T> implements Iterable<T>
     {
         return map(f).uni(
             (opt) -> opt,
-            () -> new Opt(null)
+            () -> new Opt<>(null)
         );
     }
 
