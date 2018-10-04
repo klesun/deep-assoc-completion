@@ -331,15 +331,21 @@ public class It<A> implements Iterable<A>
         return all((el, i) -> pred.test(el));
     }
 
-    // end stream at element that matches the predicate
-    // includes the element that returned true
-    public It<A> end(Predicate<A> pred)
+    // end stream the moment endPred returns true (in case of timeout for example)
+    // includes the value on which endPred returned true
+    public It<A> end(F<A, Boolean> endPred)
     {
-        Mutable<Boolean> ended = new Mutable<>(false);
-        return flt(el -> {
-            boolean isEnd = ended.get();
-            ended.set(pred.test(el));
-            return !isEnd;
+        Iterator<A> sourceIt = dispose();
+        return new It<>(() -> new Iterator<A>(){
+            boolean end = false;
+            public boolean hasNext() {
+                return !end && sourceIt.hasNext();
+            }
+            public A next() {
+                A next = sourceIt.next();
+                end = endPred.apply(next);
+                return next;
+            }
         });
     }
 

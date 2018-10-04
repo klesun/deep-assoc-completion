@@ -30,6 +30,9 @@ import java.util.*;
  */
 public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 {
+    private Opt<PsiElement> lastCaretPsi = non();
+    private boolean lastFinished = true;
+
     private static PsiElement truncateOnLineBreak(PsiElement psi)
     {
         PsiElement truncated = psi.getFirstChild();
@@ -40,29 +43,16 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         return psi;
     }
 
-    // just treating a symptom. i dunno why duplicates appear - they should not
-    private static void removeDuplicates(L<PsiElement> psiTargets)
-    {
-        Set<PsiElement> fingerprints = new HashSet<>();
-        int size = psiTargets.size();
-        for (int k = size - 1; k >= 0; --k) {
-            if (fingerprints.contains(psiTargets.get(k))) {
-                psiTargets.remove(k);
-            }
-            fingerprints.add(psiTargets.get(k));
-        }
-    }
-
     private static It<PsiElement> resolveAssocKey(PsiElement psiElement, FuncCtx funcCtx)
     {
-        return opt(psiElement).itr()
-            .map(psi -> psi.getParent())
+        return opt(psiElement)
+            .fap(psi -> opt(psi.getParent()))
             .fop(toCast(PhpExpression.class))
-            .fap(literal -> Lang.opt(literal.getParent()).itr()
+            .fap(literal -> Lang.opt(literal.getParent())
                 .fop(Lang.toCast(ArrayIndex.class))
-                .map(index -> index.getParent())
+                .fap(index -> opt(index.getParent()))
                 .fop(Lang.toCast(ArrayAccessExpressionImpl.class))
-                .map(expr -> expr.getValue())
+                .fap(expr -> opt(expr.getValue()))
                 .fop(toCast(PhpExpression.class))
                 .fap(srcExpr -> {
                     String key = funcCtx.findExprType(literal).wap(Mt::getStringValueSt);
@@ -120,6 +110,9 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
     @Override
     public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement nullPsi, int mouseOffset, Editor editor)
     {
+        Boolean prevFinished = lastFinished;
+        lastFinished = false;
+        Boolean isSecondAttempt = lastCaretPsi.map(last -> last.equals(nullPsi)).def(false);
         It<PsiElement> psiit = opt(nullPsi)
             .fap(psiElement -> {
                 SearchContext search = new SearchContext(psiElement.getProject())
@@ -133,11 +126,13 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                     () -> resolveDocResult(psiElement)
                         .map(t -> t.definition)
                 );
-                return it.map(psi -> truncateOnLineBreak(psi)).unq();
+                return it.map(psi -> truncateOnLineBreak(psi))
+                    .end((itpsi) -> !isSecondAttempt || !prevFinished)
+                    .unq();
             });
-        // TODO: find out if it is possible to return GoTo options one by one like we do for completion options
-        L<PsiElement> arr = psiit.fst().arr();
-        //L<PsiElement> arr = psiit.arr();
+        L<PsiElement> arr = psiit.arr();
+        lastCaretPsi = opt(nullPsi);
+        lastFinished = true;
         return arr.toArray(new PsiElement[arr.size()]);
     }
 

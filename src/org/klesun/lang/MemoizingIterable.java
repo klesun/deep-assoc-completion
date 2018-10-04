@@ -19,7 +19,7 @@ public class MemoizingIterable<A> implements Iterable<A>
 
     public MemoizingIterable(Iterator<A> source)
     {
-        this.source = source;
+        this.source = It(() -> source).unq().iterator();
     }
 
     public Iterator<A> iterator()

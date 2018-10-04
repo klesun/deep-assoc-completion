@@ -169,11 +169,11 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
         // TODO: add some sleep-s between suggestions to make IDEA not so laggy during continuous type resolution
 
-        tit.fch(t -> {
+        tit.fch((t, i) -> {
             types.add(t);
             t.keys.values().forEach(k -> {
                 if (firstTime.get() == -1) {
-                    System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + t.definition.getText() + " " + Tls.implode(", ", t.keys.keySet()));
+                    System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + Tls.implode(", ", t.keys.keySet()));
                     firstTime.set(System.nanoTime() - startTime);
                 }
                 String keyName = k.name;
@@ -191,6 +191,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         });
         long elapsed = System.nanoTime() - startTime;
         System.out.println("Resolved all key names in " + search.getExpressionsResolved() + " expressions");
+        result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() +
+            " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0));
 
         Mt mt = new Mt(types);
         It<DeepType> indexTypes = mt.types.fap(t -> t.getListElemTypes());
@@ -234,8 +236,5 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .map(keyName -> makeFullLookup(mt, keyName));
 
         lookups.fch(l -> nameToNewLookup.gat(l.getKeyName()).thn(newL -> l.lookupData = newL));
-
-        result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() +
-            " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0));
     }
 }
