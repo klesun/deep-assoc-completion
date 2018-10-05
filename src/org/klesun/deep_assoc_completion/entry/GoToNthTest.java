@@ -83,7 +83,8 @@ public class GoToNthTest extends AnAction
                             .fap(func -> pvdrMeths.flt(m -> m.equals(func))).arr()
                             .cct(pvdrMeths).cct(caretFuncOpt)
                             .fap(func -> ClosRes.getReturnedValue(func, funcCtx))
-                            .fap(t -> Mt.getKeySt(t, "0")) // first arg passed to the testing function
+                            .fap(t -> Mt.getElSt(t)) // go to first arg passed to the testing function, not
+                            .fap(t -> Mt.getKeySt(t, "0")) // whole set since there may be some wrapping magic
                             .arr().gat(testNum)
                             .thn(test -> {
                                 caret.moveToOffset(test.definition.getTextOffset());
