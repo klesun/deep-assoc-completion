@@ -168,8 +168,17 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
         Mt mt = new Mt(tit);
         mt.types.fap(t -> t.keys).fch((k,i) -> {
-            k.keyType.getNames().fch(keyName -> {
-                if (!keyNames.contains(keyName)) {
+            k.keyType.getTypes.get().fch((kt,j) -> {
+                L<String> keyNamesToAdd = list();
+                if (kt.stringValue == null) {
+                    for (int n = 0; n < 5; ++n) {
+                        keyNamesToAdd.add(n + "");
+                    }
+                } else {
+                    keyNamesToAdd.add(kt.stringValue);
+                }
+                keyNamesToAdd = keyNamesToAdd.flt(kn -> !keyNames.contains(kn)).arr();
+                for (String keyName: keyNamesToAdd) {
                     if (firstTime.get() == -1) {
                         System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
                         firstTime.set(System.nanoTime() - startTime);
@@ -190,21 +199,6 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         System.out.println("Resolved all key names in " + search.getExpressionsResolved() + " expressions");
         result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() +
             " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0));
-
-        It<DeepType> indexTypes = mt.types.fap(t -> t.getListElemTypes());
-        if (indexTypes.has()) {
-            Mt idxMt = new Mt(indexTypes);
-            String typeText = idxMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
-            String ideaType = idxMt.getIdeaType().filterUnknown().toStringResolved();
-            if (mt.hasNumberIndexes()) {
-                for (int k = 0; k < 5; ++k) {
-                    result.addElement(makePaddedLookup(k + "", ideaType, typeText));
-                }
-            } else {
-                // string key, but key name unknown
-                result.addElement(makePaddedLookup("", ideaType, typeText));
-            }
-        }
 
         // I enabled auto-popup for it, but I want it to show
         // only my options, not 100500k built-in suggestions
