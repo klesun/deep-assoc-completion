@@ -222,9 +222,13 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // following code calculates deeper type info for
         // completion options and updates them in the dialog
 
-        Dict<LookupElement> nameToNewLookup = L(keyNames).key(keyName -> keyName)
-            .map(keyName -> makeFullLookup(mt, keyName));
-
-        lookups.fch(l -> nameToNewLookup.gat(l.getKeyName()).thn(newL -> l.lookupData = newL));
+        Dict<MutableLookup> nameToMutLookup = lookups.key(l -> l.lookupData.getLookupString());
+        nameToMutLookup
+            .fch((mutLook, keyName) -> {
+                search.overrideMaxExpr = som(search.getExpressionsResolved() + 25);
+                LookupElement lookup = makeFullLookup(mt, keyName);
+                search.overrideMaxExpr = non();
+                mutLook.lookupData = lookup;
+            });
     }
 }
