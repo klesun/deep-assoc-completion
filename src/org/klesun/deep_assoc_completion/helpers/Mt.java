@@ -34,7 +34,7 @@ public class Mt extends Lang
         // I'm not sure I'm good mathematician enough to find
         // out the algorithm that would not produce them with
         // all these recursions, so I'm just removing dupes here
-        this.types = new MemoizingIterable<>(It(types).unq().iterator());
+        this.types = new MemoizingIterable<>(types.iterator());
         this.reason = reason;
     }
     public Mt(Iterable<DeepType> types)
@@ -45,7 +45,8 @@ public class Mt extends Lang
     public static DeepType getInArraySt(It<DeepType> types, PsiElement call)
     {
         DeepType result = new DeepType(call, PhpType.ARRAY);
-        result.listElTypes.add(Tls.onDemand(() -> new Mt(types)));
+        result.addKey(KeyType.integer(call), call)
+            .addType(Tls.onDemand(() -> new Mt(types)), PhpType.MIXED);
         return result;
     }
 
@@ -95,16 +96,12 @@ public class Mt extends Lang
     public static It<DeepType> getKeySt(DeepType type, @Nullable String keyName)
     {
         return It.cnc(
-            Tls.ife(keyName != null, () -> It.cnc(
-                Lang.getKey(type.keys, keyName)
-                    .fap(v -> v.getTypes()),
-                Tls.ifi(Tls.isNum(keyName), () -> type.listElTypes.fap(t -> t.get().types))
-            ), () -> It.cnc(
-                It(type.keys.values())
-                    .fap(v -> v.getTypes()),
-                type.listElTypes.fap(t -> t.get().types)
-            )),
-            type.anyKeyElTypes.fap(t -> t.get().types),
+            type.keys
+                .flt(k -> keyName == null || k.keyType.getTypes.get()
+                    .any(kt -> keyName.equals(kt.stringValue)
+                        || kt.stringValue == null
+                        && (!kt.isNumber() || Tls.isNum(keyName))))
+                .fap(k -> k.getTypes()),
             opt(type.briefType.elementType().filterUnknown().filterMixed())
                 .flt(it -> !it.isEmpty()).itr()
                 .map(it -> new DeepType(type.definition, it, false))
@@ -131,30 +128,10 @@ public class Mt extends Lang
         return ideaType;
     }
 
-    public PhpType getKeyBriefType(@NonNull String keyName)
+    public It<String> getKeyNames()
     {
-        PhpType ideaType = new PhpType();
-        Map<PsiElement, L<PhpType>> psiToType = new LinkedHashMap<>();
-        It<DeepType.Key> keyObjs = types.fop(t -> Lang.getKey(t.keys, keyName));
-        // getting rid of duplicates, temporary solution
-        // TODO: 7681 types!!! and only 2 of them are actually unique. should do something
-        keyObjs.fch(k -> psiToType.put(k.definition, k.getBriefTypes()));
-
-        It(psiToType.values()).fap(a -> a).fch(ideaType::add);
-        return ideaType;
-    }
-
-    public L<String> getKeyNames()
-    {
-        L<String> names = L();
-        HashSet<String> repeations = new HashSet<>();
-        types.fap(t -> It(t.keys.keySet())).fch(name -> {
-            if (!repeations.contains(name)) {
-                repeations.add(name);
-                names.add(name);
-            }
-        });
-        return names;
+        return types.fap(t -> It(t.keys))
+            .fap(k -> k.keyType.getNames()).unq();
     }
 
     public It<DeepType.Key> getProps()
@@ -183,7 +160,7 @@ public class Mt extends Lang
         circularRefs.addAll(types);
 
         L<String> briefValues = list();
-        L<String> keyNames = getKeyNames();
+        L<String> keyNames = getKeyNames().arr();
 
         if (keyNames.size() > 0) {
             if (keyNames.all((k,i) -> (k + "").equals(i + ""))) {
@@ -228,7 +205,7 @@ public class Mt extends Lang
 
     public boolean hasNumberIndexes()
     {
-        return types.any(t -> t.hasNumberIndexes() || t.listElTypes.size() > 0);
+        return types.any(t -> t.hasNumberIndexes());
     }
 
     public boolean isInt()

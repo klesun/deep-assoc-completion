@@ -63,17 +63,20 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         ).def(base);
     }
 
-    private static It<LookupElement> getDynamicProps(Mt mt)
+    private static It<? extends LookupElement> getDynamicProps(Mt mt)
     {
-        return mt.getProps().arr().dct(p -> T2(p.name, p)).vls()
-            .map(prop -> LookupElementBuilder.create(prop.name)
-                .bold()
-                .withIcon(PhpIcons.FIELD)
-                .withTypeText(prop.getBriefTypes().wap(its -> {
-                    PhpType ideaType = new PhpType();
-                    its.fch(ideaType::add);
-                    return ideaType.toString();
-                })));
+        return mt.getProps()
+            .fap(prop -> prop.keyType.getNames()
+                .map(name -> LookupElementBuilder.create(name)
+                    .bold()
+                    .withIcon(PhpIcons.FIELD)
+                    .withTypeText(prop.getBriefTypes().wap(its -> {
+                        PhpType ideaType = new PhpType();
+                        its.fch(ideaType::add);
+                        return ideaType.toString();
+                    }))))
+            .unq(l -> l.getLookupString())
+            ;
     }
 
     @Override

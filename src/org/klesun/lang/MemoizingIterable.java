@@ -19,7 +19,7 @@ public class MemoizingIterable<A> implements Iterable<A>
 
     public MemoizingIterable(Iterator<A> source)
     {
-        this.source = It(() -> source).unq().iterator();
+        this.source = source;
     }
 
     public Iterator<A> iterator()
@@ -115,6 +115,11 @@ public class MemoizingIterable<A> implements Iterable<A>
     public It<A> flt(Predicate<A> pred)
     {
         return flt((val, i) -> pred.test(val));
+    }
+
+    public void fch(C2<A, Integer> action)
+    {
+        It(this).fch(action);
     }
 
     public <@NonNull Tnew> It<Tnew> map(Lang.F<A, @NonNull Tnew> f)

@@ -40,23 +40,15 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
                 .withTypeText(type);
     }
 
-    private static LookupElement makeLookup(DeepType.Key keyEntry)
+    private static It<? extends LookupElement> makeOptions(It<DeepType> tit)
     {
-        String type = keyEntry.getTypes().fst().map(t -> t.briefType.toString()).def("unknown");
-        return makeLookupBase(keyEntry.name, type);
-    }
-
-    private static It<LookupElement> makeOptions(It<DeepType> tit)
-    {
-        Set<String> suggested = new HashSet<>();
         Mutable<Boolean> hadArrt = new Mutable<>(false);
         return tit.fap(type -> It.cnc(
-            It(type.keys.values())
-                .flt(k -> !suggested.contains(k.name))
-                .map(k -> {
-                    suggested.add(k.name);
-                    return makeLookup(k);
-                }),
+            type.keys.fap(keyEntry -> {
+                String typeStr = keyEntry.getTypes().fst().map(t -> t.briefType.toString()).def("unknown");
+                return keyEntry.keyType.getNames()
+                    .map(keyName -> makeLookupBase(keyName, typeStr));
+            }),
             It(type.getListElemTypes()).fst().flt(t -> type.keys.size() == 0).fap(t -> {
                 if (!hadArrt.get()) {
                     hadArrt.set(true);
@@ -66,7 +58,9 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
                     return list();
                 }
             })
-        ));
+        ))
+            .unq(l -> l.getLookupString())
+            ;
     }
 
     private static It<DeepType> resolveArrayKeyExists(StringLiteralExpression literal, FuncCtx funcCtx)
@@ -128,8 +122,9 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
             .map(psi -> psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
             .fap(lit -> resolve(lit, false, editor)
-                .fap(t -> t.keys.values())
-                .flt(k -> lit.getContents().equals(k.name))
+                .fap(t -> t.keys)
+                .fap(k -> k.keyType.getTypes.get())
+                .flt(kt -> lit.getContents().equals(kt.stringValue))
                 .map(t -> t.definition))
             .arr();
 

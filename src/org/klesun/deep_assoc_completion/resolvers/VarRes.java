@@ -66,7 +66,7 @@ public class VarRes extends Lang
     private Opt<Assign> assertArrayUnshift(PsiElement varRef)
     {
         L<KeyType> keys = list();
-        keys.add(KeyType.integer());
+        keys.add(KeyType.integer(varRef));
         return opt(varRef.getParent())
             .fop(toCast(ParameterListImpl.class))
             .map(par -> par.getParent())
@@ -102,8 +102,10 @@ public class VarRes extends Lang
                     if (keyVarOpt.has()) {
                         tuple = tuple.sub(1); // key was included
                         if (varRef.isEquivalentTo(keyVarOpt.unw())) {
-                            return artit.fap(t -> t.keys.values())
-                                .map(keyObj -> new DeepType(keyObj.definition, PhpType.STRING, keyObj.name));
+                            return artit.fap(t -> t.keys)
+                                .fap(k -> k.keyType.getTypes.get())
+                                .fap(t -> opt(t.stringValue)
+                                    .map(name -> new DeepType(t.definition, PhpType.STRING, name)));
                         }
                     }
                     if (tuple.size() > 1) {
@@ -138,7 +140,8 @@ public class VarRes extends Lang
                         return opt(null);
                     })
                     .map(i -> arrts
-                        .fop(t -> opt(t.keys.get(i + "")))
+                        .fap(t -> t.keys)
+                        .flt(k -> k.keyType.getNames().any(n -> n.equals(i + "")))
                         .fap(k -> k.getTypeGetters()))
                 )
                 .map(mtgs -> () -> mtgs.fap(g -> g.get().types))

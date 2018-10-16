@@ -39,13 +39,14 @@ import static org.klesun.lang.Lang.*;
  */
 public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> implements GotoDeclarationHandler
 {
-    private static LookupElement makeLookup(DeepType.Key keyEntry)
+    private static It<LookupElement> makeLookup(DeepType.Key keyEntry)
     {
         String type = keyEntry.getTypes().fst().map(t -> t.briefType.toString()).def("from usage");
-        return LookupElementBuilder.create(keyEntry.name)
-            .bold()
-            .withIcon(DeepKeysPvdr.getIcon())
-            .withTypeText(type);
+        return keyEntry.keyType.getNames()
+            .map(name -> LookupElementBuilder.create(name)
+                .bold()
+                .withIcon(DeepKeysPvdr.getIcon())
+                .withTypeText(type));
     }
 
     private static Opt<ArrayCreationExpression> assertArrCtorKey(PsiElement caretPsi)
@@ -84,12 +85,12 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
                     .fop(toCast(StringLiteralExpressionImpl.class))
                     .map(lit -> lit.getContents()).wap(tit -> new HashSet<>(tit.arr()));
                 return resolve(arrCtor, parameters.isAutoPopup(), parameters.getEditor())
-                    .types.fap(t -> t.keys.values())
-                    .flt(k -> !alreadyDeclared.contains(k.name));
+                    .types.fap(t -> t.keys.flt(k -> k.keyType.getNames().all(n -> alreadyDeclared.contains(n))));
             });
 
-        usedKeys.map(k -> makeLookup(k))
+        usedKeys.fap(k -> makeLookup(k))
             // to preserve order
+            .unq(l -> l.getLookupString())
             .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - i))
             .fch(result::addElement);
 
@@ -124,8 +125,8 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
             .fap(lit -> opt(lit.getFirstChild())
                 .fop(c -> assertArrCtorKey(c))
                 .fap(arrCtor -> resolve(arrCtor, false, editor)
-                    .types.fap(t -> t.keys.values())
-                    .flt(k -> lit.getContents().equals(k.name))
+                    .types.fap(t -> t.keys).fap(k -> k.keyType.getTypes.get())
+                    .flt(k -> lit.getContents().equals(k.stringValue))
                     .map(k -> k.definition))).arr();
 
         removeDuplicates(psiTargets);

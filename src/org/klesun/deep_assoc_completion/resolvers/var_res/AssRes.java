@@ -35,17 +35,9 @@ public class AssRes extends Lang
             DeepType arr = new DeepType(psi, PhpType.ARRAY);
             KeyType nextKey = keys.get(0);
             L<KeyType> furtherKeys = keys.sub(1);
-            if (nextKey.keyType == KeyType.EKeyType.STRING) {
-                S<Iterable<DeepType>> memoized = Tls.onDemand(() -> new MemoizingIterable<>(getType.get().iterator()));
-                nextKey.getNameToMt().fch((types, name) ->
-                    types.fch(t -> arr.addKey(name, t.definition).addType(() ->
-                        makeType(furtherKeys, memoized, psi, briefType).wap(Mt::new), briefType)));
-            } else  if (nextKey.keyType == KeyType.EKeyType.INTEGER) {
-                arr.hasIntKeys = true;
-                arr.listElTypes.add(Tls.onDemand(() -> new Mt(makeType(furtherKeys, getType, psi, briefType))));
-            } else {
-                arr.anyKeyElTypes.add(Tls.onDemand(() -> makeType(furtherKeys, getType, psi, briefType).wap(Mt::new)));
-            }
+            S<Iterable<DeepType>> memoized = Tls.onDemand(() -> new MemoizingIterable<>(getType.get().iterator()));
+            arr.addKey(nextKey, nextKey.definition).addType(() ->
+                makeType(furtherKeys, memoized, psi, briefType).wap(Mt::new), briefType);
             return It(list(arr));
         }
     }
@@ -69,9 +61,8 @@ public class AssRes extends Lang
             KeyType name = opt(nextKey.getIndex())
                 .map(index -> index.getValue())
                 .fop(toCast(PhpExpression.class))
-                .map(key -> ctx.findExprType(key))
-                .map(tit -> KeyType.mt(new Mt(tit)))
-                .def(KeyType.integer());
+                .map(key -> KeyType.mt(() -> ctx.findExprType(key), key))
+                .def(KeyType.integer(nextKey));
             reversedKeys.add(name);
 
             nextKeyOpt = opt(nextKey.getValue())

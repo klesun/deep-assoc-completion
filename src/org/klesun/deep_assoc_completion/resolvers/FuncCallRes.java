@@ -13,6 +13,7 @@ import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.ScopeFinder;
 import org.klesun.deep_assoc_completion.helpers.ArgOrder;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
@@ -59,18 +60,12 @@ public class FuncCallRes extends Lang
             .wap(Mt::new));
         It<DeepType> eachTMapped = arrMt.types.map(t -> {
             DeepType mapped = new DeepType(t.definition, PhpType.ARRAY);
-            t.keys.forEach((k, v) -> mapped.addKey(k, v.definition)
+            t.keys.fch((v, i) -> mapped.addKey(v.keyType, v.definition)
                 .addType(getElMt, call.getType().elementType()));
             return mapped;
         });
-        if (arrMt.hasNumberIndexes()) {
-            mapRetType.listElTypes.add(getElMt);
-        } else if (
-            arrMt.getKeyNames().size() == 0 ||
-            arrMt.types.any(t -> t.anyKeyElTypes.size() > 0)
-        ) {
-            mapRetType.anyKeyElTypes.add(getElMt);
-        }
+        S<It<DeepType>> ktg = () -> arrMt.types.fap(t -> t.keys).fap(k -> k.keyType.getTypes.get());
+        mapRetType.addKey(KeyType.mt(ktg, call), call).addType(getElMt, PhpType.MIXED);
         return It.cnc(list(mapRetType), eachTMapped);
     }
 
@@ -86,7 +81,7 @@ public class FuncCallRes extends Lang
         keyToTypes.fch((types,keyName) -> combine
             .addKey(keyName, types.map(t -> t.definition).fst().def(call))
             .addType(getElMt, ideaElType));
-        combine.anyKeyElTypes.add(getElMt);
+        combine.addKey(KeyType.unknown(call), call).addType(getElMt, PhpType.MIXED);
         return combine;
     }
 
@@ -98,7 +93,7 @@ public class FuncCallRes extends Lang
             .map(name -> new DeepType(call, PhpType.STRING, name)).wap(Mt::new);
         L<String> newKeys = sourceMt.getEl().types.map(t -> t.stringValue).arr();
         if (!newKeys.has() || newKeys.any(k -> k == null)) {
-            flip.anyKeyElTypes.add(() -> newValueMt);
+            flip.addKey(KeyType.unknown(call), call).addType(() -> newValueMt, PhpType.MIXED);
         }
         for (String key: newKeys) {
             flip.addKey(key, call).addType(() -> newValueMt, Mt.getIdeaTypeSt(It(newValueMt.types)));
@@ -133,7 +128,7 @@ public class FuncCallRes extends Lang
     {
         String delim = callCtx.getArgMt(0).getStringValues().fst().def(" ");
         It<String> parts = callCtx.getArgMt(1).types
-            .fap(t -> t.keys.values())
+            .fap(t -> t.keys)
             .fap(kv -> kv.getTypes())
             .fop(t -> opt(t.stringValue));
         String joined = Tls.implode(delim, parts);
@@ -300,7 +295,7 @@ public class FuncCallRes extends Lang
             T2("value", PhpType.STRING)
         ));
         DeepType arrt = new DeepType(call, PhpType.ARRAY);
-        arrt.listElTypes.add(() -> new Mt(list(assoct)));
+        arrt.addKey(KeyType.integer(call), call).addType(() -> new Mt(list(assoct)));
         return arrt;
     }
 
@@ -338,7 +333,7 @@ public class FuncCallRes extends Lang
             return assoct;
         } else {
             DeepType arrt = new DeepType(call, PhpType.ARRAY);
-            arrt.listElTypes.add(() -> new Mt(list(assoct)));
+            arrt.addKey(KeyType.integer(call)).addType(() -> new Mt(list(assoct)));
             return arrt;
         }
     }
@@ -400,7 +395,7 @@ public class FuncCallRes extends Lang
                     .fap(mt -> mt.types).map(a -> a);
             } else if (name.equals("array_column")) {
                 DeepType type = new DeepType(call);
-                type.listElTypes.add(Tls.onDemand(() -> {
+                type.addKey(KeyType.integer(call)).addType(Tls.onDemand(() -> {
                     Mt elType = callCtx.getArgMt(0).getEl();
                     @Nullable String keyName = callCtx.getArgMt(1).getStringValue();
                     return elType.getKey(keyName);
@@ -420,9 +415,11 @@ public class FuncCallRes extends Lang
                 return list(implode(callCtx, call));
             } else if (name.equals("array_keys")) {
                 DeepType arrt = new DeepType(call, PhpType.ARRAY);
-                arrt.listElTypes.add(Tls.onDemand(() -> callCtx.getArgMt(0).types
-                    .fap(t -> t.keys.values())
-                    .map(k -> new DeepType(k.definition, PhpType.STRING, k.name))
+                arrt.addKey(KeyType.integer(call)).addType(Tls.onDemand(() -> callCtx.getArgMt(0).types
+                    .fap(t -> t.keys)
+                    .fap(k -> k.keyType.getTypes.get())
+                    .fap(kt -> opt(kt.stringValue)
+                        .map(keyName -> new DeepType(kt.definition, PhpType.STRING, keyName)))
                     .wap(types -> new Mt(types))));
                 return list(arrt);
             } else if (name.equals("func_get_args")) {
@@ -443,7 +440,8 @@ public class FuncCallRes extends Lang
                     .fap(t -> t.getReturnTypes(newCtx)).map(a -> a);
             } else if (name.equals("explode")) {
                 DeepType arrt = new DeepType(call, PhpType.ARRAY);
-                arrt.listElTypes.add(() -> new Mt(list(new DeepType(call, PhpType.STRING))));
+                arrt.addKey(KeyType.integer(call))
+                    .addType(() -> new Mt(list(new DeepType(call, PhpType.STRING))), PhpType.STRING);
                 return list(arrt);
             } else if (name.equals("curl_getinfo") && !callCtx.getArg(1).has()) {
                 return list(curl_getinfo(call));
@@ -484,11 +482,11 @@ public class FuncCallRes extends Lang
         FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
         return It.cnc(
             findBuiltInFuncCallType(funcCall),
-            opt(funcCall.getFirstChild()).itr()
+            opt(funcCall.getFirstChild())
                 .fop(toCast(PhpExpression.class))
                 .fap(funcVar -> ctx.findExprType(funcVar))
                 .fap(t -> t.getReturnTypes(funcCtx)),
-            opt(funcCall.resolve()).itr()
+            opt(funcCall.resolve())
                 .fop(Tls.toCast(FunctionImpl.class))
                 .fap(func -> new ClosRes(ctx).resolve(func).getReturnTypes(funcCtx))
         );

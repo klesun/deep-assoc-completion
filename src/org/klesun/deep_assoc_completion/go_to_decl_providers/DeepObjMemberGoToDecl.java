@@ -17,6 +17,8 @@ import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 
+import java.util.Objects;
+
 /**
  * for cases when built-in Type Provider failed to determine
  * class of object - try ourselves using the Deep Resolver
@@ -50,7 +52,8 @@ public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandle
                     ArrCtorRes.resolveMtCls(mt, mem.getProject())
                         .fap(cls -> resolveMember(cls, mem.getName())),
                     mt.getProps()
-                        .flt(prop -> prop.name.equals(mem.getName()))
+                        .fap(prop -> prop.keyType.getTypes.get())
+                        .flt(propt -> Objects.equals(propt.stringValue, mem.getName()))
                         .map(prop -> prop.definition)
                 ).fap(a -> a))
             ).arr();

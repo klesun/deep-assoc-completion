@@ -1,10 +1,11 @@
 package org.klesun.deep_assoc_completion.helpers;
 
+import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.lang.Dict;
-import org.klesun.lang.It;
-import org.klesun.lang.L;
+import org.klesun.lang.*;
+
 import static org.klesun.lang.Lang.*;
 
 import static org.klesun.lang.Lang.list;
@@ -13,43 +14,38 @@ import static org.klesun.lang.Lang.opt;
 /** is there actually a point in having this and Mt as two separate classes? */
 public class KeyType
 {
-    public enum EKeyType {STRING, INTEGER, UNKNOWN}
+    final public S<MemoizingIterable<DeepType>> getTypes;
+    final public PsiElement definition;
 
-    final public EKeyType keyType;
-    final private L<DeepType> types;
-
-    private KeyType(EKeyType keyType, @NotNull L<DeepType> types)
+    private KeyType(S<MemoizingIterable<DeepType>> getTypes, PsiElement definition)
     {
-        this.keyType = keyType;
-        this.types = types;
+        this.definition = definition;
+        this.getTypes = getTypes;
     }
 
-    public static KeyType mt(Mt mt)
+    public static KeyType mt(S<It<DeepType>> mtg, PsiElement definition)
     {
-        return mt.getStringValues().has()
-            ? new KeyType(EKeyType.STRING, mt.types.arr())
-            : (mt.isInt()
-                ? KeyType.integer()
-                : KeyType.unknown());
+        Iterable<DeepType> anyt = som(new DeepType(definition, PhpType.MIXED));
+        return new KeyType(Tls.onDemand(() -> new MemoizingIterable<>(mtg.get().def(anyt).iterator())), definition);
     }
 
-    public static KeyType integer()
+    public static KeyType integer(PsiElement psi)
     {
-        return new KeyType(EKeyType.INTEGER, list());
+        return new KeyType(() -> new MemoizingIterable<>(som(new DeepType(psi, PhpType.INT)).iterator()), psi);
     }
 
-    public static KeyType unknown()
+    public static KeyType unknown(PsiElement psi)
     {
-        return new KeyType(EKeyType.UNKNOWN, list());
+        return new KeyType(() -> new MemoizingIterable<>(som(new DeepType(psi, PhpType.MIXED)).iterator()), psi);
     }
 
     public It<String> getNames()
     {
-        return new Mt(types).getStringValues();
+        return getTypes.get().fap(t -> opt(t.stringValue));
     }
 
-    public Dict<L<DeepType>> getNameToMt()
+    public It<T2<String, DeepType>> getNameToMt()
     {
-        return types.gop(t -> opt(t.stringValue));
+        return getTypes.get().fap(t -> opt(t.stringValue).map(str -> T2(str, t)));
     }
 }

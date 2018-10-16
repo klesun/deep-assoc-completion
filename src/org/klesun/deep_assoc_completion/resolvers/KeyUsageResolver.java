@@ -6,6 +6,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
@@ -175,7 +176,7 @@ public class KeyUsageResolver extends Lang
                 .fop(toCast(Function.class))) // TODO: support in a var
             .fap(func -> {
                 DeepType arrt = new DeepType(argList, PhpType.ARRAY);
-                arrt.anyKeyElTypes.add(Tls.onDemand(() -> resolveArgUsedKeys(func, 0, fakeCtx.subCtxSingleArgArr(arrCtor))));
+                arrt.addKey(KeyType.unknown(argList)).addType(Tls.onDemand(() -> resolveArgUsedKeys(func, 0, fakeCtx.subCtxSingleArgArr(arrCtor))));
                 return list(arrt);
             });
     }

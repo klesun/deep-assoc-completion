@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -163,7 +164,7 @@ public class Tls extends Lang
 
     public static It<Integer> range(int l, int r)
     {
-        return new It<>(IntStream.range(l, r).boxed());
+        return new It<>(IntStream.range(l, r).boxed().collect(Collectors.toList()));
     }
 
     /**

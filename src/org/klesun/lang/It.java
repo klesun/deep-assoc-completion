@@ -1,6 +1,7 @@
 package org.klesun.lang;
 
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.lang.iterators.FlatMapIterator;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -21,16 +22,15 @@ public class It<A> implements Iterable<A>
 {
     private Opt<Iterator<A>> iterator = Lang.non();
     private Iterable<A> source;
+    private Opt<Exception> createdAt = Lang.non();
     private Opt<Exception> disposedAt = Lang.non();
     private boolean disposed = false;
 
-    public It(Stream<A> sourceStream)
-    {
-        this.source = sourceStream::iterator;
-    }
-
     public It(Iterable<A> sourceIter)
     {
+        if (SearchContext.DEBUG_DEFAULT) {
+            createdAt = som(new Exception("here iterator was created"));
+        }
         this.source = sourceIter;
     }
 
@@ -67,21 +67,7 @@ public class It<A> implements Iterable<A>
     {
         // my implementation of these functions seems to be slower than built-in Stream-s, but I can't
         // make Stream versions to actually return a lazy iterator without instantly resolving all values
-        L<Iterator<B>> sources = L(args).map(arr -> arr.iterator()).arr();
-        Iterable<B> iter = () -> new Iterator<B>() {
-            public boolean hasNext() {
-                return sources.any(it -> it.hasNext());
-            }
-            public B next() {
-                for (Iterator<B> it: sources) {
-                    if (it.hasNext()) {
-                        return it.next();
-                    }
-                }
-                throw new NoSuchElementException("huj");
-            }
-        };
-        return new It<>(iter);
+        return It(args).fap(ble -> ble);
 //        return new It<>(Arrays.stream(args)
 //            .flatMap(iter -> StreamSupport.stream(iter.spliterator(), false)));
     }
@@ -138,7 +124,7 @@ public class It<A> implements Iterable<A>
                 return sourceIt.hasNext();
             }
             public B next() {
-                return mapper.apply(sourceIt.next(), ++pos);
+                return mapper.apply(sourceIt.next(), pos++);
             }
         });
 //        Mutable<Integer> mutI = new Mutable<>(0);
@@ -154,16 +140,16 @@ public class It<A> implements Iterable<A>
         Iterator<A> sourceIt = dispose();
         return new It<>(() -> new Iterator<A>(){
             Opt<A> current = Lang.non();
-            int i = 0;
+            int i = -1;
             private Opt<A> getCurrent() {
                 if (!current.has()) {
                     while (sourceIt.hasNext()) {
                         A value = sourceIt.next();
+                        ++i;
                         if (pred.apply(value, i)) {
                             this.current = som(value);
                             break;
                         }
-                        ++i;
                     }
                 }
                 return this.current;
@@ -191,31 +177,8 @@ public class It<A> implements Iterable<A>
 
     public <B> It<B> fap(F2<A, Integer, Iterable<B>> flatten)
     {
-        Iterator<A> sourceIt = dispose();
-        return new It<>(() -> new Iterator<B>(){
-            Iterator<B> current = new L<B>().iterator();
-            int i = 0;
-            private Opt<S<B>> getNextSup() {
-                if (current.hasNext()) {
-                    return som(() -> current.next());
-                } else {
-                    while (sourceIt.hasNext()) {
-                        current = flatten.apply(sourceIt.next(), i).iterator();
-                        if (current.hasNext()) {
-                            return som(() -> current.next());
-                        }
-                        ++i;
-                    }
-                    return Lang.non();
-                }
-            }
-            public boolean hasNext() {
-                return getNextSup().has();
-            }
-            public B next() {
-                return getNextSup().unw().get();
-            }
-        });
+        Iterator<A> iter = dispose();
+        return It(() -> new FlatMapIterator<>(iter, flatten));
 //        Mutable<Integer> mutI = new Mutable<>(0);
 //        return new It<>(disposeStream()
 //            .map(el -> {
@@ -243,12 +206,26 @@ public class It<A> implements Iterable<A>
 
     public It<A> unq()
     {
-        Set occurences = new HashSet<>();
+        Set<A> occurences = new HashSet<>();
         return flt(t -> {
             if (occurences.contains(t)) {
                 return false;
             } else {
                 occurences.add(t);
+                return true;
+            }
+        });
+    }
+
+    public It<A> unq(F<A, String> getHash)
+    {
+        Set<String> occurences = new HashSet<>();
+        return flt(t -> {
+            String hash = getHash.apply(t);
+            if (occurences.contains(hash)) {
+                return false;
+            } else {
+                occurences.add(hash);
                 return true;
             }
         });
@@ -263,6 +240,20 @@ public class It<A> implements Iterable<A>
     {
         dispose().forEachRemaining(f);
         //disposeStream().forEach(f);
+    }
+
+    // like fch() but executed not at once, but when iterator is actually disposed. for debug
+    public It<A> thn(C2<A, Integer> f)
+    {
+        return flt((el,i) -> {
+            f.accept(el, i);
+            return true;
+        });
+    }
+
+    public It<A> thn(C<A> f)
+    {
+        return thn((el,i) -> f.accept(el));
     }
 
     public void fch(C2<A, Integer> f)
@@ -293,6 +284,11 @@ public class It<A> implements Iterable<A>
 
     public boolean has()
     {
+        if (disposed) {
+            RuntimeException exc = new NoSuchElementException("Tried to re-use disposed iterator");
+            disposedAt.thn(exc::initCause);
+            throw exc;
+        }
         return getIterator().hasNext();
     }
 
@@ -352,5 +348,17 @@ public class It<A> implements Iterable<A>
     public Iterator<A> iterator()
     {
         return dispose();
+    }
+
+    public int hashCode()
+    {
+        return source.hashCode();
+    }
+
+    public boolean equals(Object thatRaw)
+    {
+        return Tls.cast(It.class, thatRaw)
+            .flt(that -> that.source == this.source)
+            .has();
     }
 }

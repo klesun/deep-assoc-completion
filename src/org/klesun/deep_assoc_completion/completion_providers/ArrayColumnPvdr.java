@@ -46,33 +46,24 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters> im
             .withTypeText(type);
     }
 
-    private static LookupElement makeLookup(DeepType.Key keyEntry)
-    {
-        String type = keyEntry.getTypes().fst().map(t -> t.briefType.toString()).def("unknown");
-        return makeLookupBase(keyEntry.name, type);
-    }
-
-    private static It<LookupElement> makeOptions(It<DeepType> tit)
+    private static It<LookupElementBuilder> makeOptions(It<DeepType> tit)
     {
         Set<String> suggested = new HashSet<>();
         Mutable<Boolean> hadArrt = new Mutable<>(false);
-        return tit.fap(type -> It.cnc(
-            It(type.keys.values())
-                .flt(k -> !suggested.contains(k.name))
-                .map(k -> {
-                    suggested.add(k.name);
-                    return makeLookup(k);
-                }),
-            It(type.getListElemTypes()).fst().flt(t -> type.keys.size() == 0).fap(t -> {
-                if (!hadArrt.get()) {
+        return tit.fap(type -> type.keys
+            .fap(k -> k.keyType.getTypes.get().fap(kt -> {
+                String typeStr = k.getTypes().fst().map(t -> t.briefType.toString()).def("unknown");
+                if (kt.stringValue != null) {
+                    if (!suggested.contains(kt.stringValue)) {
+                        suggested.add(kt.stringValue);
+                        return It(som(makeLookupBase(kt.stringValue, typeStr)));
+                    }
+                } else if (!hadArrt.get() && kt.isNumber()) {
                     hadArrt.set(true);
-                    return Tls.range(0, 5).map(k -> makeLookupBase(k + "",
-                        t.briefType.toString()).withBoldness(false));
-                } else {
-                    return list();
+                    return Tls.range(0, 5).map(i -> makeLookupBase(i + "", typeStr).withBoldness(false));
                 }
-            })
-        ));
+                return It.non();
+            })));
     }
 
     // array_intersect($cmdTypes, ['redisplayPnr', 'itinerary', 'airItinerary', 'storeKeepPnr', 'changeArea', ''])
@@ -136,8 +127,10 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters> im
             .map(psi -> psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
             .fap(literal -> resolve(literal, false, editor)
-                .fop(arrayType -> getKey(arrayType.keys, literal.getContents()))
-                .map(keyRec -> keyRec.definition))
+                .fap(arrayType -> arrayType.keys)
+                .fap(k -> k.keyType.getTypes.get())
+                .flt(kt -> literal.getContents().equals(kt.stringValue)))
+            .map(t -> t.definition)
             .arr();
 
         removeDuplicates(psiTargets);

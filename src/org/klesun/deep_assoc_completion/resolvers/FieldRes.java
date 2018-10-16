@@ -92,7 +92,7 @@ public class FieldRes extends Lang
         It<DeepType> propDocTs = It(list());
         if (!declarations.has()) {
             propDocTs = getObjMt.get().getProps()
-                .flt(prop -> prop.name.equals(fieldRef.getName()))
+                .flt(prop -> prop.keyType.getNames().any(n -> n.equals(fieldRef.getName())))
                 .fap(prop -> prop.getTypes());
         }
         It<DeepType> declTypes = declarations

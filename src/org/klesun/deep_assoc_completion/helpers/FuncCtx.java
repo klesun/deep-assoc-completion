@@ -94,7 +94,7 @@ public class FuncCtx extends Lang
             if (orderObj.isVariadic) {
                 return uniqueRef.map(ref -> fromVariadic.unw().getInArray(ref)).map(t -> new Mt(list(t)));
             } else {
-                return opt(fromVariadic.itr().fap(mt -> mt.types).wap(Mt::new));
+                return opt(fromVariadic.fap(mt -> mt.types).wap(Mt::new));
             }
         } else if (!orderObj.isVariadic) {
             int index = orderObj.order;
@@ -131,7 +131,7 @@ public class FuncCtx extends Lang
     {
         int oldDepth = search.depthLeft;
         search.setDepth(Math.min(oldDepth, limit));
-        It<DeepType> result = It(search.findExprType(expr, this));
+        It<DeepType> result = findExprType(expr);
         search.setDepth(oldDepth);
         return result;
     }

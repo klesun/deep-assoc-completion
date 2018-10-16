@@ -585,7 +585,10 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         $list[] = [$bombs[2], ['missileDensity' => [], 'missileDamage' => [], 'arcDegree' => []]];
 
         $kira = new \DeepTest\KiraYoshikage();
+        ([$kira, 'murder'])()[''];
+
         $murderedNumbers = array_map([$kira, 'murder'], [1,2,3]);
+        $murderedNumbers[0][''];
         $list[] = [$murderedNumbers[0], ['mood' => [], 'murderMethods' => []]];
 
         $barrels = array_map(['self', 'makeBarrel'], [0,1,2,3,4]);

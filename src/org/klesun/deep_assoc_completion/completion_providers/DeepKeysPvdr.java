@@ -161,27 +161,24 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // preliminary keys without type - they may be at least 3 times faster in some cases
 
         It<DeepType> tit = resolveAtPsi(caretPsi, new FuncCtx(search));
-        L<DeepType> types = list();
         Set<String> keyNames = new LinkedHashSet<>();
         System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");
         tit.has();
         System.out.println("checked if iterator has anything, took " + search.getExpressionsResolved() + " expressions");
 
-        // TODO: add some sleep-s between suggestions to make IDEA not so laggy during continuous type resolution
-
-        tit.fch((t, i) -> {
-            types.add(t);
-            t.keys.values().forEach(k -> {
-                if (firstTime.get() == -1) {
-                    System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + Tls.implode(", ", t.keys.keySet()));
-                    firstTime.set(System.nanoTime() - startTime);
-                }
-                String keyName = k.name;
+        Mt mt = new Mt(tit);
+        mt.types.fap(t -> t.keys).fch((k,i) -> {
+            k.keyType.getNames().fch(keyName -> {
                 if (!keyNames.contains(keyName)) {
+                    if (firstTime.get() == -1) {
+                        System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
+                        firstTime.set(System.nanoTime() - startTime);
+                    }
                     keyNames.add(keyName);
                     LookupElement justName = makePaddedLookup(keyName, "resolving...", "");
                     MutableLookup mutLookup = new MutableLookup(justName, includeQuotes);
-                    result.addElement(PrioritizedLookupElement.withPriority(mutLookup, 2000 - keyNames.size()));
+                    int basePriority = Tls.isNum(keyName) ? 2000 : 2500;
+                    result.addElement(PrioritizedLookupElement.withPriority(mutLookup, basePriority - keyNames.size()));
                     lookups.add(mutLookup);
 
                     String briefTypeRaw = Mt.getKeyBriefTypeSt(k.getBriefTypes()).filterUnknown().toStringResolved();
@@ -194,7 +191,6 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() +
             " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0));
 
-        Mt mt = new Mt(types);
         It<DeepType> indexTypes = mt.types.fap(t -> t.getListElemTypes());
         if (indexTypes.has()) {
             Mt idxMt = new Mt(indexTypes);

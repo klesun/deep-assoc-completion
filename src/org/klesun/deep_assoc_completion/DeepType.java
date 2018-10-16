@@ -8,6 +8,7 @@ import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
@@ -19,13 +20,9 @@ import java.util.*;
  */
 public class DeepType extends Lang
 {
-    // keys and typeGetters of associative array
-    public final LinkedHashMap<String, Key> keys = new LinkedHashMap<>();
+    public final L<Key> keys = new L<>();
     // just like array keys, but dynamic object properties
     public final Dict<Key> props = new Dict<>(L());
-    // possible typeGetters of list element
-    public L<S<Mt>> anyKeyElTypes = new L<>();
-    public L<S<Mt>> listElTypes = new L<>();
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
@@ -39,7 +36,6 @@ public class DeepType extends Lang
     public final PhpType briefType;
     public boolean isNumber = false;
     final public boolean isExactPsi;
-    public boolean hasIntKeys = false;
 
     private DeepType(PsiElement definition, PhpType briefType, String stringValue, boolean isExactPsi)
     {
@@ -96,35 +92,55 @@ public class DeepType extends Lang
 
     public It<DeepType> getListElemTypes()
     {
-        return listElTypes.cct(anyKeyElTypes).fap(s -> s.get().types);
+        // TODO: get rid of this function, we should not iterate through all types during resolution
+        return keys
+            .flt(k -> k.typeGetters.has() && k.keyType.getTypes.get().any(kt -> kt.isNumber() || kt.stringValue == null))
+            .fap(k -> k.typeGetters.fap(mtg -> mtg.get().types));
     }
 
     public Key addKey(String name, PsiElement definition)
     {
-        Key keyEntry = new Key(name, definition);
-        keys.put(keyEntry.name, keyEntry);
+        DeepType kt = new DeepType(definition, PhpType.STRING, name);
+        KeyType keyType = KeyType.mt(() -> It(som(kt)), definition);
+        Key keyEntry = new Key(keyType, definition);
+        keys.add(keyEntry);
         return keyEntry;
+    }
+
+    public Key addKey(KeyType keyType, PsiElement definition)
+    {
+        Key keyEntry = new Key(keyType, definition);
+        keys.add(keyEntry);
+        return keyEntry;
+    }
+
+    public Key addKey(KeyType keyType)
+    {
+        return addKey(keyType, keyType.definition);
     }
 
     public Key addProp(String name, PsiElement definition)
     {
-        Key keyEntry = new Key(name, definition);
-        props.put(keyEntry.name, keyEntry);
+        DeepType kt = new DeepType(definition, PhpType.STRING, name);
+        KeyType keyType = KeyType.mt(() -> It(som(kt)), definition);
+        Key keyEntry = new Key(keyType, definition);
+        props.put(name, keyEntry);
         return keyEntry;
     }
 
     public static class Key
     {
-        final public String name;
+        final public KeyType keyType;
+        // TODO: rename to valueTypeGetters
         final private L<S<Mt>> typeGetters = L();
         // to get quick built-in type info
         final private L<PhpType> briefTypes = L();
         // where Go To Definition will lead
         final public PsiElement definition;
 
-        private Key(String name, PsiElement definition)
+        private Key(KeyType keyType, PsiElement definition)
         {
-            this.name = name;
+            this.keyType = keyType;
             this.definition = definition;
         }
 
@@ -132,6 +148,11 @@ public class DeepType extends Lang
         {
             typeGetters.add(Tls.onDemand(getter));
             briefTypes.add(briefType);
+        }
+
+        public void addType(S<Mt> getter)
+        {
+            addType(getter, PhpType.MIXED);
         }
 
         public It<DeepType> getTypes()
@@ -174,11 +195,13 @@ public class DeepType extends Lang
         List<String> briefTypes = list();
 
         types.forEach(t -> {
-            t.keys.forEach((k,v) -> {
-                if (!mergedKeys.containsKey(k)) {
-                    mergedKeys.put(k, list());
-                }
-                v.getTypes().fch(el -> mergedKeys.get(k).add(el));
+            t.keys.forEach((v) -> {
+                v.keyType.getNames().fch(k -> {
+                    if (!mergedKeys.containsKey(k)) {
+                        mergedKeys.put(k, list());
+                    }
+                    v.getTypes().fch(el -> mergedKeys.get(k).add(el));
+                });
             });
             t.getListElemTypes().forEach(indexTypes::add);
             briefTypes.add(opt(t.stringValue).def(t.briefType.filterUnknown().toString()));
@@ -216,7 +239,8 @@ public class DeepType extends Lang
 
     public boolean hasNumberIndexes()
     {
-        return hasIntKeys || It(keys.values()).any(k -> Tls.regex("^\\d+$", k.name).has());
+        // TODO: get rid of this function, we should not iterate through all types during resolution
+        return It(keys).any(k -> k.keyType.getTypes.get().any(kt -> kt.isNumber()));
     }
 
     public boolean isNumber()

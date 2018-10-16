@@ -349,7 +349,7 @@ class ExactKeysUnitTest
             'pcc' => 'KL34 ',
             'airline' => '',
             'originType' => 'agency',
-            'teamInitials' =>'  ',
+            'teamInitials' => '',
         ];
         $clean = array_map(function($match) { return trim($match) ?: null; }, $dict);
         $clean[''];

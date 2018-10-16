@@ -10,6 +10,7 @@ import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
@@ -44,8 +45,8 @@ public class ArrCtorRes extends Lang
     {
         It<PhpClass> resolved = opt(mtArg)
             .map(mt -> mt.getIdeaType())
-            .map(tpe -> resolveIdeaTypeCls(tpe, project))
-            .fap(clses -> clses);
+            .fap(tpe -> resolveIdeaTypeCls(tpe, project))
+            ;
         if (!resolved.has()) {
             // allow no namespace in php doc class references
             PhpIndex idx = PhpIndex.getInstance(project);
@@ -65,9 +66,7 @@ public class ArrCtorRes extends Lang
 
     public It<PhpClass> resolveObjCls(PhpExpression expr)
     {
-        Mt mt = opt(expr)
-            .fap(xpr -> ctx.findExprType(xpr))
-            .wap(Mt::new);
+        Mt mt = new Mt(ctx.findExprType(expr));
         return resolveMtCls(mt, expr.getProject());
     }
 
@@ -109,11 +108,10 @@ public class ArrCtorRes extends Lang
             .fop(toCast(StringLiteralExpression.class))
             .map(lit -> lit.getContents())
             .fap(met -> refParts.gat(0)
-                .fap(clsPsi -> list(
-                    resolveClass(clsPsi).fap(a -> list(a)),
+                .fap(clsPsi -> It.cnc(
+                    resolveClass(clsPsi),
                     resolveInstance(clsPsi)
                 ))
-                .fap(a -> a)
                 .fop(cls -> opt(cls.findMethodByName(met))));
     }
 
@@ -153,7 +151,7 @@ public class ArrCtorRes extends Lang
                                 .addKey(key, ctx.getRealPsi(keyRec))
                                 .addType(getType, Tls.getIdeaType(v)));
                         } else {
-                            arrayType.anyKeyElTypes.add(getType);
+                            arrayType.addKey(KeyType.unknown(keyRec)).addType(getType);
                         }
                     });
             }));

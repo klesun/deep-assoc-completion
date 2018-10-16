@@ -67,9 +67,9 @@ public class RunTest extends AnAction
                 CaseContext ctx = new CaseContext(logger);
                 ctx.dataProviderName = func.getName();
                 ctx.testNumber = i;
-                return opt(rett.keys.get("0"))
-                    .fap(actual -> opt(rett.keys.get("1"))
-                        .fap(expected -> list(T3(ctx, actual, expected))));
+                return rett.keys.flt(k -> k.keyType.getNames().any(n -> n.equals("0")))
+                    .fap(actual -> rett.keys.flt(k -> k.keyType.getNames().any(n -> n.equals("1")))
+                        .map(expected -> T3(ctx, actual, expected)));
             });
     }
 
@@ -84,10 +84,11 @@ public class RunTest extends AnAction
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
             .fap(tuple -> {
-                L<String> actualKeys = tuple.b.getTypes().fap(t -> t.keys.keySet()).arr();
+                L<String> actualKeys = tuple.b.getTypes().fap(t -> t.keys).fap(k -> k.keyType.getNames()).arr();
                 L<String> expectedKeys = new Mt(tuple.c.getTypes())
                     .getKey(null).getStringValues().arr();
                 try {
+                    //logger.logMsg("doing " + tuple.a.dataProviderName + " #" + tuple.a.testNumber);
                     return tuple.a.testCaseExact(actualKeys, expectedKeys);
                 } catch (RuntimeException exc) {
                     String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
@@ -102,6 +103,7 @@ public class RunTest extends AnAction
             .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
             .fap(tuple -> {
                 try {
+                    //logger.logMsg("doing " + tuple.a.dataProviderName + " #" + tuple.a.testNumber);
                     return tuple.a.testCasePartial(list(tuple.b), tuple.c);
                 } catch (RuntimeException exc) {
                     String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
@@ -140,10 +142,11 @@ public class RunTest extends AnAction
             L<Error> errors = list();
 
             DeepType expectedt = expected.getTypes().fst().unw();
-            expectedt.keys.forEach((subKey, subExpected) -> {
+            expectedt.keys.fch((subExpected) -> subExpected.keyType.getNames().fch(subKey -> {
                 It<DeepType.Key> havingKey = It(actual)
                     .fap(krecs -> krecs.getTypes())
-                    .fop(t -> opt(t.keys.get(subKey)));
+                    .fap(t -> t.keys)
+                    .flt(k -> k.keyType.getNames().any(n -> n.equals(subKey)));
 
                 if (!havingKey.has()) {
                     logger.logErrShort();
@@ -154,7 +157,7 @@ public class RunTest extends AnAction
                     testCasePartial(havingKey.arr(), subExpected);
                     keyChain.remove(keyChain.size() - 1);
                 }
-            });
+            }));
 
             return errors;
         }
