@@ -82,7 +82,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         briefVal = briefVal + "                                                                ";
         briefVal = Tls.substr(briefVal, 0, BRIEF_TYPE_MAX_LEN - keyName.length());
         return LookupElementBuilder.create(keyName)
-            .bold()
+            .withBoldness(!Tls.isNum(keyName))
             .withInsertHandler(makeInsertHandler())
             .withTailText(briefVal, true)
             .withIcon(getIcon())
