@@ -824,7 +824,7 @@ class DeepKeysTest
             'SELECT * FROM delete_me WHERE name = :name AND price < :price;',
         ]), [
             // should suggest: name, price
-            'price' => '123',
+            '' => '123',
         ]);
 
     }

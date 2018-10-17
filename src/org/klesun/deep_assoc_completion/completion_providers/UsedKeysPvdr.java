@@ -85,7 +85,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
                     .fop(toCast(StringLiteralExpressionImpl.class))
                     .map(lit -> lit.getContents()).wap(tit -> new HashSet<>(tit.arr()));
                 return resolve(arrCtor, parameters.isAutoPopup(), parameters.getEditor())
-                    .types.fap(t -> t.keys.flt(k -> k.keyType.getNames().all(n -> alreadyDeclared.contains(n))));
+                    .types.fap(t -> t.keys.flt(k -> k.keyType.getNames().any(n -> !alreadyDeclared.contains(n))));
             });
 
         usedKeys.fap(k -> makeLookup(k))
