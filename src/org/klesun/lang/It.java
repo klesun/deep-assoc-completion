@@ -1,7 +1,7 @@
 package org.klesun.lang;
 
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
-import org.klesun.lang.iterators.FlatMapIterator;
+import org.klesun.lang.iterators.*;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -36,15 +36,7 @@ public class It<A> implements Iterable<A>
 
     public It(A[] source)
     {
-        this(() -> new Iterator<A>() {
-            private int pos = 0;
-            public boolean hasNext() {
-                return source.length > pos;
-            }
-            public A next() {
-                return source[pos++];
-            }
-        });
+        this(() -> new ArrayIterator<>(source));
     }
 
     public static <B> It<B> non()
@@ -117,16 +109,8 @@ public class It<A> implements Iterable<A>
 
     public <B> It<B> map(F2<A, Integer, B> mapper)
     {
-        Iterator<A> sourceIt = dispose();
-        return new It<>(() -> new Iterator<B>(){
-            int pos = 0;
-            public boolean hasNext() {
-                return sourceIt.hasNext();
-            }
-            public B next() {
-                return mapper.apply(sourceIt.next(), pos++);
-            }
-        });
+        Iterator<B> mator = new MapIterator<>(dispose(), mapper);
+        return new It<>(() -> mator);
 //        Mutable<Integer> mutI = new Mutable<>(0);
 //        return new It<>(disposeStream().map(el -> {
 //            int i = mutI.get();
@@ -137,32 +121,8 @@ public class It<A> implements Iterable<A>
 
     public It<A> flt(F2<A, Integer, Boolean> pred)
     {
-        Iterator<A> sourceIt = dispose();
-        return new It<>(() -> new Iterator<A>(){
-            Opt<A> current = Lang.non();
-            int i = -1;
-            private Opt<A> getCurrent() {
-                if (!current.has()) {
-                    while (sourceIt.hasNext()) {
-                        A value = sourceIt.next();
-                        ++i;
-                        if (pred.apply(value, i)) {
-                            this.current = som(value);
-                            break;
-                        }
-                    }
-                }
-                return this.current;
-            }
-            public boolean hasNext() {
-                return getCurrent().has();
-            }
-            public A next() {
-                A value = getCurrent().unw();
-                current = Lang.non();
-                return value;
-            }
-        });
+        Iterator<A> fitor = new FilterIterator<>(dispose(), pred);
+        return new It<>(() -> fitor);
 //        return new It<>(disposeStream().filter(el -> {
 //            int i = mutI.get();
 //            mutI.set(i + 1);
@@ -177,8 +137,8 @@ public class It<A> implements Iterable<A>
 
     public <B> It<B> fap(F2<A, Integer, Iterable<B>> flatten)
     {
-        Iterator<A> iter = dispose();
-        return It(() -> new FlatMapIterator<>(iter, flatten));
+        Iterator<B> fator = new FlatMapIterator<>(dispose(), flatten);
+        return It(() -> fator);
 //        Mutable<Integer> mutI = new Mutable<>(0);
 //        return new It<>(disposeStream()
 //            .map(el -> {
@@ -331,18 +291,8 @@ public class It<A> implements Iterable<A>
     // includes the value on which endPred returned true
     public It<A> end(F<A, Boolean> endPred)
     {
-        Iterator<A> sourceIt = dispose();
-        return new It<>(() -> new Iterator<A>(){
-            boolean end = false;
-            public boolean hasNext() {
-                return !end && sourceIt.hasNext();
-            }
-            public A next() {
-                A next = sourceIt.next();
-                end = endPred.apply(next);
-                return next;
-            }
-        });
+        Iterator<A> endor = new EndIterator<>(dispose(), endPred);
+        return new It<>(() -> endor);
     }
 
     public Iterator<A> iterator()
