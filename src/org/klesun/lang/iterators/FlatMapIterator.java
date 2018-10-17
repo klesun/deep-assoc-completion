@@ -16,11 +16,9 @@ public class FlatMapIterator<A, B> implements Iterator<B> {
         // hundreds of thousands of types come here. this is probably wrong and should be fixed
         this.iterables = It(() -> sourceIt)
             .map((el, i) -> flatten.apply(el,i))
-            //.unq()
-//            .flt((el,i) -> {
-//                System.out.println("unq fap " + i + " " + el.getClass());
-//                return true;
-//            })
+            // this does not seem a good solution since it slows tests
+            // it would be better if there were no duplicates in the first place
+            .unq(ble -> ble instanceof It ? ((It<B>) ble).getSourceHash() : ble)
             ;
     }
 

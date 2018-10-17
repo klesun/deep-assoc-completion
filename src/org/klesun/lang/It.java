@@ -217,11 +217,11 @@ public class It<A> implements Iterable<A>
         });
     }
 
-    public It<A> unq(F<A, String> getHash)
+    public It<A> unq(F<A, Object> getHash)
     {
-        Set<String> occurences = new HashSet<>();
+        Set<Object> occurences = new HashSet<>();
         return flt(t -> {
-            String hash = getHash.apply(t);
+            Object hash = getHash.apply(t);
             if (occurences.contains(hash)) {
                 return false;
             } else {
@@ -350,15 +350,9 @@ public class It<A> implements Iterable<A>
         return dispose();
     }
 
-    public int hashCode()
+    /** Don't even think of casting it to the Iterable. Seriously, don't. */
+    public Object getSourceHash()
     {
-        return source.hashCode();
-    }
-
-    public boolean equals(Object thatRaw)
-    {
-        return Tls.cast(It.class, thatRaw)
-            .flt(that -> that.source == this.source)
-            .has();
+        return source;
     }
 }
