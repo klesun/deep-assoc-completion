@@ -51,7 +51,7 @@ public class ShowDocs extends AnAction
                         .fap(func -> {
                             DeepType arrt = new DeepType(par, PhpType.ARRAY);
                             It<String> keys = new KeyUsageResolver(funcCtx.subCtxEmpty(), 3)
-                                .resolveArgUsedKeys(func, order, funcCtx).getKeyNames();
+                                .resolveArgUsedKeys(func, order, funcCtx).fap(t -> t.keys).fap(k -> k.keyType.getNames()).unq();
                             keys.fch(k -> arrt.addKey(k, psi));
                             return list(arrt);
                         });
