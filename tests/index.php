@@ -877,6 +877,20 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    /**
+     * @param $field = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][$i]
+     */
+    private function weekday(string $field)
+    {
+        print('Pysch! Processed '.$field.PHP_EOL);
+    }
+
+    private function testStringArgCompletion()
+    {
+        // should suggest: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        $this->weekday('');
+    }
+
     private static function testUndefinedKeyError()
     {
         $record = ['a' => 6, 'b' => 8];

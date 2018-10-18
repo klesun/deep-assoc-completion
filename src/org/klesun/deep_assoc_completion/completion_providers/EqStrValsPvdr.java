@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.completion_providers;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
+import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
@@ -33,17 +34,19 @@ import static org.klesun.lang.Lang.*;
 // should suggest possible values of 'type'
 public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> implements GotoDeclarationHandler
 {
-    private static LookupElement makeLookupBase(String keyName, String type)
+    private static LookupElementBuilder makeLookupBase(String keyName, String type)
     {
         return LookupElementBuilder.create(keyName)
-                .bold()
-                .withIcon(DeepKeysPvdr.getIcon())
-                .withTypeText(type);
+            .bold()
+            .withIcon(DeepKeysPvdr.getIcon())
+            .withTypeText(type);
     }
 
     private static It<LookupElement> makeOptions(It<DeepType> tit)
     {
-        return tit.fop(t -> opt(t.stringValue)).unq().map(strVal -> makeLookupBase(strVal, "string"));
+        return tit.fop(t -> opt(t.stringValue)).unq()
+            .map(strVal -> makeLookupBase(strVal, "string"))
+            .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, 2000 - i));
     }
 
     /** $type === '' */
