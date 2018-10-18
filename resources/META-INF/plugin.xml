@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.17.04.001</version>
+    <version>2018.10.18.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,7 +37,9 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Resolve key names in an iterator as well</li>
+        <li>Provide string value completion when string is passed to a function</li>
+        <li>UI: show number options without boldness</li>
+        <li>Suggest number key names as soon as we encounter numeric types</li>
     </ul>
     ]]>
     </change-notes>

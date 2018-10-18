@@ -20,9 +20,9 @@ import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
-import org.klesun.lang.Opt;
 
 import java.util.HashSet;
 import java.util.List;
@@ -62,6 +62,11 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
                 .fop(toCast(PhpExpression.class))
                 .fap(exp -> funcCtx.findExprType(exp)))
             ;
+    }
+
+    private static It<DeepType> resolveUsedValues(StringLiteralExpression lit, FuncCtx funcCtx)
+    {
+        return new KeyUsageResolver(funcCtx, 3).findKeysUsedOnExpr(lit);
     }
 
     /** in_array($type, ['']) */
@@ -126,10 +131,14 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     {
         SearchContext search = new SearchContext(lit.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
+        if (isAutoPopup) {
+            search.overrideMaxExpr = som(200);
+        }
         FuncCtx funcCtx = new FuncCtx(search);
 
         return It.cnc(
             resolveEqExpr(lit, funcCtx),
+            resolveUsedValues(lit, funcCtx),
             resolveInArrayHaystack(lit, funcCtx),
             resolveInArrayNeedle(lit, funcCtx),
             resolveArrayIntersect(lit, funcCtx)
@@ -146,6 +155,10 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
 
         makeOptions(tit).fch(result::addElement);
         long elapsed = System.nanoTime() - startTime;
+        double seconds = elapsed / 1000000000.0;
+        if (seconds > 0.1) {
+            System.out.println("resolved str values in " + seconds + " seconds");
+        }
     }
 
     // ================================

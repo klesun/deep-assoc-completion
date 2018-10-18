@@ -873,10 +873,6 @@ class DeepKeysTest
         $pnr[''];
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     /**
      * @param $field = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][$i]
      */
@@ -889,6 +885,26 @@ class DeepKeysTest
     {
         // should suggest: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         $this->weekday('');
+    }
+
+    //============================
+    // not implemented follow
+    //============================
+
+    private function getProfile(string $profileName)
+    {
+        $profiles = [
+            'dev' => ['password' => 'qwerty123'],
+            'prod' => ['password' => 'qwerty456'],
+            'student' => ['password' => 'qwerty789'],
+        ];
+        return $profiles[$profileName];
+    }
+
+    private function testStringArrayKeyArgCompletion()
+    {
+        // should suggest: ['dev', 'prod', 'student']
+        $this->getProfile('');
     }
 
     private static function testUndefinedKeyError()

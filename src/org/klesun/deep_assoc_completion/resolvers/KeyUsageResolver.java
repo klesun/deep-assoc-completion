@@ -194,7 +194,7 @@ public class KeyUsageResolver extends Lang
                 .map(varName -> T2(varName, pdostt.definition))));
     }
 
-    private It<DeepType> findKeysUsedOnExpr(PhpExpression arrCtor)
+    public It<DeepType> findKeysUsedOnExpr(PhpExpression arrCtor)
     {
         return opt(arrCtor.getParent())
             .fop(toCast(ParameterList.class))
