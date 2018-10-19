@@ -1009,6 +1009,21 @@ class ExactKeysUnitTest
         ];
     }
 
+    public static function provideArrayFillKeys()
+    {
+        $row = array_fill_keys(['id', 'name', 'price', 'currency'], '');
+        $row[''];
+        $list[] = [$row, ['id', 'name', 'price', 'currency']];
+
+        $lreplace = array_replace(['a' => '', 'b' => ''], ['a' => 5, 'b' => 6, 'c' => 7]);
+        $list[] = [$lreplace, ['a', 'b', 'c']];
+
+        $rreplace = array_replace(['a' => '', 'b' => '', 'c' => ''], ['a' => 5, 'b' => 6]);
+        $list[] = [$rreplace, ['a', 'b', 'c']];
+
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

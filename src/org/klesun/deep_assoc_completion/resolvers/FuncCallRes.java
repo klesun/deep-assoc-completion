@@ -85,6 +85,14 @@ public class FuncCallRes extends Lang
         return combine;
     }
 
+    private DeepType array_fill_keys(FuncCtx callCtx, FunctionReferenceImpl call)
+    {
+        return makeAssoc(call, callCtx.getArg(0)
+            .fap(mt -> mt.getEl().getStringValues())
+            .map(keyName -> T2(keyName, PhpType.MIXED))
+            .arr());
+    }
+
     private DeepType array_flip(FuncCtx callCtx, FunctionReferenceImpl call)
     {
         DeepType flip = new DeepType(call, PhpType.ARRAY);
@@ -382,6 +390,8 @@ public class FuncCallRes extends Lang
                 return callCtx.getArgMt(0).types;
             } else if (name.equals("array_combine")) {
                 return list(array_combine(callCtx, call));
+            } else if (name.equals("array_fill_keys")) {
+                return list(array_fill_keys(callCtx, call));
             } else if (name.equals("array_flip")) {
                 return list(array_flip(callCtx, call));
             } else if (name.equals("array_pop") || name.equals("array_shift")
@@ -389,7 +399,9 @@ public class FuncCallRes extends Lang
                     || name.equals("prev") || name.equals("reset")
             ) {
                 return callCtx.getArgMt(0).getEl().types;
-            } else if (name.equals("array_merge")) {
+            } else if (name.equals("array_merge") || name.equals("array_replace")
+                    || name.equals("array_replace_recursive")
+            ) {
                 return Tls.range(0, params.length)
                     .fop(i -> callCtx.getArg(i))
                     .fap(mt -> mt.types).map(a -> a);
