@@ -1024,6 +1024,18 @@ class ExactKeysUnitTest
         return $list;
     }
 
+    public static function provideClassInAVar()
+    {
+        $cls = PersonStorage::class;
+        $obj = new $cls();
+//        $obj = new PersonStorage();
+        $result = $obj->addPerson('Vova', 18);
+        $result[''];
+        return [
+            [$result, ['status', 'spaceLeft']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion;
 
 import com.intellij.psi.*;
 import com.jetbrains.php.lang.psi.elements.AssignmentExpression;
+import com.jetbrains.php.lang.psi.elements.ClassConstantReference;
 import com.jetbrains.php.lang.psi.elements.ParenthesizedExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
@@ -16,7 +17,23 @@ import org.klesun.lang.*;
  */
 public class DeepTypeResolver extends Lang
 {
-    public static It<DeepType> resolveIn(PsiElement expr, FuncCtx ctx)
+    private static It<DeepType> resolveClsConst(ClassConstantReference cst, FuncCtx ctx)
+    {
+        if ("class".equals(cst.getName())) {
+            return opt(cst.getClassReference())
+                .fap(cls -> new MiscRes(ctx).resolveClassReference(cst, cls))
+                .map(ideaType -> DeepType.makeClsRef(cst, ideaType));
+        } else {
+            return It(cst.multiResolve(false))
+                .map(ref -> ref.getElement())
+                .fop(toCast(ClassConstImpl.class))
+                .map(a -> a.getDefaultValue())
+                .fop(toCast(PhpExpression.class))
+                .fap(exp -> new FuncCtx(ctx.getSearch()).findExprType(exp));
+        }
+    }
+
+    public static It<DeepType> resolveIn(PhpExpression expr, FuncCtx ctx)
     {
         It<DeepType> tit = It.frs(() -> It.non()
             , () -> Tls.cast(VariableImpl.class, expr)
@@ -50,13 +67,14 @@ public class DeepTypeResolver extends Lang
                 .map(par -> par.getArgument())
                 .fop(toCast(PhpExpression.class))
                 .fap(val -> ctx.findExprType(val))
-            , () -> Tls.cast(ClassConstantReferenceImpl.class, expr)
-                .fap(cst -> It(cst.multiResolve(false))
-                    .map(ref -> ref.getElement())
-                    .fop(toCast(ClassConstImpl.class))
-                    .map(a -> a.getDefaultValue())
+            , () -> Tls.cast(ClassReferenceImpl.class, expr)
+                .fap(ref -> opt(expr.getFirstChild())
+                    // in `new $someVar()` it is Variable PSI, in `new SomeCls()` it is Leaf PSI
                     .fop(toCast(PhpExpression.class))
-                    .fap(exp -> new FuncCtx(ctx.getSearch()).findExprType(exp)))
+                    .fap(clsVar -> ctx.findExprType(clsVar))
+                    .def(som(DeepType.makeClsRef(expr, expr.getType()))))
+            , () -> Tls.cast(ClassConstantReferenceImpl.class, expr)
+                .fap(cst -> resolveClsConst(cst, ctx))
             , () -> Tls.cast(PhpExpressionImpl.class, expr)
                 .map(v -> v.getFirstChild())
                 .fop(toCast(FunctionImpl.class))

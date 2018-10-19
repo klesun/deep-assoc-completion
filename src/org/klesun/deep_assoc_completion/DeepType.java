@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.psi.elements.ClassConstantReference;
 import com.jetbrains.php.lang.psi.elements.NewExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
@@ -31,6 +32,7 @@ public class DeepType extends Lang
     public final L<DeepType> pdoFetchTypes = L();
     public final LinkedHashSet<String> pdoBindVars = new LinkedHashSet<>();
     public Opt<FuncCtx> ctorArgs = opt(null);
+    public Opt<PhpType> clsRefType = non();
     public final @Nullable String stringValue;
     public final PsiElement definition;
     public final PhpType briefType;
@@ -82,6 +84,14 @@ public class DeepType extends Lang
     {
         DeepType self = new DeepType(newExp, ideaType, null);
         self.ctorArgs = opt(ctorArgs);
+        return self;
+    }
+
+    public static DeepType makeClsRef(PhpExpression definition, PhpType clsType)
+    {
+        It<String> fqns = It(clsType.filterUnknown().filterMixed().filterNull().filterPlurals().filterPrimitives().getTypes());
+        DeepType self = new DeepType(definition, PhpType.STRING, fqns.fst().def(null));
+        self.clsRefType = som(clsType);
         return self;
     }
 

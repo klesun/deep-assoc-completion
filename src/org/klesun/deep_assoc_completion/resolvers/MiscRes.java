@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiPolyVariantReference;
 import com.jetbrains.php.lang.psi.elements.NewExpression;
 import com.jetbrains.php.lang.psi.elements.PhpClass;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
@@ -31,25 +32,35 @@ public class MiscRes extends Lang
             .fap(casted -> ctx.findExprType(casted));
     }
 
-    private Opt<Mt> resolveNew(NewExpression newExp)
+    public It<PhpType> resolveClassReference(PsiPolyVariantReference poly, PhpExpression clsRefPsi)
     {
-        return Opt.fst(
-            () -> opt(newExp.getClassReference())
-                .flt(ref -> ref.getText().equals("static"))
+        return It.frs(
+            // new static()
+            () -> opt(poly)
+                .flt(ref -> clsRefPsi.getText().equals("static"))
                 .fop(ref -> Opt.fst(
                     () -> ctx.clsIdeaType,
-                    () -> Tls.findParent(ref, PhpClass.class, a -> true)
+                    () -> Tls.findParent(clsRefPsi, PhpClass.class, a -> true)
                         .map(cls -> cls.getType())
                 )),
-            () -> opt(newExp)
-                .flt(exp -> opt(exp.getClassReference())
-                    .fap(ref -> It(ref.multiResolve(false)))
-                    .has())
-                .map(exp -> exp.getType())
-        ).map(it -> {
-            FuncCtx ctorArgs = ctx.subCtxDirect(newExp);
-            return DeepType.makeNew(newExp, ctorArgs, it).mt();
-        });
+            // new SomeCls()
+            () -> opt(poly)
+                .flt(ref -> It(ref.multiResolve(false)).has())
+                .map(exp -> clsRefPsi.getType()),
+            // new $clsInAVar()
+            () -> ctx.findExprType(clsRefPsi)
+                .fap(t -> t.clsRefType)
+        );
+    }
+
+    private It<DeepType> resolveNew(NewExpression newExp)
+    {
+        return opt(newExp.getClassReference())
+            .fap(cls -> resolveClassReference(cls, cls))
+            .map(ideaType -> {
+                FuncCtx ctorArgs = ctx.subCtxDirect(newExp);
+                return DeepType.makeNew(newExp, ctorArgs, ideaType);
+            });
     }
 
     public It<DeepType> resolve(PsiElement expr)
@@ -107,8 +118,7 @@ public class MiscRes extends Lang
                         return list(type);
                     }))
             , Tls.cast(NewExpressionImpl.class, expr)
-                .fop(newExp -> resolveNew(newExp))
-                .fap(mt -> mt.types)
+                .fap(newExp -> resolveNew(newExp))
         );
     }
 
