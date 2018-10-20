@@ -189,9 +189,7 @@ public class SearchContext extends Lang
             //System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
             return It.non();
         } else if (timeout.flt(tout -> seconds > tout).has()) {
-            String fileText = expr.getContainingFile().getText();
-            int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
-            System.out.println(indent + "## Timed out " + seconds + " " + expr.getClass() + " " + Tls.singleLine(expr.getText(), 50) + " " + expr.getContainingFile().getName() + ":" + phpLineNum);
+            System.out.println(indent + "## Timed out " + seconds + " " + expr.getClass() + " " + formatPsi(expr));
             return It.non();
         }
 
@@ -204,9 +202,11 @@ public class SearchContext extends Lang
             if (!overrideMaxExpr.has()) {
                 putToCache(funcCtx, expr, list());
             }
-            // .unq() before caching is important since types taken
-            // from cache would grow in count exponentially otherwise
-            It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx).unq();
+
+            It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx)
+                .lmt(1000) // .lmt() is just a safety measure, it should not be needed if everything works properly
+                .unq() // .unq() before caching is important since types taken from cache would grow in count exponentially otherwise
+                ;
             Iterable<DeepType> mit = new MemoizingIterable<>(tit.iterator());
             result = som(mit);
             if (!overrideMaxExpr.has()) {

@@ -89,6 +89,9 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         });
         SearchContext search = new SearchContext(parameters)
             .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
+        if (parameters.isAutoPopup()) {
+            search.overrideMaxExpr = som(200);
+        }
         Dict<Long> times = new Dict<>(list());
         It<? extends PhpClassMember> members = It(list());
         if (builtIns.size() == 0) {

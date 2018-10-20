@@ -6,13 +6,18 @@ import java.util.Iterator;
 
 public class EndIterator<A> implements Iterator<A> {
     private final Iterator<A> sourceIt;
-    private final Lang.F<A, Boolean> endPred;
+    private final Lang.F2<A, Integer, Boolean> endPred;
     boolean end;
+    int i = 0;
 
-    public EndIterator(Iterator<A> sourceIt, Lang.F<A, Boolean> endPred) {
+    public EndIterator(Iterator<A> sourceIt, Lang.F2<A, Integer, Boolean> endPred) {
         this.sourceIt = sourceIt;
         this.endPred = endPred;
         end = false;
+    }
+
+    public EndIterator(Iterator<A> sourceIt, Lang.F<A, Boolean> endPred) {
+        this(sourceIt, (el,i) -> endPred.apply(el));
     }
 
     public boolean hasNext() {
@@ -21,7 +26,7 @@ public class EndIterator<A> implements Iterator<A> {
 
     public A next() {
         A next = sourceIt.next();
-        end = endPred.apply(next);
+        end = endPred.apply(next, i++);
         return next;
     }
 }

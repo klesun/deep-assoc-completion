@@ -177,6 +177,12 @@ public class It<A> implements Iterable<A>
         });
     }
 
+    public It<A> lmt(int limit)
+    {
+        Iterator<A> lator = new EndIterator<>(dispose(), (el,i) -> i >= limit);
+        return It(() -> lator);
+    }
+
     public It<A> unq(F<A, Object> getHash)
     {
         Set<Object> occurences = new HashSet<>();
