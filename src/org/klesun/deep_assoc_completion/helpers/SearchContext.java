@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.helpers;
 
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.FieldReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
@@ -14,6 +15,7 @@ import org.klesun.lang.*;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class SearchContext extends Lang
@@ -85,6 +87,7 @@ public class SearchContext extends Lang
         return true;
     }
 
+    // should probably keep expression tree and start using this again
     private boolean isRecursion()
     {
         // imagine sequence: a b c d e f g e f g
@@ -112,6 +115,13 @@ public class SearchContext extends Lang
         return opt(mt);
     }
 
+    private static String formatPsi(PsiElement expr)
+    {
+        String fileText = expr.getContainingFile().getText();
+        int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
+        return Tls.singleLine(expr.getText(), 120) + " - " + expr.getContainingFile().getName() + ":" + phpLineNum;
+    }
+
     private void putToCache(FuncCtx ctx, PhpExpression expr, Iterable<DeepType> result)
     {
         if (!ctxToExprToResult.containsKey(ctx)) {
@@ -121,6 +131,27 @@ public class SearchContext extends Lang
             ctxToExprToResult.get(ctx).remove(expr);
         }
         ctxToExprToResult.get(ctx).put(expr, result);
+    }
+
+    private void printCache()
+    {
+        Map<PhpExpression, L<FuncCtx>> psiToCtxs = new LinkedHashMap<>();
+        ctxToExprToResult.forEach((ctx, psiToMt) -> {
+            psiToMt.forEach((psi, mt) -> {
+                if (!psiToCtxs.containsKey(psi)) {
+                    psiToCtxs.put(psi, list());
+                }
+                psiToCtxs.get(psi).add(ctx);
+            });
+        });
+        L(psiToCtxs.keySet())
+            .srt(psi -> -psiToCtxs.get(psi).size())
+            .fch(psi -> {
+                System.out.println("  ** PSI: " + formatPsi(psi));
+                psiToCtxs.get(psi).fch(ctx -> {
+                    System.out.println("   +-- Ctx: " + ctx.hashCode() + " " + ctx);
+                });
+            });
     }
 
     public Iterable<DeepType> findExprType(PhpExpression expr, FuncCtx funcCtx)
@@ -153,9 +184,7 @@ public class SearchContext extends Lang
         if (funcCtx.getCallStackLength() > 9) { // on <= 6 tests fail
             return It.non();
         }
-        if (depthLeft <= 0) {
-            return It.non();
-        } else if (++expressionsResolved > getMaxExpressions()) {
+        if (++expressionsResolved > getMaxExpressions()) {
             /** @debug */
             //System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
             return It.non();
@@ -165,17 +194,6 @@ public class SearchContext extends Lang
             System.out.println(indent + "## Timed out " + seconds + " " + expr.getClass() + " " + Tls.singleLine(expr.getText(), 50) + " " + expr.getContainingFile().getName() + ":" + phpLineNum);
             return It.non();
         }
-        --depthLeft;
-        psiTrace.add(expr);
-        if (isRecursion()) {
-            if (debug) {
-                //System.out.println(indent + "** CIRCULAR REFERENCE DETECTED");
-            }
-            psiTrace.remove(psiTrace.size() - 1);
-            ++depthLeft;
-            return It.non();
-        }
-        long startTime = System.nanoTime();
 
         Opt<Iterable<DeepType>> result = takeFromCache(funcCtx, expr);
         if (result.has()) {
@@ -186,32 +204,17 @@ public class SearchContext extends Lang
             if (!overrideMaxExpr.has()) {
                 putToCache(funcCtx, expr, list());
             }
-//            System.out.println("Gonna resolve " + getExpressionsResolved() + " " + expr.getText());
-            It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx);
-//            System.out.println("Got a tit " + getExpressionsResolved() + " " + expr.getText());
+            // .unq() before caching is important since types taken
+            // from cache would grow in count exponentially otherwise
+            It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx).unq();
             Iterable<DeepType> mit = new MemoizingIterable<>(tit.iterator());
-//            System.out.println("Got a mit " + getExpressionsResolved() + " " + expr.getText());
             result = som(mit);
             if (!overrideMaxExpr.has()) {
                 result.thn(mt -> putToCache(funcCtx, expr, mit));
             }
         }
 
-        psiTrace.remove(psiTrace.size() - 1);
-        ++depthLeft;
-
-        if (debug) {
-            //long elapsed = System.nanoTime() - startTime;
-            //System.out.println(indent + "* " + /*result.fap(a -> a).arr().size() +*/
-            //    " types in " + (BigDecimal.valueOf(elapsed / 1000000000.0).toPlainString()) + " : " /*+ Tls.implode(", ", result.map(Mt::new).fap(a -> a.getKeyNames()))*/);
-        }
-
-        /** @debug */
-//        if (getExpressionsResolved() == 7147) {
-//            throw new RuntimeException("so who is screwing the iterator?");
-//        }
-
-        return result.def(It.non());
+        return It(result.def(It.non()));
     }
 
     public int getExpressionsResolved()

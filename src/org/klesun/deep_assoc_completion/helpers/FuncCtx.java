@@ -213,42 +213,29 @@ public class FuncCtx extends Lang
         return search;
     }
 
+    private L<Object> getHashValues()
+    {
+        L<Object> values = list();
+        values.add(argPsiType);
+        values.add(clsIdeaType.map(ArrCtorRes::ideaTypeToFqn));
+        values.add(hasArgs());
+        if (!hasArgs()) return values;
+        values.add(uniqueRef);
+        if (!uniqueRef.has()) return values;
+        values.add(parent);
+        return values;
+    }
+
     public int hashCode()
     {
-        if (!uniqueRef.has() || !hasArgs()) {
-            // all contexts without args are same if class is same
-            return ArrCtorRes.ideaTypeToFqn(this.clsIdeaType.def(null)).hashCode();
-        } else {
-            int noParentSalt = 7052005; // random int
-            int parentHash = parent.uni(p -> p.hashCode(), () -> noParentSalt);
-            return Arrays.asList(parentHash, uniqueRef.unw().hashCode()).hashCode();
-        }
+        return getHashValues().hashCode();
     }
 
     public boolean equals(Object thatRaw)
     {
-        Boolean result = Tls.cast(FuncCtx.class, thatRaw)
-            .map(that -> {
-                // this could be written much shorter with one function getParents()
-                // and list comparison, but taking all parents could be
-                // not efficient, and we want this function to be AFAP
-                if (this.argPsiType != that.argPsiType) return false;
-                if (clsIdeaType.has()) {
-                    Set<String> thisFqn = ArrCtorRes.ideaTypeToFqn(this.clsIdeaType.unw());
-                    Set<String> thatFqn = ArrCtorRes.ideaTypeToFqn(that.clsIdeaType.def(null));
-                    if (!thisFqn.equals(thatFqn)) return false;
-                }
-                if (!this.hasArgs()) return !that.hasArgs();
-                if (!this.uniqueRef.has()) return !that.uniqueRef.has();
-                if (!that.uniqueRef.has()) return false;
-                if (!this.uniqueRef.unw().isEquivalentTo(that.uniqueRef.unw())) return false;
-                if (!this.parent.has()) return !that.parent.has();
-                if (!that.parent.has()) return false;
-
-                return this.parent.unw().equals(that.parent.unw());
-            })
+        return Tls.cast(FuncCtx.class, thatRaw)
+            .map(that -> this.getHashValues().equals(that.getHashValues()))
             .def(false);
-        return result;
     }
 
     /** for debug */

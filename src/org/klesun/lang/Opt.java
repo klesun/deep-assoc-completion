@@ -166,6 +166,11 @@ public class Opt<T> implements Iterable<T>
         // TODO: implement!
     }
 
+    public int hashCode()
+    {
+        return map(val -> val.hashCode()).def(-100);
+    }
+
     public boolean equals(Object other)
     {
         return opt(other)
