@@ -148,6 +148,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
     {
         int depth = getMaxDepth(parameters);
         SearchContext search = new SearchContext(parameters).setDepth(depth);
+        search.isMain = true;
         Set<String> suggested = new HashSet<>();
         PsiElement caretPsi = parameters.getPosition(); // usually leaf element
         Opt<PsiElement> firstParent = opt(caretPsi.getParent());

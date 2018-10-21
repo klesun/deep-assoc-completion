@@ -209,7 +209,7 @@ public class It<A> implements Iterable<A>
     }
 
     // like fch() but executed not at once, but when iterator is actually disposed. for debug
-    public It<A> thn(C2<A, Integer> f)
+    public It<A> btw(C2<A, Integer> f)
     {
         return flt((el,i) -> {
             f.accept(el, i);
@@ -217,9 +217,16 @@ public class It<A> implements Iterable<A>
         });
     }
 
-    public It<A> thn(C<A> f)
+    // execute on the first hasNext() call that returns false
+    public It<A> thn(C<Integer> f)
     {
-        return thn((el,i) -> f.accept(el));
+        Iterator<A> tator = new ThenIterator<>(dispose(), f);
+        return new It<>(() -> tator);
+    }
+
+    public It<A> btw(C<A> f)
+    {
+        return btw((el, i) -> f.accept(el));
     }
 
     public void fch(C2<A, Integer> f)

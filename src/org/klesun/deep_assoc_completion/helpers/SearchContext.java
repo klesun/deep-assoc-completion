@@ -35,6 +35,7 @@ public class SearchContext extends Lang
     final private Map<FuncCtx, Map<PhpExpression, Iterable<DeepType>>> ctxToExprToResult = new HashMap<>();
     public Opt<Integer> overrideMaxExpr = non();
     final public Map<PsiFile, Collection<FieldReferenceImpl>> fileToFieldRefs = new HashMap<>();
+    public boolean isMain = false;
 
     public SearchContext(@Nullable Project project)
     {
@@ -162,11 +163,6 @@ public class SearchContext extends Lang
             lastReportTime = System.nanoTime();
             //System.out.println("deep-assoc-completion warning at " + time + ": type resolution takes " + seconds + " seconds " + expr.getText() + " " + expr.getClass());
         }
-
-        String indent = "";
-        for (int i = 0; i < initialDepth - depthLeft; ++i) {
-            indent += " ";
-        }
         if (debug) {
             // pretty useless now, actually, after we moved to iterators
             // I guess a new "context" should be created on each expression, not just function call to know the depth
@@ -189,7 +185,6 @@ public class SearchContext extends Lang
             //System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
             return It.non();
         } else if (timeout.flt(tout -> seconds > tout).has()) {
-            System.out.println(indent + "## Timed out " + seconds + " " + expr.getClass() + " " + formatPsi(expr));
             return It.non();
         }
 
