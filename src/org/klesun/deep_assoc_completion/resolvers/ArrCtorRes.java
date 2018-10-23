@@ -10,6 +10,7 @@ import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
@@ -21,9 +22,9 @@ import java.util.Set;
 
 public class ArrCtorRes extends Lang
 {
-    final private FuncCtx ctx;
+    final private IExprCtx ctx;
 
-    public ArrCtorRes(FuncCtx ctx)
+    public ArrCtorRes(IExprCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -133,7 +134,7 @@ public class ArrCtorRes extends Lang
                 // currently each value is wrapped into a plane Psi element
                 // i believe this is likely to change in future - so we try both cases
                 .elf(() -> opt(valuePsi.getFirstChild()).fop(toCast(PhpExpression.class)))
-                .thn(val -> arrayType.addKey(i + "", ctx.getRealPsi(val))
+                .thn(val -> arrayType.addKey(i + "", ctx.getFakeFileSource().def(val))
                     .addType(() -> ctx.findExprType(val).wap(Mt::new), Tls.getIdeaType(val))));
 
         // keyed elements
@@ -148,7 +149,7 @@ public class ArrCtorRes extends Lang
                     .thn(keyStrValues -> {
                         if (keyStrValues.has()) {
                             keyStrValues.fch(key -> arrayType
-                                .addKey(key, ctx.getRealPsi(keyRec))
+                                .addKey(key, ctx.getFakeFileSource().def(keyRec))
                                 .addType(getType, Tls.getIdeaType(v)));
                         } else {
                             arrayType.addKey(KeyType.unknown(keyRec)).addType(getType);

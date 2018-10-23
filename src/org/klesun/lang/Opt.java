@@ -54,15 +54,23 @@ public class Opt<T> implements Iterable<T>
         return map(v -> f.apply(v) ? v : null);
     }
 
-    /** Flat Map - to combine Opt-s
+    /**
+     * Flat Map - to combine Opt-s
      * just fap() should be enough since Opt is iterable, but it
-     * does not infer properly with method references */
+     * does not infer properly with method references
+     * TODO: refactor all usages to cst(SomePsi.class) and fap(() -> ...)
+     */
     public <T1> Opt<T1> fop(Lang.F<T, Opt<T1>> f)
     {
         return map(f).uni(
             (opt) -> opt,
             () -> new Opt<>(null)
         );
+    }
+
+    public <T1 extends T> Opt<T1> cst(Class<T1> cls)
+    {
+        return fap((val) -> Tls.cast(cls, val)).fst();
     }
 
     public L<T> arr()

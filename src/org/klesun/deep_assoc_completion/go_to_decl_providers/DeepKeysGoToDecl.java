@@ -16,9 +16,7 @@ import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
@@ -63,7 +61,7 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                 }));
     }
 
-    private static It<PsiElement> resolveMethCall(PsiElement psiElement, FuncCtx ctx)
+    private static It<PsiElement> resolveMethCall(PsiElement psiElement, IExprCtx ctx)
     {
         return opt(psiElement)
             .map(psi -> psi.getParent())
@@ -87,11 +85,12 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
 
                 FuncCtx ctx = new FuncCtx(new SearchContext(psiElement.getProject()));
                 ctx.fakeFileSource = opt(doc);
+                IExprCtx exprCtx = new ExprCtx(ctx, psiElement, 0);
 
                 return opt(file.findElementAt(offset))
                     .fap(psi -> It.cnc(
                         resolveAssocKey(psi, ctx),
-                        resolveMethCall(psi, ctx)
+                        resolveMethCall(psi, exprCtx)
                     ));
             });
     }
@@ -101,10 +100,11 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
         SearchContext search = new SearchContext(psiElement.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
+        IExprCtx exprCtx = new ExprCtx(funcCtx, psiElement, 0);
 
         return opt(psiElement)
             .fop(v -> Tls.findParent(v, PhpDocParamTag.class, psi -> true))
-            .fap(tag -> new DocParamRes(funcCtx).resolve(tag));
+            .fap(tag -> new DocParamRes(exprCtx).resolve(tag));
     }
 
     @Nullable

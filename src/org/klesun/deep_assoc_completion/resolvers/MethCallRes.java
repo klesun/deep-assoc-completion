@@ -11,6 +11,8 @@ import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.IExprCtx;
+import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
@@ -22,9 +24,9 @@ import java.util.regex.Pattern;
 
 public class MethCallRes extends Lang
 {
-    final private FuncCtx ctx;
+    final private IExprCtx ctx;
 
-    public MethCallRes(FuncCtx ctx)
+    public MethCallRes(IExprCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -85,7 +87,7 @@ public class MethCallRes extends Lang
                             .fap(a -> list(a));
                     }
                 });
-        }).fch(name -> parsedType.addKey(name, ctx.getRealPsi(strType.definition))
+        }).fch(name -> parsedType.addKey(name, ctx.getFakeFileSource().def(strType.definition))
             .addType(() -> new Mt(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
         return parsedType;
     }
@@ -108,7 +110,7 @@ public class MethCallRes extends Lang
         });
     }
 
-    private It<DeepType> findBuiltInRetType(Method meth, FuncCtx argCtx, MethodReference methCall)
+    private It<DeepType> findBuiltInRetType(Method meth, IFuncCtx argCtx, MethodReference methCall)
     {
         It<DeepType> types = It(list());
         String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
@@ -134,27 +136,26 @@ public class MethCallRes extends Lang
         return types;
     }
 
-    private static It<DeepType> parseReturnDoc(PhpDocReturnTag returnDoc, FuncCtx funcCtx)
+    private static It<DeepType> parseReturnDoc(PhpDocReturnTag returnDoc, IExprCtx funcCtx)
     {
-        FuncCtx docCtx = new FuncCtx(funcCtx.getSearch());
-        docCtx.fakeFileSource = opt(returnDoc);
+        IExprCtx docCtx = funcCtx.subCtxEmpty(returnDoc);
         return Tls.regex("^\\s*(like\\s*|=|)((?:\\[|[a-zA-Z]+[\\(:]|new\\s+).*)$", returnDoc.getTagValue())
             .fop(match -> match.gat(1))
             .fop(expr -> DocParamRes.parseExpression(expr, returnDoc.getProject(), docCtx))
             .def(It.non());
     }
 
-    public static F<FuncCtx, It<DeepType>> findMethRetType(Method meth)
+    public static F<IExprCtx, It<DeepType>> findMethRetType(Method meth)
     {
-        return (FuncCtx funcCtx) -> {
+        return (IExprCtx funcCtx) -> {
             It<Method> impls = It(list(meth));
             if (meth.isAbstract()) {
                 impls = It.cnc(list(meth), findOverridingMethods(meth));
                 // ignore $this and args in implementations
                 // since there may be dozens of them (Laravel)
-                funcCtx = new FuncCtx(funcCtx.getSearch());
+                funcCtx = funcCtx.subCtxEmpty();
             }
-            FuncCtx finalCtx = funcCtx;
+            IExprCtx finalCtx = funcCtx;
             return impls.fap(m -> It.cnc(
                 ClosRes.getReturnedValue(m, finalCtx),
                 opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
@@ -164,12 +165,12 @@ public class MethCallRes extends Lang
         };
     }
 
-    public static It<Method> resolveMethodsNoNs(MethodReference call, FuncCtx ctx)
+    public static It<Method> resolveMethodsNoNs(MethodReference call, IExprCtx ctx)
     {
         String cls = opt(call.getClassReference()).map(c -> c.getText()).def("");
         String mth = opt(call.getName()).def("");
         if (cls.equals("self") || cls.equals("static")) {
-            cls = ctx.fakeFileSource
+            cls = ctx.getFakeFileSource()
                 .fop(doc -> Tls.findParent(doc, PhpClass.class, a -> true))
                 .map(clsPsi -> clsPsi.getFQN())
                 .def(cls);
@@ -190,12 +191,12 @@ public class MethCallRes extends Lang
             .flt(m -> Objects.equals(m.getName(), func));
     }
 
-    private It<Method> findReferenced(MethodReferenceImpl fieldRef, FuncCtx ctx)
+    private It<Method> findReferenced(MethodReferenceImpl fieldRef, IExprCtx ctx)
     {
         long startTime = System.nanoTime();
         It<Method> mit = opt(fieldRef.getClassReference())
             .fap(obj -> It.frs(
-                () -> ctx.clsIdeaType
+                () -> ctx.getSelfType()
                     // IDEA resolve static:: incorrectly, it either treats it
                     // same as self::, either does not resolve it at all
                     .flt(typ -> obj.getText().equals("static"))
@@ -214,7 +215,7 @@ public class MethCallRes extends Lang
         return mit;
     }
 
-    private Opt<It<Method>> resolveMethodFromCall(MethodReferenceImpl call, FuncCtx ctx)
+    private Opt<It<Method>> resolveMethodFromCall(MethodReferenceImpl call, IExprCtx ctx)
     {
         return Opt.fst(() -> opt(null)
             , () -> opt(findReferenced(call, ctx)).flt(found -> found.has())
@@ -229,12 +230,12 @@ public class MethCallRes extends Lang
 
     public It<DeepType> resolveCall(MethodReferenceImpl funcCall)
     {
-        FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
+        IExprCtx funcCtx = ctx.subCtxDirect(funcCall);
         return resolveMethodFromCall(funcCall, ctx)
             .fap(funcs -> funcs)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
-                findBuiltInRetType(func, funcCtx, funcCall)
+                findBuiltInRetType(func, funcCtx.func(), funcCall)
             ));
     }
 }

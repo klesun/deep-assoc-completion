@@ -8,9 +8,7 @@ import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.Nullable;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.KeyType;
-import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.lang.*;
 
 import java.util.*;
@@ -28,10 +26,10 @@ public class DeepType extends Lang
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
     // list of functions that take arg list and return list of return types
-    public final L<F<FuncCtx, MemoizingIterable<DeepType>>> returnTypeGetters = L();
+    public final L<F<IExprCtx, MemoizingIterable<DeepType>>> returnTypeGetters = L();
     public final L<DeepType> pdoFetchTypes = L();
     public final LinkedHashSet<String> pdoBindVars = new LinkedHashSet<>();
-    public Opt<FuncCtx> ctorArgs = opt(null);
+    public Opt<IExprCtx> ctorArgs = opt(null);
     public Opt<PhpType> clsRefType = non();
     public final @Nullable String stringValue;
     public final PsiElement definition;
@@ -80,7 +78,7 @@ public class DeepType extends Lang
     }
 
     /** new object creation */
-    public static DeepType makeNew(NewExpression newExp, FuncCtx ctorArgs, PhpType ideaType)
+    public static DeepType makeNew(NewExpression newExp, IExprCtx ctorArgs, PhpType ideaType)
     {
         DeepType self = new DeepType(newExp, ideaType, null);
         self.ctorArgs = opt(ctorArgs);
@@ -95,7 +93,7 @@ public class DeepType extends Lang
         return self;
     }
 
-    public It<DeepType> getReturnTypes(FuncCtx ctx)
+    public It<DeepType> getReturnTypes(IExprCtx ctx)
     {
         return returnTypeGetters.fap(g -> g.apply(ctx));
     }
@@ -234,9 +232,6 @@ public class DeepType extends Lang
             It<String> briefs = It(new HashSet<>(briefTypes)).flt(t -> !"".equals(t));
             result = "'" + Tls.implode("|", briefs) + "'";
         }
-        result += It(types).fop(t -> t.ctorArgs)
-            .map(ctx -> Tls.implode(", ", ctx.getArgs().map(a -> a.varExport()))).arr()
-            .grp(a -> a).kys().fst().map(argStr -> "(" + argStr + ")").def("");
         circularRefs.removeAll(types);
         return result;
     }

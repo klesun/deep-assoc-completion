@@ -17,7 +17,9 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
+import org.klesun.deep_assoc_completion.helpers.ExprCtx;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.lang.It;
@@ -37,6 +39,7 @@ public class ShowDocs extends AnAction
         SearchContext search = new SearchContext(psi.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(false, psi.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
+        IExprCtx exprCtx = new ExprCtx(funcCtx, psi, 0);
 
         return It.cnc(
             Tls.cast(PhpExpression.class, psi)
@@ -50,8 +53,8 @@ public class ShowDocs extends AnAction
                         .fop(toCast(Function.class))
                         .fap(func -> {
                             DeepType arrt = new DeepType(par, PhpType.ARRAY);
-                            It<String> keys = new KeyUsageResolver(funcCtx.subCtxEmpty(), 3)
-                                .resolveArgUsedKeys(func, order, funcCtx).fap(t -> t.keys).fap(k -> k.keyType.getNames()).unq();
+                            It<String> keys = new KeyUsageResolver(exprCtx.subCtxEmpty(), 3)
+                                .resolveArgUsedKeys(func, order, exprCtx).fap(t -> t.keys).fap(k -> k.keyType.getNames()).unq();
                             keys.fch(k -> arrt.addKey(k, psi));
                             return list(arrt);
                         });

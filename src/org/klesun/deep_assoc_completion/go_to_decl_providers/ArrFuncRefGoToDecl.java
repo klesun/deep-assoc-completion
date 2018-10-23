@@ -9,6 +9,7 @@ import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
+import org.klesun.deep_assoc_completion.helpers.ExprCtx;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
@@ -46,7 +47,8 @@ public class ArrFuncRefGoToDecl extends Lang implements GotoDeclarationHandler
                         .fap(cls -> It(cls.getMethods())
                             .flt(meth -> meth.isStatic()))
                     ,
-                    new ArrCtorRes(funcCtx).resolveInstance(clsPsi)
+                    new ArrCtorRes(new ExprCtx(funcCtx, clsPsi, 0))
+                        .resolveInstance(clsPsi)
                         .fap(cls -> It(cls.getMethods())
                             .flt(meth -> meth.getMethodType(false) != Method.MethodType.CONSTRUCTOR)
                             .flt(meth -> !meth.isStatic()))))

@@ -10,9 +10,7 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.ArgOrder;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
@@ -20,9 +18,9 @@ import org.klesun.lang.*;
 
 public class ArgRes extends Lang
 {
-    private FuncCtx trace;
+    private IExprCtx trace;
 
-    public ArgRes(FuncCtx trace)
+    public ArgRes(IExprCtx trace)
     {
         this.trace = trace;
     }
@@ -51,7 +49,7 @@ public class ArgRes extends Lang
             if (argOrderInLambda == 0 && "array_map".equals(call.getName())) {
                 return L(call.getParameters()).gat(1)
                     .fop(toCast(PhpExpression.class))
-                    .fap(arr -> new FuncCtx(trace.getSearch()).findExprType(arr).fap(Mt::getElSt));
+                    .fap(arr -> trace.subCtxEmpty().findExprType(arr).fap(Mt::getElSt));
             }
         } else if (argOrderOfLambda == 1 && params.length > 1) {
             // functions where array is passed in the first argument
@@ -64,7 +62,7 @@ public class ArgRes extends Lang
             ) {
                 return L(call.getParameters()).gat(0)
                     .fop(toCast(PhpExpression.class))
-                    .fap(arr -> new FuncCtx(trace.getSearch()).findExprType(arr).fap(Mt::getElSt));
+                    .fap(arr -> trace.subCtxEmpty().findExprType(arr).fap(Mt::getElSt));
             }
         }
         return It.non();
@@ -83,7 +81,7 @@ public class ArgRes extends Lang
             ) {
                 return L(call.getParameters()).gat(1)
                     .fop(toCast(PhpExpression.class))
-                    .fap(arr -> new FuncCtx(trace.getSearch())
+                    .fap(arr -> trace.subCtxEmpty()
                         .findExprType(arr).fap(Mt::getElSt));
             }
         }
@@ -100,7 +98,7 @@ public class ArgRes extends Lang
                     .fap(parl -> opt(parl.getParent())
                         .fop(toCast(FunctionReference.class))
                         .fap(call -> {
-                            FuncCtx subCtx = trace.subCtxDirect(call);
+                            IExprCtx subCtx = trace.subCtxDirect(call);
                             int funcVarOrder = L(parl.getParameters()).indexOf(funcVar);
                             return It.frs(() -> It.non()
                                 , () -> Tls.cast(FunctionReferenceImpl.class, call)
@@ -120,7 +118,7 @@ public class ArgRes extends Lang
                 , () -> Tls.cast(FunctionReferenceImpl.class, parent)
                     .fop(call -> L(call.getParameters()).gat(caretArgOrder))
                     .fop(toCast(PhpExpression.class))
-                    .fap(arg -> new FuncCtx(trace.getSearch()).findExprType(arg))
+                    .fap(arg -> trace.subCtxEmpty().findExprType(arg))
             ));
     }
 
@@ -155,7 +153,7 @@ public class ArgRes extends Lang
 
         return Tls.cast(MethodImpl.class, func)
             // if caret is inside this function, when passed args are unknown
-            .flt(a -> !trace.hasArgs())
+            .flt(a -> !trace.func().hasArgs())
             .flt(a -> func.getParameters().length > 0)
             .fap(meth -> {
                 PsiFile file = func.getContainingFile();
@@ -167,7 +165,7 @@ public class ArgRes extends Lang
                             .has())
                         .fop(call -> L(call.getParameters()).gat(argOrderInLambda))
                         .fop(toCast(PhpExpression.class))
-                        .fap(arg -> new FuncCtx(trace.getSearch()).findExprType(arg)),
+                        .fap(arg -> trace.subCtxEmpty().findExprType(arg)),
                     It(PsiTreeUtil.findChildrenOfType(file, ArrayCreationExpressionImpl.class))
                         .flt(arr -> arr.getChildren().length == 2
                                 && L(arr.getChildren()).gat(0)
@@ -180,9 +178,9 @@ public class ArgRes extends Lang
                                     .flt(str -> str.getContents().equals(meth.getName()))
                                     .has())
                         .fap(arr -> It.frs(
-                            () -> new ArgRes(new FuncCtx(trace.getSearch()))
+                            () -> new ArgRes(trace.subCtxEmpty())
                                 .getInlineFuncArg(arr, argOrderInLambda),
-                            () -> new ArgRes(new FuncCtx(trace.getSearch()))
+                            () -> new ArgRes(trace.subCtxEmpty())
                                 .getFuncVarUsageArg(arr, argOrderInLambda)
                         ))
                 );
@@ -223,7 +221,7 @@ public class ArgRes extends Lang
             .fop(ref -> It(ref.getReferences()).fst())
             .map(ref -> ref.resolve())
             .fop(toCast(MethodImpl.class))
-            .fap(met -> ClosRes.getReturnedValue(met, new FuncCtx(trace.getSearch())))
+            .fap(met -> ClosRes.getReturnedValue(met, trace.subCtxEmpty()))
             .fap(t -> Mt.getElSt(t))
             .fap(t -> getArgOrder(param)
                 .fap(order -> Mt.getKeySt(t, order + "")));
@@ -255,16 +253,16 @@ public class ArgRes extends Lang
             .fap(doc -> new DocParamRes(trace).resolve(doc))
             ;
         It<DeepType> genericTit = It();
-        if (!trace.hasArgs()) {
+        if (!trace.func().hasArgs()) {
             // passed args not known - if caret was inside this function
             genericTit = It(peekOutside(param));
         } else {
             genericTit = getArgOrder(param)
                 .fap(i -> {
                     if (param.getText().startsWith("...")) {
-                        return trace.getArg(new ArgOrder(i, true)).fap(a -> a.types);
+                        return trace.func().getArg(new ArgOrder(i, true)).fap(a -> a.types);
                     } else {
-                        return trace.getArg(i).fap(mt -> mt.types);
+                        return trace.func().getArg(i).fap(mt -> mt.types);
                     }
                 });
         }

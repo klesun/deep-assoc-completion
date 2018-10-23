@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 /** a node in called function stack trace with args */
-public class FuncCtx extends Lang
+public class FuncCtx extends Lang implements IFuncCtx
 {
     enum EArgPsiType {DIRECT, ARR, NONE, INDIRECT};
 
@@ -111,60 +111,43 @@ public class FuncCtx extends Lang
         }
     }
 
-    public Opt<Mt> getArg(Integer index)
-    {
-        return getArg(new ArgOrder(index, false));
-    }
-
-    public Mt getArgMt(Integer index)
-    {
-        return getArg(new ArgOrder(index, false)).def(Mt.INVALID_PSI);
-    }
-
-    @NotNull
+    /** should be called _only_ from an entry level class */
     public It<DeepType> findExprType(PhpExpression expr)
     {
-        return It(search.findExprType(expr, this));
+        IExprCtx exprCtx = new ExprCtx(this, expr, 0);
+        return It(search.findExprType(expr, exprCtx));
     }
 
-    public It<DeepType> limitResolve(int limit, PhpExpression expr)
-    {
-        int oldDepth = search.depthLeft;
-        search.setDepth(Math.min(oldDepth, limit));
-        It<DeepType> result = findExprType(expr);
-        search.setDepth(oldDepth);
-        return result;
-    }
 
-    public FuncCtx subCtxDirect(FunctionReference funcCall)
+    public FuncCtx subCtxDirect(FunctionReference funcCall, F<PhpExpression, It<DeepType>> findExprType)
     {
-        FuncCtx self = subCtxDirectGeneric(funcCall);
+        FuncCtx self = subCtxDirectGeneric(funcCall, findExprType);
         Tls.cast(MethodReference.class, funcCall)
             .map(methCall -> methCall.getClassReference())
             .thn(ref -> {
                 if (ref instanceof ClassReference) {
                     self.clsIdeaType = opt(ref.getType());
                 } else {
-                    self.instGetter = opt(() -> new Mt(findExprType(ref)));
+                    self.instGetter = opt(() -> new Mt(findExprType.apply(ref)));
                 }
             });
         return self;
     }
 
-    public FuncCtx subCtxDirect(NewExpression funcCall)
+    public FuncCtx subCtxDirect(NewExpression funcCall, F<PhpExpression, It<DeepType>> findExprType)
     {
-        FuncCtx self = subCtxDirectGeneric(funcCall);
+        FuncCtx self = subCtxDirectGeneric(funcCall, findExprType);
         opt(funcCall.getClassReference())
             .thn(ref -> self.clsIdeaType = opt(ref.getType()));
         return self;
     }
 
-    public FuncCtx subCtxDirectGeneric(ParameterListOwner funcCall)
+    public FuncCtx subCtxDirectGeneric(ParameterListOwner funcCall, F<PhpExpression, It<DeepType>> findExprType)
     {
         L<PsiElement> psiArgs = L(funcCall.getParameters());
         L<S<Mt>> argGetters = psiArgs.map((psi) -> S(() ->
             Tls.cast(PhpExpression.class, psi) .uni(
-                arg -> new Mt(findExprType(arg)),
+                arg -> new Mt(findExprType.apply(arg)),
                 () -> Mt.INVALID_PSI)
         )).arr();
         FuncCtx subCtx = new FuncCtx(this, argGetters, funcCall, EArgPsiType.DIRECT);
@@ -177,16 +160,16 @@ public class FuncCtx extends Lang
     }
 
     /** context from args passed in array for example in array_map or array_filter */
-    public FuncCtx subCtxSingleArgArr(PhpExpression argArr)
+    public FuncCtx subCtxSingleArgArr(PhpExpression argArr, F<PhpExpression, It<DeepType>> findExprType)
     {
-        L<S<Mt>> argGetters = list(() -> findExprType(argArr).fap(Mt::getElSt).wap(Mt::new));
+        L<S<Mt>> argGetters = list(() -> findExprType.apply(argArr).fap(Mt::getElSt).wap(Mt::new));
         return new FuncCtx(this, argGetters, argArr, EArgPsiType.ARR);
     }
 
     /** when you have expression PSI and it is not directly passed to the func, ex. call_user_func_array() */
-    public FuncCtx subCtxIndirect(PhpExpression args)
+    public FuncCtx subCtxIndirect(PhpExpression args, F<PhpExpression, It<DeepType>> findExprType)
     {
-        S<Mt> getMt = Tls.onDemand(() -> new Mt(findExprType(args)));
+        S<Mt> getMt = Tls.onDemand(() -> new Mt(findExprType.apply(args)));
         L<S<Mt>> argGetters = list();
         // always 10 arguments, got any problem?
         // it probably should be done correctly one day...

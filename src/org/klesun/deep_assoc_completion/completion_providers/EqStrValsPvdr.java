@@ -17,9 +17,7 @@ import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
@@ -50,7 +48,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     }
 
     /** $type === '' */
-    private static It<DeepType> resolveEqExpr(StringLiteralExpression lit, FuncCtx funcCtx)
+    private static It<DeepType> resolveEqExpr(StringLiteralExpression lit, IExprCtx funcCtx)
     {
         return opt(lit)
             .map(literal -> literal.getParent()) // BinaryExpressionImpl
@@ -64,13 +62,13 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
             ;
     }
 
-    private static It<DeepType> resolveUsedValues(StringLiteralExpression lit, FuncCtx funcCtx)
+    private static It<DeepType> resolveUsedValues(StringLiteralExpression lit, IExprCtx funcCtx)
     {
         return new KeyUsageResolver(funcCtx, 3).findKeysUsedOnExpr(lit);
     }
 
     /** in_array($type, ['']) */
-    private static It<DeepType> resolveInArrayHaystack(StringLiteralExpression lit, FuncCtx funcCtx)
+    private static It<DeepType> resolveInArrayHaystack(StringLiteralExpression lit, IExprCtx funcCtx)
     {
         return opt(lit)
             .map(literal -> literal.getParent()) // array value
@@ -91,7 +89,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     }
 
     /** in_array('', $types) */
-    private static It<DeepType> resolveInArrayNeedle(StringLiteralExpression lit, FuncCtx funcCtx)
+    private static It<DeepType> resolveInArrayNeedle(StringLiteralExpression lit, IExprCtx funcCtx)
     {
         return opt(lit.getParent())
             .fop(toCast(ParameterList.class))
@@ -108,7 +106,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     }
 
     // array_intersect($cmdTypes, ['redisplayPnr', 'itinerary', 'airItinerary', 'storeKeepPnr', 'changeArea', ''])
-    private static It<DeepType> resolveArrayIntersect(StringLiteralExpression lit, FuncCtx funcCtx)
+    private static It<DeepType> resolveArrayIntersect(StringLiteralExpression lit, IExprCtx funcCtx)
     {
         return opt(lit)
             .map(literal -> literal.getParent()) // array value
@@ -135,13 +133,14 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
             search.overrideMaxExpr = som(200);
         }
         FuncCtx funcCtx = new FuncCtx(search);
+        IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 
         return It.cnc(
-            resolveEqExpr(lit, funcCtx),
-            resolveUsedValues(lit, funcCtx),
-            resolveInArrayHaystack(lit, funcCtx),
-            resolveInArrayNeedle(lit, funcCtx),
-            resolveArrayIntersect(lit, funcCtx)
+            resolveEqExpr(lit, exprCtx),
+            resolveUsedValues(lit, exprCtx),
+            resolveInArrayHaystack(lit, exprCtx),
+            resolveInArrayNeedle(lit, exprCtx),
+            resolveArrayIntersect(lit, exprCtx)
         );
     }
 

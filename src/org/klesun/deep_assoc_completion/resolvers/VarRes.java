@@ -9,9 +9,7 @@ import com.jetbrains.php.lang.psi.elements.Variable;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.KeyType;
-import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.var_res.ArgRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
@@ -21,12 +19,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static org.klesun.lang.Lang.*;
 
-public class VarRes extends Lang
+public class VarRes
 {
-    final private FuncCtx ctx;
+    final private IExprCtx ctx;
 
-    public VarRes(FuncCtx ctx)
+    public VarRes(IExprCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -225,12 +224,12 @@ public class VarRes extends Lang
         }
 
         DeepType typeFromIdea = new DeepType(variable);
-        Opt<Mt> thisType = opt(variable)
+        It<DeepType> thisType = opt(variable)
             .flt(vari -> vari.getText().equals("$this"))
-            .fop(vari -> ctx.instGetter.map(g -> g.get()));
+            .fap(vari -> ctx.getThisType());
         return It.cnc(
             docTypes, list(typeFromIdea),
-            thisType.itr().fap(a -> a.types),
+            thisType,
             AssRes.assignmentsToTypes(asses)
         );
     }

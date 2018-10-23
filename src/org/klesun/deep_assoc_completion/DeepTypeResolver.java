@@ -6,18 +6,22 @@ import com.jetbrains.php.lang.psi.elements.ClassConstantReference;
 import com.jetbrains.php.lang.psi.elements.ParenthesizedExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import org.klesun.deep_assoc_completion.helpers.ExprCtx;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.resolvers.*;
 import org.klesun.lang.*;
+
+import static org.klesun.lang.Lang.*;
 
 /**
  * Provides mechanism to determine expression type.
  * Unlike original jetbrain's type resolver, this
  * includes associative array key information
  */
-public class DeepTypeResolver extends Lang
+public class DeepTypeResolver
 {
-    private static It<DeepType> resolveClsConst(ClassConstantReference cst, FuncCtx ctx)
+    private static It<DeepType> resolveClsConst(ClassConstantReference cst, IExprCtx ctx)
     {
         if ("class".equals(cst.getName())) {
             return opt(cst.getClassReference())
@@ -29,11 +33,11 @@ public class DeepTypeResolver extends Lang
                 .fop(toCast(ClassConstImpl.class))
                 .map(a -> a.getDefaultValue())
                 .fop(toCast(PhpExpression.class))
-                .fap(exp -> new FuncCtx(ctx.getSearch()).findExprType(exp));
+                .fap(exp -> ctx.subCtxEmpty().findExprType(exp));
         }
     }
 
-    public static It<DeepType> resolveIn(PhpExpression expr, FuncCtx ctx)
+    public static It<DeepType> resolveIn(PhpExpression expr, IExprCtx ctx)
     {
         It<DeepType> tit = It.frs(() -> It.non()
             , () -> Tls.cast(VariableImpl.class, expr)

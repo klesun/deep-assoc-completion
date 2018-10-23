@@ -12,6 +12,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
@@ -19,9 +20,9 @@ import javax.annotation.Nullable;
 
 public class MiscRes extends Lang
 {
-    final private FuncCtx ctx;
+    final private IExprCtx ctx;
 
-    public MiscRes(FuncCtx ctx)
+    public MiscRes(IExprCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -39,7 +40,7 @@ public class MiscRes extends Lang
             () -> opt(poly)
                 .flt(ref -> clsRefPsi.getText().equals("static"))
                 .fop(ref -> Opt.fst(
-                    () -> ctx.clsIdeaType,
+                    () -> ctx.getSelfType(),
                     () -> Tls.findParent(clsRefPsi, PhpClass.class, a -> true)
                         .map(cls -> cls.getType())
                 )),
@@ -58,7 +59,7 @@ public class MiscRes extends Lang
         return opt(newExp.getClassReference())
             .fap(cls -> resolveClassReference(cls, cls))
             .map(ideaType -> {
-                FuncCtx ctorArgs = ctx.subCtxDirect(newExp);
+                IExprCtx ctorArgs = ctx.subCtxDirect(newExp);
                 return DeepType.makeNew(newExp, ctorArgs, ideaType);
             });
     }

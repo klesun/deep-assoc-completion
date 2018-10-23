@@ -4,15 +4,17 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.helpers.ExprCtx;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
 public class ClosRes extends Lang
 {
-    final private FuncCtx ctx;
+    final private IExprCtx ctx;
 
-    public ClosRes(FuncCtx ctx)
+    public ClosRes(IExprCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -62,7 +64,7 @@ public class ClosRes extends Lang
         return result;
     }
 
-    public static It<DeepType> getReturnedValue(PsiElement funcBody, FuncCtx ctx)
+    public static It<DeepType> getReturnedValue(PsiElement funcBody, IExprCtx ctx)
     {
         return It.cnc(
             findFunctionReturns(funcBody)

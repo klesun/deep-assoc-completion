@@ -32,7 +32,7 @@ public class SearchContext extends Lang
     // for performance measurement
     private int expressionsResolved = 0;
     final public L<PhpExpression> psiTrace = L();
-    final private Map<FuncCtx, Map<PhpExpression, Iterable<DeepType>>> ctxToExprToResult = new HashMap<>();
+    final private Map<IFuncCtx, Map<PhpExpression, Iterable<DeepType>>> ctxToExprToResult = new HashMap<>();
     public Opt<Integer> overrideMaxExpr = non();
     final public Map<PsiFile, Collection<FieldReferenceImpl>> fileToFieldRefs = new HashMap<>();
     public boolean isMain = false;
@@ -104,7 +104,7 @@ public class SearchContext extends Lang
         return false;
     }
 
-    private Opt<Iterable<DeepType>> takeFromCache(FuncCtx ctx, PhpExpression expr)
+    private Opt<Iterable<DeepType>> takeFromCache(IFuncCtx ctx, PhpExpression expr)
     {
         if (!ctxToExprToResult.containsKey(ctx)) {
             return opt(null);
@@ -123,7 +123,7 @@ public class SearchContext extends Lang
         return Tls.singleLine(expr.getText(), 120) + " - " + expr.getContainingFile().getName() + ":" + phpLineNum;
     }
 
-    private void putToCache(FuncCtx ctx, PhpExpression expr, Iterable<DeepType> result)
+    private void putToCache(IFuncCtx ctx, PhpExpression expr, Iterable<DeepType> result)
     {
         if (!ctxToExprToResult.containsKey(ctx)) {
             ctxToExprToResult.put(ctx, new HashMap<>());
@@ -136,7 +136,7 @@ public class SearchContext extends Lang
 
     private void printCache()
     {
-        Map<PhpExpression, L<FuncCtx>> psiToCtxs = new LinkedHashMap<>();
+        Map<PhpExpression, L<IFuncCtx>> psiToCtxs = new LinkedHashMap<>();
         ctxToExprToResult.forEach((ctx, psiToMt) -> {
             psiToMt.forEach((psi, mt) -> {
                 if (!psiToCtxs.containsKey(psi)) {
@@ -155,7 +155,7 @@ public class SearchContext extends Lang
             });
     }
 
-    public Iterable<DeepType> findExprType(PhpExpression expr, FuncCtx funcCtx)
+    public Iterable<DeepType> findExprType(PhpExpression expr, IExprCtx funcCtx)
     {
         long time = System.nanoTime();
         double seconds = (time - startTime) / 1000000000.0;
@@ -163,21 +163,9 @@ public class SearchContext extends Lang
             lastReportTime = System.nanoTime();
             //System.out.println("deep-assoc-completion warning at " + time + ": type resolution takes " + seconds + " seconds " + expr.getText() + " " + expr.getClass());
         }
-        if (debug) {
-            // pretty useless now, actually, after we moved to iterators
-            // I guess a new "context" should be created on each expression, not just function call to know the depth
-            String trace = funcCtx.getCallStack()
-                .map(ctx -> Tls.singleLine(ctx.uniqueRef.map(ref -> ref.getText()).def("(no args)"), 30))
-                .wap(calls -> Tls.implode(" -> ", calls));
-            System.out.print(trace + " | ");
-            String fileText = expr.getContainingFile().getText();
-            int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
-            StackTraceElement caller = new Exception().getStackTrace()[2];
-            System.out.println(depthLeft + " " + Tls.singleLine(expr.getText(), 120) + "       - " + expr.getContainingFile().getName() + ":" + phpLineNum + "       - " + caller.getClassName() + ":" + caller.getLineNumber() + " ### " + funcCtx);
-        }
 
         // TODO: add to config
-        if (funcCtx.getCallStackLength() > 9) { // on <= 6 tests fail
+        if (funcCtx.func().getCallStackLength() > 10) { // on <= 6 tests fail
             return It.non();
         }
         if (++expressionsResolved > getMaxExpressions()) {
@@ -188,14 +176,14 @@ public class SearchContext extends Lang
             return It.non();
         }
 
-        Opt<Iterable<DeepType>> result = takeFromCache(funcCtx, expr);
+        Opt<Iterable<DeepType>> result = takeFromCache(funcCtx.func(), expr);
         if (result.has()) {
             if (debug) {
                 //System.out.println(indent + "<< TAKING RESULT FROM CACHE");
             }
         } else {
             if (!overrideMaxExpr.has()) {
-                putToCache(funcCtx, expr, list());
+                putToCache(funcCtx.func(), expr, list());
             }
 
             It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx)
@@ -205,7 +193,7 @@ public class SearchContext extends Lang
             Iterable<DeepType> mit = new MemoizingIterable<>(tit.iterator());
             result = som(mit);
             if (!overrideMaxExpr.has()) {
-                result.thn(mt -> putToCache(funcCtx, expr, mit));
+                result.thn(mt -> putToCache(funcCtx.func(), expr, mit));
             }
         }
 
@@ -215,5 +203,17 @@ public class SearchContext extends Lang
     public int getExpressionsResolved()
     {
         return this.expressionsResolved;
+    }
+
+
+    public static class ExprTreeNode
+    {
+        final PhpExpression expr;
+        final L<ExprTreeNode> children = list();
+
+        public ExprTreeNode(PhpExpression expr)
+        {
+            this.expr = expr;
+        }
     }
 }

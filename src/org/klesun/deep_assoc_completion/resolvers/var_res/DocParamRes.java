@@ -13,15 +13,17 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.Statement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.helpers.ExprCtx;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
 public class DocParamRes extends Lang
 {
-    private FuncCtx ctx;
+    private IExprCtx ctx;
 
-    public DocParamRes(FuncCtx ctx)
+    public DocParamRes(IExprCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -111,7 +113,7 @@ public class DocParamRes extends Lang
         }
     }
 
-    public static Opt<It<DeepType>> parseExpression(String expr, Project project, FuncCtx docCtx)
+    public static Opt<It<DeepType>> parseExpression(String expr, Project project, IExprCtx docCtx)
     {
         // adding "$arg = " so anonymous functions were parsed as expressions
         expr = "<?php\n$arg = " + expr + ";";
@@ -128,8 +130,7 @@ public class DocParamRes extends Lang
     private Opt<It<DeepType>> parseDoc(PhpDocTag doc, Project project)
     {
         String tagValue = doc.getTagValue();
-        FuncCtx docCtx = new FuncCtx(ctx.getSearch());
-        docCtx.fakeFileSource = opt(doc);
+        IExprCtx docCtx = ctx.subCtxEmpty(doc);
         return Opt.fst(
             () -> Tls.regex("^\\s*=\\s*(.+)$", tagValue)
                 .fop(matches -> matches.gat(0))

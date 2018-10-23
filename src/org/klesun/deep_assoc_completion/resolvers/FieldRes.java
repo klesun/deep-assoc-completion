@@ -8,6 +8,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
@@ -18,9 +19,9 @@ import java.util.Set;
 
 public class FieldRes extends Lang
 {
-    final private FuncCtx ctx;
+    final private IExprCtx ctx;
 
-    public FieldRes(FuncCtx ctx)
+    public FieldRes(IExprCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -34,16 +35,16 @@ public class FieldRes extends Lang
 //        );
 //        return ReferencesSearch.search(decl, scope, false).findAll();
 
-        // this taks 6 milliseconds on just ApolloPnrFieldsOnDemand.php each time
+        // this takes 6 milliseconds on just ApolloPnrFieldsOnDemand.php each time
         // maybe it can be done more efficiently like iterating manually (could return iterator in such case BTW), caching or reusing IDEA's reference provider
-        // but if I remember correctly, IDEA's reference resolver was not used hee because it randomly threw exceptions
-        if (!ctx.getSearch().fileToFieldRefs.containsKey(file)) {
+        // but if I remember correctly, IDEA's reference resolver was not used here because it randomly threw exceptions
+        if (!ctx.getFieldRefCache().containsKey(file)) {
             long startTime = System.nanoTime();
-            ctx.getSearch().fileToFieldRefs.put(file, PsiTreeUtil.findChildrenOfType(file, FieldReferenceImpl.class));
+            ctx.getFieldRefCache().put(file, PsiTreeUtil.findChildrenOfType(file, FieldReferenceImpl.class));
             double elapsed = (System.nanoTime() - startTime) / 1000000000.0;
             //System.out.println("found refs in " + file.getName() + " over " + elapsed + " seconds");
         }
-        Collection<FieldReferenceImpl> refs = ctx.getSearch().fileToFieldRefs.get(file);
+        Collection<FieldReferenceImpl> refs = ctx.getFieldRefCache().get(file);
         return It(refs)
             .flt(ref -> name.equals(ref.getName()));
     }
@@ -58,11 +59,11 @@ public class FieldRes extends Lang
     // when you do instanceof, IDEA type acquires the class, so  it may
     // happen that args passed to an instance as instance of one class
     // could be used in some other instanceof-ed class if we don't do this check
-    private static boolean isSameClass(FuncCtx ctx, PhpClass fieldCls)
+    private static boolean isSameClass(IExprCtx ctx, PhpClass fieldCls)
     {
         // return true if ctx class is empty or ctx class constructor is in fieldCls
         // (if fieldCls is ctx class or ctx class inherits constructor from fieldCls)
-        Set<String> ctxFqns = ArrCtorRes.ideaTypeToFqn(ctx.clsIdeaType.def(PhpType.UNSET));
+        Set<String> ctxFqns = ArrCtorRes.ideaTypeToFqn(ctx.getSelfType().def(PhpType.UNSET));
         return ctxFqns.isEmpty() || ctxFqns.contains(fieldCls.getFQN());
     }
 
@@ -70,7 +71,7 @@ public class FieldRes extends Lang
     {
         S<Mt> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
             .fop(ref -> Opt.fst(
-                () -> ctx.clsIdeaType
+                () -> ctx.getSelfType()
                     .flt(typ -> ref.getText().equals("static"))
                     .flt(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, ref.getProject()).has())
                     .map(typ -> new Mt(list(new DeepType(ref, typ)))),
@@ -97,7 +98,7 @@ public class FieldRes extends Lang
         }
         It<DeepType> declTypes = declarations
             .fap(resolved -> {
-                FuncCtx implCtx = new FuncCtx(ctx.getSearch());
+                IExprCtx implCtx = ctx.subCtxEmpty();
                 It<DeepType> defTs = Tls.cast(FieldImpl.class, resolved).itr()
                     .map(fld -> fld.getDefaultValue())
                     .fop(toCast(PhpExpression.class))

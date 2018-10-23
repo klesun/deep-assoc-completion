@@ -13,9 +13,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
 import com.jetbrains.php.lang.psi.elements.Method;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
@@ -82,7 +80,7 @@ public class GoToNthTest extends AnAction
                         return caretFuncOpt
                             .fap(func -> pvdrMeths.flt(m -> m.equals(func))).arr()
                             .cct(pvdrMeths).cct(caretFuncOpt)
-                            .fap(func -> ClosRes.getReturnedValue(func, funcCtx))
+                            .fap(func -> ClosRes.getReturnedValue(func, new ExprCtx(funcCtx, func, 0)))
                             .fap(t -> Mt.getElSt(t)) // go to first arg passed to the testing function, not
                             .fap(t -> Mt.getKeySt(t, "0")) // whole set since there may be some wrapping magic
                             .arr().gat(testNum)

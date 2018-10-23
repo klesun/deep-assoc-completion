@@ -11,19 +11,16 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.ScopeFinder;
-import org.klesun.deep_assoc_completion.helpers.ArgOrder;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.KeyType;
-import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.lang.*;
 
 import javax.annotation.Nullable;
 
 public class FuncCallRes extends Lang
 {
-    private FuncCtx ctx;
+    private IExprCtx ctx;
 
-    public FuncCallRes(FuncCtx ctx)
+    public FuncCallRes(IExprCtx ctx)
     {
         this.ctx = ctx;
     }
@@ -46,14 +43,14 @@ public class FuncCallRes extends Lang
             ;
     }
 
-    private It<DeepType> array_map(FuncCtx callCtx, FunctionReferenceImpl call)
+    private It<DeepType> array_map(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
         DeepType mapRetType = new DeepType(call);
         Mt arrMt = callCtx.getArgMt(1);
-        FuncCtx subCtx = L(call.getParameters()).gat(1)
+        IExprCtx subCtx = L(call.getParameters()).gat(1)
             .fop(array -> Tls.cast(PhpExpression.class, array))
             .uni(argArr -> ctx.subCtxSingleArgArr(argArr),
-                () -> new FuncCtx(ctx.getSearch())
+                () -> ctx.subCtxEmpty()
             );
         S<Mt> getElMt = Tls.onDemand(() -> callCtx.getArgMt(0).types
             .fap(t -> t.getReturnTypes(subCtx))
@@ -69,7 +66,7 @@ public class FuncCallRes extends Lang
         return It.cnc(list(mapRetType), eachTMapped);
     }
 
-    private DeepType array_combine(FuncCtx callCtx, FunctionReferenceImpl call)
+    private DeepType array_combine(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
         DeepType combine = new DeepType(call, PhpType.ARRAY);
         Dict<L<DeepType>> keyToTypes = callCtx.getArgMt(0).getEl().types
@@ -85,7 +82,7 @@ public class FuncCallRes extends Lang
         return combine;
     }
 
-    private DeepType array_fill_keys(FuncCtx callCtx, FunctionReferenceImpl call)
+    private DeepType array_fill_keys(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
         return makeAssoc(call, callCtx.getArg(0)
             .fap(mt -> mt.getEl().getStringValues())
@@ -93,7 +90,7 @@ public class FuncCallRes extends Lang
             .arr());
     }
 
-    private DeepType array_flip(FuncCtx callCtx, FunctionReferenceImpl call)
+    private DeepType array_flip(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
         DeepType flip = new DeepType(call, PhpType.ARRAY);
         Mt sourceMt = callCtx.getArgMt(0);
@@ -109,7 +106,7 @@ public class FuncCallRes extends Lang
         return flip;
     }
 
-    private DeepType compact(FuncCtx callCtx, FunctionReferenceImpl call)
+    private DeepType compact(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
         DeepType arrt = new DeepType(call, PhpType.ARRAY);
         Tls.findParent(call, GroupStatement.class, a -> true)
@@ -132,7 +129,7 @@ public class FuncCallRes extends Lang
         return arrt;
     }
 
-    private DeepType implode(FuncCtx callCtx, FunctionReferenceImpl call)
+    private DeepType implode(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
         String delim = callCtx.getArgMt(0).getStringValues().fst().def(" ");
         It<String> parts = callCtx.getArgMt(1).types
@@ -326,7 +323,7 @@ public class FuncCallRes extends Lang
         ));
     }
 
-    private static DeepType ob_get_status(FuncCtx callCtx, FunctionReferenceImpl call)
+    private static DeepType ob_get_status(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
         DeepType assoct = makeAssoc(call, list(
             T2("name", PhpType.STRING),
@@ -376,7 +373,7 @@ public class FuncCallRes extends Lang
     private Iterable<DeepType> findBuiltInFuncCallType(FunctionReferenceImpl call)
     {
         return opt(call.getName()).map(name -> {
-            FuncCtx callCtx = ctx.subCtxDirect(call);
+            IFuncCtx callCtx = ctx.subCtxDirect(call).func();
             PsiElement[] params = call.getParameters();
             L<PsiElement> lParams = L(params);
             if (name.equals("array_map")) {
@@ -435,19 +432,19 @@ public class FuncCallRes extends Lang
                     .wap(types -> new Mt(types))));
                 return list(arrt);
             } else if (name.equals("func_get_args")) {
-                return ctx.getArg(new ArgOrder(0, true)).itr().fap(a -> a.types);
+                return ctx.func().getArg(new ArgOrder(0, true)).itr().fap(a -> a.types);
             } else if (name.equals("func_get_arg")) {
                 return callCtx.getArg(0).itr()
                     .fop(mt -> opt(mt.getStringValue()))
                     .flt(str -> Tls.isNum(str))
                     .map(str -> Integer.parseInt(str))
-                    .fop(order -> ctx.getArg(order))
+                    .fop(order -> ctx.func().getArg(order))
                     .fap(mt -> mt.types).map(a -> a);
             } else if (name.equals("call_user_func_array")) {
-                FuncCtx newCtx = lParams.gat(1)
+                IExprCtx newCtx = lParams.gat(1)
                     .fop(toCast(PhpExpression.class))
                     .map(args -> ctx.subCtxIndirect(args))
-                    .def(new FuncCtx(ctx.getSearch()));
+                    .def(ctx.subCtxEmpty());
                 return callCtx.getArgMt(0).types
                     .fap(t -> t.getReturnTypes(newCtx)).map(a -> a);
             } else if (name.equals("explode")) {
@@ -491,7 +488,7 @@ public class FuncCallRes extends Lang
 
     public It<DeepType> resolve(FunctionReferenceImpl funcCall)
     {
-        FuncCtx funcCtx = ctx.subCtxDirect(funcCall);
+        IExprCtx funcCtx = ctx.subCtxDirect(funcCall);
         return It.cnc(
             findBuiltInFuncCallType(funcCall),
             opt(funcCall.getFirstChild())

@@ -5,10 +5,7 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.KeyType;
-import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
 
@@ -21,10 +18,10 @@ import java.util.Set;
  */
 public class KeyUsageResolver extends Lang
 {
-    final private FuncCtx fakeCtx;
+    final private IExprCtx fakeCtx;
     final private int depthLeft;
 
-    public KeyUsageResolver(FuncCtx fakeCtx, int depthLeft)
+    public KeyUsageResolver(IExprCtx fakeCtx, int depthLeft)
     {
         this.fakeCtx = fakeCtx;
         this.depthLeft = depthLeft;
@@ -52,7 +49,7 @@ public class KeyUsageResolver extends Lang
                 .map(varUsage -> acc.getIndex()));
     }
 
-    public It<DeepType> resolveArgUsedKeys(Function meth, int argOrder, FuncCtx nextCtx)
+    public It<DeepType> resolveArgUsedKeys(Function meth, int argOrder, IExprCtx nextCtx)
     {
         return L(meth.getParameters()).gat(argOrder)
             .fop(toCast(ParameterImpl.class))
@@ -204,10 +201,10 @@ public class KeyUsageResolver extends Lang
                 return resolveFunc(argList)
                     .fap(meth -> It.cnc(
                         getImplementations(meth).fap(ipl -> {
-                            FuncCtx nextCtx = callOpt.fop(call -> Opt.fst(
+                            IExprCtx nextCtx = callOpt.fop(call -> Opt.fst(
                                 () -> Tls.cast(MethodReference.class, call).map(casted -> fakeCtx.subCtxDirect(casted)),
                                 () -> Tls.cast(NewExpression.class, call).map(casted -> fakeCtx.subCtxDirect(casted))
-                            )).def(new FuncCtx(fakeCtx.getSearch()));
+                            )).def(fakeCtx.subCtxEmpty());
                             return resolveArgUsedKeys(ipl, order, nextCtx);
                         }),
                         opt(meth.getName())
@@ -260,7 +257,8 @@ public class KeyUsageResolver extends Lang
     public Mt resolve(ArrayCreationExpression arrCtor)
     {
         SearchContext fakeSearch = new SearchContext(arrCtor.getProject());
-        FuncCtx fakeCtx = new FuncCtx(fakeSearch);
+        FuncCtx funcCtx = new FuncCtx(fakeSearch);
+        IExprCtx fakeCtx = new ExprCtx(funcCtx, arrCtor, 0);
 
         return list(
             findKeysUsedOnExpr(arrCtor),
