@@ -452,6 +452,8 @@ public class FuncCallRes extends Lang
                 arrt.addKey(KeyType.integer(call))
                     .addType(() -> new Mt(list(new DeepType(call, PhpType.STRING))), PhpType.STRING);
                 return list(arrt);
+            } else if (name.equals("get_called_class")) {
+                return ctx.getSelfType().map(idea -> DeepType.makeClsRef(call, idea));
             } else if (name.equals("curl_getinfo") && !callCtx.getArg(1).has()) {
                 return list(curl_getinfo(call));
             } else if (name.equals("stream_get_meta_data")) {
