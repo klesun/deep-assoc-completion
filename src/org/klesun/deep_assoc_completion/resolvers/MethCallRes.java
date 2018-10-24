@@ -136,11 +136,10 @@ public class MethCallRes extends Lang
             types = It(pdoTypes);
         } else if (clsNme.equals("Model") && meth.getName().equals("get")) {
             // treating any class named "Model" as a base ORM class for Doctrine/Eloquent/CustomStuff completion
-            L<PhpClass> callClsOpt = opt(methCall.getClassReference())
-                .fop(toCast(ClassReferenceImpl.class))
-                .fap(clsRef -> It(clsRef.multiResolve(false)))
-                .fap(res -> opt(res.getElement()))
-                .fop(toCast(PhpClass.class)).arr();
+            MemoizingIterable<PhpType> callsClsType = new MiscRes(ctx).resolveClassReferenceFromMember(methCall).mem();
+            L<PhpClass> callClsOpt = callsClsType
+                .fap(ideaType -> ArrCtorRes.resolveIdeaTypeCls(ideaType, methCall.getProject()))
+                .arr();
             Mutable<Boolean> isAssoc = new Mutable<>(false);
             It<T2<String, PsiElement>> fieldNames = callClsOpt
                 .fap(callCls -> callCls.getFields())
@@ -160,9 +159,7 @@ public class MethCallRes extends Lang
                 })
                 .unq(t2 -> t2.a);
             It<DeepType> rowTypes = It.cnc(
-                opt(methCall.getClassReference())
-                    .fap(ref -> opt(ref.getType()))
-                    .map(ideaType -> new DeepType(methCall, ideaType)),
+                callsClsType.map(ideaType -> new DeepType(methCall, ideaType)),
                 som(KeyUsageResolver.makeAssoc(methCall, fieldNames))
             );
             DeepType rowArrType = Mt.getInArraySt(rowTypes, methCall);
@@ -226,7 +223,7 @@ public class MethCallRes extends Lang
             .flt(m -> Objects.equals(m.getName(), func));
     }
 
-    private It<Method> findReferenced(MethodReferenceImpl fieldRef, IExprCtx ctx)
+    private It<Method> findReferenced(MethodReferenceImpl fieldRef)
     {
         long startTime = System.nanoTime();
         It<Method> mit = opt(fieldRef.getClassReference())
@@ -250,10 +247,10 @@ public class MethCallRes extends Lang
         return mit;
     }
 
-    private Opt<It<Method>> resolveMethodFromCall(MethodReferenceImpl call, IExprCtx ctx)
+    private Opt<It<Method>> resolveMethodFromCall(MethodReferenceImpl call)
     {
         return Opt.fst(() -> opt(null)
-            , () -> opt(findReferenced(call, ctx)).flt(found -> found.has())
+            , () -> opt(findReferenced(call)).flt(found -> found.has())
             , () -> opt(It(call.multiResolve(false)))
                 .map(l -> l.map(v -> v.getElement()))
                 .map(l -> l.fop(toCast(Method.class)))
@@ -266,7 +263,7 @@ public class MethCallRes extends Lang
     public It<DeepType> resolveCall(MethodReferenceImpl funcCall)
     {
         IExprCtx funcCtx = ctx.subCtxDirect(funcCall);
-        return resolveMethodFromCall(funcCall, ctx)
+        return resolveMethodFromCall(funcCall)
             .fap(funcs -> funcs)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),

@@ -18,6 +18,13 @@ class PersonStorage
         ];
         return ['status' => 'OK', 'spaceLeft' => 192846];
     }
+    public static function getFields() {
+        return [
+            'markup' => 'decimal',
+            'name' => 'string',
+            'price' => 'decimal',
+        ];
+    }
 }
 
 class MyModuleOptions

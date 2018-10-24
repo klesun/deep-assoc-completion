@@ -1031,8 +1031,13 @@ class ExactKeysUnitTest
 //        $obj = new PersonStorage();
         $result = $obj->addPerson('Vova', 18);
         $result[''];
+
+        $fields = $cls::getFields();
+        $fields[''];
+
         return [
             [$result, ['status', 'spaceLeft']],
+            [$fields, ['markup', 'name', 'price']],
         ];
     }
 

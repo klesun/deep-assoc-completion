@@ -45,7 +45,8 @@ public class ArrCtorRes extends Lang
     public static It<PhpClass> resolveMtCls(Mt mtArg, Project project)
     {
         It<PhpClass> resolved = opt(mtArg)
-            .map(mt -> mt.getIdeaType())
+            .map(mt -> mt.getIdeaType()).itr()
+            .cct(mtArg.types.fap(t -> t.clsRefType))
             .fap(tpe -> resolveIdeaTypeCls(tpe, project))
             ;
         if (!resolved.has()) {

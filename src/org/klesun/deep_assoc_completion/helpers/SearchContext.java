@@ -168,8 +168,6 @@ public class SearchContext extends Lang
             return It.non();
         }
         if (++expressionsResolved > getMaxExpressions()) {
-            /** @debug */
-            //System.out.println(indent + "## Expression limit guard reached " + expressionsResolved + " " + expr.getText());
             return It.non();
         } else if (timeout.flt(tout -> seconds > tout).has()) {
             return It.non();

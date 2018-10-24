@@ -265,6 +265,11 @@ public class It<A> implements Iterable<A>
         return getIterator().hasNext();
     }
 
+    public MemoizingIterable<A> mem()
+    {
+        return new MemoizingIterable<>(dispose());
+    }
+
     public L<A> arr()
     {
         L<A> arr = L();
