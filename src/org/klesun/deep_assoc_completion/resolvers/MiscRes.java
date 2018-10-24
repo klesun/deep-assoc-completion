@@ -47,6 +47,8 @@ public class MiscRes extends Lang
                 )),
             // new SomeCls(), $someObj->someField
             () -> opt(clsRefPsi)
+                // don't allow IDEA to resolve $someCls::doSomething(), since it loses static:: context
+                .flt(ref -> !ref.getText().startsWith("$"))
                 .flt(ref -> ideaKnows)
                 .map(exp -> exp.getType()),
             // new $clsInAVar()

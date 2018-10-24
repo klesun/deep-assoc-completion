@@ -287,6 +287,11 @@ public class It<A> implements Iterable<A>
         return value;
     }
 
+    public String str()
+    {
+        return Tls.implode(", ", arr().map(val -> val.toString()));
+    }
+
     public boolean any(Predicate<A> pred)
     {
         Iterable<A> iter = this::dispose;

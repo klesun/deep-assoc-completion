@@ -194,6 +194,10 @@ public class SearchContext extends Lang
             }
         }
 
+        /** @debug */
+        //System.out.println("zalupa expr " + expr.getText() + " self is " + result.fap(a -> a).rdc((sum,el) -> sum + "|" +
+        //    el.clsRefType.map(t -> t.toString()).def("(no cls)"), "") + " trace: " + funcCtx.func());
+
         return It(result.def(It.non()))
             .thn(cnt -> funcCtx.typeCnt = som(cnt))
             ;

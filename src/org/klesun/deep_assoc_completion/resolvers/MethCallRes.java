@@ -137,11 +137,9 @@ public class MethCallRes extends Lang
         } else if (clsNme.equals("Model") && meth.getName().equals("get")) {
             // treating any class named "Model" as a base ORM class for Doctrine/Eloquent/CustomStuff completion
             MemoizingIterable<PhpType> callsClsType = new MiscRes(ctx).resolveClassReferenceFromMember(methCall).mem();
-            L<PhpClass> callClsOpt = callsClsType
-                .fap(ideaType -> ArrCtorRes.resolveIdeaTypeCls(ideaType, methCall.getProject()))
-                .arr();
             Mutable<Boolean> isAssoc = new Mutable<>(false);
-            It<T2<String, PsiElement>> fieldNames = callClsOpt
+            It<T2<String, PsiElement>> fieldNames = callsClsType
+                .fap(ideaType -> ArrCtorRes.resolveIdeaTypeCls(ideaType, methCall.getProject()))
                 .fap(callCls -> callCls.getFields())
                 // could also add here "getFields" functions
                 .flt(f -> f.getName().equals("fields"))
