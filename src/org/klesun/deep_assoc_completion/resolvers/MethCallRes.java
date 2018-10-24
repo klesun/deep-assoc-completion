@@ -157,9 +157,9 @@ public class MethCallRes extends Lang
             }
             IExprCtx finalCtx = funcCtx;
             return impls.fap(m -> It.cnc(
-                ClosRes.getReturnedValue(m, finalCtx),
                 opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
                     .fap(tag -> parseReturnDoc(tag, finalCtx)),
+                ClosRes.getReturnedValue(m, finalCtx),
                 opt(m.getReturnType()).fap(rt -> list(new DeepType(rt, rt.getType())))
             ));
         };

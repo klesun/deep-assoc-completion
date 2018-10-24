@@ -874,7 +874,7 @@ class DeepKeysTest
     }
 
     /**
-     * @param $field = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][$i]
+     * @param $field = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][-100]
      */
     private function weekday(string $field)
     {

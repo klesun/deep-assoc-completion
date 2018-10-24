@@ -161,11 +161,7 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
     /** "rdc" stands for "reduce" */
     public <Tnew> Tnew rdc(Lang.F2<Tnew, T, Tnew> f, Tnew initialValue)
     {
-        Tnew value = initialValue;
-        for (T el: s) {
-            value = f.apply(value, el);
-        }
-        return value;
+        return itr().rdc(f, initialValue);
     }
 
     /** "with" */

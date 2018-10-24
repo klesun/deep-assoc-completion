@@ -13,9 +13,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocType;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocReturnTagImpl;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
@@ -103,6 +101,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 }
                 FuncCtx ctx = new FuncCtx(search);
                 ctx.fakeFileSource = opt(tagValue);
+                IExprCtx exprCtx = new ExprCtx(ctx, tagValue, 0);
                 Tls.regex(regex, docValue)
                     .fop(match -> match.gat(0))
                     // method name completion
@@ -115,7 +114,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                     .map(expr -> prefix + expr + ";")
                     .map(expr -> PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr))
                     .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))
-                    .map(psi -> DeepKeysPvdr.resolveAtPsi(psi, ctx).wap(Mt::new))
+                    .map(psi -> DeepKeysPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::new))
                     .fap(mt -> mt.getKeyNames().map(k -> DeepKeysPvdr.makeFullLookup(mt, k)))
                     .fch(result::addElement)
                     ;

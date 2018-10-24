@@ -114,7 +114,7 @@ public class FuncCtx extends Lang implements IFuncCtx
     /** should be called _only_ from an entry level class */
     public It<DeepType> findExprType(PhpExpression expr)
     {
-        IExprCtx exprCtx = new ExprCtx(this, expr, 0);
+        ExprCtx exprCtx = new ExprCtx(this, expr, 0);
         return It(search.findExprType(expr, exprCtx));
     }
 

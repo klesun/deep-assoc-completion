@@ -116,7 +116,7 @@ public class SearchContext extends Lang
         return opt(mt);
     }
 
-    private static String formatPsi(PsiElement expr)
+    public static String formatPsi(PsiElement expr)
     {
         String fileText = expr.getContainingFile().getText();
         int phpLineNum = Tls.substr(fileText, 0, expr.getTextOffset()).split("\n").length;
@@ -155,7 +155,7 @@ public class SearchContext extends Lang
             });
     }
 
-    public Iterable<DeepType> findExprType(PhpExpression expr, IExprCtx funcCtx)
+    public Iterable<DeepType> findExprType(PhpExpression expr, ExprCtx funcCtx)
     {
         long time = System.nanoTime();
         double seconds = (time - startTime) / 1000000000.0;
@@ -164,8 +164,7 @@ public class SearchContext extends Lang
             //System.out.println("deep-assoc-completion warning at " + time + ": type resolution takes " + seconds + " seconds " + expr.getText() + " " + expr.getClass());
         }
 
-        // TODO: add to config
-        if (funcCtx.func().getCallStackLength() > 10) { // on <= 6 tests fail
+        if (funcCtx.depth > initialDepth ||  funcCtx.func().getCallStackLength() > 10) { // on <= 6 tests fail
             return It.non();
         }
         if (++expressionsResolved > getMaxExpressions()) {
@@ -187,7 +186,7 @@ public class SearchContext extends Lang
             }
 
             It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx)
-                .lmt(1000) // .lmt() is just a safety measure, it should not be needed if everything works properly
+                //.lmt(1000) // .lmt() is just a safety measure, it should not be needed if everything works properly
                 .unq() // .unq() before caching is important since types taken from cache would grow in count exponentially otherwise
                 ;
             Iterable<DeepType> mit = new MemoizingIterable<>(tit.iterator());
@@ -197,7 +196,9 @@ public class SearchContext extends Lang
             }
         }
 
-        return It(result.def(It.non()));
+        return It(result.def(It.non()))
+            .thn(cnt -> funcCtx.typeCnt = som(cnt))
+            ;
     }
 
     public int getExpressionsResolved()

@@ -23,10 +23,11 @@ import static org.klesun.lang.Lang.*;
  * I'm going to use this to keep record of _expression tree_ for depth limits and debug
  */
 public class ExprCtx implements IExprCtx {
-    final private int depth;
+    final public int depth;
     final private FuncCtx funcCtx;
-    final private PsiElement expr;
-    final private L<ExprCtx> children = list();
+    final public PsiElement expr;
+    final public L<ExprCtx> children = list();
+    public Opt<Integer> typeCnt = non();
 
     public ExprCtx(FuncCtx funcCtx, PsiElement expr, int depth) {
         this.funcCtx = funcCtx;

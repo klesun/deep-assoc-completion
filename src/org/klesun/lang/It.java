@@ -272,6 +272,16 @@ public class It<A> implements Iterable<A>
         return arr;
     }
 
+    /** "rdc" stands for "reduce" */
+    public <Tnew> Tnew rdc(Lang.F2<Tnew, A, Tnew> f, Tnew initialValue)
+    {
+        Tnew value = initialValue;
+        for (A el: this) {
+            value = f.apply(value, el);
+        }
+        return value;
+    }
+
     public boolean any(Predicate<A> pred)
     {
         Iterable<A> iter = this::dispose;

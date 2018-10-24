@@ -11,10 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.IExprCtx;
-import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.icons.DeepIcons;
 import org.klesun.lang.*;
 
@@ -124,7 +121,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    public static It<DeepType> resolveAtPsi(PsiElement caretPsi, FuncCtx funcCtx)
+    public static It<DeepType> resolveAtPsi(PsiElement caretPsi, IExprCtx funcCtx)
     {
         return opt(caretPsi.getParent())
             .map(litRaw -> litRaw.getParent())
@@ -144,11 +141,22 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         return makePaddedLookup(keyName, ideaTypeStr, briefValue);
     }
 
+    private static void printExprTree(ExprCtx root, int depth)
+    {
+        String indent = Tls.range(0, depth).rdc((sum,i) -> sum + " ", "");
+        int typeCnt = root.typeCnt.def(0);
+        System.out.println(indent + SearchContext.formatPsi(root.expr) + " " + typeCnt + " types " + (typeCnt > 100 ? "many yopta" : ""));
+        for (ExprCtx subCtx: root.children) {
+            printExprTree(subCtx, depth + 1);
+        }
+    }
+
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         int depth = getMaxDepth(parameters);
         SearchContext search = new SearchContext(parameters).setDepth(depth);
+        FuncCtx funcCtx = new FuncCtx(search);
         search.isMain = true;
         Set<String> suggested = new HashSet<>();
         PsiElement caretPsi = parameters.getPosition(); // usually leaf element
@@ -162,7 +170,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         L<MutableLookup> lookups = L();
         // preliminary keys without type - they may be at least 3 times faster in some cases
 
-        It<DeepType> tit = resolveAtPsi(caretPsi, new FuncCtx(search));
+        ExprCtx exprCtx = new ExprCtx(funcCtx, caretPsi, 0);
+        It<DeepType> tit = resolveAtPsi(caretPsi, exprCtx);
         Set<String> keyNames = new LinkedHashSet<>();
         System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");
         tit.has();
@@ -201,6 +210,8 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         System.out.println("Resolved all key names in " + search.getExpressionsResolved() + " expressions");
         result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() +
             " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0));
+
+        //printExprTree(exprCtx, 0);
 
         // I enabled auto-popup for it, but I want it to show
         // only my options, not 100500k built-in suggestions
