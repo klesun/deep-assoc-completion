@@ -4,6 +4,7 @@ import com.intellij.database.model.DasObject;
 import com.intellij.database.model.ObjectKind;
 import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiElement;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
@@ -141,7 +142,7 @@ public class MethCallRes extends Lang
                 .fap(res -> opt(res.getElement()))
                 .fop(toCast(PhpClass.class)).arr();
             Mutable<Boolean> isAssoc = new Mutable<>(false);
-            It<String> fieldNames = callClsOpt
+            It<T2<String, PsiElement>> fieldNames = callClsOpt
                 .fap(callCls -> callCls.getFields())
                 // could also add here "getFields" functions
                 .flt(f -> f.getName().equals("fields"))
@@ -149,16 +150,16 @@ public class MethCallRes extends Lang
                 .fop(toCast(PhpExpression.class))
                 .fap(val -> ctx.limitResolve(30, val))
                 .fap(valt -> valt.keys)
-                .btw(k -> isAssoc.set(k.keyType.getTypes.get().any(kt -> !kt.isNumber())))
+                .btw(k -> isAssoc.set(It(k.keyType.getTypes.get())
+                    .fst().any(kt -> !kt.isNumber())))
                 .fap(k -> {
-                    if (isAssoc.get()) {
-                        return k.keyType.getNames();
-                    } else {
-                        return k.getTypes().fap(t -> opt(t.stringValue));
-                    }
+                    It<DeepType> keyTypes = isAssoc.get()
+                        ? It(k.keyType.getTypes.get())
+                        : k.getTypes();
+                    return keyTypes.fap(t -> opt(t.stringValue).map(str -> T2(str, t.definition)));
                 })
-                .unq();
-            DeepType rowType = FuncCallRes.makeAssoc(methCall, fieldNames.map(n -> T2(n, PhpType.STRING)));
+                .unq(t2 -> t2.a);
+            DeepType rowType = KeyUsageResolver.makeAssoc(methCall, fieldNames);
             DeepType rowArrType = Mt.getInArraySt(It(som(rowType)), methCall);
             types = It(som(rowArrType));
         }

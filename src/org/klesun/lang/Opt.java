@@ -84,6 +84,16 @@ public class Opt<T> implements Iterable<T>
         return uni((val) -> It(f.apply(val)), () -> It.non());
     }
 
+    public Boolean any(F<T, Boolean> pred)
+    {
+        return has ? pred.apply(value) : false;
+    }
+
+    public Boolean all(F<T, Boolean> pred)
+    {
+        return has ? pred.apply(value) : true;
+    }
+
     public It<T> itr()
     {
         return It(arr());
