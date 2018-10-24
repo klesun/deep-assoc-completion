@@ -63,10 +63,6 @@ public class ExprCtx implements IExprCtx {
         return subExpr(expr, funcCtx.subCtxDirect(funcCall, this::findExprType));
     }
 
-    public ExprCtx subCtxDirectGeneric(ParameterListOwner funcCall) {
-        return subExpr(expr, funcCtx.subCtxDirectGeneric(funcCall, this::findExprType));
-    }
-
     public ExprCtx subCtxSingleArgArr(PhpExpression argArr) {
         return subExpr(expr, funcCtx.subCtxSingleArgArr(argArr, this::findExprType));
     }

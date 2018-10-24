@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.helpers;
 
+import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.FunctionReference;
@@ -31,7 +32,6 @@ public interface IExprCtx {
     IExprCtx subCtxEmpty(PsiElement fakeFileSource);
     IExprCtx subCtxDirect(FunctionReference funcCall);
     IExprCtx subCtxDirect(NewExpression funcCall);
-    IExprCtx subCtxDirectGeneric(ParameterListOwner funcCall);
     IExprCtx subCtxSingleArgArr(PhpExpression argArr);
     IExprCtx subCtxIndirect(PhpExpression args);
     It<DeepType> getThisType();
@@ -41,4 +41,21 @@ public interface IExprCtx {
 
     It<DeepType> findExprType(PhpExpression expr);
     It<DeepType> limitResolve(int limit, PhpExpression expr);
+
+
+    /**
+     * when you parse text, attempts to go to a PSI
+     * in it will lead you to a fake foo.bar file
+     * I would rather go to the doc
+     */
+    default PsiElement getRealPsi(PsiElement maybeFake)
+    {
+        PsiFile file = maybeFake.getContainingFile();
+        PsiDirectory dir = file.getContainingDirectory();
+        if (dir == null && getFakeFileSource().has()) {
+            return getFakeFileSource().unw();
+        } else {
+            return maybeFake;
+        }
+    }
 }

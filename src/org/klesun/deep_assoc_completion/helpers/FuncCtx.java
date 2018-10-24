@@ -257,20 +257,4 @@ public class FuncCtx extends Lang implements IFuncCtx
     {
         return getCallStack().size();
     }
-
-    /**
-     * when you parse text, attempts to go to a PSI
-     * in it will lead you to a fake foo.bar file
-     * I would rather go to the doc
-     */
-    public PsiElement getRealPsi(PsiElement maybeFake)
-    {
-        PsiFile file = maybeFake.getContainingFile();
-        PsiDirectory dir = file.getContainingDirectory();
-        if (dir == null && fakeFileSource.has()) {
-            return fakeFileSource.unw();
-        } else {
-            return maybeFake;
-        }
-    }
 }

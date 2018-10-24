@@ -87,7 +87,7 @@ public class MethCallRes extends Lang
                             .fap(a -> list(a));
                     }
                 });
-        }).fch(name -> parsedType.addKey(name, ctx.getFakeFileSource().def(strType.definition))
+        }).fch(name -> parsedType.addKey(name, ctx.getRealPsi(strType.definition))
             .addType(() -> new Mt(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
         return parsedType;
     }
