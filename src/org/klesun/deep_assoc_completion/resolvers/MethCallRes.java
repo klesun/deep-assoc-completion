@@ -159,8 +159,13 @@ public class MethCallRes extends Lang
                     return keyTypes.fap(t -> opt(t.stringValue).map(str -> T2(str, t.definition)));
                 })
                 .unq(t2 -> t2.a);
-            DeepType rowType = KeyUsageResolver.makeAssoc(methCall, fieldNames);
-            DeepType rowArrType = Mt.getInArraySt(It(som(rowType)), methCall);
+            It<DeepType> rowTypes = It.cnc(
+                opt(methCall.getClassReference())
+                    .fap(ref -> opt(ref.getType()))
+                    .map(ideaType -> new DeepType(methCall, ideaType)),
+                som(KeyUsageResolver.makeAssoc(methCall, fieldNames))
+            );
+            DeepType rowArrType = Mt.getInArraySt(rowTypes, methCall);
             types = It(som(rowArrType));
         }
         return types;
