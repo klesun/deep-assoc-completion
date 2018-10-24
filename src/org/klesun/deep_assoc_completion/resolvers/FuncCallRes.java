@@ -143,7 +143,7 @@ public class FuncCallRes extends Lang
         return type;
     }
 
-    private static DeepType makeAssoc(PsiElement psi, L<T2<String, PhpType>> keys)
+    public static DeepType makeAssoc(PsiElement psi, Iterable<T2<String, PhpType>> keys)
     {
         DeepType assoct = new DeepType(psi, PhpType.ARRAY);
         for (T2<String, PhpType> key: keys) {

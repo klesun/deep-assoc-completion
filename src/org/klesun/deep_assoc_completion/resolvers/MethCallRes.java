@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
@@ -110,7 +111,7 @@ public class MethCallRes extends Lang
         });
     }
 
-    private It<DeepType> findBuiltInRetType(Method meth, IFuncCtx argCtx, MethodReference methCall)
+    private It<DeepType> findBuiltInRetType(Method meth, IExprCtx argCtx, MethodReference methCall)
     {
         It<DeepType> types = It(list());
         String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
@@ -118,7 +119,7 @@ public class MethCallRes extends Lang
             clsNme.equals("PDO") && meth.getName().equals("prepare")
         ) {
             DeepType type = new DeepType(methCall);
-            argCtx.getArg(0)
+            argCtx.func().getArg(0)
                 .fap(mt -> mt.types)
                 .fch(strType -> {
                     DeepType fetchType = parseSqlSelect(strType, meth.getProject());
@@ -132,6 +133,34 @@ public class MethCallRes extends Lang
                 .fap(obj -> ctx.findExprType(obj))
                 .fap(t -> t.pdoFetchTypes);
             types = It(pdoTypes);
+        } else if (clsNme.equals("Model") && meth.getName().equals("get")) {
+            // treating any class named "Model" as a base ORM class for Doctrine/Eloquent/CustomStuff completion
+            L<PhpClass> callClsOpt = opt(methCall.getClassReference())
+                .fop(toCast(ClassReferenceImpl.class))
+                .fap(clsRef -> It(clsRef.multiResolve(false)))
+                .fap(res -> opt(res.getElement()))
+                .fop(toCast(PhpClass.class)).arr();
+            Mutable<Boolean> isAssoc = new Mutable<>(false);
+            It<String> fieldNames = callClsOpt
+                .fap(callCls -> callCls.getFields())
+                // could also add here "getFields" functions
+                .flt(f -> f.getName().equals("fields"))
+                .fap(f -> opt(f.getDefaultValue()))
+                .fop(toCast(PhpExpression.class))
+                .fap(val -> ctx.limitResolve(30, val))
+                .fap(valt -> valt.keys)
+                .btw(k -> isAssoc.set(k.keyType.getTypes.get().any(kt -> !kt.isNumber())))
+                .fap(k -> {
+                    if (isAssoc.get()) {
+                        return k.keyType.getNames();
+                    } else {
+                        return k.getTypes().fap(t -> opt(t.stringValue));
+                    }
+                })
+                .unq();
+            DeepType rowType = FuncCallRes.makeAssoc(methCall, fieldNames.map(n -> T2(n, PhpType.STRING)));
+            DeepType rowArrType = Mt.getInArraySt(It(som(rowType)), methCall);
+            types = It(som(rowArrType));
         }
         return types;
     }
@@ -235,7 +264,7 @@ public class MethCallRes extends Lang
             .fap(funcs -> funcs)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
-                findBuiltInRetType(func, funcCtx.func(), funcCall)
+                findBuiltInRetType(func, funcCtx, funcCall)
             ));
     }
 }
