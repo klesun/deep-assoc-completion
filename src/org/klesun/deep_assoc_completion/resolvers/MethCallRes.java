@@ -229,7 +229,7 @@ public class MethCallRes extends Lang
         It<Method> mit = opt(fieldRef.getClassReference())
             .fap(obj -> It.frs(
                 () -> ctx.getSelfType()
-                    // IDEA resolve static:: incorrectly, it either treats it
+                    // IDEA resolves static:: incorrectly, it either treats it
                     // same as self::, either does not resolve it at all
                     .flt(typ -> obj.getText().equals("static"))
                     .fap(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, obj.getProject())),

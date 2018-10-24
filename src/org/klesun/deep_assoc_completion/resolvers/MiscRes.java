@@ -34,48 +34,36 @@ public class MiscRes extends Lang
             .fap(casted -> ctx.findExprType(casted));
     }
 
-    public It<PhpType> resolveClassReference(PsiPolyVariantReference poly, PhpExpression clsRefPsi)
+    public It<PhpType> resolveAnyClassReference(@Nullable PhpExpression clsRefPsi, boolean ideaKnows)
     {
         return It.frs(
             // new static()
-            () -> opt(poly)
-                .flt(ref -> clsRefPsi.getText().equals("static")).itr()
-                .fop(ref -> Opt.fst(
-                    () -> ctx.getSelfType(),
-                    () -> Tls.findParent(clsRefPsi, PhpClass.class, a -> true)
-                        .map(cls -> cls.getType())
-                )),
-            // new SomeCls(), $someObj->someField
-            () -> opt(poly)
-                .flt(ref -> It(ref.multiResolve(false)).has())
-                .map(exp -> clsRefPsi.getType()),
-            // new $clsInAVar()
-            () -> ctx.findExprType(clsRefPsi)
-                .fap(t -> t.clsRefType)
-        );
-    }
-
-    public It<PhpType> resolveClassReferenceFromMember(MemberReference memRef)
-    {
-        Opt<PhpExpression> clsRefOpt = opt(memRef.getClassReference());
-        return It.frs(
-            // static::someFunc()
-            () -> clsRefOpt
-                .flt(ref -> ref.getText().equals("static"))
+            () -> opt(clsRefPsi)
+                .flt(ref -> ref.getText().equals("static")).itr()
                 .fop(ref -> Opt.fst(
                     () -> ctx.getSelfType(),
                     () -> Tls.findParent(ref, PhpClass.class, a -> true)
                         .map(cls -> cls.getType())
                 )),
-            // SomeCls::someFunc()
-            () -> clsRefOpt
-                .flt(clsRef -> It(memRef.multiResolve(false)).has())
-                .map(clsRef -> clsRef.getType()),
-            // $clsInAVar::someFunc()
-            () -> clsRefOpt
-                .fap(clsRef -> ctx.findExprType(clsRef))
+            // new SomeCls(), $someObj->someField
+            () -> opt(clsRefPsi)
+                .flt(ref -> ideaKnows)
+                .map(exp -> exp.getType()),
+            // new $clsInAVar()
+            () -> opt(clsRefPsi)
+                .fap(ref -> ctx.findExprType(ref))
                 .fap(t -> t.clsRefType)
         );
+    }
+
+    public It<PhpType> resolveClassReference(PsiPolyVariantReference poly, PhpExpression clsRefPsi)
+    {
+        return resolveAnyClassReference(clsRefPsi, It(poly.multiResolve(false)).has());
+    }
+
+    public It<PhpType> resolveClassReferenceFromMember(MemberReference memRef)
+    {
+        return resolveAnyClassReference(memRef.getClassReference(), It(memRef.multiResolve(false)).has());
     }
 
     private It<DeepType> resolveNew(NewExpression newExp)

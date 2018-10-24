@@ -118,19 +118,26 @@ public class FuncCtx extends Lang implements IFuncCtx
         return It(search.findExprType(expr, exprCtx));
     }
 
+    // when self::doSomething is used in non-static context and doSomething() is a non-static method
+    // I believe this is deprecated in PHP 7, but there are few places in our framework that use this
+    public static boolean isWhitelistedStaticThis(PhpExpression ref)
+    {
+        Opt<PhpClass> clsOpt = Tls.findParent(ref, PhpClass.class, a -> true);
+        return clsOpt.map(cls -> cls.getFQN()).any(fqn -> fqn.startsWith("\\Dyninno\\Core\\Database\\"));
+    }
 
     public FuncCtx subCtxDirect(FunctionReference funcCall, F<PhpExpression, It<DeepType>> findExprType)
     {
         FuncCtx self = subCtxDirectGeneric(funcCall, findExprType);
         Tls.cast(MethodReference.class, funcCall)
-            .map(methCall -> methCall.getClassReference())
-            .thn(ref -> {
-                if (ref instanceof ClassReference) {
-                    self.clsIdeaType = opt(ref.getType());
-                } else {
-                    self.instGetter = opt(() -> new Mt(findExprType.apply(ref)));
-                }
-            });
+            .thn(methCall -> opt(methCall.getClassReference())
+                .thn(ref -> {
+                    if (ref instanceof ClassReference && !isWhitelistedStaticThis(methCall)) {
+                        self.clsIdeaType = opt(ref.getType());
+                    } else {
+                        self.instGetter = opt(() -> new Mt(findExprType.apply(ref)));
+                    }
+                }));
         return self;
     }
 

@@ -72,11 +72,22 @@ public class DeepTypeResolver
                 .fop(toCast(PhpExpression.class))
                 .fap(val -> ctx.findExprType(val))
             , () -> Tls.cast(ClassReferenceImpl.class, expr)
-                .fap(ref -> opt(expr.getFirstChild())
-                    // in `new $someVar()` it is Variable PSI, in `new SomeCls()` it is Leaf PSI
-                    .fop(toCast(PhpExpression.class))
-                    .fap(clsVar -> ctx.findExprType(clsVar))
-                    .def(som(DeepType.makeClsRef(expr, expr.getType()))))
+                .fap(ref -> {
+                    It<DeepType> clsTit = It.frs(
+                        () -> opt(expr.getFirstChild())
+                            // in `new $someVar()` it is Variable PSI, in `new SomeCls()` it is Leaf PSI
+                            .fop(toCast(PhpExpression.class))
+                            .fap(clsVar -> ctx.findExprType(clsVar)),
+                        () -> som(DeepType.makeClsRef(expr, expr.getType()))
+                    );
+                    if (FuncCtx.isWhitelistedStaticThis(expr) &&
+                        list("self", "static").contains(expr.getText())
+                    ) {
+                        // deprecated PHP feature - to access non-static fields/methods from non-static context via self::
+                        clsTit = It.cnc(clsTit, ctx.getThisType());
+                    }
+                    return clsTit;
+                })
             , () -> Tls.cast(ClassConstantReferenceImpl.class, expr)
                 .fap(cst -> resolveClsConst(cst, ctx))
             , () -> Tls.cast(PhpExpressionImpl.class, expr)

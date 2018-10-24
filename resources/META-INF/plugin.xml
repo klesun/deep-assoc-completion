@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.10.24.004</version>
+    <version>2018.10.25.004</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,7 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Use _call_ class as well in method call resolution. Like in Like in $someCls::doSomething().</li>
+        <li>Use _called_ class in method call resolution as well (not just in `new` instance creation). Like in $someCls::doSomething().</li>
         <li>Add completion from CMS Framework Model::get()</li>
         <li>Expression depth limit is back</li>
     </ul>
