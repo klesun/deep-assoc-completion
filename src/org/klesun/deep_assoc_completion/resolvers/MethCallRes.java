@@ -140,8 +140,9 @@ public class MethCallRes extends Lang
             Mutable<Boolean> isAssoc = new Mutable<>(false);
             It<T2<String, PsiElement>> fieldNames = callsClsType
                 .fap(ideaType -> ArrCtorRes.resolveIdeaTypeCls(ideaType, methCall.getProject()))
+                .fap(callCls -> It.cnc(som(callCls), It(callCls.getSupers())).end(sup -> sup.getName().equals("Model")).unq())
                 .fap(callCls -> callCls.getFields())
-                // could also add here "getFields" functions
+                // could also add here "getFields" functions, not just "fields" property
                 .flt(f -> f.getName().equals("fields"))
                 .fap(f -> opt(f.getDefaultValue()))
                 .fop(toCast(PhpExpression.class))
