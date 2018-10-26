@@ -85,8 +85,16 @@ public class ClosRes extends Lang
     public DeepType resolve(FunctionImpl func)
     {
         DeepType result = new DeepType(func, func.getLocalType(true));
-        result.returnTypeGetters.add((funcCtx) ->
-            new MemoizingIterable<>(getReturnedValue(func, funcCtx).iterator()));
+        result.returnTypeGetters.add((callCtx) -> {
+            L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars = It(func.getChildren())
+                .fop(toCast(PhpUseList.class))
+                .fap(u -> It(u.getChildren()))
+                .fop(toCast(Variable.class))
+                .map(closVar -> T2(closVar.getName(), Tls.onDemand(() -> ctx.findExprType(closVar).mem())))
+                .arr();
+            IExprCtx closCtx = callCtx.withClosure(closureVars);
+            return new MemoizingIterable<>(getReturnedValue(func, closCtx).iterator());
+        });
         return result;
     }
 }

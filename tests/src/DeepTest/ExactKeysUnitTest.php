@@ -4,6 +4,7 @@ namespace DeepTest;
 use Lib\ParamValidation\DictP;
 use Lib\ParamValidation\ListP;
 use Lib\ParamValidation\StringP;
+use Lib\Utils\Fp;
 
 /**
  * unlike UnitTest.php, this test not just checks that actual result  has _at least_
@@ -1038,6 +1039,132 @@ class ExactKeysUnitTest
         return [
             [$result, ['status', 'spaceLeft']],
             [$fields, ['markup', 'name', 'price']],
+        ];
+    }
+
+    private static function combineTicketsAndInvoices(array $tickets, array $invoices)
+    {
+        $invoices[0]['invoiceNumber'];
+        $numToInv = array_combine(array_column($invoices, 'ticketNumber'), $invoices);
+        return array_map(function($ticket)use($numToInv){
+            $numToInv[0]['invoiceNumber'];
+            $ticket['ticketInvoiceInfo'] = $numToInv[$ticket['ticketNumber']] ?? null;
+            $ticket['ticketInvoiceInfo'][''];
+            return $ticket;
+        }, $tickets);
+    }
+
+    public static function provideClosureUse()
+    {
+        $tickets = [
+            ['ticketNumber' => '0123456789012', 'name' => 'Vasya/Pupkin'],
+            ['ticketNumber' => '0123456789013', 'name' => 'Vasita/Pupkina'],
+        ];
+        $invoices = [
+            ['ticketNumber' => '0123456789012', 'invoiceNumber' => '13412314', 'isVoided' => false],
+            ['ticketNumber' => '0123456789013', 'invoiceNumber' => '13412315', 'isVoided' => false],
+        ];
+        $combined = static::combineTicketsAndInvoices($tickets, $invoices);
+        $combined[0]['ticketInvoiceInfo'][''];
+        return [
+            [$combined[0], ['ticketNumber', 'name', 'ticketInvoiceInfo']],
+            [$combined[0]['ticketInvoiceInfo'], ['ticketNumber', 'invoiceNumber', 'isVoided']],
+        ];
+    }
+
+    private static function getLocations()
+    {
+        return [
+            ['type' => 'city', 'value' => 'WAS'],
+            ['type' => 'airport', 'value' => 'JFK'],
+            ['type' => 'country', 'value' => 'LV'],
+            ['type' => 'region', 'value' => '34'],
+        ];
+    }
+
+    /** @param $rule = [
+     *     'departure_items' => static::getLocations(),
+     *     'destination_items' => static::getLocations(),
+     * ] */
+    private static function normalizeRule(array $rule, bool $forClient)
+    {
+        // remove empty condition keys to make field more readable in db cli
+        $normArr = !$forClient
+            ? function(array $arr){return array_filter($arr);}
+            : function(array $arr){return $arr;};
+
+        return $normArr([
+            'departure_items' => array_map(function($item) use ($forClient,$normArr){
+                return $normArr([
+                    'type' => strval($item['type']),
+                    'value' => strval($item['value']),
+                    'name' => $forClient ? static::getLocationName($item) : null,
+                ]);
+            }, $rule['departure_items'] ?? []),
+            'destination_items' => array_map(function($item) use ($forClient,$normArr){
+                return $normArr([
+                    'type' => strval($item['type']),
+                    'value' => strval($item['value']),
+                    'name' => $forClient ? static::getLocationName($item) : null,
+                ]);
+            }, $rule['destination_items'] ?? []),
+            'reprice_pcc_records' => array_map(function($item) use ($forClient,$normArr){
+                return $normArr([
+                    'gds' => strval($item['gds']),
+                    'pcc' => strval($item['pcc']),
+                    'ptc' => strval($item['ptc'] ?? ''),
+                    'account_code' => strval($item['account_code'] ?? ''),
+                    'fare_type' => strval($item['fare_type'] ?? ''),
+                ]);
+            }, $rule['reprice_pcc_records'] ?? []),
+        ]);
+    }
+
+    public function provideUseInUseInUse($dataStr)
+    {
+        $rule = self::normalizeRule(json_decode($dataStr, true), false);
+        $rule['destination_items'][0]['type'] === '';
+        $types = array_column($rule['destination_items'], 'type');
+        return [
+            [$rule, ['departure_items', 'destination_items', 'reprice_pcc_records']],
+            [$rule['departure_items'][0], ['type', 'value', 'name']],
+            [$rule['destination_items'][0], ['type', 'value', 'name']],
+            [$rule['reprice_pcc_records'][0], ['gds', 'pcc', 'ptc', 'account_code', 'fare_type']],
+            [array_flip($types), ['city', 'airport', 'country', 'region']]
+        ];
+    }
+
+    /**
+     * wrap private method in a closure to
+     * allow passing it outside of this class
+     */
+    private static function closed(callable $meth)
+    {
+        // this could be moved to a helper class - will
+        // need to use reflection to call private method
+        return function(...$args) use ($meth) {return $meth(...$args);};
+    }
+
+    private static function parseSegment($line)
+    {
+        return [
+            'lineNumber' => 123,
+            'from' => 'KIV',
+            'to' => 'RIX',
+            'date' => '2018-02-15',
+        ];
+    }
+
+    public function provideMethWrapper()
+    {
+        $lines = [
+            ' ASD D 1BJ JK J 2J 2J ',
+            ' ASD 2INCI2 I 2IC2IO  ',
+            ' A3G3D 1BS JK J 2J 2J ',
+        ];
+        $segments = Fp::map(self::closed([self::class, 'parseSegment']), $lines);
+        return [
+            [$segments[0], ['lineNumber', 'from', 'to', 'date']],
         ];
     }
 

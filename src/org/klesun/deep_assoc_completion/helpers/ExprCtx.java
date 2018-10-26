@@ -71,6 +71,10 @@ public class ExprCtx implements IExprCtx {
         return subExpr(expr, funcCtx.subCtxIndirect(args, this::findExprType));
     }
 
+    public ExprCtx withClosure(L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars) {
+        return subExpr(expr, funcCtx.withClosure(closureVars));
+    }
+
     public Opt<PsiElement> getFakeFileSource() {
         return funcCtx.fakeFileSource;
     }
@@ -85,6 +89,10 @@ public class ExprCtx implements IExprCtx {
 
     public Opt<PhpType> getSelfType() {
         return funcCtx.clsIdeaType;
+    }
+
+    public L<T2<String, S<MemoizingIterable<DeepType>>>> getClosureVars() {
+        return funcCtx.closureVars;
     }
 
     public It<DeepType> findExprType(PhpExpression expr) {

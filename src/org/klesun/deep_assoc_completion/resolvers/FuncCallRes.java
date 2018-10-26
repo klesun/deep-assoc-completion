@@ -414,7 +414,7 @@ public class FuncCallRes extends Lang
                 return callCtx.getArgMt(0).getInArray(call).mt().types;
             } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")
                     || name.equals("array_intersect_assoc") || name.equals("array_diff_assoc")
-                    || name.equals("array_diff")
+                    || name.equals("array_diff") || name.equals("strval")
             ) {
                 // do something more clever?
                 return callCtx.getArgMt(0).types;

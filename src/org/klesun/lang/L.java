@@ -164,6 +164,11 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
         return itr().rdc(f, initialValue);
     }
 
+    public String toString()
+    {
+        return Tls.implode(", ", map(a -> a.toString()));
+    }
+
     /** "with" */
     public L<T> wth(Lang.C<L<T>> f) {
         f.accept(this);

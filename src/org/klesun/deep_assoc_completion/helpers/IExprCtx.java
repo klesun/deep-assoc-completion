@@ -10,14 +10,12 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.lang.It;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
+import org.klesun.lang.*;
 
 import java.util.Collection;
 import java.util.Map;
 
-import static org.klesun.lang.Lang.som;
+import static org.klesun.lang.Lang.*;
 
 /**
  * making it an interface since I'm refactor the context
@@ -34,8 +32,10 @@ public interface IExprCtx {
     IExprCtx subCtxDirect(NewExpression funcCall);
     IExprCtx subCtxSingleArgArr(PhpExpression argArr);
     IExprCtx subCtxIndirect(PhpExpression args);
+    IExprCtx withClosure(L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars);
     It<DeepType> getThisType();
     Opt<PhpType> getSelfType();
+    L<T2<String, S<MemoizingIterable<DeepType>>>> getClosureVars();
     Opt<PsiElement> getFakeFileSource();
     Map<PsiFile, Collection<FieldReferenceImpl>> getFieldRefCache();
 

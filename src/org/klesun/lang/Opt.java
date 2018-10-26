@@ -200,4 +200,9 @@ public class Opt<T> implements Iterable<T>
             })
             .has();
     }
+
+    public String toString()
+    {
+        return !has() ? "non" : "som(" + unw() + ")";
+    }
 }

@@ -4,8 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocVarImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.Variable;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
@@ -186,14 +185,22 @@ public class VarRes
     public It<DeepType> resolve(Variable variable)
     {
         It<PsiElement> references = findDeclarations(variable)
-            .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable));
+            .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable))
+            ;
 
         // @var docs are a special case since they give type
         // info from any position (above/below/right of/left of the var declaration)
         It<DeepType> docTypes = getDocType(variable);
+        Opt<Function> caretScope = Tls.findParent(variable, Function.class, a -> true)
+            .fop(func -> variable.getParent() instanceof PhpUseList
+                ? Tls.findParent(func, Function.class, a -> true) : som(func));
 
         L<Assign> asses = references
             .fop(refPsi -> {
+                Opt<Function> declScope = Tls.findParent(refPsi, Function.class, a -> true);
+                if (!declScope.equals(caretScope)) {
+                    return non(); // refPsi is outside the function, a closure, handled manually
+                }
                 boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
                 return Opt.fst(() -> non()
                     , () -> (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
@@ -227,9 +234,14 @@ public class VarRes
         It<DeepType> thisType = opt(variable)
             .flt(vari -> vari.getText().equals("$this"))
             .fap(vari -> ctx.getThisType());
+
+        It<DeepType> closureType = ctx.getClosureVars().itr()
+            .flt(t2 -> t2.a.equals(variable.getName()))
+            .fap(t2 -> t2.b.get());
+
         return It.cnc(
             docTypes, list(typeFromIdea),
-            thisType,
+            thisType, closureType,
             AssRes.assignmentsToTypes(asses)
         );
     }

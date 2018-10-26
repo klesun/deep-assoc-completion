@@ -26,6 +26,7 @@ public class FuncCtx extends Lang implements IFuncCtx
     private L<Integer> variadicOrders = L();
     public Opt<Lang.S<Mt>> instGetter = opt(null);
     public Opt<PhpType> clsIdeaType = opt(null);
+    public L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars = list();
     final private EArgPsiType argPsiType;
     /** use this when you need to reference a real PSI during parsing of PHP Doc */
     public Opt<PsiElement> fakeFileSource = opt(null);
@@ -190,6 +191,18 @@ public class FuncCtx extends Lang implements IFuncCtx
     public FuncCtx subCtxEmpty()
     {
         return new FuncCtx(this, list(), null, EArgPsiType.NONE);
+    }
+
+    public FuncCtx withClosure(L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars)
+    {
+        FuncCtx closCtx = new FuncCtx(this, argGetters, uniqueRef.def(null), EArgPsiType.INDIRECT);
+        closCtx.closureVars = closureVars; // probably should add to caching criteria...
+        closCtx.fakeFileSource = this.fakeFileSource;
+        closCtx.clsIdeaType = this.clsIdeaType;
+        closCtx.instGetter = this.instGetter;
+        closCtx.variadicOrders = this.variadicOrders;
+        closCtx.cachedArgs = this.cachedArgs;
+        return closCtx;
     }
 
     public boolean hasArgs()
