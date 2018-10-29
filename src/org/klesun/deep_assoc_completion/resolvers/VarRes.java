@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocVarImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
@@ -194,11 +195,13 @@ public class VarRes
         Opt<Function> caretScope = Tls.findParent(variable, Function.class, a -> true)
             .fop(func -> variable.getParent() instanceof PhpUseList
                 ? Tls.findParent(func, Function.class, a -> true) : som(func));
+        Opt<PsiFile> caretFile = opt(variable.getContainingFile());
 
         L<Assign> asses = references
             .fop(refPsi -> {
                 Opt<Function> declScope = Tls.findParent(refPsi, Function.class, a -> true);
-                if (!declScope.equals(caretScope)) {
+                Opt<PsiFile> declFile = opt(refPsi.getContainingFile());
+                if (declFile.equals(caretFile) && !declScope.equals(caretScope)) {
                     return non(); // refPsi is outside the function, a closure, handled manually
                 }
                 boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);

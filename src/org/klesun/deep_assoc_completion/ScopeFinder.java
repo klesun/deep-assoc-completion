@@ -9,6 +9,7 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * determines whether var declaration
@@ -180,6 +181,8 @@ public class ScopeFinder extends Lang
     {
         if (isPartOfAssignment(reference, caretVar)) {
             return false;
+        } else if (!Objects.equals(reference.getContainingFile(), caretVar.getContainingFile())) {
+            return true;
         } else if (caretVar.getTextOffset() < reference.getTextOffset()) {
             return false;
         }

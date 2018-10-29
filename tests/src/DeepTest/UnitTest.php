@@ -1376,4 +1376,15 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         }
         return $list;
     }
+
+    public function provideGlobals()
+    {
+        // should infer keys from all places in project where $GLOBALS is written
+        $GLOBALS[''];
+        $list[] = [$GLOBALS, ['asd' => [], 'haruka' => [], 'zhopa' => []]];
+        global $zhopa;
+        $zhopa[''];
+        $list[] = [$zhopa, ['ololo' => [], 'DmitryNagiev' => []]];
+        return $list;
+    }
 }
