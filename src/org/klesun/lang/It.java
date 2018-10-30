@@ -154,6 +154,11 @@ public class It<A> implements Iterable<A>
         return fap((el, i) -> flatten.apply(el));
     }
 
+    public <B extends A> It<B> cst(Class<B> cls)
+    {
+        return fap(val -> Tls.cast(cls, val));
+    }
+
     public <B> It<B> fop(F2<A, Integer, Opt<B>> convert)
     {
         return map(convert).fap(a -> a.itr());

@@ -247,11 +247,15 @@ public class ArgRes extends Lang
             list(param)
         );
 
-        It<DeepType> docTit = decls
-            .fop(arg -> opt(arg.getDocComment()))
-            .fop(doc -> opt(doc.getParamTagByName(param.getName())))
-            .fap(doc -> new DocParamRes(trace).resolve(doc))
-            ;
+        It<DeepType> declTit = decls
+            .fap(arg -> It.cnc(
+                opt(arg.getDocComment())
+                    .fop(doc -> opt(doc.getParamTagByName(param.getName())))
+                    .fap(doc -> new DocParamRes(trace).resolve(doc)),
+                opt(arg.getDefaultValue()).itr()
+                    .cst(PhpExpression.class)
+                    .fap(xpr -> trace.subCtxEmpty().findExprType(xpr))
+            ));
         It<DeepType> genericTit = It();
         if (!trace.func().hasArgs()) {
             // passed args not known - if caret was inside this function
@@ -267,7 +271,7 @@ public class ArgRes extends Lang
                 });
         }
         return It.cnc(
-            docTit,
+            declTit,
             resolveFromDataProviderDoc(param),
             genericTit
         );

@@ -1329,21 +1329,55 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
         return $list;
     }
 
+    public function provideGlobals()
+    {
+        // should infer keys from all places in project where $GLOBALS is written
+        $GLOBALS[''];
+        $list[] = [$GLOBALS, ['asd' => [], 'haruka' => [], 'zhopa' => []]];
+        global $zhopa;
+        $zhopa[''];
+        $list[] = [$zhopa, ['ololo' => [], 'DmitryNagiev' => []]];
+        return $list;
+    }
+
     /** @param $citizenOpt = Result::makeOk(new ReimuHakurei()) */
-//    public function provideNoNsNew($citizenOpt)
-//    {
-//        (new PersonStorage())->reimuResult->result->demandDonuts();
-//        $citizenOpt->result->demandDonuts();
-//        $citizen->demandDonuts()[''];
-//        $honestOpinion = static::makeKonohaCitizen()->getHonestOpinion();
-//        $honestOpinion[''];
-//        $list[] = [$honestOpinion, [
-//            'whoShouldBeTheHokage' => [],
-//            'whoStealsFromTreasury' => [],
-//            'whoShouldNotExist' => [],
-//        ]];
-//        return $list;
-//    }
+    public function provideNoNsNew($citizenOpt)
+    {
+        (new PersonStorage())->reimuResult->result->demandDonuts();
+        $citizenOpt->result->demandDonuts();
+        $citizen->demandDonuts()[''];
+        $honestOpinion = static::makeKonohaCitizen()->getHonestOpinion();
+        $honestOpinion[''];
+        $list[] = [$honestOpinion, [
+            'whoShouldBeTheHokage' => [],
+            'whoStealsFromTreasury' => [],
+            'whoShouldNotExist' => [],
+        ]];
+        return $list;
+    }
+
+
+    private function sendVerificaionEmail($_arguments = [
+        'user' => null,
+        'controllerIdentifier' => null,
+        'actionIdentifier' => null,
+    ])
+    {
+        $_arguments[''];
+        return ['params' => $_arguments];
+    }
+
+    public function provideDefaultArgValues()
+    {
+        $sent = $this->sendVerificaionEmail([
+            'user' => 'vova',
+            // should suggest: 'controlIdentifier', 'actionIdentifier'
+            '' => 'ololo123',
+        ]);
+        $sent['params'][''];
+        $list[] = [$sent['params'], ['user' => [], 'controllerIdentifier' => [], 'actionIdentifier' => []]];
+        return $list;
+    }
 
     //=============================
     // following are not implemented yet
@@ -1374,17 +1408,6 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
             $segment[''];
             $list[] = [$segment, ['type' => [], 'model' => [], 'state' => []]];
         }
-        return $list;
-    }
-
-    public function provideGlobals()
-    {
-        // should infer keys from all places in project where $GLOBALS is written
-        $GLOBALS[''];
-        $list[] = [$GLOBALS, ['asd' => [], 'haruka' => [], 'zhopa' => []]];
-        global $zhopa;
-        $zhopa[''];
-        $list[] = [$zhopa, ['ololo' => [], 'DmitryNagiev' => []]];
         return $list;
     }
 }
