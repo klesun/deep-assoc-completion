@@ -70,6 +70,9 @@ public class KeyUsageResolver extends Lang
                 opt(arg.getDocComment())
                     .map(doc -> doc.getParamTagByName(arg.getName()))
                     .fap(doc -> new DocParamRes(nextCtx).resolve(doc)),
+                opt(arg.getDefaultValue())
+                    .cst(PhpExpression.class)
+                    .fap(xpr -> nextCtx.subCtxEmpty().findExprType(xpr)),
                 new KeyUsageResolver(nextCtx, depthLeft - 1).findKeysUsedOnVar(arg)
             ));
     }
