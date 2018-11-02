@@ -4,6 +4,8 @@ namespace DeepTest;
 /** @property  $reimuResult = Result::makeOk(new ReimuHakurei()) */
 class PersonStorage
 {
+    /** @var $pnrData = ['reservation' => [], 'currentPricing' => ['pricingList' => []]] */
+    public $pnrData;
     public $mainPerson = ['name' => 'Vasja', 'age' => 21];
     public $allPersons = [];
     public $asdasd = [

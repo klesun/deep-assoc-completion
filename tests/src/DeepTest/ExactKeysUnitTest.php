@@ -1168,6 +1168,19 @@ class ExactKeysUnitTest
         ];
     }
 
+    public function providePropDocComment()
+    {
+        $storage = new PersonStorage();
+        $reimu = $storage->reimuResult;
+        $storage->pnrData[''];
+        $reimu->unwrap()->demandDonuts()[''];
+        return [
+            [$storage->pnrData, ['reservation', 'currentPricing']],
+            [$storage->pnrData['currentPricing'], ['pricingList']],
+            [$reimu->unwrap()->demandDonuts(), ['patience', 'amount', 'consequences']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

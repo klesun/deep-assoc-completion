@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
@@ -67,6 +68,27 @@ public class FieldRes extends Lang
         return ctxFqns.isEmpty() || ctxFqns.contains(fieldCls.getFQN());
     }
 
+    private It<Assign> getAssignments(Field resolved, FieldReference fieldRef)
+    {
+        IExprCtx implCtx = ctx.subCtxEmpty();
+        return opt(resolved.getContainingFile())
+            .fap(file -> findReferences(file, fieldRef.getName()))
+            .fap(assPsi -> Tls.findParent(assPsi, Method.class, a -> true)
+                .flt(meth -> meth.getName().equals("__construct"))
+                .map(meth -> fieldRef.getClassReference())
+                .fop(toCast(PhpExpression.class))
+                .fap(ref -> ctx.findExprType(ref))
+                .fop(t -> t.ctorArgs)
+                .flt(ctx -> opt(resolved.getContainingClass())
+                    .map(cls -> isSameClass(ctx, cls)).def(true))
+                .wap(ctxs -> It.cnc(
+                    ctxs,
+                    Tls.ifi(areInSameScope(fieldRef, assPsi), () -> list(ctx)),
+                    Tls.ifi(!ctxs.has(), () -> list(implCtx))
+                ))
+                .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(assPsi, false)));
+    }
+
     public It<DeepType> resolve(FieldReferenceImpl fieldRef)
     {
         S<Mt> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
@@ -104,31 +126,20 @@ public class FieldRes extends Lang
                     .fop(toCast(PhpExpression.class))
                     .fap(def -> implCtx.findExprType(def));
 
-                It<DeepType> docTs = opt(resolved.getContainingClass()).itr()
-                    .fop(cls -> opt(cls.getDocComment()))
+                It<DeepType> docTs = opt(resolved.getDocComment())
+                    .fap(doc -> opt(doc.getVarTag()))
+                    .fap(docTag -> new DocParamRes(implCtx).resolve(docTag));
+
+                It<DeepType> magicPropTs = opt(resolved.getContainingClass())
+                    .fap(cls -> opt(cls.getDocComment()))
                     .fap(doc -> doc.getPropertyTags())
                     .flt(tag -> opt(tag.getProperty()).flt(pro -> pro.getName().equals(fieldRef.getName())).has())
                     .fap(tag -> new DocParamRes(ctx).resolve(tag));
 
-                It<Assign> asses = opt(resolved.getContainingFile()).itr()
-                    .fap(file -> findReferences(file, fieldRef.getName()))
-                    .fap(assPsi -> Tls.findParent(assPsi, Method.class, a -> true)
-                        .flt(meth -> meth.getName().equals("__construct"))
-                        .map(meth -> fieldRef.getClassReference())
-                        .fop(toCast(PhpExpression.class))
-                        .fap(ref -> ctx.findExprType(ref))
-                        .fop(t -> t.ctorArgs)
-                        .flt(ctx -> opt(resolved.getContainingClass())
-                            .map(cls -> isSameClass(ctx, cls)).def(true))
-                        .wap(ctxs -> It.cnc(
-                            ctxs,
-                            Tls.ifi(areInSameScope(fieldRef, assPsi), () -> list(ctx)),
-                            Tls.ifi(!ctxs.has(), () -> list(implCtx))
-                        ))
-                        .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(assPsi, false)));
+                It<Assign> asses = getAssignments(resolved, fieldRef);
 
                 return It.cnc(
-                    defTs, docTs,
+                    defTs, magicPropTs, docTs,
                     AssRes.assignmentsToTypes(asses)
                 );
             });

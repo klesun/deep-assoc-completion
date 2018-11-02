@@ -1343,7 +1343,6 @@ class UnitTest implements IProcessPntQueueAction /** extends \PHPUnit_Framework_
     /** @param $citizenOpt = Result::makeOk(new ReimuHakurei()) */
     public function provideNoNsNew($citizenOpt)
     {
-        (new PersonStorage())->reimuResult->result->demandDonuts();
         $citizenOpt->result->demandDonuts();
         $citizen->demandDonuts()[''];
         $honestOpinion = static::makeKonohaCitizen()->getHonestOpinion();
