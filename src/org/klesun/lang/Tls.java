@@ -201,12 +201,12 @@ public class Tls extends Lang
         }
     }
 
-    public static <T> Iterable<T> ifi(boolean cond, S<Iterable<T>> then)
+    public static <T> It<T> ifi(boolean cond, S<Iterable<T>> then)
     {
         if (cond) {
-            return then.get();
+            return It(then.get());
         } else {
-            return list();
+            return It(list());
         }
     }
 }

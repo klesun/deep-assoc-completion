@@ -194,6 +194,15 @@ public class KeyUsageResolver extends Lang
                 .map(varName -> T2(varName, pdostt.definition))));
     }
 
+    private It<DeepType> findKeysUsedInModelGet(Function func, ParameterList argList, PhpExpression arrCtor)
+    {
+        return Tls.cast(Method.class, func)
+            .flt(m -> L(argList.getParameters()).indexOf(arrCtor) == 0)
+            .fap(meth -> opt(argList.getParent())
+                .cst(MethodReference.class)
+                .fap(methCall -> (new MethCallRes(fakeCtx)).getModelRowType(methCall, meth)));
+    }
+
     public It<DeepType> findKeysUsedOnExpr(PhpExpression arrCtor)
     {
         return opt(arrCtor.getParent())
@@ -215,6 +224,7 @@ public class KeyUsageResolver extends Lang
                             .fap(n -> resolveReplaceKeys(argList, order).types),
                         findKeysUsedInArrayMap(meth, argList, arrCtor),
                         findKeysUsedInPdoExec(meth, argList, arrCtor),
+                        findKeysUsedInModelGet(meth, argList, arrCtor),
                         opt(argList.getParent())
                             .fop(toCast(NewExpressionImpl.class))
                             .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types)

@@ -8,13 +8,10 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.IExprCtx;
-import org.klesun.deep_assoc_completion.helpers.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.*;
@@ -112,6 +109,41 @@ public class MethCallRes extends Lang
         });
     }
 
+    public It<DeepType> getModelRowType(MethodReference methCall, Method meth)
+    {
+        // treating any class named "Model" as a base ORM class for Doctrine/Eloquent/CustomStuff completion
+        String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
+        return Tls.ifi(
+            clsNme.equals("Model") && meth.getName().equals("get"),
+            () -> new MiscRes(ctx).resolveClassReferenceFromMember(methCall)
+        ).fap(ideaType -> {
+            Mutable<Boolean> isAssoc = new Mutable<>(false);
+            It<T2<String, PsiElement>> fieldNames =
+                ArrCtorRes.resolveIdeaTypeCls(ideaType, methCall.getProject())
+                .fap(callCls -> It.cnc(som(callCls), It(callCls.getSupers())).end(sup -> sup.getName().equals("Model")).unq())
+                .fap(callCls -> callCls.getFields())
+                // could also add here "getFields" functions, not just "fields" property
+                .flt(f -> f.getName().equals("fields"))
+                .fap(f -> opt(f.getDefaultValue()))
+                .fop(toCast(PhpExpression.class))
+                .fap(val -> ctx.limitResolve(30, val))
+                .fap(valt -> valt.keys)
+                .btw(k -> isAssoc.set(It(k.keyType.getTypes.get())
+                    .fst().any(kt -> !kt.isNumber())))
+                .fap(k -> {
+                    It<DeepType> keyTypes = isAssoc.get()
+                        ? It(k.keyType.getTypes.get())
+                        : k.getTypes();
+                    return keyTypes.fap(t -> opt(t.stringValue).map(str -> T2(str, t.definition)));
+                })
+                .unq(t2 -> t2.a);
+            return It.cnc(
+                som(new DeepType(methCall, ideaType)),
+                som(KeyUsageResolver.makeAssoc(methCall, fieldNames))
+            );
+        });
+    }
+
     private It<DeepType> findBuiltInRetType(Method meth, IExprCtx argCtx, MethodReference methCall)
     {
         It<DeepType> types = It(list());
@@ -134,36 +166,11 @@ public class MethCallRes extends Lang
                 .fap(obj -> ctx.findExprType(obj))
                 .fap(t -> t.pdoFetchTypes);
             types = It(pdoTypes);
-        } else if (clsNme.equals("Model") && meth.getName().equals("get")) {
-            // treating any class named "Model" as a base ORM class for Doctrine/Eloquent/CustomStuff completion
-            MemoizingIterable<PhpType> callsClsType = new MiscRes(ctx).resolveClassReferenceFromMember(methCall).mem();
-            Mutable<Boolean> isAssoc = new Mutable<>(false);
-            It<T2<String, PsiElement>> fieldNames = callsClsType
-                .fap(ideaType -> ArrCtorRes.resolveIdeaTypeCls(ideaType, methCall.getProject()))
-                .fap(callCls -> It.cnc(som(callCls), It(callCls.getSupers())).end(sup -> sup.getName().equals("Model")).unq())
-                .fap(callCls -> callCls.getFields())
-                // could also add here "getFields" functions, not just "fields" property
-                .flt(f -> f.getName().equals("fields"))
-                .fap(f -> opt(f.getDefaultValue()))
-                .fop(toCast(PhpExpression.class))
-                .fap(val -> ctx.limitResolve(30, val))
-                .fap(valt -> valt.keys)
-                .btw(k -> isAssoc.set(It(k.keyType.getTypes.get())
-                    .fst().any(kt -> !kt.isNumber())))
-                .fap(k -> {
-                    It<DeepType> keyTypes = isAssoc.get()
-                        ? It(k.keyType.getTypes.get())
-                        : k.getTypes();
-                    return keyTypes.fap(t -> opt(t.stringValue).map(str -> T2(str, t.definition)));
-                })
-                .unq(t2 -> t2.a);
-            It<DeepType> rowTypes = It.cnc(
-                callsClsType.map(ideaType -> new DeepType(methCall, ideaType)),
-                som(KeyUsageResolver.makeAssoc(methCall, fieldNames))
-            );
-            DeepType rowArrType = Mt.getInArraySt(rowTypes, methCall);
-            types = It(som(rowArrType));
         }
+        It<DeepType> modelRowTypes = getModelRowType(methCall, meth);
+        It<DeepType> modelRowArrTypes = !modelRowTypes.has() ? It.non() :
+            It(som(Mt.getInArraySt(modelRowTypes, methCall)));
+        types = It.cnc(types, modelRowArrTypes);
         return types;
     }
 
