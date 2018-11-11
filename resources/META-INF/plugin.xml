@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.11.05.001</version>
+    <version>2018.11.11.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,8 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Provide filter field completion in CMS Framework Model::get()</li>
-        <li>Infer type from `public $field` deep-format doc comment</li>
+        <li>Fix: Do not disable built-in completion in [] and [$]</li>
     </ul>
     ]]>
     </change-notes>
