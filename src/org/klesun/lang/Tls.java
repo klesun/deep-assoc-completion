@@ -66,6 +66,19 @@ public class Tls extends Lang
         return opt(null);
     }
 
+    public static <T extends PsiElement> Opt<T> findPrevSibling(PsiElement psi, Class<T> cls)
+    {
+        PsiElement prev = psi.getPrevSibling();
+        while (prev != null) {
+            Opt<T> matching = Tls.cast(cls, prev);
+            if (matching.has()) {
+                return matching;
+            }
+            prev = prev.getPrevSibling();
+        }
+        return non();
+    }
+
     public static <T extends PsiElement> It<T> findChildren(
         PsiElement parent,
         Class<T> cls,

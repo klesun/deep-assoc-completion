@@ -3,6 +3,9 @@ package org.klesun.deep_assoc_completion.entry;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
+import com.intellij.util.ProcessingContext;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocToken;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
@@ -46,6 +49,22 @@ public class DeepKeysCbtr extends CompletionContributor
             PlatformPatterns.psiElement()
                 .withSuperParent(2, PhpDocTag.class),
             new DocFqnPvdr()
+        );
+        /** @param $params = [
+         *     'weekday' => self::we, // should suggest "weekday"
+         *     'youkai' => new YakumoR, // should suggest "YakumoRan"
+         * ] */
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(0, PhpDocToken.class)
+                .withSuperParent(1, PhpDocComment.class)
+                ,
+            new CompletionProvider<CompletionParameters>() {
+                protected void addCompletions(@NotNull CompletionParameters completionParameters, ProcessingContext processingContext, @NotNull CompletionResultSet completionResultSet) {
+                    new DocFqnPvdr().addCompletionsMultiline(completionParameters, processingContext, completionResultSet);
+                }
+            }
         );
         // array_column($arr, '')
         this.extend(

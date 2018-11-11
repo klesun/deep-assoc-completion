@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.completion_providers;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.completion.impl.CamelHumpMatcher;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
@@ -11,6 +12,7 @@ import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocType;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocReturnTagImpl;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.*;
@@ -27,6 +29,10 @@ import static org.klesun.lang.Lang.*;
  */
 public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
 {
+    final private static String prefix = "<?php\n$arg = ";
+    final private static String regex = "^\\s*=\\s*(.+)$";
+    final private static String returnRegex = "^\\s*(?:like|=|)\\s*(.+)$";
+
     private static String makeMethOrderValue(Method meth)
     {
         String result = "";
@@ -39,7 +45,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
         Opt<PhpClass> caretClass = Tls.findParent(docPsi, PhpClass.class, a -> true);
         PhpIndex idx = PhpIndex.getInstance(project);
         return Opt.fst(() -> opt(null)
-            , () -> Tls.regex("(?:|.*new\\s+|.*\\(|.*\\[) *([A-Za-z][A-Za-z0-9_]+)::([a-zA-Z0-9_]*?)(IntellijIdeaRulezzz.*)?", docValue)
+            , () -> Tls.regex("(?:|.*\\(|.*\\[\\s*|.*=>\\s*) *([A-Za-z][A-Za-z0-9_]+)::([a-zA-Z0-9_]*?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete method
                 .map(mtch -> {
                     String clsName = mtch.gat(0).unw();
@@ -59,15 +65,63 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                         .flt(p -> metMatcher.prefixMatches(p))
                         .map(f -> f + "()"));
                 })
-            , () -> Tls.regex("(?:|.*new\\s+|.*\\(|.*\\[) *([A-Z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
+            , () -> Tls.regex("(|.*new\\s+|.*\\(|.*\\[\\s*|.*=>\\s*) *([A-Z][A-Za-z0-9_]+?)(IntellijIdeaRulezzz.*)?", docValue)
                 // have to complete class
-                .fop(m -> m.gat(0))
-                .map(CamelHumpMatcher::new)
-                .map(p -> It.cnc(
-                    idx.getAllClassNames(p),
-                    list("self", "static")
-                ).map(cls -> cls + "::"))
+                .map(m -> {
+                    String stopLexeme = m.get(0);
+                    String className = m.get(1);
+                    CamelHumpMatcher matcher = new CamelHumpMatcher(className);
+                    return It.cnc(
+                        idx.getAllClassNames(matcher),
+                        list("self", "static")
+                    ).map(cls -> cls + (stopLexeme.endsWith("new ") ? "()" : "::"));
+                })
         );
+    }
+
+    private It<LookupElement> parseDocValue(String docValue, SearchContext search, PsiElement tagValue, String regex)
+    {
+        FuncCtx ctx = new FuncCtx(search);
+        ctx.fakeFileSource = opt(tagValue);
+        IExprCtx exprCtx = new ExprCtx(ctx, tagValue, 0);
+        return Tls.regex(regex, docValue)
+            .fop(match -> match.gat(0))
+            .fap(expr -> It.cnc(
+                // method name completion
+                extractTypedFqnPart(expr, tagValue.getProject(), tagValue)
+                    .fap(options -> options)
+                    .map((lookup) -> LookupElementBuilder.create(lookup)
+                        .withIcon(DeepKeysPvdr.getIcon())),
+                // assoc array completion
+                opt(PsiFileFactory.getInstance(tagValue.getProject()).createFileFromText(PhpLanguage.INSTANCE, prefix + expr + ";"))
+                    .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))
+                    .map(psi -> DeepKeysPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::new))
+                    .fap(mt -> mt.getKeyNames().map(k -> DeepKeysPvdr.makeFullLookup(mt, k)))
+            ));
+    }
+
+    private It<LookupElement> parseTagValue(PsiElement tagValue, SearchContext search)
+    {
+        String docValue = tagValue.getText();
+        String regex = DocFqnPvdr.regex;
+        if (tagValue.getParent() instanceof PhpDocReturnTagImpl) {
+            PhpDocReturnTagImpl returnTag = (PhpDocReturnTagImpl)tagValue.getParent();
+            L<PhpDocType> docTypes = It(returnTag.getChildren())
+                .fop(toCast(PhpDocType.class)).arr();
+            regex = returnRegex;
+            if (docValue.matches("::[a-zA-Z0-9_]*IntellijIdeaRulezzz")) {
+                // class name gets resolved as return type psi
+                String typePart = docTypes
+                    .map(typ -> typ.getText())
+                    .wap(parts -> Tls.implode("", parts));
+                docValue = typePart + docValue;
+            } else if (docTypes.size() == 0 || tagValue instanceof PhpDocType) {
+                System.out.println("zalupa do not suggest strt class name");
+                // do not suggest class in @return start, since IDEA already does that
+                regex = "^\\b$"; // regex that will match nothing
+            }
+        }
+        return parseDocValue(docValue, search, tagValue, regex);
     }
 
     @Override
@@ -77,47 +131,21 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
         SearchContext search = new SearchContext(parameters).setDepth(depth);
 
         opt(parameters.getPosition().getParent())
-            .thn(tagValue -> {
-                String docValue = tagValue.getText();
-                Project project = tagValue.getProject();
+            .fap(tagValue -> parseTagValue(tagValue, search))
+            .fch(result::addElement);
+    }
 
-                String prefix = "<?php\n$arg = ";
-                String regex = "^\\s*=\\s*(.+)$";
-                if (tagValue.getParent() instanceof PhpDocReturnTagImpl) {
-                    PhpDocReturnTagImpl returnTag = (PhpDocReturnTagImpl)tagValue.getParent();
-                    L<PhpDocType> docTypes = It(returnTag.getChildren())
-                        .fop(toCast(PhpDocType.class)).arr();
-                    regex = "^\\s*(?:like|=|)\\s*(.+)$";
-                    if (docValue.matches("::[a-zA-Z0-9_]*IntellijIdeaRulezzz")) {
-                        // class name gets resolved as return type psi
-                        String typePart = docTypes
-                            .map(typ -> typ.getText())
-                            .wap(parts -> Tls.implode("", parts));
-                        docValue = typePart + docValue;
-                    } else if (docTypes.size() == 0 || tagValue instanceof PhpDocType) {
-                        // do not suggest class in @return start, since IDEA already does that
-                        regex = "^\\b$"; // regex that will match nothing
-                    }
-                }
-                FuncCtx ctx = new FuncCtx(search);
-                ctx.fakeFileSource = opt(tagValue);
-                IExprCtx exprCtx = new ExprCtx(ctx, tagValue, 0);
-                Tls.regex(regex, docValue)
-                    .fop(match -> match.gat(0))
-                    // method name completion
-                    .thn(expr -> extractTypedFqnPart(expr, project, tagValue)
-                        .fap(options -> options)
-                        .map((lookup) -> LookupElementBuilder.create(lookup)
-                            .withIcon(DeepKeysPvdr.getIcon()))
-                        .fch(result::addElement))
-                    // assoc array completion
-                    .map(expr -> prefix + expr + ";")
-                    .map(expr -> PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr))
-                    .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))
-                    .map(psi -> DeepKeysPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::new))
-                    .fap(mt -> mt.getKeyNames().map(k -> DeepKeysPvdr.makeFullLookup(mt, k)))
-                    .fch(result::addElement)
-                    ;
-            });
+    public void addCompletionsMultiline(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
+    {
+        Opt<PhpDocTag> docTagOpt = Tls.findPrevSibling(parameters.getPosition(), PhpDocTag.class);
+        docTagOpt.thn(docTag -> {
+            String regex = DocFqnPvdr.regex;
+            if (docTag instanceof PhpDocReturnTagImpl) {
+                regex = returnRegex;
+            }
+            SearchContext search = new SearchContext(parameters).setDepth(getMaxDepth(parameters));
+            parseDocValue(docTag.getTagValue(), search, docTag, regex)
+                .fch(result::addElement);
+        });
     }
 }

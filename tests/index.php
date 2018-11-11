@@ -887,10 +887,6 @@ class DeepKeysTest
         $this->weekday('');
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     private function testBuiltInCompletion()
     {
         $key = 123;
@@ -898,6 +894,29 @@ class DeepKeysTest
         $zhopa[];
         $GLOBALS[];
     }
+
+    /**
+     * @param $params = [
+     *     'weekday' => self::we, // should suggest "weekday"
+     *     'huikday' => YakumoRan::norm, // should suggest "normalizeShikigami"
+     *     'youkai' => new Yaku, // should suggest "YakumoRan"
+     * ]
+     * @param $params2 = self::wee,
+     * @param $params3 = new Yakum,
+     * @return array [
+     *     'pnr' => self::getSa, // should suggest "getSabrePnr"
+     *     'maiden' => new ReimuHa, // should suggest "ReimuHakurei"
+     * ]
+     * @param $zhopa int asdsad kamsdk nasjkndjksand
+     */
+    private function testMultilineDoc($params, $params2, $params3)
+    {
+        $params[''];
+    }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private function getProfile(string $profileName)
     {
