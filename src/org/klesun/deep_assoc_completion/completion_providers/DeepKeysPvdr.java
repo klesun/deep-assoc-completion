@@ -225,8 +225,9 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         result.runRemainingContributors(parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
             LookupElement lookup = otherSourceResult.getLookupElement();
+            boolean wouldBeDisplayedOnItsOwn = !isEmptySquareBracket || !parameters.isAutoPopup();
             if (!suggested.contains(lookup.getLookupString()) &&
-                !isEmptySquareBracket // no auto-popup is needed here
+                wouldBeDisplayedOnItsOwn
             ) {
                 result.addElement(lookup);
             }

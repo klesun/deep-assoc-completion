@@ -891,6 +891,14 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    private function testBuiltInCompletion()
+    {
+        $key = 123;
+        $zhopa = [];
+        $zhopa[];
+        $GLOBALS[];
+    }
+
     private function getProfile(string $profileName)
     {
         $profiles = [
