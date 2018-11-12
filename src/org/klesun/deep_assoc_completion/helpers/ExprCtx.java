@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.helpers;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.FunctionReference;
@@ -77,6 +78,10 @@ public class ExprCtx implements IExprCtx {
 
     public Opt<PsiElement> getFakeFileSource() {
         return funcCtx.fakeFileSource;
+    }
+
+    public Opt<Project> getProject() {
+        return funcCtx.getSearch().project;
     }
 
     public Map<PsiFile, Collection<FieldReferenceImpl>> getFieldRefCache() {

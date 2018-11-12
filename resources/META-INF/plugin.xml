@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.11.11.001</version>
+    <version>2018.11.11.003</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,7 +37,9 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
+        <li>Provide very simple completion of global var name defined like $GLOBALS['someVar'] = 123;</li>
         <li>Fix: Do not disable built-in completion in [] and [$]</li>
+        <li>Provide method name completion work in multi-line php doc comments as well</li>
     </ul>
     ]]>
     </change-notes>
@@ -57,6 +59,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.completion_providers.EqStrValsPvdr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.completion_providers.ArrayKeyExistsPvdr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.completion_providers.UsedKeysPvdr"/>
+        <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.completion_providers.VarNamePvdr"/>
 
         <projectConfigurable
             instance="org.klesun.deep_assoc_completion.entry.DeepSettingsForm"

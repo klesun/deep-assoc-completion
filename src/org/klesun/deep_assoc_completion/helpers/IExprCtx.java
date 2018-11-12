@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.helpers;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -38,6 +39,7 @@ public interface IExprCtx {
     L<T2<String, S<MemoizingIterable<DeepType>>>> getClosureVars();
     Opt<PsiElement> getFakeFileSource();
     Map<PsiFile, Collection<FieldReferenceImpl>> getFieldRefCache();
+    Opt<Project> getProject();
 
     It<DeepType> findExprType(PhpExpression expr);
     It<DeepType> limitResolve(int limit, PhpExpression expr);

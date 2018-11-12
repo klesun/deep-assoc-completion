@@ -901,10 +901,10 @@ class DeepKeysTest
      *     'huikday' => YakumoRan::norm, // should suggest "normalizeShikigami"
      *     'youkai' => new Yaku, // should suggest "YakumoRan"
      * ]
-     * @param $params2 = self::wee,
-     * @param $params3 = new Yakum,
+     * @param $params2 = self::weekday(),
+     * @param $params3 = new YakumoRan(),
      * @return array [
-     *     'pnr' => self::getSa, // should suggest "getSabrePnr"
+     *     'pnr' => self::getSabrePnr(), // should suggest "getSabrePnr"
      *     'maiden' => new ReimuHa, // should suggest "ReimuHakurei"
      * ]
      * @param $zhopa int asdsad kamsdk nasjkndjksand
@@ -977,3 +977,26 @@ $sql = [];
 // you should not get completion when you type 'dzhigurda'
 $sql['dzigurasdv'][] = 123;
 
+class get{
+    public function random($array)
+    {
+        //global $someArr, $someInt;
+
+        $GLOBALS['insideFunc'] = 345;
+        foreach($array as $var){
+            $GLOBALS[$var] = rand(1,100);
+        }
+    }
+}
+foreach (['a', 'b', 'c'] as $letter) {
+    $GLOBALS[$letter] = 123;
+}
+$get = new get;
+$get->random(array('myVar'));
+
+$GLOBALS['inGlobalScope'] = 123;
+
+$GLOBALS['someArr'] = ['a' => 5, 'b' => 6];
+$GLOBALS['someInt'] = 123;
+
+echo $so;

@@ -10,6 +10,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
 import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
+import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.completion_providers.*;
 import org.klesun.deep_assoc_completion.completion_providers.ArrayColumnPvdr;
@@ -121,6 +122,15 @@ public class DeepKeysCbtr extends CompletionContributor
                 .withSuperParent(1, StringLiteralExpression.class)
                 ,
             new EqStrValsPvdr()
+        );
+        // $GLOBALS['myVar'] = 123;
+        // $myV;
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, VariableImpl.class)
+                ,
+            new VarNamePvdr()
         );
         // for cases when only Deep Resolve can say what class it is
         this.extend(
