@@ -1181,6 +1181,15 @@ class ExactKeysUnitTest
         ];
     }
 
+    public function provideIntOverflow()
+    {
+        $numSet = array_flip([4294967295, 123, -4294967295, 4294967295232323231313123123]);
+        $numSet[''];
+        return [
+            [$numSet, ['4294967295', '123', '4294967295232323231313123123']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

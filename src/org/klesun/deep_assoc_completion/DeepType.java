@@ -85,6 +85,13 @@ public class DeepType extends Lang
         return self;
     }
 
+    public static DeepType makeInt(PhpExpressionImpl numPsi, String number)
+    {
+        DeepType self = new DeepType(numPsi, PhpType.INT, number);
+        self.isNumber = true;
+        return self;
+    }
+
     public static DeepType makeClsRef(PhpExpression definition, PhpType clsType)
     {
         It<String> fqns = It(clsType.filterUnknown().filterMixed().filterNull().filterPlurals().filterPrimitives().getTypes());

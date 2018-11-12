@@ -97,8 +97,7 @@ public class DeepTypeResolver
             , () -> Tls.cast(PhpExpressionImpl.class, expr)
                 .fap(casted -> opt(casted.getText())
                     .flt(text -> Tls.regex("^\\d+$", text).has())
-                    .map(Integer::parseInt)
-                    .fap(num -> list(new DeepType(casted, num))))
+                    .fap(num -> list(DeepType.makeInt(casted, num))))
             // leave rest to MiscRes
             , () -> new MiscRes(ctx).resolve(expr)
             , () -> Tls.cast(MethodReferenceImpl.class, expr)
