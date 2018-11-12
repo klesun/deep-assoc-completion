@@ -71,12 +71,6 @@ public class DeepType extends Lang
         this(lit, PhpType.STRING, lit.getContents());
     }
 
-    public DeepType(PhpExpressionImpl numPsi, Integer number)
-    {
-        this(numPsi, PhpType.INT, "" + number);
-        this.isNumber = true;
-    }
-
     /** new object creation */
     public static DeepType makeNew(NewExpression newExp, IExprCtx ctorArgs, PhpType ideaType)
     {
