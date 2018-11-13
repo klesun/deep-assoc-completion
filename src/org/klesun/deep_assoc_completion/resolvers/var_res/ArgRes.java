@@ -147,10 +147,6 @@ public class ArgRes extends Lang
     // $result = static::doSomething($args);
     private It<DeepType> getPrivateFuncUsageArg(FunctionImpl func, int argOrderInLambda)
     {
-        // it would be nice to also infer arg type when function is
-        // called with array_map([$this, 'doStuff'], $args) one day...
-        // would just Ctrl+F-ing the file for function name be slower?
-
         return Tls.cast(MethodImpl.class, func)
             // if caret is inside this function, when passed args are unknown
             .flt(a -> !trace.func().hasArgs())
@@ -161,7 +157,8 @@ public class ArgRes extends Lang
                     It(PsiTreeUtil.findChildrenOfType(file, MethodReferenceImpl.class))
                         .flt(call -> meth.getName().equals(call.getName()))
                         .flt(call -> opt(call.getClassReference()).map(ref -> ref.getText())
-                            .flt(txt -> txt.equals("$this") || txt.equals("self") || txt.equals("static"))
+                            .flt(txt -> txt.equals("$this") || txt.equals("self") ||
+                                        txt.equals("static") || func.equals(call.resolve()))
                             .has())
                         .fop(call -> L(call.getParameters()).gat(argOrderInLambda))
                         .fop(toCast(PhpExpression.class))

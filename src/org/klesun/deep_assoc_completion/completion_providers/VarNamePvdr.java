@@ -9,9 +9,16 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.PsiReferenceService;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIndex;
+import com.jetbrains.php.lang.PhpCallbackReferenceBase;
+import com.jetbrains.php.lang.findUsages.PhpFindUsagesConfiguration;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
@@ -22,6 +29,7 @@ import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.FuncCallRes;
 import org.klesun.deep_assoc_completion.resolvers.VarRes;
+import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.MemoizingIterable;
@@ -30,6 +38,7 @@ import org.klesun.lang.Tls;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static org.klesun.lang.Lang.*;
 
@@ -48,9 +57,10 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
     private static It<LookupElement> makeOptions(It<DeepType> tit)
     {
         return tit.fap(t -> t.keys)
-            .fap(k -> k.keyType.getNames()).unq()
-            .map(strVal -> makeLookupBase("$" + strVal, "string"))
-            .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, -1000 - i));
+            .fap(k -> k.keyType.getNames()
+                .map(strVal -> makeLookupBase("$" + strVal, Mt.getIdeaTypeSt(k.getTypes()).toString()))
+                .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, -1000 - i)))
+            .unq(l -> l.getLookupString());
     }
 
     private static boolean isGlobalContext(Variable caretVar)
@@ -58,14 +68,27 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
         return caretVar.getParent() instanceof Global || !Tls.findParent(caretVar, Function.class, a -> true).has();
     }
 
+    private static It<Variable> getGlobalsMagicVarUsages(Project project)
+    {
+        try {
+            return It(PhpIndex.getInstance(project).getVariablesByName("GLOBALS")).fst()
+                .fap(globVar -> ReferencesSearch.search(globVar, GlobalSearchScope.allScope(globVar.getProject()), false))
+                .fap(ref -> opt(ref.getElement()))
+                .cst(Variable.class);
+        } catch (Throwable exc) {
+            // from my past experience with ReferencesSearch, it is
+            // likely to throw random exceptions and cause random hangs...
+            return It.non();
+        }
+    }
+
     private static It<DeepType> resolveGlobalsMagicVar(IExprCtx funcCtx, Variable caretVar)
     {
         return funcCtx.getProject()
             .flt(proj -> isGlobalContext(caretVar))
-            .map(proj -> PhpIndex.getInstance(proj))
-            // does not include $GLOBAL usages in for loops and functions sadly
-            .fap(idx -> It(idx.getVariablesByName("GLOBALS")))
-            .fap(glob -> new VarRes(funcCtx).resolve(glob));
+            .fap(proj -> getGlobalsMagicVarUsages(proj))
+            .fap(glob -> new VarRes(funcCtx.subCtxEmpty()).resolveRef(glob, false))
+            .wap(asses -> AssRes.assignmentsToTypes(asses));
     }
 
     private It<DeepType> resolve(VariableImpl caretVar, boolean isAutoPopup, Editor editor)

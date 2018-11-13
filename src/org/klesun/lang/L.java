@@ -166,7 +166,7 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
 
     public String toString()
     {
-        return Tls.implode(", ", map(a -> a.toString()));
+        return "[" + Tls.implode(", ", map(a -> a.toString())) + "]";
     }
 
     /** "with" */

@@ -978,25 +978,20 @@ $sql = [];
 $sql['dzigurasdv'][] = 123;
 
 class get{
-    public function random($array)
+    public function random($array, $hujKey)
     {
-        //global $someArr, $someInt;
-
-        $GLOBALS['insideFunc'] = 345;
         foreach($array as $var){
+            $GLOBALS['insideFunc'] = 345;
             $GLOBALS[$var] = rand(1,100);
         }
     }
-}
-foreach (['a', 'b', 'c'] as $letter) {
-    $GLOBALS[$letter] = 123;
+    private static function doHast()
+    {
+        $get = new get;
+        $get->random(array('myVar2'), 'strArgKey2');
+    }
 }
 $get = new get;
-$get->random(array('myVar'));
+$get->random(array('myVar'), 'strArgKey');
 
-$GLOBALS['inGlobalScope'] = 123;
-
-$GLOBALS['someArr'] = ['a' => 5, 'b' => 6];
-$GLOBALS['someInt'] = 123;
-
-echo $so;
+echo $my;

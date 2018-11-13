@@ -183,6 +183,24 @@ public class VarRes
             .fap(docTag -> new DocParamRes(ctx).resolve(docTag));
     }
 
+    public Opt<Assign> resolveRef(PsiElement refPsi, boolean didSurelyHappen)
+    {
+        return Opt.fst(() -> non()
+            , () -> (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
+            , () -> assertArrayUnshift(refPsi)
+            , () -> assertForeachElement(refPsi)
+                .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
+            , () -> assertTupleAssignment(refPsi)
+                .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
+            , () -> assertPregMatchResult(refPsi)
+                .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi, PhpType.ARRAY))
+            , () -> Tls.cast(ParameterImpl.class, refPsi)
+                .map(param -> {
+                    S<It<DeepType>> mtg = () -> new ArgRes(ctx).resolveArg(param);
+                    return new Assign(list(), mtg, true, refPsi, param.getType());
+                }));
+    }
+
     public It<DeepType> resolve(Variable variable)
     {
         It<PsiElement> references = findDeclarations(variable)
@@ -198,27 +216,13 @@ public class VarRes
         Opt<PsiFile> caretFile = opt(variable.getContainingFile());
 
         L<Assign> asses = references
-            .fop(refPsi -> {
+            .fap(refPsi -> {
                 Opt<Function> declScope = Tls.findParent(refPsi, Function.class, a -> true);
                 Opt<PsiFile> declFile = opt(refPsi.getContainingFile());
                 if (declFile.equals(caretFile) && !declScope.equals(caretScope)) {
                     return non(); // refPsi is outside the function, a closure, handled manually
                 }
-                boolean didSurelyHappen = ScopeFinder.didSurelyHappen(refPsi, variable);
-                return Opt.fst(() -> non()
-                    , () -> (new AssRes(ctx)).collectAssignment(refPsi, didSurelyHappen)
-                    , () -> assertArrayUnshift(refPsi)
-                    , () -> assertForeachElement(refPsi)
-                        .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
-                    , () -> assertTupleAssignment(refPsi)
-                        .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
-                    , () -> assertPregMatchResult(refPsi)
-                        .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi, PhpType.ARRAY))
-                    , () -> Tls.cast(ParameterImpl.class, refPsi)
-                        .map(param -> {
-                            S<It<DeepType>> mtg = () -> new ArgRes(ctx).resolveArg(param);
-                            return new Assign(list(), mtg, true, refPsi, param.getType());
-                        }));
+                return resolveRef(refPsi, ScopeFinder.didSurelyHappen(refPsi, variable));
             })
             .arr();
         int lastDeclPos = -1;
