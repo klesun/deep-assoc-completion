@@ -6,7 +6,6 @@
 
     <description><![CDATA[
 <ul>
-  <li>Fix: do not fail on number literals beyond signed int.</li>
   <li>PHP associative array auto-completion inferred from other functions (in other files).</li>
   <li>Go To key Definition.</li>
   <li>Specify array keys and reference functions in phpdoc.</li>
@@ -38,6 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
+        <li>Fix: do not fail on number literals beyond signed int.</li>
         <li>Provide completion of global var name defined like $GLOBALS['someVar'] = 123; (even if assignment happens in a function)</li>
     </ul>
     ]]>
