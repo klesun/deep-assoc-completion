@@ -925,6 +925,47 @@ class DeepKeysTest
         $somePrefix_gender;
     }
 
+    /** @param $sale = [
+     *     'netPrice' => '500.89' , // price without taxes
+     *     // or 'ticket', 'insurance', 'tablet'
+     *     'product' => 'car',
+     *     // the person that gives you the money
+     *     // maybe a man, a woman, or a programmer
+     *     'customer' => [
+     *         'lastName' => 'Pupkin',
+     *         'firstNme' => 'Vasya',
+     *     ],
+     * ] */
+    private function testKeyDocs($sale)
+    {
+        // should include the comment in completion popup
+        $sale[''];
+        $hale = [
+            'netPrice' => '500.89', // price without taxes actually very long comment
+            // or 'ticket', 'insurance', 'tablet'
+            'product' => 'car' ,
+            // the person that gives you the money
+            // may be a man, a woman, or a programmer
+            'customer' => [
+                'lastName' => 'Pupkin',
+                'firstNme' => 'Vasya',
+            ],
+        ];
+        $hale[''];
+        $car = [
+            'model' => 'Mitsubishi G199', /* cars with same model are usually same */
+            /**
+             * consists of letters that describe car features
+             * like conditioning, wheel/door count, etc...
+             */
+            'carCode' => 'ECAR',
+            'requiredLicense' => 'lightweight', // I never studied in driving school,
+            // but I heard there is such stuff
+            'sadad' => 123 // last element
+        ];
+        $car[''];
+    }
+
     //============================
     // not implemented follow
     //============================

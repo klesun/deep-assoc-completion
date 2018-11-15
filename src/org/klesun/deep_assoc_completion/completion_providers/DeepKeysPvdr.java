@@ -26,7 +26,7 @@ import static org.klesun.lang.Lang.*;
  */
 public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 {
-    final private static int BRIEF_TYPE_MAX_LEN = 50;
+    final private static int BRIEF_VALUE_MAX_LEN = 50;
 
     private static ImageIcon icon = null;
 
@@ -70,7 +70,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         };
     }
 
-    private static LookupElement makePaddedLookup(String keyName, String ideaType, String briefVal)
+    private static LookupElementBuilder makePaddedLookup(String keyName, String ideaType, String briefVal)
     {
         ideaType = !ideaType.equals("") ? ideaType : "?";
 
@@ -78,7 +78,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // get nasty broken position of type when you highlight an option
         briefVal = briefVal.trim().equals("") ? "" : " = " + briefVal;
         briefVal = briefVal + "                                                                ";
-        briefVal = Tls.substr(briefVal, 0, BRIEF_TYPE_MAX_LEN - keyName.length());
+        briefVal = Tls.substr(briefVal, 0, BRIEF_VALUE_MAX_LEN - keyName.length());
         return LookupElementBuilder.create(keyName)
             .withBoldness(!Tls.isNum(keyName))
             .withInsertHandler(makeInsertHandler())
@@ -93,11 +93,11 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
      */
     static class MutableLookup extends LookupElement
     {
-        public LookupElement lookupData;
+        public LookupElementBuilder lookupData;
         private boolean includeQuotes;
         private InsertHandler<LookupElement> onInsert = makeInsertHandler();
 
-        public MutableLookup(LookupElement lookupData, boolean includeQuotes) {
+        public MutableLookup(LookupElementBuilder lookupData, boolean includeQuotes) {
             this.lookupData = lookupData;
             this.includeQuotes = includeQuotes;
         }
@@ -133,10 +133,14 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .fap(srcExpr -> funcCtx.findExprType(srcExpr));
     }
 
-    public static LookupElement makeFullLookup(Mt mt, String keyName)
+    public static LookupElementBuilder makeFullLookup(Mt mt, String keyName, Set<String> comments)
     {
         Mt keyMt = mt.types.fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::new);
-        String briefValue = keyMt.getBriefValueText(BRIEF_TYPE_MAX_LEN);
+        String comment = Tls.implode(" ", comments);
+        String briefValue = keyMt.getBriefValueText(BRIEF_VALUE_MAX_LEN);
+        if (!comment.trim().equals("")) {
+            briefValue = Tls.substr(briefValue, 0, 12) + " " + comment;
+        }
         String ideaTypeStr = keyMt.getIdeaType().filterUnknown().toStringResolved();
         return makePaddedLookup(keyName, ideaTypeStr, briefValue);
     }
@@ -167,12 +171,13 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
         long startTime = System.nanoTime();
         Mutable<Long> firstTime = new Mutable<>(-1L);
-        L<MutableLookup> lookups = L();
+        Dict<MutableLookup> nameToMutLookup = new Dict<>(new LinkedHashMap<>());
         // preliminary keys without type - they may be at least 3 times faster in some cases
 
         ExprCtx exprCtx = new ExprCtx(funcCtx, caretPsi, 0);
         It<DeepType> tit = resolveAtPsi(caretPsi, exprCtx);
         Set<String> keyNames = new LinkedHashSet<>();
+        Map<String, Set<String>> keyToComments = new HashMap<>();
         System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");
         tit.has();
         System.out.println("checked if iterator has anything, took " + search.getExpressionsResolved() + " expressions");
@@ -188,21 +193,33 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 } else {
                     keyNamesToAdd.add(kt.stringValue);
                 }
-                keyNamesToAdd = keyNamesToAdd.flt(kn -> !keyNames.contains(kn)).arr();
-                for (String keyName: keyNamesToAdd) {
+                L<String> newKeyNamesToAdd = keyNamesToAdd.flt(kn -> !keyNames.contains(kn)).arr();
+                for (String keyName: newKeyNamesToAdd) {
                     if (firstTime.get() == -1) {
                         System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
                         firstTime.set(System.nanoTime() - startTime);
                     }
                     keyNames.add(keyName);
-                    LookupElement justName = makePaddedLookup(keyName, "resolving...", "");
+                    LookupElementBuilder justName = makePaddedLookup(keyName, "resolving...", "");
                     MutableLookup mutLookup = new MutableLookup(justName, includeQuotes);
                     int basePriority = Tls.isNum(keyName) ? 2000 : 2500;
                     result.addElement(PrioritizedLookupElement.withPriority(mutLookup, basePriority - keyNames.size()));
-                    lookups.add(mutLookup);
+                    nameToMutLookup.put(keyName, mutLookup);
 
                     String briefTypeRaw = Mt.getKeyBriefTypeSt(k.getBriefTypes()).filterUnknown().toStringResolved();
                     mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "");
+                }
+                String comment = Tls.implode(" ", k.comments);
+                if (!comment.trim().equals("")) {
+                    keyNamesToAdd.fch(name -> {
+                        opt(nameToMutLookup.get(name)).thn(mutLookup -> {
+                            mutLookup.lookupData = mutLookup.lookupData.withTailText(" " + Tls.substr(comment, 0, BRIEF_VALUE_MAX_LEN), true);
+                        });
+                        if (!keyToComments.containsKey(name)) {
+                            keyToComments.put(name, new LinkedHashSet<>());
+                        }
+                        keyToComments.get(name).addAll(k.comments);
+                    });
                 }
             });
         });
@@ -221,7 +238,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .map(n -> n.equals("")|| n.equals("IntellijIdeaRulezzz"))
             .def(false);
 
-        lookups.map(l -> l.getLookupString()).fch(el -> suggested.add(el));
+        nameToMutLookup.map(l -> l.getLookupString()).fch(el -> suggested.add(el));
         result.runRemainingContributors(parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
             LookupElement lookup = otherSourceResult.getLookupElement();
@@ -236,11 +253,11 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // following code calculates deeper type info for
         // completion options and updates them in the dialog
 
-        Dict<MutableLookup> nameToMutLookup = lookups.key(l -> l.lookupData.getLookupString());
         nameToMutLookup
             .fch((mutLook, keyName) -> {
                 search.overrideMaxExpr = som(search.getExpressionsResolved() + 25);
-                LookupElement lookup = makeFullLookup(mt, keyName);
+                Set<String> comments = opt(keyToComments.get(keyName)).def(new HashSet<>());
+                LookupElementBuilder lookup = makeFullLookup(mt, keyName, comments);
                 search.overrideMaxExpr = non();
                 mutLook.lookupData = lookup;
             });

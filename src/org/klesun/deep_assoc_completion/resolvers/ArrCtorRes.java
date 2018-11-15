@@ -2,6 +2,8 @@ package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.impl.source.tree.PsiCommentImpl;
+import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
@@ -117,6 +119,57 @@ public class ArrCtorRes extends Lang
                 .fop(cls -> opt(cls.findMethodByName(met))));
     }
 
+    private static int getIndent(PsiElement psi)
+    {
+        return opt(psi.getPrevSibling())
+            .cst(PsiWhiteSpaceImpl.class)
+            .fop(ws -> Tls.regex("^(.*\\n|)(\\s*?)$", ws.getText()))
+            .fop(ma -> ma.gat(1))
+            .map(space -> space.length())
+            .def(0);
+    }
+
+    private static L<String> getTopComments(ArrayHashElement hashEl)
+    {
+        L<String> comments = list();
+        PsiElement prev = hashEl.getPrevSibling();
+        int indent = getIndent(hashEl);
+        while (prev != null) {
+            boolean shouldSkip = prev instanceof PsiWhiteSpaceImpl;
+            if (prev instanceof PsiCommentImpl && getIndent(prev) == indent) {
+                comments.add(0, prev.getText());
+            } else if (!shouldSkip) {
+                break;
+            }
+            prev = prev.getPrevSibling();
+        }
+        return comments;
+    }
+
+    // probably it would be good to also support comments like this:
+    // 'someKey' => 213, // some key 1 description line 1
+    //                  // still key 1 description line 2
+    // 'someKey2' => 213, //bla bla about key 2
+    private static Opt<String> getSideComments(ArrayHashElement hashEl)
+    {
+        PsiElement next = hashEl.getNextSibling();
+        while (next != null) {
+            boolean shouldSkip = next instanceof PsiWhiteSpaceImpl || next.getText().equals(",");
+            if (next instanceof PsiCommentImpl) {
+                return som(((PsiCommentImpl)next).getText());
+            } else if (!shouldSkip || next.getText().contains("\n")) {
+                return non();
+            }
+            next = next.getNextSibling();
+        }
+        return non();
+    }
+
+    private static It<String> gatherSurroundingComments(ArrayHashElement hashEl)
+    {
+        return It.cnc(getTopComments(hashEl), getSideComments(hashEl));
+    }
+
     public DeepType resolve(ArrayCreationExpressionImpl expr)
     {
         DeepType arrayType = new DeepType(expr);
@@ -151,7 +204,8 @@ public class ArrCtorRes extends Lang
                         if (keyStrValues.has()) {
                             keyStrValues.fch(key -> arrayType
                                 .addKey(key, ctx.getRealPsi(keyRec))
-                                .addType(getType, Tls.getIdeaType(v)));
+                                    .addType(getType, Tls.getIdeaType(v))
+                                    .addComments(gatherSurroundingComments(keyRec)));
                         } else {
                             arrayType.addKey(KeyType.unknown(keyRec)).addType(getType);
                         }

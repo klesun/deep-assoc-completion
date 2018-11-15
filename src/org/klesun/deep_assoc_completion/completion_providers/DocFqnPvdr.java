@@ -21,6 +21,8 @@ import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import java.util.HashSet;
+
 import static org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr.getMaxDepth;
 import static org.klesun.lang.Lang.*;
 
@@ -96,7 +98,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 opt(PsiFileFactory.getInstance(tagValue.getProject()).createFileFromText(PhpLanguage.INSTANCE, prefix + expr + ";"))
                     .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))
                     .map(psi -> DeepKeysPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::new))
-                    .fap(mt -> mt.getKeyNames().map(k -> DeepKeysPvdr.makeFullLookup(mt, k)))
+                    .fap(mt -> mt.getKeyNames().map(k -> DeepKeysPvdr.makeFullLookup(mt, k, new HashSet<>())))
             ));
     }
 

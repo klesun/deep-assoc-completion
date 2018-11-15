@@ -146,6 +146,7 @@ public class DeepType extends Lang
         final private L<PhpType> briefTypes = L();
         // where Go To Definition will lead
         final public PsiElement definition;
+        public Set<String> comments = new LinkedHashSet<>();
 
         private Key(KeyType keyType, PsiElement definition)
         {
@@ -153,10 +154,17 @@ public class DeepType extends Lang
             this.definition = definition;
         }
 
-        public void addType(S<Mt> getter, PhpType briefType)
+        public Key addType(S<Mt> getter, PhpType briefType)
         {
             typeGetters.add(Tls.onDemand(getter));
             briefTypes.add(briefType);
+            return this;
+        }
+
+        public Key addComments(Iterable<String> comments)
+        {
+            comments.forEach(this.comments::add);
+            return this;
         }
 
         public void addType(S<Mt> getter)
