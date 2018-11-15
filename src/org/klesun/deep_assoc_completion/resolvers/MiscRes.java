@@ -2,17 +2,13 @@ package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiPolyVariantReference;
-import com.jetbrains.php.lang.psi.elements.MemberReference;
-import com.jetbrains.php.lang.psi.elements.NewExpression;
-import com.jetbrains.php.lang.psi.elements.PhpClass;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.NewExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.TernaryExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
@@ -78,6 +74,51 @@ public class MiscRes extends Lang
             });
     }
 
+    private L<String> getCastTypes()
+    {
+        return list(
+            "int",
+            "integer",
+            "bool",
+            "boolean",
+            "float",
+            "double",
+            "real",
+            "string",
+            "array",
+            "object",
+            "unset"
+        );
+    }
+
+    private Opt<DeepType> castToPhpType(DeepType deepType, String phpType)
+    {
+        if (phpType.equals("string")) {
+            return som(new DeepType(deepType.definition, PhpType.STRING, deepType.stringValue));
+        } else if (phpType.equals("int") || phpType.equals("integer")) {
+            return som(DeepType.makeInt(deepType.definition, deepType.stringValue));
+        } else if (phpType.equals("array")) {
+            DeepType arrt = new DeepType(deepType.definition, PhpType.ARRAY);
+            arrt.keys.addAll(deepType.keys.cct(deepType.props.vls()));
+            return som(arrt);
+        } else if (phpType.equals("object")) {
+            DeepType objt = new DeepType(deepType.definition, PhpType.OBJECT);
+            deepType.props.vls().cct(deepType.keys)
+                .fch(k -> k.keyType.getNames()
+                    .fch(n -> objt.addProp(n, k.definition)
+                        .addType(() -> new Mt(k.getTypes()))));
+            return som(objt);
+        } else if (phpType.equals("bool") || phpType.equals("boolean")) {
+            return som(new DeepType(deepType.definition, PhpType.BOOLEAN, deepType.stringValue));
+        } else if (phpType.equals("float") || phpType.equals("double") || phpType.equals("real")) {
+            return som(new DeepType(deepType.definition, PhpType.FLOAT, deepType.stringValue));
+        } else if (phpType.equals("unset")) {
+            return som(new DeepType(deepType.definition, PhpType.NULL));
+        } else {
+            return non();
+        }
+    }
+
     public It<DeepType> resolve(PsiElement expr)
     {
         return It.cnc(It.non()
@@ -132,6 +173,12 @@ public class MiscRes extends Lang
                         DeepType type = new DeepType(bin, PhpType.STRING, unescaped);
                         return list(type);
                     }))
+            , Tls.cast(UnaryExpression.class, expr)
+                .fap(bin -> opt(bin.getOperation())
+                    .fap(op -> Tls.regex("^\\(\\s*(" + Tls.implode("|", getCastTypes()) + ")\\s*\\)$", op.getText()))
+                    .fap(m -> m.fst())
+                    .fap(phpType -> findPsiExprType(bin.getValue())
+                        .fap(t -> castToPhpType(t, phpType))))
             , Tls.cast(NewExpressionImpl.class, expr)
                 .fap(newExp -> resolveNew(newExp))
         );

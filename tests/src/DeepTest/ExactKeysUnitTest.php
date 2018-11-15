@@ -1190,6 +1190,25 @@ class ExactKeysUnitTest
         ];
     }
 
+    public function provideCast()
+    {
+        $developer = ['skill' => 9.8, 'salary' => '500.00', 'age' => 23];
+        $objDev = (object)$developer;
+        // should suggest: skill, salary, age
+        $objDev->s;
+        $castedDev = (array)$objDev;
+        $castedDev[''];
+        $qualification = ['frontend', 'backend', 'fullstack'][rand()];
+        $castedQual = (string)$qualification;
+        $number = [42, 1337, 228][rand()];
+        $castedNum = (int)$number;
+        return [
+            [$castedDev, ['skill', 'salary', 'age']],
+            [array_flip([$castedQual]), ['frontend', 'backend', 'fullstack']],
+            [array_flip([$castedNum]), ['42', '1337', '228']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
