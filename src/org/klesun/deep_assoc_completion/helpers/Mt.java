@@ -139,11 +139,16 @@ public class Mt extends Lang
         return types.fap(t -> t.props.vls());
     }
 
-    public static PhpType getIdeaTypeSt(It<DeepType> types)
+    public static PhpType joinIdeaTypes(Iterable<PhpType> ideaTypes)
     {
         PhpType ideaType = new PhpType();
-        types.map(t -> t.briefType).fch(ideaType::add);
+        It(ideaTypes).fch(ideaType::add);
         return ideaType;
+    }
+
+    public static PhpType getIdeaTypeSt(It<DeepType> types)
+    {
+        return joinIdeaTypes(types.map(t -> t.briefType));
     }
 
     public PhpType getIdeaType()

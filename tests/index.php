@@ -914,6 +914,17 @@ class DeepKeysTest
         $params[''];
     }
 
+    private function testExtract()
+    {
+        $pax = ['name' => 'Vova', 'age' => 15, 'gender' => 'M'];
+        extract($pax);
+        // should suggest: name, age, gender
+        $age;
+        extract($pax, null, 'somePrefix_');
+        // should suggest: somePrefix_name, somePrefix_age, somePrefix_gender
+        $somePrefix_gender;
+    }
+
     //============================
     // not implemented follow
     //============================

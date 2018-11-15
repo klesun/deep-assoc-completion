@@ -11,34 +11,26 @@ import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
-import com.intellij.psi.PsiReferenceService;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIndex;
-import com.jetbrains.php.lang.PhpCallbackReferenceBase;
-import com.jetbrains.php.lang.findUsages.PhpFindUsagesConfiguration;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
-import org.klesun.deep_assoc_completion.resolvers.FuncCallRes;
 import org.klesun.deep_assoc_completion.resolvers.VarRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
-import org.klesun.lang.MemoizingIterable;
 import org.klesun.lang.Tls;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import static org.klesun.lang.Lang.*;
 
@@ -91,6 +83,37 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
             .wap(asses -> AssRes.assignmentsToTypes(asses));
     }
 
+    private static It<FunctionReference> getCalsBefore(Variable caretVar)
+    {
+        return Tls.findParent(caretVar, Function.class, a -> true)
+            .fap(meth -> Tls.findChildren(
+                meth.getLastChild(),
+                FunctionReference.class,
+                subPsi -> !(subPsi instanceof Function) &&
+                            subPsi.getTextOffset() < caretVar.getTextOffset()
+            ));
+    }
+
+    private static It<DeepType> resolveExtract(IExprCtx exprCtx, Variable caretVar)
+    {
+        return getCalsBefore(caretVar)
+            .lmt(75)
+            .flt(call -> "extract".equals(call.getName()))
+            .fap(call -> {
+                IExprCtx extractCtx = exprCtx.subCtxDirect(call);
+                Mt source = extractCtx.func().getArgMt(0);
+                String prefix = extractCtx.func().getArgMt(2).getStringValues().fst().def("");
+                return source.types.map(t -> {
+                    DeepType resultt = new DeepType(t.definition, PhpType.ARRAY);
+                    t.keys.fch(k -> k.keyType.getNames()
+                        .fch(n -> resultt.addKey(prefix + n, k.definition)
+                            .addType(() -> new Mt(k.getTypes()), k.getBriefTypes().wap(Mt::joinIdeaTypes))));
+                    return resultt;
+                });
+            });
+    }
+
+    /** @return type of an associative array with vars to suggest as keys */
     private It<DeepType> resolve(VariableImpl caretVar, boolean isAutoPopup, Editor editor)
     {
         SearchContext search = new SearchContext(caretVar.getProject())
@@ -102,7 +125,8 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
         IExprCtx exprCtx = new ExprCtx(funcCtx, caretVar, 0);
 
         return It.cnc(
-            resolveGlobalsMagicVar(exprCtx, caretVar)
+            resolveGlobalsMagicVar(exprCtx, caretVar),
+            resolveExtract(exprCtx, caretVar)
         );
     }
 
