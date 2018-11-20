@@ -92,7 +92,7 @@ public class RunTest extends AnAction
                     return tuple.a.testCaseExact(actualKeys, expectedKeys);
                 } catch (RuntimeException exc) {
                     String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
-                        // + "\n" + Tls.getStackTrace(exc)
+                        + "\n" + Tls.getStackTrace(exc)
                         ;
                     return list(new Error(tuple.a, msg));
                 }
@@ -107,7 +107,7 @@ public class RunTest extends AnAction
                     return tuple.a.testCasePartial(list(tuple.b), tuple.c);
                 } catch (RuntimeException exc) {
                     String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
-                        // + "\n" + Tls.getStackTrace(exc)
+                        + "\n" + Tls.getStackTrace(exc)
                         ;
                     return list(new Error(tuple.a, msg));
                 }
@@ -153,9 +153,6 @@ public class RunTest extends AnAction
                     errors.add(new Error(this, "No such key: " + subKey));
                 } else {
                     logger.logSucShort();
-                    keyChain.add(subKey);
-                    testCasePartial(havingKey.arr(), subExpected);
-                    keyChain.remove(keyChain.size() - 1);
                 }
             }));
 
