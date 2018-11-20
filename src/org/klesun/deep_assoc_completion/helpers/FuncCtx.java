@@ -195,7 +195,7 @@ public class FuncCtx extends Lang implements IFuncCtx
 
     public FuncCtx withClosure(L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars)
     {
-        FuncCtx closCtx = new FuncCtx(this, argGetters, uniqueRef.def(null), EArgPsiType.INDIRECT);
+        FuncCtx closCtx = new FuncCtx(parent.def(this), argGetters, uniqueRef.def(null), EArgPsiType.INDIRECT);
         closCtx.closureVars = closureVars; // probably should add to caching criteria...
         closCtx.fakeFileSource = this.fakeFileSource;
         closCtx.clsIdeaType = this.clsIdeaType;
