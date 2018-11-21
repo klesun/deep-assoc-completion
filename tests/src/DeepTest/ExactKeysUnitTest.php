@@ -477,7 +477,25 @@ class ExactKeysUnitTest
      * ] */
     private static function getGlobalConfig()
     {
-        return json_decode(file_get_contents('/var/www/html/local_config.json'), true);
+        return json_decode(file_get_contents('/var/www/html/global_config.json'), true);
+    }
+
+    /** @return = [
+     *     'mailServiceUrl' => 'www.dev.mail.com',
+     *     'apolloLogin' => 'student',
+     * ] */
+    private static function getDevConfig()
+    {
+        return json_decode(file_get_contents('/var/www/html/dev_config.json'), true);
+    }
+
+    /** @return array = [
+     *     'mailServiceUrl' => 'www.prod.mail.com',
+     *     'apolloLogin' => 'employee',
+     * ] */
+    private static function getProdConfig()
+    {
+        return json_decode(file_get_contents('/var/www/html/prod_config.json'), true);
     }
 
     public function provideReturnDoc()
@@ -487,7 +505,14 @@ class ExactKeysUnitTest
         $list[] = [$config, ['baseUrl', 'isDevelopment', 'fluentdIp', 'fluentdPort']];
         $config2 = static::getGlobalConfig();
         $config2[''];
+        $config3 = static::getDevConfig();
+        $config3[''];
+        $config4 = static::getProdConfig();
+        $config4[''];
+        $list[] = [$config, ['baseUrl', 'iseDevelopment', 'fluentdIp', 'fluentdPort']];
         $list[] = [$config2, ['securityKey', 'loggerIp']];
+        $list[] = [$config3, ['mailServiceUrl', 'apolloLogin']];
+        $list[] = [$config4, ['mailServiceUrl', 'apolloLogin']];
         return $list;
     }
 
