@@ -41,8 +41,8 @@ To go to the key definition, hover on it and press `ctrl` + `click` or put carre
 
 You can specify function argument type using `@param SomeType $varName = Some::phpExpression()`, like `@param $anime = ['genre' => 'shounen', 'studio' => 'Shaft']`. `=` is mandatory and expression must be a valid php expression. Class methods can be specified either with complete namespace like `\Very\Long\Namespace\ClassName::funcName()`, or with just `ClassName::funcName()`.
 
-You can also specify `@return` array keys as well:
-```php
+You can specify `@return` array keys as well:
+```cpp
 /**
  * @return array [
  *     'success' => true,
