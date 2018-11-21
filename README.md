@@ -26,12 +26,10 @@ To use compiled `.jar` in your phpstorm go to `Settings -> Plugins -> Install pl
 
 ## Features description
 
-(for detailed usage guide go to the [docs](https://github.com/klesun/phpstorm-deep-keys/blob/master/docs/deep-keys-overview.md)
+(a bit more detailed usage guide can be found [here](https://github.com/klesun/phpstorm-deep-keys/blob/master/docs/deep-keys-overview.md))
 
 ### Completion from expression
-When you are going to type an associative key of a variable, like in `$user['']`, put caret between quotes and press `ctrl` + `space`. The plugin will analyze your code, determine what keys does `$user` have and suggest completion. It should become pretty intuitive when plugin can determine keys, and when it can't. It still has some unsupported completion sources - i'm working on them.
-
-The suggested completion may clash with phpstorm's built-in completion. In such case plugin keys will always be at the bottom and in **bold** - hit `Page Down` several times to get to them.
+When you are going to type an associative key of a variable, like in `$user['']`, put caret between quotes and press `ctrl` + `space`. The plugin will analyze your code, determine what keys does `$user` have and suggest completion.
 
 ### Go To Definition
 ![Go To Definition](https://cloud.githubusercontent.com/assets/5202330/26428215/284b1988-40e9-11e7-9a44-746145c5393f.png)
@@ -41,14 +39,49 @@ To go to the key definition, hover on it and press `ctrl` + `click` or put carre
 ### Completion from phpdoc
 ![Completion from phpdoc](https://cloud.githubusercontent.com/assets/5202330/26426602/0f72f554-40e2-11e7-8873-30b873310746.png)
 
-You can specify function argument type using `@param {optionalType}? $varName = {expression}`, like `@param $anime = ['genre' => 'shounen', 'studio' => 'Shaft']`. `=` is mandatory and expression must be a valid php expression. Class methods can be specified either with complete namespace like `\Very\Long\Namespace\ClassName::funcName()`, or with just `ClassName::funcName()`.
+You can specify function argument type using `@param SomeType $varName = Some::phpExpression()`, like `@param $anime = ['genre' => 'shounen', 'studio' => 'Shaft']`. `=` is mandatory and expression must be a valid php expression. Class methods can be specified either with complete namespace like `\Very\Long\Namespace\ClassName::funcName()`, or with just `ClassName::funcName()`.
+
+You can also specify `@return` array keys as well:
+```php
+/**
+ * @return array [
+ *     'success' => true,
+ *     'formObject' => new Form,
+ *     'errors' => [],
+ * ]
+ */
+public static function processForm($arr);
+```
+![Completion from @return phpdoc](https://i.stack.imgur.com/vgZM9.png)
 
 ### Object type info in an associative array
 ![Object type info in an associative array](https://user-images.githubusercontent.com/5202330/30355696-9d6aa368-983d-11e7-8b8a-6b4f5afcee0e.png)
 
-Phpstorm does not highlight you method call when object in located in an associative array? Don't be sad, this plugin is exactly what you need!
+Phpstorm does not give you method name completion when object is located in an associative array? Don't be sad, this plugin is exactly what you need!
 
-### Describe variable
-![Describe variable](https://cloud.githubusercontent.com/assets/5202330/26427776/ee6d4e54-40e6-11e7-83d5-81a1687a0d7a.png)
+### To N-th Test
+![To N-th Test](https://user-images.githubusercontent.com/5202330/48870020-e6310280-ede7-11e8-9a70-33b64fdcc574.png)
 
-To get variable/expression result structure as lousy json, put caret on it and press `ctlr` + `alt` + `q`.
+Did you ever want an ability to find out which exactly test case does phpunit mean by the `with data set "17"` without manually counting them? You can find this feature in _Tools -> deep-assoc-completion -> To N-th Test_. It moves your caret to the test case with the order you specify in the popup. If there are multiple `@dataProvider` functions in the file, the function caret is currently in will be used. This action will work correctly only on more or less straightforward `@dataProvider`-s.  
+
+### String value completion
+![String Value Completion](https://user-images.githubusercontent.com/5202330/48870527-e205e480-ede9-11e8-824c-750088b76fa4.png)
+  
+![String Value Completion](https://user-images.githubusercontent.com/5202330/48870610-2b563400-edea-11e8-93c1-c8bbd973726b.png)  
+
+## Completion sources
+
+### Argument type resolution based on what was passed to the function
+![Keep Track of What is Passed to the Function](https://user-images.githubusercontent.com/5202330/48870882-280f7800-edeb-11e8-9a72-fe66b1af1fd5.png)
+
+![Infer type based on function usage when inside function](https://user-images.githubusercontent.com/5202330/48870975-88061e80-edeb-11e8-9501-c525a2a92e6a.png)
+
+Extremely useful for small private helper functions - you don't need to document args in each of them to get completion.
+
+### Keys from PDOStatement::fetch() if your Database is connected to IDEA
+![PDO completion](https://user-images.githubusercontent.com/5202330/34743879-3e690ff0-f583-11e7-8dee-dd8c86b78917.png)
+
+### All built-in array functions I could find are supported
+![built-ins](https://user-images.githubusercontent.com/5202330/48871378-2e9eef00-eded-11e8-8bbc-26c9d675cbeb.png)
+
+![static key built-ins](https://user-images.githubusercontent.com/5202330/48871517-bd137080-eded-11e8-9208-3725d81b960a.png)

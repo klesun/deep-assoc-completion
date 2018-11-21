@@ -1,4 +1,4 @@
-Hello, my name is Artur, nice to meet you. In this video i'd like to show you the features of the "deep-keys" phpstorm plugin i wrote.
+Hello, in this document I'd like to show you the features of the "deep-assoc-completion" phpstorm plugin I wrote.
 
 The plugin adds associative array key completion for you. So when you declare a variable like that...
 
@@ -42,26 +42,19 @@ $anime['']; // should suggest: "name", "score", "genre"
 How about that, phpstorm? Too complex for you, eh? 
 So, what do we do, how do we know what keys does this variable have? We aren't supposed to dive deep into source code to collect the key names from everywhere and write them down are we?
 
-Luckily, no, because, this situation is a piece of cake for the "deep-keys" plugin. So, you install it like this...
-
-...
-...
-
-And voile, here is your completion. The plugin looks really deep into the origins of the contents of this variable to get the type info - 35 expressions to be precise, enough to cover nested arrays of about 10 levels depth at once:
+Luckily, no, because, this situation is a piece of cake for the "deep-assoc-completion" plugin. So, you just install it through _File -> Settings -> Plugins -> Browse Repositories -> deep-asoc-completion_, restart phpstorm, and voile, here is your completion. The plugin looks really deep into the origins of the contents of this variable to get the type info - 40 expressions by default, enough to cover nested arrays of about 10 levels depth at once:
 
 ```php
 // example from a unit test
 $policeDepartment['offices']['402']['deskByTheWindow']['dayShift']['cases']['8469132']['evidences'][0]['value'];
 ```
+(the depth is configurable in _File -> Settings -> Languages & Frameworks -> PHP -> deep-asoc-completion_)
 
 You can go to the definition of a key, by Ctrl+Pressing on it, or putting carret at it and pressing Ctrl+B (or corresponding key on Mac if any), just like how you would get to the definition of a function or a field.
 
-The completion works with `foreach`, with `list(...) = ...` assignment, with most built-in functions, like `array_map`, `array_merge`, `array_combine`, etc... and even with methods passed by reference like here:
+The completion works with `foreach`, with `list(...) = ...` assignment, with most built-in functions, like `array_map`, `array_merge`, `array_combine`, etc... and even with methods passed by reference like `[SomeClass::class, 'someMethod']`.
 
-...
-...
-
-If you find a case when completion does not work when it should, i will be very grateful to you for filing a bug report in github (link should be in the description).
+If you find a case when completion does not work when it should, you may file an issue in github.
 
 ___________________________________________________________________
 
@@ -187,4 +180,6 @@ The plugin suggests you the keys function uses. Is helps a lot sometimes.
 
 _______________________________________________
 
-Last, but not... well, actually the least important feature - Ctrl+Alt+Q - getting the json-like description of variable type. It may be handy sometimes when you, like, need to create an array with same keys as the variable, and you don't want to type them manually... And it helps to grasp the idea about the variable i guess.
+Last, but not... well, actually the least important feature - _Ctrl+Alt+Q_ - getting the json-like description of variable type. It may be handy sometimes when you, like, need to create an array with same keys as the variable, and you don't want to type them manually... And it helps to grasp the idea about the variable i guess.
+
+![Describe variable](https://cloud.githubusercontent.com/assets/5202330/26427776/ee6d4e54-40e6-11e7-83d5-81a1687a0d7a.png)
