@@ -15,6 +15,10 @@ class UnitTest
         $imported['result']['pnrFields']['reservation'][''];
         $imported['result']['pnrFields']['reservation']['itinerary'][0][''];
         $imported['result']['pnrFields']['reservation']['passengers'][0][''];
+        $imported['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'][''];
+        $imported['result']['pnrFields']['fareQuoteInfo'][''];
+        $imported['result']['pnrFields']['fareQuoteInfo']['pricingList'][0][''];
+        $imported['result']['pnrFields']['fareQuoteInfo']['pricingList'][0]['pricingBlockList'][0][''];
 
         return [
             [$imported, ['response_code' => [], 'errors' => [], 'result' => []]],
@@ -23,6 +27,11 @@ class UnitTest
             [$imported['result']['pnrFields']['reservation'], ['passengers' => [], 'itinerary' => [], 'pnrInfo' => []]],
             [$imported['result']['pnrFields']['reservation']['itinerary'][0], ['departureDt' => [], 'airline' => [], 'destinationAirport' => []]],
             [$imported['result']['pnrFields']['reservation']['passengers'][0], ['nameNumber' => [], 'lastName' => [], 'firstName' => []]],
+            [$imported['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'], ['isInfant' => [], 'firstNameNumber' => [], 'fieldNumber' => [], 'absolute' => []]],
+            [$imported['result']['pnrFields']['fareQuoteInfo'], ['pricingList' => [], 'error' => []]],
+            [$imported['result']['pnrFields']['fareQuoteInfo']['pricingList'][0], ['quoteNumber' => [], 'pricingPcc' => [], 'pricingModifiers' => [], 'pricingBlockList' => []]],
+            [$imported['result']['pnrFields']['fareQuoteInfo']['pricingList'][0]['pricingBlockList'][0], ['passengerNameNumbers' => [], 'ptcInfo' => [], 'fareInfo' => [], 'validatingCarrier' => []]],
+            // TODO: continue, add fare construction and stuff
         ];
     }
 }
