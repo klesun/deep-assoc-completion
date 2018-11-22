@@ -184,7 +184,7 @@ public class SearchContext extends Lang
             }
 
             It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx)
-                //.lmt(1000) // .lmt() is just a safety measure, it should not be needed if everything works properly
+                .lmt(1000) // .lmt() is just a safety measure, it should not be needed if everything works properly
                 .unq() // .unq() before caching is important since types taken from cache would grow in count exponentially otherwise
                 ;
             Iterable<DeepType> mit = new MemoizingIterable<>(tit.iterator());
