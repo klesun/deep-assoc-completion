@@ -164,7 +164,7 @@ public class SearchContext extends Lang
             //System.out.println("deep-assoc-completion warning at " + time + ": type resolution takes " + seconds + " seconds " + expr.getText() + " " + expr.getClass());
         }
 
-        if (funcCtx.depth > initialDepth ||  funcCtx.func().getCallStackLength() > 10) { // on <= 6 tests fail
+        if (funcCtx.depth > initialDepth) {
             return It.non();
         }
         if (++expressionsResolved > getMaxExpressions()) {

@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.11.22.001</version>
+    <version>2018.11.22.002</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,6 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
+        <li>Fix: remove hardcoded 10 calls depth limit. It is not needed anymore since configurable and more reliable expression depth limit is back</li>
         <li>Allow `@return array = [...]` php doc format, not just `@return array [...]`</li>
         <li>Bugfix: closure caching was broken in 2018.10.31.001</li>
         <li>Remember comment next to key if any and show it in completion popup</li>

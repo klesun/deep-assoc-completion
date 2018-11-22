@@ -509,7 +509,7 @@ class ExactKeysUnitTest
         $config3[''];
         $config4 = static::getProdConfig();
         $config4[''];
-        $list[] = [$config, ['baseUrl', 'iseDevelopment', 'fluentdIp', 'fluentdPort']];
+        $list[] = [$config, ['baseUrl', 'isDevelopment', 'fluentdIp', 'fluentdPort']];
         $list[] = [$config2, ['securityKey', 'loggerIp']];
         $list[] = [$config3, ['mailServiceUrl', 'apolloLogin']];
         $list[] = [$config4, ['mailServiceUrl', 'apolloLogin']];
