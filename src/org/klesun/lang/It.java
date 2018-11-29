@@ -164,9 +164,22 @@ public class It<A> implements Iterable<A>
         return map(convert).fap(a -> a.itr());
     }
 
+    /** flat map optional, remove elements that don't match */
     public <B> It<B> fop(F<A, Opt<B>> convert)
     {
         return map(convert).fap(a -> a.itr());
+    }
+
+    /** flat map optional, become empty optional if at least one element does not match */
+    public <B> Opt<L<B>> fal(F<A, Opt<B>> convert)
+    {
+        L<Opt<B>> opts = map(convert).arr();
+        if (opts.any(opt -> !opt.has())) {
+            return new Opt<>(null);
+        } else {
+            L<B> vals = opts.map(opt -> opt.unw()).arr();
+            return som(vals);
+        }
     }
 
     public It<A> unq()
@@ -292,9 +305,14 @@ public class It<A> implements Iterable<A>
         return value;
     }
 
+    public String str(String delim)
+    {
+        return Tls.implode(delim, arr().map(val -> val.toString()));
+    }
+
     public String str()
     {
-        return Tls.implode(", ", arr().map(val -> val.toString()));
+        return str(", ");
     }
 
     public boolean any(Predicate<A> pred)

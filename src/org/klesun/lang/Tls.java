@@ -85,12 +85,21 @@ public class Tls extends Lang
         Predicate<PsiElement> goDeeperPred
     ) {
         if (goDeeperPred.test(parent)) {
-            return It(parent.getChildren())
-                .fap(c -> findChildren(c, cls, goDeeperPred))
-                .cct(list(parent).fop(toCast(cls)));
+            return It.cnc(
+                Tls.cast(cls, parent),
+                It(parent.getChildren())
+                    .fap(c -> findChildren(c, cls, goDeeperPred))
+            );
         } else {
             return It.non();
         }
+    }
+
+    public static <T extends PsiElement> It<T> findChildren(
+        PsiElement parent,
+        Class<T> cls
+    ) {
+        return findChildren(parent, cls, (a) -> true);
     }
 
     /**

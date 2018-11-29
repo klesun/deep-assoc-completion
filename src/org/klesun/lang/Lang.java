@@ -39,6 +39,28 @@ public class Lang
         }
     }
 
+    // tuple of 4 elements
+    public static class T4<T1, T2, T3, T4>
+    {
+        final public T1 a;
+        final public T2 b;
+        final public T3 c;
+        final public T4 d;
+
+        public T4(T1 a, T2 b, T3 c, T4 d)
+        {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+            this.d = d;
+        }
+
+        public <Tnew> Tnew nme(F4<T1, T2, T3, T4, Tnew> namer)
+        {
+            return namer.apply(a,b,c,d);
+        }
+    }
+
     public static class Mutable<T>
     {
         private T value;
@@ -63,6 +85,17 @@ public class Lang
     public interface R extends Runnable {}
     public interface F<Tin, Tout> extends Function<Tin, Tout> {}
     public interface F2<Tin1, Tin2, Tout> extends BiFunction<Tin1, Tin2, Tout> {}
+
+    @FunctionalInterface
+    public interface F3<T,U,S, R> {
+        R apply(T t, U u, S s);
+    }
+
+    @FunctionalInterface
+    public interface F4<Tin1, Tin2, Tin3, Tin4, Tout> {
+        Tout apply(Tin1 var1, Tin2 var2, Tin3 var3, Tin4 var4);
+    }
+
     public interface C<Tin> extends Consumer<Tin> {}
     public interface C2<Tin1, Tin2> extends BiConsumer<Tin1, Tin2> {}
 
@@ -128,6 +161,10 @@ public class Lang
     public static <Ta, Tb, Tc> T3<Ta, Tb, Tc> T3(Ta a, Tb b, Tc c)
     {
         return new T3<Ta, Tb, Tc>(a, b, c);
+    }
+    public static <Ta, Tb, Tc, Td> T4<Ta, Tb, Tc, Td> T4(Ta a, Tb b, Tc c, Td d)
+    {
+        return new T4<Ta, Tb, Tc, Td>(a, b, c, d);
     }
 
     public static <T> L<T> list(T... args)

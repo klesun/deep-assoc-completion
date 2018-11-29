@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocVarImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
@@ -81,42 +82,71 @@ public class VarRes
             });
     }
 
+    private static boolean isInList(Variable lstVar)
+    {
+        PsiElement prev = lstVar.getPrevSibling();
+        while (prev != null) {
+            if (prev.getText().equals("list")) {
+                return true;
+            } else if (
+                !list(",", "(").contains(prev.getText()) &&
+                !(prev instanceof PsiWhiteSpaceImpl)
+            ) {
+                return false;
+            } else {
+                prev = prev.getPrevSibling();
+            }
+        }
+        return false;
+    }
+
+    // array, key, value, list values
+    public static Opt<T4<PhpExpression, Opt<Variable>, Opt<Variable>, L<Variable>>> parseForeach(ForeachImpl fch)
+    {
+        return opt(fch.getArray())
+            .fop(toCast(PhpExpression.class))
+            .map(arr -> {
+                L<Variable> tuple = L(fch.getVariables());
+                Opt<Variable> keyVarOpt = opt(fch.getKey())
+                    // IDEA breaks on list() - should help her
+                    .flt(keyVar -> Opt.fst(
+                        () -> opt(keyVar.getNextSibling())
+                            .fop(toCast(PsiWhiteSpace.class))
+                            .map(ws -> ws.getNextSibling()),
+                        () -> opt(keyVar.getNextSibling())
+                    ).flt(par -> par.getText().equals("=>")).has());
+                if (keyVarOpt.has()) {
+                    tuple = tuple.sub(1); // key was included
+                }
+                // you could write list($a) or $list(,,$c), but
+                // IDEA does not parse list in foreach well
+                if (tuple.size() > 1 || tuple.fst().any(lstVar -> isInList(lstVar))) {
+                    return T4(arr, keyVarOpt, non(), tuple);
+                } else {
+                    return T4(arr, keyVarOpt, tuple.fst(), list());
+                }
+            });
+    }
+
     private Opt<S<It<DeepType>>> assertForeachElement(PsiElement varRef)
     {
         return opt(varRef.getParent())
-            .fop(toCast(ForeachImpl.class))
-            .fop(fch -> opt(fch.getArray())
-                .fop(toCast(PhpExpression.class))
-                .map(arr -> () -> {
-                    It<DeepType> artit = ctx.findExprType(arr);
-                    L<Variable> tuple = L(fch.getVariables());
-                    Opt<Variable> keyVarOpt = opt(fch.getKey())
-                        // IDEA breaks on list() - should help her
-                        .flt(keyVar -> Opt.fst(
-                            () -> opt(keyVar.getNextSibling())
-                                .fop(toCast(PsiWhiteSpace.class))
-                                .map(ws -> ws.getNextSibling()),
-                            () -> opt(keyVar.getNextSibling())
-                        ).flt(par -> par.getText().equals("=>")).has());
-                    if (keyVarOpt.has()) {
-                        tuple = tuple.sub(1); // key was included
-                        if (varRef.isEquivalentTo(keyVarOpt.unw())) {
-                            return artit.fap(t -> t.keys)
-                                .fap(k -> k.keyType.getTypes.get())
-                                .fap(t -> opt(t.stringValue)
-                                    .map(name -> new DeepType(t.definition, PhpType.STRING, name)));
-                        }
-                    }
-                    if (tuple.size() > 1) {
-                        L<Variable> tuplef = tuple;
-                        return artit.fap(Mt::getElSt)
-                            .fap(elt -> Mt.getKeySt(elt, tuplef.indexOf(varRef) + ""));
-                    } else {
-                        // this is actually not correct since you could write list($a)
-                        // or $list(,,$c), but IDEA does not parse list in foreach well
-                        return artit.fap(Mt::getElSt);
-                    }
-                }));
+            .cst(ForeachImpl.class)
+            .fop(fch -> parseForeach(fch))
+            .map(tup -> () -> tup.nme((arr, keyVarOpt, valOpt, tuple) -> {
+                It<DeepType> artit = ctx.findExprType(arr);
+                if (opt(varRef).equals(keyVarOpt)) {
+                    return artit.fap(t -> t.keys)
+                        .fap(k -> k.keyType.getTypes.get())
+                        .fap(t -> opt(t.stringValue)
+                            .map(name -> new DeepType(t.definition, PhpType.STRING, name)));
+                } else if (!valOpt.has()) {
+                    return artit.fap(Mt::getElSt)
+                        .fap(elt -> Mt.getKeySt(elt, tuple.indexOf(varRef) + ""));
+                } else {
+                    return artit.fap(Mt::getElSt);
+                }
+            }));
     }
 
     private Opt<S<It<DeepType>>> assertTupleAssignment(PsiElement varRef)
