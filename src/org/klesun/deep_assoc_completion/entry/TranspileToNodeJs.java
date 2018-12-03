@@ -19,6 +19,7 @@ import com.jetbrains.php.lang.psi.elements.impl.ForeachImpl;
 import com.jetbrains.php.lang.psi.elements.impl.GroupStatementSimpleImpl;
 import com.jetbrains.php.lang.psi.elements.impl.PhpUseListImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StatementImpl;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
@@ -168,6 +169,15 @@ public class TranspileToNodeJs extends AnAction
     {
         // TODO: add whitespace generally here
         // TODO: $arr[] = $val; -> $arr.push($val)
+        // TODO: unset -> delete
+        // TODO: output in a scratch file, not STDOUT
+        // TODO: process whole directories, not just one file
+        // TODO: do not add coma after last object element if there weren't any in original
+        // TODO: if ($zhopa = getZhopa()) {...} -> let $zhopa; if ($zhopa = getZhopa()) {...}
+        // TODO: class constants
+        // TODO: put properties in constructor - node does not allow properties directly in class body
+        // TODO: do not add let in +=
+        // TODO: proper php single quote literal escaping: '/\s*/' -> '/\\s*/'
         Iterable<String> result = It.frs(() -> It.non()
             , () -> Tls.cast(LeafPsiElement.class, psi)
                 .map(leaf ->
@@ -200,7 +210,7 @@ public class TranspileToNodeJs extends AnAction
                     return (isDeclSt ? "let " : "") + varName;
                 })
             , () -> Tls.cast(FieldReference.class, psi)
-                .map(typed -> transpilePsi(typed.getClassReference()) + "." + typed.getName())
+                .map(typed -> transpilePsi(typed.getClassReference()) + ".$" + typed.getName())
             , () -> Tls.cast(MethodReference.class, psi)
                 .map(typed -> transpilePsi(typed.getClassReference()) + "." + typed.getName() + "(" + It(typed.getParameters()).map(arg -> transpilePsi(arg)).str(", ") + ")")
             , () -> Tls.cast(ArrayCreationExpression.class, psi).itr()
@@ -214,6 +224,27 @@ public class TranspileToNodeJs extends AnAction
                             + transpilePsi(typed.getRightOperand()))
             , () -> Tls.cast(ClassConstantReference.class, psi)
                 .map(typed -> transpilePsi(typed.getClassReference()) + '.' + typed.getName())
+            , () -> Tls.cast(StringLiteralExpression.class, psi)
+                .map(typed -> {
+                    if (!typed.isSingleQuote()) {
+                        return typed.getText();
+                    } else {
+                        String content = typed.getContents();
+                        return Tls.regex("\\/(.+)\\/([a-z]{0,3})", content)
+                            .map(m -> "/" + m.get(0) + "/" + m.get(1)) // '/\s*/i' -> /\s*/i
+                            .def("'" + StringEscapeUtils.escapeJavaScript(typed.getContents()) + "'");
+                    }
+                })
+            , () -> Tls.cast(FunctionReference.class, psi)
+                .fap(call -> {
+                    PsiElement[] args = call.getParameters();
+                    if ("preg_match".equals(call.getName()) && args.length > 2) {
+                        String matchesVar = args[2].getText();
+                        return som(matchesVar + " = " + call.getName() + "(" + It(call.getParameters()).map(arg -> transpilePsi(arg)).str(", ") + ")");
+                    } else {
+                        return non();
+                    }
+                })
         );
         return It(result).def(getChildrenWithLeaf(psi)
             .map(c -> transpilePsi(c))).str("");
