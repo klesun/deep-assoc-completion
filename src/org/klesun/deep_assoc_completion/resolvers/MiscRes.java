@@ -13,8 +13,6 @@ import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
-import javax.annotation.Nullable;
-
 public class MiscRes extends Lang
 {
     final private IExprCtx ctx;
@@ -30,7 +28,7 @@ public class MiscRes extends Lang
             .fap(casted -> ctx.findExprType(casted));
     }
 
-    public It<PhpType> resolveAnyClassReference(@Nullable PhpExpression clsRefPsi, boolean ideaKnows)
+    public It<PhpType> resolveAnyClassReference(PhpExpression clsRefPsi, boolean ideaKnows)
     {
         return It.frs(
             // new static()
@@ -165,7 +163,7 @@ public class MiscRes extends Lang
                     .fap(op -> {
                         It<DeepType> lmt = findPsiExprType(bin.getLeftOperand());
                         It<DeepType> rmt = findPsiExprType(bin.getRightOperand());
-                        @Nullable String unescaped = opt(Mt.getStringValueSt(lmt))
+                        String unescaped = opt(Mt.getStringValueSt(lmt))
                             .fop(lstr -> opt(Mt.getStringValueSt(rmt))
                                 .map(rstr -> lstr + rstr))
                             .map(ccted -> StringEscapeUtils.unescapeJava(ccted)) // PHP ~ java

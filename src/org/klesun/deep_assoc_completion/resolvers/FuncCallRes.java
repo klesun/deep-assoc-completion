@@ -14,8 +14,6 @@ import org.klesun.deep_assoc_completion.ScopeFinder;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.lang.*;
 
-import javax.annotation.Nullable;
-
 public class FuncCallRes extends Lang
 {
     private IExprCtx ctx;
@@ -406,7 +404,7 @@ public class FuncCallRes extends Lang
                 DeepType type = new DeepType(call);
                 type.addKey(KeyType.integer(call)).addType(Tls.onDemand(() -> {
                     Mt elType = callCtx.getArgMt(0).getEl();
-                    @Nullable String keyName = callCtx.getArgMt(1).getStringValue();
+                    String keyName = callCtx.getArgMt(1).getStringValue();
                     return elType.getKey(keyName);
                 }));
                 return list(type);

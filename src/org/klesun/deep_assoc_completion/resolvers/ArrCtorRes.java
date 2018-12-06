@@ -17,7 +17,6 @@ import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
-import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -31,7 +30,7 @@ public class ArrCtorRes extends Lang
         this.ctx = ctx;
     }
 
-    public static Set<String> ideaTypeToFqn(@Nullable PhpType ideaType)
+    public static Set<String> ideaTypeToFqn(PhpType ideaType)
     {
         return new HashSet<>(opt(ideaType).def(PhpType.EMPTY).filterUnknown()
             .filterNull().filterMixed().filter(PhpType.OBJECT).getTypes());

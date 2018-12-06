@@ -12,7 +12,6 @@ import org.klesun.deep_assoc_completion.DeepTypeResolver;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.lang.*;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -37,7 +36,7 @@ public class SearchContext extends Lang
     final public Map<PsiFile, Collection<FieldReferenceImpl>> fileToFieldRefs = new HashMap<>();
     public boolean isMain = false;
 
-    public SearchContext(@Nullable Project project)
+    public SearchContext(Project project)
     {
         this.project = opt(project);
     }

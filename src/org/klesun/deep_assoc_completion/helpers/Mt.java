@@ -5,7 +5,6 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.lang.*;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -59,7 +58,7 @@ public class Mt extends Lang
     public static String getStringValueSt(Iterable<DeepType> types)
     {
         int i = 0;
-        @Nullable String value = null;
+        String value = null;
         for (DeepType t: types) {
             if (i > 0 && !Objects.equals(t.stringValue, value)) {
                 return null;
@@ -93,7 +92,7 @@ public class Mt extends Lang
         return getKey(null);
     }
 
-    public static It<DeepType> getKeySt(DeepType type, @Nullable String keyName)
+    public static It<DeepType> getKeySt(DeepType type, String keyName)
     {
         return It.cnc(
             type.keys
