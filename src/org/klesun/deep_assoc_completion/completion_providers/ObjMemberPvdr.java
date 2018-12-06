@@ -69,7 +69,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             .fap(prop -> prop.keyType.getNames()
                 .map(name -> LookupElementBuilder.create(name)
                     .bold()
-                    .withIcon(PhpIcons.FIELD)
+                    .withIcon(DeepKeysPvdr.getIcon())
                     .withTypeText(prop.getBriefTypes().wap(its -> {
                         PhpType ideaType = new PhpType();
                         its.fch(ideaType::add);
