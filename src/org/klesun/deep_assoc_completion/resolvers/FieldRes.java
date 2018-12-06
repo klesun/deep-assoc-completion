@@ -89,36 +89,9 @@ public class FieldRes extends Lang
                 .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(assPsi, false)));
     }
 
-    public It<DeepType> resolve(FieldReferenceImpl fieldRef)
+    private It<DeepType> declsToTypes(FieldReferenceImpl fieldRef, It<Field> declarations)
     {
-        S<Mt> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
-            .fop(ref -> Opt.fst(
-                () -> ctx.getSelfType()
-                    .flt(typ -> ref.getText().equals("static"))
-                    .flt(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, ref.getProject()).has())
-                    .map(typ -> new Mt(list(new DeepType(ref, typ)))),
-                () -> opt(ctx.findExprType(ref).wap(Mt::new))
-            ))
-            .def(Mt.INVALID_PSI));
-
-        It<Field> declarations = It.frs(
-            () -> opt(fieldRef)
-                .flt(ref -> !ref.getText().startsWith("static::")) // IDEA is bad at static:: resolution
-                .fap(ref -> It(ref.multiResolve(false)))
-                .map(res -> res.getElement())
-                .fop(toCast(Field.class)),
-            () -> opt(getObjMt.get())
-                .fap(mt -> ArrCtorRes.resolveMtCls(mt, fieldRef.getProject()))
-                .fap(cls -> cls.getFields())
-                .flt(f -> f.getName().equals(fieldRef.getName()))
-        );
-        It<DeepType> propDocTs = It(list());
-        if (!declarations.has()) {
-            propDocTs = getObjMt.get().getProps()
-                .flt(prop -> prop.keyType.getNames().any(n -> n.equals(fieldRef.getName())))
-                .fap(prop -> prop.getTypes());
-        }
-        It<DeepType> declTypes = declarations
+        return declarations
             .fap(resolved -> {
                 IExprCtx implCtx = ctx.subCtxEmpty();
                 It<DeepType> defTs = Tls.cast(FieldImpl.class, resolved).itr()
@@ -143,7 +116,54 @@ public class FieldRes extends Lang
                     AssRes.assignmentsToTypes(asses)
                 );
             });
+    }
 
-        return It.cnc(propDocTs, declTypes);
+    private It<DeepType> resolveMagicProp(PhpClass cls, String propName)
+    {
+        // TODO: add propName and called clas to the call context
+        IExprCtx exprCtx = ctx.subCtxEmpty();
+        return It(cls.getMethods())
+            .flt(m -> "__get".equals(m.getName()))
+            .fap(m -> MethCallRes.findMethRetType(m).apply(exprCtx));
+    }
+
+    public It<DeepType> resolve(FieldReferenceImpl fieldRef)
+    {
+        S<Mt> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
+            .fop(ref -> Opt.fst(
+                () -> ctx.getSelfType()
+                    .flt(typ -> ref.getText().equals("static"))
+                    .flt(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, ref.getProject()).has())
+                    .map(typ -> new Mt(list(new DeepType(ref, typ)))),
+                () -> opt(ctx.findExprType(ref).wap(Mt::new))
+            ))
+            .def(Mt.INVALID_PSI));
+
+        S<MemoizingIterable<PhpClass>> getCls = Tls.onDemand(() -> opt(getObjMt.get())
+            .fap(mt -> ArrCtorRes.resolveMtCls(mt, fieldRef.getProject())).mem());
+
+        It<Field> declarations = It.frs(
+            () -> opt(fieldRef)
+                .flt(ref -> !ref.getText().startsWith("static::")) // IDEA is bad at static:: resolution
+                .fap(ref -> It(ref.multiResolve(false)))
+                .map(res -> res.getElement())
+                .fop(toCast(Field.class)),
+            () -> getCls.get()
+                .fap(cls -> cls.getFields())
+                .flt(f -> f.getName().equals(fieldRef.getName()))
+        );
+        It<DeepType> propDocTs = It(list());
+        It<DeepType> magicPropTs = It(list());
+        if (!declarations.has()) {
+            propDocTs = getObjMt.get().getProps()
+                .flt(prop -> prop.keyType.getNames().any(n -> n.equals(fieldRef.getName())))
+                .fap(prop -> prop.getTypes());
+            magicPropTs = getCls.get()
+                .fap(cls -> opt(fieldRef.getName())
+                    .fap(nme -> resolveMagicProp(cls, nme)));
+        }
+        It<DeepType> declTypes = declsToTypes(fieldRef, declarations);
+
+        return It.cnc(propDocTs, magicPropTs, declTypes);
     }
 }

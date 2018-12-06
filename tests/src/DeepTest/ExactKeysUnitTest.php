@@ -5,6 +5,7 @@ use Lib\ParamValidation\DictP;
 use Lib\ParamValidation\ListP;
 use Lib\ParamValidation\StringP;
 use Lib\Utils\Fp;
+use SomeCls123;
 
 /**
  * unlike UnitTest.php, this test not just checks that actual result  has _at least_
@@ -1237,4 +1238,26 @@ class ExactKeysUnitTest
     //=============================
     // following are not implemented yet
     //=============================
+
+    public function provideVarNameProperty()
+    {
+        $propName = 'database';
+        $dbRec = SomeCls123::$data->$propName;
+        $dbRec->d;
+        return [
+            //[(array)$dbRec, []],
+        ];
+    }
+
+    public function provideMagicMethodInference()
+    {
+        $object = new SomeCls123();
+        // should suggest: database, max_occurences
+        $object->a;
+        // should suggest: server, user, pass, database, port, socket
+        $object->database->e;
+        return [
+            //[$object->database, ['server', 'user', 'pass', 'database', 'port', 'socket']],
+        ];
+    }
 }
