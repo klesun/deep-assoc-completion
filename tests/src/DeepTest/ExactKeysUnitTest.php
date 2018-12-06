@@ -1235,20 +1235,6 @@ class ExactKeysUnitTest
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
-    public function provideVarNameProperty()
-    {
-        $propName = 'database';
-        $dbRec = SomeCls123::$data->$propName;
-        $dbRec->d;
-        return [
-            //[(array)$dbRec, []],
-        ];
-    }
-
     public function provideMagicMethodInference()
     {
         $object = new SomeCls123();
@@ -1257,7 +1243,35 @@ class ExactKeysUnitTest
         // should suggest: server, user, pass, database, port, socket
         $object->database->e;
         return [
-            //[$object->database, ['server', 'user', 'pass', 'database', 'port', 'socket']],
+            [(array)$object->database, ['server', 'user', 'pass', 'database', 'port', 'socket']],
+        ];
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
+
+    public function provideVarNameProperty()
+    {
+        $agent = (object)['id' => 123, 'name' => 'vova',
+            'company' => ['domain' => 'CRA', 'tz' => 'America/New_York'],
+            'team' => ['motto' => 'get sales or get lost!', 'auditor' => 'Boris'],
+        ];
+        $agent->company[''];
+        $companyPropName = 'company';
+        $company = $agent->{$companyPropName};
+        $company[''];
+        $teamPropName = 'team';
+        $team = $agent->{$teamPropName};
+        $team[''];
+
+        $propName = 'database';
+        $dbRec = SomeCls123::$data->$propName;
+        $dbRec->da;
+        return [
+//            [(array)$company, ['domain', 'tz']],
+//            [(array)$team, ['motto', 'auditor']],
+            [(array)$dbRec, ['server','user','pass','database','port','socket']],
         ];
     }
 }

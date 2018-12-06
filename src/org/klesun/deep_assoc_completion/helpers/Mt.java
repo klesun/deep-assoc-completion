@@ -92,6 +92,15 @@ public class Mt extends Lang
         return getKey(null);
     }
 
+    public static It<DeepType> getPropSt(DeepType type, String keyName)
+    {
+        return type.props.vls()
+            .flt(k -> keyName == null || k.keyType.getTypes.get()
+                .any(kt -> keyName.equals(kt.stringValue)
+                    || kt.stringValue == null))
+            .fap(k -> k.getTypes());
+    }
+
     public static It<DeepType> getKeySt(DeepType type, String keyName)
     {
         return It.cnc(

@@ -155,9 +155,10 @@ public class FieldRes extends Lang
         It<DeepType> propDocTs = It(list());
         It<DeepType> magicPropTs = It(list());
         if (!declarations.has()) {
-            propDocTs = getObjMt.get().getProps()
-                .flt(prop -> prop.keyType.getNames().any(n -> n.equals(fieldRef.getName())))
-                .fap(prop -> prop.getTypes());
+            String rawName = fieldRef.getName();
+            String name = "".equals(rawName) ? null : rawName;
+            propDocTs = getObjMt.get().types
+                .fap(t -> Mt.getPropSt(t, name));
             magicPropTs = getCls.get()
                 .fap(cls -> opt(fieldRef.getName())
                     .fap(nme -> resolveMagicProp(cls, nme)));
