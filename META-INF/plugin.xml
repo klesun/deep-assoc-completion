@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.11.22.003</version>
+    <version>2018.12.07.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,11 +37,9 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Limit each expression resolution to 1000 types as a temporary workaround to some infinite recursion bug reproducing in Rbs/UnitTest.php</li>
-        <li>Fix: remove hardcoded 10 calls depth limit. It is not needed anymore since configurable and more reliable expression depth limit is back</li>
-        <li>Allow `@return array = [...]` php doc format, not just `@return array [...]`</li>
-        <li>Bugfix: closure caching was broken in 2018.10.31.001</li>
-        <li>Remember comment next to key if any and show it in completion popup</li>
+        <li>#56 Infer dynamic property type from __get() magic method</li>
+        <li>#56 Infer type from $obj->$propName (when a var is used as property name)</li>
+        <li>Add basic PHP -> node js transpiler action in _Tools -> deep-assoc-completion -> Transpile to JS Code (output only to STDOUT currently =P)_</li>
     </ul>
     ]]>
     </change-notes>

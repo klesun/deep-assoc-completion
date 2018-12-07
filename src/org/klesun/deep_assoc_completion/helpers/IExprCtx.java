@@ -42,7 +42,8 @@ public interface IExprCtx {
     Opt<Project> getProject();
 
     It<DeepType> findExprType(PhpExpression expr);
-    It<DeepType> limitResolve(int limit, PhpExpression expr);
+    It<DeepType> limitResolve(int exprLimit, PhpExpression expr);
+    It<DeepType> limitResolveDepth(int depthLimit, PhpExpression expr);
 
 
     /**

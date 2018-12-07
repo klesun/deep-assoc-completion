@@ -1279,6 +1279,7 @@ class ExactKeysUnitTest
         $propName = 'database';
         $dbRec = SomeCls123::$data->$propName;
         $zhopa = SomeCls123::getProp('zhopa');
+        $zhopa->u;
 
         return [
             [(array)$company, ['domain', 'tz']],

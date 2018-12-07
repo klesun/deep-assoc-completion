@@ -4,7 +4,6 @@ import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.jetbrains.php.lang.psi.elements.FieldReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import org.klesun.deep_assoc_completion.DeepType;
@@ -22,8 +21,7 @@ public class SearchContext extends Lang
     // parametrized fields
     private long startTime = System.nanoTime();
     private long lastReportTime = System.nanoTime();
-    public int depthLeft = 20;
-    public int initialDepth = depthLeft;
+    public int maxDepth = 20;
     final public static boolean DEBUG_DEFAULT = false;
     public boolean debug = DEBUG_DEFAULT;
     private Opt<Double> timeout = opt(null);
@@ -48,7 +46,7 @@ public class SearchContext extends Lang
 
     public SearchContext setDepth(int depth)
     {
-        this.depthLeft = initialDepth = depth;
+        this.maxDepth = depth;
         return this;
     }
 
@@ -154,7 +152,12 @@ public class SearchContext extends Lang
             });
     }
 
-    public Iterable<DeepType> findExprType(PhpExpression expr, ExprCtx funcCtx)
+    private boolean shouldCache(ExprCtx exprCtx)
+    {
+        return !overrideMaxExpr.has() && !exprCtx.doNotCache;
+    }
+
+    public Iterable<DeepType> findExprType(PhpExpression expr, ExprCtx exprCtx)
     {
         long time = System.nanoTime();
         double seconds = (time - startTime) / 1000000000.0;
@@ -163,7 +166,7 @@ public class SearchContext extends Lang
             //System.out.println("deep-assoc-completion warning at " + time + ": type resolution takes " + seconds + " seconds " + expr.getText() + " " + expr.getClass());
         }
 
-        if (funcCtx.depth > initialDepth) {
+        if (exprCtx.depth > maxDepth) {
             return It.non();
         }
         if (++expressionsResolved > getMaxExpressions()) {
@@ -172,24 +175,24 @@ public class SearchContext extends Lang
             return It.non();
         }
 
-        Opt<Iterable<DeepType>> result = takeFromCache(funcCtx.func(), expr);
+        Opt<Iterable<DeepType>> result = takeFromCache(exprCtx.func(), expr);
         if (result.has()) {
             if (debug) {
                 //System.out.println(indent + "<< TAKING RESULT FROM CACHE");
             }
         } else {
-            if (!overrideMaxExpr.has()) {
-                putToCache(funcCtx.func(), expr, list());
+            if (shouldCache(exprCtx)) {
+                putToCache(exprCtx.func(), expr, list());
             }
 
-            It<DeepType> tit = DeepTypeResolver.resolveIn(expr, funcCtx)
+            It<DeepType> tit = DeepTypeResolver.resolveIn(expr, exprCtx)
                 //.lmt(1000) // .lmt() is just a safety measure, it should not be needed if everything works properly
                 .unq() // .unq() before caching is important since types taken from cache would grow in count exponentially otherwise
                 ;
             Iterable<DeepType> mit = new MemoizingIterable<>(tit.iterator());
             result = som(mit);
-            if (!overrideMaxExpr.has()) {
-                result.thn(mt -> putToCache(funcCtx.func(), expr, mit));
+            if (shouldCache(exprCtx)) {
+                result.thn(mt -> putToCache(exprCtx.func(), expr, mit));
             }
         }
 
@@ -198,7 +201,7 @@ public class SearchContext extends Lang
         //    el.clsRefType.map(t -> t.toString()).def("(no cls)"), "") + " trace: " + funcCtx.func());
 
         return It(result.def(It.non()))
-            .thn(cnt -> funcCtx.typeCnt = som(cnt))
+            .thn(cnt -> exprCtx.typeCnt = som(cnt))
             ;
     }
 

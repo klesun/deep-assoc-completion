@@ -161,9 +161,7 @@ public class FieldRes extends Lang
                 name = It(fieldRef.getChildren())
                     .flt((c,i) -> i > 0) // skip first psi, it is the object var
                     .cst(Variable.class)
-                    // TODO: should limit in such way func call context was
-                    //  preserved, it does not make much sense otherwise
-                    .fap(vari -> ctx.limitResolve(15, vari))
+                    .fap(vari -> ctx.limitResolveDepth(5, vari))
                     .wap(Mt::getStringValueSt);
             }
             String finalName = name;
