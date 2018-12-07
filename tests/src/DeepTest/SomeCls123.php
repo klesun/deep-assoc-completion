@@ -21,12 +21,6 @@ class SomeCls123
      */
     public static $data;
 
-    /**
-     * @param $key
-     *
-     * @return self::$data
-     * @throws \Exception
-     */
     public function __get($key)
     {
         if (isset(self::$data->$key)) {
@@ -40,3 +34,6 @@ class SomeCls123
         return self::$data->$name;
     }
 }
+
+
+(new SomeCls123())->database->e;

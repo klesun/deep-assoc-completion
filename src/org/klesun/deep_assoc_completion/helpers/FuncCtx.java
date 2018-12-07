@@ -127,19 +127,42 @@ public class FuncCtx extends Lang implements IFuncCtx
         return clsOpt.map(cls -> cls.getFQN()).any(fqn -> fqn.startsWith("\\Dyninno\\Core\\Database\\"));
     }
 
+    private void setThisType(MemberReference memRef, F<PhpExpression, It<DeepType>> findExprType)
+    {
+        opt(memRef.getClassReference())
+            .thn(clsRef -> {
+                if (clsRef instanceof ClassReference && !isWhitelistedStaticThis(memRef)) {
+                    this.clsIdeaType = opt(clsRef.getType());
+                } else {
+                    this.instGetter = opt(() -> new Mt(findExprType.apply(clsRef)));
+                }
+            });
+    }
+
     public FuncCtx subCtxDirect(FunctionReference funcCall, F<PhpExpression, It<DeepType>> findExprType)
     {
         FuncCtx self = subCtxDirectGeneric(funcCall, findExprType);
         Tls.cast(MethodReference.class, funcCall)
-            .thn(methCall -> opt(methCall.getClassReference())
-                .thn(ref -> {
-                    if (ref instanceof ClassReference && !isWhitelistedStaticThis(methCall)) {
-                        self.clsIdeaType = opt(ref.getType());
-                    } else {
-                        self.instGetter = opt(() -> new Mt(findExprType.apply(ref)));
-                    }
-                }));
+            .thn(methCall -> self.setThisType(methCall, findExprType));
         return self;
+    }
+
+    /** the property name passed to the __get($propName) */
+    public FuncCtx subCtxMagicProp(FieldReference fieldRef, F<PhpExpression, It<DeepType>> findExprType)
+    {
+        Opt<S<Mt>> argGetter = Opt.fst(
+            () -> opt(fieldRef.getName())
+                .flt(nme -> !"".equals(nme))
+                .map(nme -> () -> new DeepType(fieldRef, PhpType.STRING, nme).mt()),
+            () -> It(fieldRef.getChildren())
+                .flt((c,i) -> i > 0) // skip first psi, it is the object var
+                .cst(Variable.class)
+                .fst()
+                .map(vari -> () -> new Mt(findExprType.apply(vari)))
+        );
+        FuncCtx subCtx = new FuncCtx(this, argGetter.arr(), fieldRef, EArgPsiType.DIRECT);
+        subCtx.setThisType(fieldRef, findExprType);
+        return subCtx;
     }
 
     public FuncCtx subCtxDirect(NewExpression funcCall, F<PhpExpression, It<DeepType>> findExprType)

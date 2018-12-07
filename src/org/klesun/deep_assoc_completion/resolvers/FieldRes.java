@@ -118,10 +118,8 @@ public class FieldRes extends Lang
             });
     }
 
-    private It<DeepType> resolveMagicProp(PhpClass cls, String propName)
+    private It<DeepType> resolveMagicProp(PhpClass cls, IExprCtx exprCtx)
     {
-        // TODO: add propName and called clas to the call context
-        IExprCtx exprCtx = ctx.subCtxEmpty();
         return It(cls.getMethods())
             .flt(m -> "__get".equals(m.getName()))
             .fap(m -> MethCallRes.findMethRetType(m).apply(exprCtx));
@@ -167,9 +165,10 @@ public class FieldRes extends Lang
             String finalName = name;
             propDocTs = getObjMt.get().types
                 .fap(t -> Mt.getPropSt(t, finalName));
+            IExprCtx magicCtx = ctx.subCtxMagicProp(fieldRef);
             magicPropTs = getCls.get()
                 .fap(cls -> opt(fieldRef.getName())
-                    .fap(nme -> resolveMagicProp(cls, nme)));
+                    .fap(nme -> resolveMagicProp(cls, magicCtx)));
         }
         It<DeepType> declTypes = declsToTypes(fieldRef, declarations);
 

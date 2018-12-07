@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.helpers;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.jetbrains.php.lang.psi.elements.FieldReference;
 import com.jetbrains.php.lang.psi.elements.FunctionReference;
 import com.jetbrains.php.lang.psi.elements.NewExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
@@ -70,6 +71,10 @@ public class ExprCtx implements IExprCtx {
 
     public ExprCtx subCtxIndirect(PhpExpression args) {
         return subExpr(expr, funcCtx.subCtxIndirect(args, this::findExprType));
+    }
+
+    public ExprCtx subCtxMagicProp(FieldReference fieldRef) {
+        return subExpr(expr, funcCtx.subCtxMagicProp(fieldRef, this::findExprType));
     }
 
     public ExprCtx withClosure(L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars) {
