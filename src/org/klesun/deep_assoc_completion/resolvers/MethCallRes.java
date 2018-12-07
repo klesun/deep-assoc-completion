@@ -126,7 +126,7 @@ public class MethCallRes extends Lang
                 .flt(f -> f.getName().equals("fields"))
                 .fap(f -> opt(f.getDefaultValue()))
                 .fop(toCast(PhpExpression.class))
-                .fap(val -> ctx.limitResolve(30, val))
+                .fap(val -> ctx.limitResolveDepth(15, val))
                 .fap(valt -> valt.keys)
                 .btw(k -> isAssoc.set(It(k.keyType.getTypes.get())
                     .fst().any(kt -> !kt.isNumber())))
