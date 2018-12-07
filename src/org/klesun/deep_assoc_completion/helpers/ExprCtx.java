@@ -109,14 +109,6 @@ public class ExprCtx implements IExprCtx {
         return It(funcCtx.getSearch().findExprType(expr, subExpr(expr, funcCtx)));
     }
 
-    public It<DeepType> limitResolve(int limit, PhpExpression expr) {
-        int oldDepth = funcCtx.getSearch().maxDepth;
-        SearchContext keySearch = new SearchContext(funcCtx.getSearch().project.def(null));
-        keySearch.setDepth(Math.min(oldDepth, limit));
-        keySearch.overrideMaxExpr = som(Math.min(funcCtx.getSearch().getMaxExpressions() - funcCtx.getSearch().getExpressionsResolved() - 1, limit));
-        return It(keySearch.findExprType(expr, subExpr(expr, new FuncCtx(keySearch))));
-    }
-
     public It<DeepType> limitResolveDepth(int depthLimit, PhpExpression expr) {
         int depth = Math.max(funcCtx.getSearch().maxDepth - depthLimit, this.depth);
         ExprCtx nextCtx = new ExprCtx(funcCtx, expr, depth);

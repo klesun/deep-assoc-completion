@@ -32,7 +32,7 @@ public class ArrAccRes extends Lang
             .fap(keyPsi -> {
                 // resolving key type can be a complex operation - we don't
                 // want that if we already know that mt has no known key names
-                @Nullable String keyName = ctx.limitResolve(15, keyPsi)
+                @Nullable String keyName = ctx.limitResolveDepth(15, keyPsi)
                     .wap(Mt::getStringValueSt);
                 return tit.fap(t -> Mt.getKeySt(t, keyName));
             });
