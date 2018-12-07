@@ -155,10 +155,20 @@ public class FieldRes extends Lang
         It<DeepType> propDocTs = It(list());
         It<DeepType> magicPropTs = It(list());
         if (!declarations.has()) {
-            String rawName = fieldRef.getName();
-            String name = "".equals(rawName) ? null : rawName;
+            String name = fieldRef.getName();
+            name = "".equals(name) ? null : name;
+            if (name == null) {
+                name = It(fieldRef.getChildren())
+                    .flt((c,i) -> i > 0) // skip first psi, it is the object var
+                    .cst(Variable.class)
+                    // TODO: should limit in such way func call context was
+                    //  preserved, it does not make much sense otherwise
+                    .fap(vari -> ctx.limitResolve(15, vari))
+                    .wap(Mt::getStringValueSt);
+            }
+            String finalName = name;
             propDocTs = getObjMt.get().types
-                .fap(t -> Mt.getPropSt(t, name));
+                .fap(t -> Mt.getPropSt(t, finalName));
             magicPropTs = getCls.get()
                 .fap(cls -> opt(fieldRef.getName())
                     .fap(nme -> resolveMagicProp(cls, nme)));

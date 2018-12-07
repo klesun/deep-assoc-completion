@@ -13,6 +13,10 @@ class SomeCls123
      *         'socket' => '',
      *     ],
      *     'max_occurences' => 10,
+     *     'zhopa' => (object)[
+     *         'guzno' => 123,
+     *         'dzhigurda' => 321,
+     *     ],
      * ]
      */
     public static $data;
@@ -29,5 +33,10 @@ class SomeCls123
             return self::$data->$key;
         }
         throw new \RuntimeException('Configuration property ' . $key . ' not exists.', 2);
+    }
+
+    public static function getProp($name)
+    {
+        return self::$data->$name;
     }
 }

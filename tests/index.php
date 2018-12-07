@@ -970,6 +970,14 @@ class DeepKeysTest
     // not implemented follow
     //============================
 
+    public function setDynamicPropsFromArr()
+    {
+        $nepgear = \DeepTest\Nepgear::__set_state([
+            // should suggest: weapon, bracer, pants, armor
+            '' => 'Cursed Sword',
+        ]);
+    }
+
     private function getProfile(string $profileName)
     {
         $profiles = [

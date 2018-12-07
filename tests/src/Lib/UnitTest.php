@@ -130,6 +130,7 @@ class UnitTest
         ];
         $weddingPairs = Fp::zip([$grooms, $wives]);
         $firstPair = $weddingPairs[0];
+        $weddingPairs[0][''];
         $list[] = [$firstPair[0], ['smoking' => [], 'salary' => []]];
         $list[] = [$firstPair[1], ['weddingDress' => [], 'face' => []]];
         return $list;

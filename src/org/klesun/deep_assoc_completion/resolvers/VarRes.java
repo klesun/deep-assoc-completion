@@ -228,7 +228,21 @@ public class VarRes
                 .map(param -> {
                     S<It<DeepType>> mtg = () -> new ArgRes(ctx).resolveArg(param);
                     return new Assign(list(), mtg, true, refPsi, param.getType());
-                }));
+                })
+            , () -> Tls.cast(Variable.class, refPsi)
+                .fop(vari -> opt(vari.getParent()))
+                .cst(UnaryExpression.class) // ++$i
+                .map(una -> new Assign(list(), () -> It(som(DeepType.makeInt(una, null))), true, una, una.getType()))
+        );
+    }
+
+    // add idea type only if it has class or we have no other info, since it does not
+    // include string values - we may mistakenly conclude that we could not resolve type
+    private static boolean hasClassInfo(PhpType ideaType)
+    {
+        PhpType filtered = ideaType.filterUnknown().filterMixed().filterNull().filterPrimitives();
+        // array and object types should be left
+        return !filtered.isEmpty();
     }
 
     public It<DeepType> resolve(Variable variable)
@@ -255,6 +269,7 @@ public class VarRes
                 return resolveRef(refPsi, ScopeFinder.didSurelyHappen(refPsi, variable));
             })
             .arr();
+
         int lastDeclPos = -1;
         for (int i = 0; i < asses.size(); ++i) {
             if (asses.get(i).didSurelyHappen &&
@@ -277,9 +292,11 @@ public class VarRes
             .fap(t2 -> t2.b.get());
 
         return It.cnc(
-            docTypes, list(typeFromIdea),
+            docTypes,
+            hasClassInfo(typeFromIdea.briefType)
+                ? list(typeFromIdea) : list(),
             thisType, closureType,
             AssRes.assignmentsToTypes(asses)
-        );
+        ).def(list(typeFromIdea));
     }
 }

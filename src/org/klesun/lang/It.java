@@ -361,4 +361,9 @@ public class It<A> implements Iterable<A>
     {
         return source;
     }
+
+    public String toString()
+    {
+        return "It." + (has() ? "som()" : "non()");
+    }
 }

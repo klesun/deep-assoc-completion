@@ -1247,9 +1247,20 @@ class ExactKeysUnitTest
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
+    private function getPropByName($name)
+    {
+        $data = (object)[
+            'drinks' => [
+                ['name' => 'pepper', 'price' => 'tasty'],
+                ['name' => 'schweps', 'price' => 'not bad'],
+            ],
+            'foods' => [
+                ['calories' => 'many', 'cooking_time' => 'fast'],
+                ['calories' => 'not so many', 'cooking_time' => 'slow'],
+            ],
+        ];
+        return $data->{$name};
+    }
 
     public function provideVarNameProperty()
     {
@@ -1262,16 +1273,22 @@ class ExactKeysUnitTest
         $company = $agent->{$companyPropName};
         $company[''];
         $teamPropName = 'team';
-        $team = $agent->{$teamPropName};
+        $team = $agent->$teamPropName;
         $team[''];
 
         $propName = 'database';
         $dbRec = SomeCls123::$data->$propName;
-        $dbRec->da;
+        $zhopa = SomeCls123::getProp('zhopa');
+
         return [
-//            [(array)$company, ['domain', 'tz']],
-//            [(array)$team, ['motto', 'auditor']],
+            [(array)$company, ['domain', 'tz']],
+            [(array)$team, ['motto', 'auditor']],
             [(array)$dbRec, ['server','user','pass','database','port','socket']],
+            [(array)$zhopa, ['guzno','dzhigurda']],
         ];
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 }
