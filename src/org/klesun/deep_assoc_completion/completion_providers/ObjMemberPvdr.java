@@ -7,7 +7,6 @@ import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.util.ProcessingContext;
-import com.jetbrains.php.PhpIcons;
 import com.jetbrains.php.lang.psi.elements.Field;
 import com.jetbrains.php.lang.psi.elements.MemberReference;
 import com.jetbrains.php.lang.psi.elements.Method;
@@ -89,9 +88,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         });
         SearchContext search = new SearchContext(parameters)
             .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
-        if (parameters.isAutoPopup()) {
-            search.overrideMaxExpr = som(200);
-        }
+
         Dict<Long> times = new Dict<>(list());
         It<? extends PhpClassMember> members = It(list());
         if (builtIns.size() == 0) {

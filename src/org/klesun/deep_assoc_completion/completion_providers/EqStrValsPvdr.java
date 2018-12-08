@@ -129,9 +129,6 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
     {
         SearchContext search = new SearchContext(lit.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
-        if (isAutoPopup) {
-            search.overrideMaxExpr = som(200);
-        }
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 

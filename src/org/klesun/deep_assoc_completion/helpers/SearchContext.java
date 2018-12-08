@@ -154,7 +154,7 @@ public class SearchContext extends Lang
 
     private boolean shouldCache(ExprCtx exprCtx)
     {
-        return !overrideMaxExpr.has() && !exprCtx.doNotCache;
+        return !exprCtx.doNotCache;
     }
 
     public Iterable<DeepType> findExprType(PhpExpression expr, ExprCtx exprCtx)
@@ -208,17 +208,5 @@ public class SearchContext extends Lang
     public int getExpressionsResolved()
     {
         return this.expressionsResolved;
-    }
-
-
-    public static class ExprTreeNode
-    {
-        final PhpExpression expr;
-        final L<ExprTreeNode> children = list();
-
-        public ExprTreeNode(PhpExpression expr)
-        {
-            this.expr = expr;
-        }
     }
 }

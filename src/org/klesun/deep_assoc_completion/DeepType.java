@@ -248,7 +248,23 @@ public class DeepType extends Lang
     @Override
     public String toString()
     {
-        return varExport(list(this));
+        String typeInfo = "unk()";
+        if (stringValue != null) {
+            typeInfo = "str(" + stringValue + ")";
+        } else if (keys.has()) {
+            typeInfo = "arr(" + keys.map(k -> k.definition.getText()).str() + ")";
+        } else if (props.size() > 0) {
+            typeInfo = "obj(" + props.kys().str() + ")";
+        } else if (isNumber) {
+            typeInfo = "int";
+        } else if (returnTypeGetters.has()) {
+            typeInfo = "fun()";
+        } else if (clsRefType.has()) {
+            typeInfo = "cls(" + clsRefType.unw() + ")";
+        } else if (ctorArgs.has()) {
+            typeInfo = "new()";
+        }
+        return typeInfo + " " + briefType + " " + Tls.singleLine(definition.getText(), 60);
     }
 
     public boolean hasNumberIndexes()

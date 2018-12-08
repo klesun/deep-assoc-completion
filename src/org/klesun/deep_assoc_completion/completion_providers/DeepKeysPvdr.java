@@ -175,15 +175,15 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // preliminary keys without type - they may be at least 3 times faster in some cases
 
         ExprCtx exprCtx = new ExprCtx(funcCtx, caretPsi, 0);
-        It<DeepType> tit = resolveAtPsi(caretPsi, exprCtx);
+        It<DeepType> arrTit = resolveAtPsi(caretPsi, exprCtx);
         Set<String> keyNames = new LinkedHashSet<>();
         Map<String, Set<String>> keyToComments = new HashMap<>();
         System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");
-        tit.has();
+        arrTit.has();
         System.out.println("checked if iterator has anything, took " + search.getExpressionsResolved() + " expressions");
 
-        Mt mt = new Mt(tit);
-        mt.types.fap(t -> t.keys).fch((k,i) -> {
+        Mt arrMt = new Mt(arrTit);
+        arrMt.types.fap(t -> t.keys).fch((k,i) -> {
             k.keyType.getTypes.get().fch((kt,j) -> {
                 L<String> keyNamesToAdd = list();
                 if (kt.stringValue == null) {

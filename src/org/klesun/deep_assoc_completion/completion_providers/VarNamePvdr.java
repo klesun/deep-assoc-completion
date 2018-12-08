@@ -118,9 +118,6 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
     {
         SearchContext search = new SearchContext(caretVar.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
-        if (isAutoPopup) {
-            search.overrideMaxExpr = som(200);
-        }
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, caretVar, 0);
 
