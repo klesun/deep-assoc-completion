@@ -3,12 +3,10 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.*;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
@@ -137,7 +135,7 @@ public class FieldRes extends Lang
             ))
             .def(Mt.INVALID_PSI));
 
-        S<MemoizingIterable<PhpClass>> getCls = Tls.onDemand(() -> opt(getObjMt.get())
+        S<MemIt<PhpClass>> getCls = Tls.onDemand(() -> opt(getObjMt.get())
             .fap(mt -> ArrCtorRes.resolveMtCls(mt, fieldRef.getProject())).mem());
 
         It<Field> declarations = It.frs(

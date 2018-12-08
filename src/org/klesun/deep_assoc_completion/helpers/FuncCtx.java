@@ -1,18 +1,13 @@
 package org.klesun.deep_assoc_completion.helpers;
 
-import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.*;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Set;
 
 /** a node in called function stack trace with args */
 public class FuncCtx extends Lang implements IFuncCtx
@@ -26,7 +21,7 @@ public class FuncCtx extends Lang implements IFuncCtx
     private L<Integer> variadicOrders = L();
     public Opt<Lang.S<Mt>> instGetter = opt(null);
     public Opt<PhpType> clsIdeaType = opt(null);
-    public L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars = list();
+    public L<T2<String, S<MemIt<DeepType>>>> closureVars = list();
     final private EArgPsiType argPsiType;
     /** use this when you need to reference a real PSI during parsing of PHP Doc */
     public Opt<PsiElement> fakeFileSource = opt(null);
@@ -216,7 +211,7 @@ public class FuncCtx extends Lang implements IFuncCtx
         return new FuncCtx(this, list(), null, EArgPsiType.NONE);
     }
 
-    public FuncCtx withClosure(L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars)
+    public FuncCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars)
     {
         FuncCtx closCtx = new FuncCtx(parent.def(this), argGetters, uniqueRef.def(null), EArgPsiType.INDIRECT);
         closCtx.closureVars = closureVars; // probably should add to caching criteria...

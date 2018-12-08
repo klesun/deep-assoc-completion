@@ -33,7 +33,7 @@ public class AssRes extends Lang
             DeepType arr = new DeepType(psi, PhpType.ARRAY);
             KeyType nextKey = keys.get(0);
             L<KeyType> furtherKeys = keys.sub(1);
-            S<Iterable<DeepType>> memoized = Tls.onDemand(() -> new MemoizingIterable<>(getType.get().iterator()));
+            S<Iterable<DeepType>> memoized = Tls.onDemand(() -> new MemIt<>(getType.get().iterator()));
             arr.addKey(nextKey, nextKey.definition).addType(() ->
                 makeType(furtherKeys, memoized, psi, briefType).wap(Mt::new), briefType);
             return It(list(arr));

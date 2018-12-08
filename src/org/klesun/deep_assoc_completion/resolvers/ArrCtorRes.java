@@ -11,7 +11,6 @@ import com.jetbrains.php.lang.psi.elements.impl.ClassConstantReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.KeyType;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -179,7 +178,7 @@ public class ArrCtorRes extends Lang
         resolveMethodFromArray(orderedParams)
             .map(meth -> MethCallRes.findMethRetType(meth))
             .fch(retTypeGetter -> arrayType.returnTypeGetters
-                .add((ctx) -> new MemoizingIterable<>(retTypeGetter.apply(ctx).iterator())));
+                .add((ctx) -> new MemIt<>(retTypeGetter.apply(ctx).iterator())));
 
         // indexed elements
         orderedParams

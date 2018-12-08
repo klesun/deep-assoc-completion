@@ -11,13 +11,13 @@ import static org.klesun.lang.Lang.*;
  * a wrapper for an iterator, that remembers all retrieved elements
  * and reuses them on the next attempt to iterate over it
  */
-public class MemoizingIterable<A> implements Iterable<A>
+public class MemIt<A> implements Iterable<A>
 {
     final private Node head = new Node(null); // first value will be skipped
     final private Iterator<A> source;
     private boolean isNexting = false;
 
-    public MemoizingIterable(Iterator<A> source)
+    public MemIt(Iterator<A> source)
     {
         this.source = source;
     }

@@ -31,10 +31,10 @@ public interface IExprCtx {
     IExprCtx subCtxSingleArgArr(PhpExpression argArr);
     IExprCtx subCtxIndirect(PhpExpression args);
     IExprCtx subCtxMagicProp(FieldReference fieldRef);
-    IExprCtx withClosure(L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars);
+    IExprCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars);
     It<DeepType> getThisType();
     Opt<PhpType> getSelfType();
-    L<T2<String, S<MemoizingIterable<DeepType>>>> getClosureVars();
+    L<T2<String, S<MemIt<DeepType>>>> getClosureVars();
     Opt<PsiElement> getFakeFileSource();
     Map<PsiFile, Collection<FieldReferenceImpl>> getFieldRefCache();
     Opt<Project> getProject();

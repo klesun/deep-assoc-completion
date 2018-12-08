@@ -23,7 +23,7 @@ public class Mt extends Lang
     public static Mt INVALID_PSI = new Mt(L(), REASON.INVALID_PSI);
 
     private REASON reason;
-    final public MemoizingIterable<DeepType> types;
+    final public MemIt<DeepType> types;
 
     private boolean isGettingKey = false;
 
@@ -33,7 +33,7 @@ public class Mt extends Lang
         // I'm not sure I'm good mathematician enough to find
         // out the algorithm that would not produce them with
         // all these recursions, so I'm just removing dupes here
-        this.types = new MemoizingIterable<>(types.iterator());
+        this.types = new MemIt<>(types.iterator());
         this.reason = reason;
     }
     public Mt(Iterable<DeepType> types)

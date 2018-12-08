@@ -77,7 +77,7 @@ public class ExprCtx implements IExprCtx {
         return subExpr(expr, funcCtx.subCtxMagicProp(fieldRef, this::findExprType));
     }
 
-    public ExprCtx withClosure(L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars) {
+    public ExprCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars) {
         return subExpr(expr, funcCtx.withClosure(closureVars));
     }
 
@@ -101,7 +101,7 @@ public class ExprCtx implements IExprCtx {
         return funcCtx.clsIdeaType;
     }
 
-    public L<T2<String, S<MemoizingIterable<DeepType>>>> getClosureVars() {
+    public L<T2<String, S<MemIt<DeepType>>>> getClosureVars() {
         return funcCtx.closureVars;
     }
 

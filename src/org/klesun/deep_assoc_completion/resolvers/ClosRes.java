@@ -4,8 +4,6 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.ExprCtx;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
@@ -86,14 +84,14 @@ public class ClosRes extends Lang
     {
         DeepType result = new DeepType(func, func.getLocalType(true));
         result.returnTypeGetters.add((callCtx) -> {
-            L<T2<String, S<MemoizingIterable<DeepType>>>> closureVars = It(func.getChildren())
+            L<T2<String, S<MemIt<DeepType>>>> closureVars = It(func.getChildren())
                 .fop(toCast(PhpUseList.class))
                 .fap(u -> It(u.getChildren()))
                 .fop(toCast(Variable.class))
                 .map(closVar -> T2(closVar.getName(), Tls.onDemand(() -> ctx.findExprType(closVar).mem())))
                 .arr();
             IExprCtx closCtx = callCtx.withClosure(closureVars);
-            return new MemoizingIterable<>(getReturnedValue(func, closCtx).iterator());
+            return new MemIt<>(getReturnedValue(func, closCtx).iterator());
         });
         return result;
     }

@@ -1,10 +1,8 @@
 package org.klesun.deep_assoc_completion;
 
 import com.intellij.psi.PsiElement;
-import com.jetbrains.php.lang.psi.elements.ClassConstantReference;
 import com.jetbrains.php.lang.psi.elements.NewExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.impl.PhpExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +24,7 @@ public class DeepType extends Lang
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
     // list of functions that take arg list and return list of return types
-    public final L<F<IExprCtx, MemoizingIterable<DeepType>>> returnTypeGetters = L();
+    public final L<F<IExprCtx, MemIt<DeepType>>> returnTypeGetters = L();
     public final L<DeepType> pdoFetchTypes = L();
     public final LinkedHashSet<String> pdoBindVars = new LinkedHashSet<>();
     public Opt<IExprCtx> ctorArgs = opt(null);
