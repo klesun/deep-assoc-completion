@@ -15,9 +15,9 @@ public class DeepSettings implements PersistentStateComponent<DeepSettings> {
     public Boolean bgTypePvdrEnabled = false;
     public Integer bgTypePvdrDepthLimit = 5;
     public Integer bgTypePvdrTimeout = 100; // milliseconds
-    public Integer explicitDepthLimit = 40;
-    public Integer implicitDepthLimit = 25;
-    public Integer totalExpressionLimit = 10000;
+    public Integer explicitDepthLimit = 55;
+    public Integer implicitDepthLimit = 30;
+    public Integer totalExpressionLimit = 7500;
     public Boolean removeUnusedImportsOnSaveEnabled = false;
 
     public static DeepSettings inst(Project project) {
