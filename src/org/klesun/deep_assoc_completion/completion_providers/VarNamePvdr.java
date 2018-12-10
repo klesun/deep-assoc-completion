@@ -118,6 +118,11 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
     {
         SearchContext search = new SearchContext(caretVar.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
+        if (isAutoPopup) {
+            // it would be sad if it deeply scanned global
+            // vars in whole project when you just type a var
+            search.setDepth(Math.min(search.maxDepth, 15));
+        }
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, caretVar, 0);
 

@@ -9,6 +9,7 @@ import com.jetbrains.php.lang.psi.elements.PhpClass;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
+import org.klesun.deep_assoc_completion.completion_providers.ObjMemberPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
@@ -25,12 +26,15 @@ import java.util.Objects;
  */
 public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandler
 {
-    private It<? extends PsiElement> resolveMember(PhpClass cls, String name)
+    private It<? extends PsiElement> resolveMember(PhpClass cls, String name, FuncCtx funcCtx)
     {
         return list(
             It(cls.getFields()).flt(f -> f.getName().equals(name)),
-            It(cls.getMethods()).flt(m -> m.getName().equals(name))
-        ).fap(a -> a);
+            It(cls.getMethods()).flt(m -> m.getName().equals(name)),
+            ObjMemberPvdr.getMagicProps(cls, funcCtx)
+                .flt(t -> name.equals(t.stringValue))
+                .map(t -> t.definition)
+        ).fap(a -> a).unq();
     }
 
     @Nullable
@@ -50,8 +54,8 @@ public class DeepObjMemberGoToDecl extends Lang implements GotoDeclarationHandle
                 .map(exp -> funcCtx.findExprType(exp).wap(Mt::new))
                 .fap(mt -> list(
                     ArrCtorRes.resolveMtCls(mt, mem.getProject())
-                        .fap(cls -> resolveMember(cls, mem.getName())),
-                    mt.getProps()
+                        .fap(cls -> resolveMember(cls, mem.getName(), funcCtx)),
+                    mt.getAssignedProps()
                         .fap(prop -> prop.keyType.getTypes.get())
                         .flt(propt -> Objects.equals(propt.stringValue, mem.getName()))
                         .map(prop -> prop.definition)

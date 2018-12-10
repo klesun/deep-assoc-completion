@@ -64,7 +64,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters> impl
 
     private static It<DeepType> resolveUsedValues(StringLiteralExpression lit, IExprCtx funcCtx)
     {
-        return new KeyUsageResolver(funcCtx, 3).findKeysUsedOnExpr(lit);
+        return new KeyUsageResolver(funcCtx, 3).findExprTypeFromUsage(lit);
     }
 
     /** in_array($type, ['']) */

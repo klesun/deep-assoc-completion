@@ -142,7 +142,7 @@ public class Mt extends Lang
             .fap(k -> k.keyType.getNames()).unq();
     }
 
-    public It<DeepType.Key> getProps()
+    public It<DeepType.Key> getAssignedProps()
     {
         return types.fap(t -> t.props.vls());
     }

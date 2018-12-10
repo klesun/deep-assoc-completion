@@ -23,12 +23,10 @@ import org.klesun.deep_assoc_completion.helpers.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.lang.It;
-import org.klesun.lang.L;
 import org.klesun.lang.Tls;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
 import static org.klesun.lang.Lang.*;
 
@@ -54,7 +52,7 @@ public class ShowDocs extends AnAction
                         .fap(func -> {
                             DeepType arrt = new DeepType(par, PhpType.ARRAY);
                             It<String> keys = new KeyUsageResolver(exprCtx.subCtxEmpty(), 3)
-                                .resolveArgUsedKeys(func, order, exprCtx).fap(t -> t.keys).fap(k -> k.keyType.getNames()).unq();
+                                .findArgTypeFromUsage(func, order, exprCtx).fap(t -> t.keys).fap(k -> k.keyType.getNames()).unq();
                             keys.fch(k -> arrt.addKey(k, psi));
                             return list(arrt);
                         });

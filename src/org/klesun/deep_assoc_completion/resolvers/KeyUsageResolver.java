@@ -49,7 +49,7 @@ public class KeyUsageResolver extends Lang
                 .map(varUsage -> acc.getIndex()));
     }
 
-    public It<DeepType> resolveArgUsedKeys(Function meth, int argOrder, IExprCtx nextCtx)
+    public It<DeepType> findArgTypeFromUsage(Function meth, int argOrder, IExprCtx nextCtx)
     {
         return L(meth.getParameters()).gat(argOrder)
             .fop(toCast(ParameterImpl.class))
@@ -61,7 +61,7 @@ public class KeyUsageResolver extends Lang
                         DeepType assoct = new DeepType(arg, PhpType.ARRAY);
                         lits.fch(lit -> {
                             S<Mt> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
-                                .fap(acc -> new KeyUsageResolver(nextCtx, depthLeft - 1).findKeysUsedOnExpr(acc)).wap(Mt::new);
+                                .fap(acc -> new KeyUsageResolver(nextCtx, depthLeft - 1).findExprTypeFromUsage(acc)).wap(Mt::new);
                             assoct.addKey(lit.getContents(), lit)
                                 .addType(getType, PhpType.UNSET);
                         });
@@ -73,7 +73,7 @@ public class KeyUsageResolver extends Lang
                 opt(arg.getDefaultValue())
                     .cst(PhpExpression.class)
                     .fap(xpr -> nextCtx.subCtxEmpty().findExprType(xpr)),
-                new KeyUsageResolver(nextCtx, depthLeft - 1).findKeysUsedOnVar(arg)
+                new KeyUsageResolver(nextCtx, depthLeft - 1).findVarTypeFromUsage(arg)
             ));
     }
 
@@ -175,7 +175,7 @@ public class KeyUsageResolver extends Lang
                 .fop(toCast(Function.class))) // TODO: support in a var
             .fap(func -> {
                 DeepType arrt = new DeepType(argList, PhpType.ARRAY);
-                arrt.addKey(KeyType.unknown(argList)).addType(Tls.onDemand(() -> resolveArgUsedKeys(func, 0, fakeCtx.subCtxSingleArgArr(arrCtor)).wap(Mt::new)));
+                arrt.addKey(KeyType.unknown(argList)).addType(Tls.onDemand(() -> findArgTypeFromUsage(func, 0, fakeCtx.subCtxSingleArgArr(arrCtor)).wap(Mt::new)));
                 return list(arrt);
             });
     }
@@ -203,7 +203,9 @@ public class KeyUsageResolver extends Lang
                 .fap(methCall -> (new MethCallRes(fakeCtx)).getModelRowType(methCall, meth)));
     }
 
-    public It<DeepType> findKeysUsedOnExpr(PhpExpression arrCtor)
+    // if arg is assoc array - will return type with keys accessed on it
+    // if arg is string - will return type of values it can take
+    public It<DeepType> findExprTypeFromUsage(PhpExpression arrCtor)
     {
         return opt(arrCtor.getParent())
             .fop(toCast(ParameterList.class))
@@ -217,7 +219,7 @@ public class KeyUsageResolver extends Lang
                                 () -> Tls.cast(MethodReference.class, call).map(casted -> fakeCtx.subCtxDirect(casted)),
                                 () -> Tls.cast(NewExpression.class, call).map(casted -> fakeCtx.subCtxDirect(casted))
                             )).def(fakeCtx.subCtxEmpty());
-                            return resolveArgUsedKeys(ipl, order, nextCtx);
+                            return findArgTypeFromUsage(ipl, order, nextCtx);
                         }),
                         opt(meth.getName())
                             .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
@@ -232,7 +234,7 @@ public class KeyUsageResolver extends Lang
             });
     }
 
-    private It<DeepType> findKeysUsedOnVar(PhpNamedElement caretVar)
+    private It<DeepType> findVarTypeFromUsage(PhpNamedElement caretVar)
     {
         if (depthLeft < 1) {
             return It.non();
@@ -240,7 +242,17 @@ public class KeyUsageResolver extends Lang
         return findVarReferences(caretVar)
             .flt(ref -> ref.getTextOffset() > caretVar.getTextOffset())
             .fop(toCast(Variable.class))
-            .fap(refVar -> findKeysUsedOnExpr(refVar));
+            .fap(refVar -> It.cnc(
+                findExprTypeFromUsage(refVar),
+                // $this->$magicProp
+                opt(refVar.getParent())
+                    .cst(FieldReference.class)
+                    .flt(fld -> !caretVar.equals(fld.getClassReference()))
+                    .fap(fld -> opt(fld.getClassReference()))
+                    .fap(fld -> fakeCtx.findExprType(fld))
+                    .fap(objt -> objt.props.vls())
+                    .fap(prop -> prop.keyType.getTypes.get())
+            ));
     }
 
     private Mt resolveOuterArray(PhpPsiElementImpl val) {
@@ -274,7 +286,7 @@ public class KeyUsageResolver extends Lang
         IExprCtx fakeCtx = new ExprCtx(funcCtx, arrCtor, 0);
 
         return list(
-            findKeysUsedOnExpr(arrCtor),
+            findExprTypeFromUsage(arrCtor),
             opt(arrCtor.getParent())
                 .fop(toCast(BinaryExpression.class))
                 .flt(sum -> arrCtor.isEquivalentTo(sum.getRightOperand()))
@@ -288,7 +300,7 @@ public class KeyUsageResolver extends Lang
                 .fop(toCast(Variable.class))
                 .fap(var -> It.cnc(
                     new VarRes(fakeCtx).getDocType(var),
-                    findKeysUsedOnVar(var)
+                    findVarTypeFromUsage(var)
                 )),
             // assoc array in an assoc array
             opt(arrCtor.getParent())

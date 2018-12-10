@@ -7,16 +7,13 @@ import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.util.ProcessingContext;
-import com.jetbrains.php.lang.psi.elements.Field;
-import com.jetbrains.php.lang.psi.elements.MemberReference;
-import com.jetbrains.php.lang.psi.elements.Method;
-import com.jetbrains.php.lang.psi.elements.PhpClassMember;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.lang.*;
 
 import java.util.HashSet;
@@ -62,9 +59,9 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         ).def(base);
     }
 
-    private static It<? extends LookupElement> getDynamicProps(Mt mt)
+    private static It<? extends LookupElement> getAssignedProps(Mt mt)
     {
-        return mt.getProps()
+        return mt.getAssignedProps()
             .fap(prop -> prop.keyType.getNames()
                 .map(name -> LookupElementBuilder.create(name)
                     .bold()
@@ -76,6 +73,24 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                     }))))
             .unq(l -> l.getLookupString())
             ;
+    }
+
+    public static It<DeepType> getMagicProps(PhpClass cls, FuncCtx funcCtx)
+    {
+        IExprCtx ctx = new ExprCtx(funcCtx, cls, 0);
+        return It(cls.getMethods())
+            .flt(m -> m.getName().equals("__get"))
+            .fap(__get -> new KeyUsageResolver(ctx.subCtxEmpty(), 10)
+                .findArgTypeFromUsage(__get, 0, ctx));
+    }
+
+    private static Opt<LookupElement> makeMagicLookup(DeepType t)
+    {
+        return opt(t.stringValue)
+            .map(propName -> LookupElementBuilder.create(propName)
+                .bold()
+                .withIcon(DeepKeysPvdr.getIcon())
+                .withTypeText("from __get()"));
     }
 
     @Override
@@ -90,16 +105,17 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
 
         Dict<Long> times = new Dict<>(list());
-        It<? extends PhpClassMember> members = It(list());
-        if (builtIns.size() == 0) {
+        It<? extends LookupElement> options = It(list());
+        if (builtIns.size() == 0 || !parameters.isAutoPopup()) {
             FuncCtx funcCtx = new FuncCtx(search);
-            members = opt(parameters.getPosition().getParent())
+            options = opt(parameters.getPosition().getParent())
                 .fop(toCast(MemberReference.class))
                 .map(mem -> mem.getClassReference())
                 .fap(ref -> {
+
                     // IDEA did not resolve the class on it's own - worth trying Deep resolution
                     Mt mt = funcCtx.findExprType(ref).wap(Mt::new);
-                    getDynamicProps(mt).fch(el -> result.addElement(el));
+                    getAssignedProps(mt).fch(el -> result.addElement(el));
                     return ArrCtorRes.resolveMtCls(mt, ref.getProject())
                         .fap(cls -> list(
                             It(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
@@ -108,12 +124,15 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                             .flt(fld -> fld.getModifier().isPublic()
                                 || ref.getText().equals("$this"))
                             .flt(fld -> !fld.getModifier().isStatic())
+                            .map(m -> makeLookup(m))
+                            .cct(getMagicProps(cls, funcCtx)
+                                .fap(t -> makeMagicLookup(t)))
                         );
                 });
             times.put("iteratorDone", System.nanoTime() - startTime);
         }
         Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()).arr());
-        members.map(m -> makeLookup(m))
+        options
             .flt(l -> !suggested.contains(l.getLookupString()))
             .fch((el, i) -> {
                 if (i == 0) {
