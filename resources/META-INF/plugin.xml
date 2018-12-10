@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.12.10.001</version>
+    <version>2018.12.10.002</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,6 +37,10 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
+        <li>Provide usage completion from get_object_vars()</li>
+        <li>Provide string arg completion if it is used as an array key inside function</li>
+        <li>#56 Provide magic property name completion based on what happens inside __get()</li>
+        <li>Increase default depth limits from 25,40 to 30,55</li>
         <li>#57 Infer `return` type of `require`</li>
     </ul>
     ]]>
