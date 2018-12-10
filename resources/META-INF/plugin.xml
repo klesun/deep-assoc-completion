@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.12.07.002</version>
+    <version>2018.12.10.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,8 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Temporarily disable brief value preview in completion options since it causes infinite loop sometimes</li>
-        <li>Fix awful bug that trashed completion for months - limit key access resolution by 15 _nested_ expressions, not 15 expressions _at all_. This caused almost every key be treated as _any_ key causing keys like 'lastName' being suggested on an itinerary segment</li>
+        <li>#57 Infer `return` type of `require`</li>
     </ul>
     ]]>
     </change-notes>

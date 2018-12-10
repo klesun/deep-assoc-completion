@@ -1,7 +1,12 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.NewExpressionImpl;
@@ -70,6 +75,21 @@ public class MiscRes extends Lang
                 IExprCtx ctorArgs = ctx.subCtxDirect(newExp);
                 return DeepType.makeNew(newExp, ctorArgs, ideaType);
             });
+    }
+
+    private It<DeepType> resolveInclude(Include casted)
+    {
+        return opt(casted.getArgument())
+            .cst(PhpExpression.class)
+            .fap(expr -> ctx.findExprType(expr))
+            .fap(t -> opt(t.stringValue))
+            .map(path -> LocalFileSystem.getInstance().findFileByPath(path))
+            .fap(f -> opt(PsiManager.getInstance(casted.getProject()).findFile(f)))
+            .fap(f -> Tls.findChildren(f, GroupStatement.class).fst())
+            .fap(block -> ClosRes.findFunctionReturns(block))
+            .fap(ret -> opt(ret.getArgument()))
+            .cst(PhpExpression.class)
+            .fap(arg -> ctx.subCtxEmpty().findExprType(arg));
     }
 
     private L<String> getCastTypes()
@@ -179,6 +199,8 @@ public class MiscRes extends Lang
                         .fap(t -> castToPhpType(t, phpType))))
             , Tls.cast(NewExpressionImpl.class, expr)
                 .fap(newExp -> resolveNew(newExp))
+            , Tls.cast(Include.class, expr)
+                .fap(casted -> resolveInclude(casted))
         );
     }
 

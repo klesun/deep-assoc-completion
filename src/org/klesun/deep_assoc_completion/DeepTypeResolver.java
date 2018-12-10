@@ -1,11 +1,9 @@
 package org.klesun.deep_assoc_completion;
 
 import com.intellij.psi.*;
-import com.jetbrains.php.lang.psi.elements.AssignmentExpression;
-import com.jetbrains.php.lang.psi.elements.ClassConstantReference;
-import com.jetbrains.php.lang.psi.elements.ParenthesizedExpression;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.helpers.ExprCtx;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.IExprCtx;
@@ -52,6 +50,15 @@ public class DeepTypeResolver
                 .fap(lit -> list(new DeepType(lit)))
             , () -> Tls.cast(StringLiteralExpressionImpl.class, expr)
                 .fap(lit -> list(new DeepType(lit)))
+            , () -> Tls.cast(ConstantReferenceImpl.class, expr)
+                .flt(cst -> cst.getText().equals("__DIR__"))
+                .map(ref -> ctx.getFakeFileSource().def(ref))
+                .fap(psi -> opt(psi.getContainingFile()))
+                .fap(psi -> opt(psi.getOriginalFile()))
+                .fap(psiFile -> opt(psiFile.getContainingDirectory()))
+                .fap(psiDir -> opt(psiDir.getVirtualFile()))
+                .map(dir -> dir.getPath() + "/")
+                .fap(dirPath -> som(new DeepType(expr, PhpType.STRING, dirPath)))
             , () -> Tls.cast(ConstantReferenceImpl.class, expr)
                 .flt(cst -> // they are defined through themselves in Core_d.php
                     !cst.getText().toLowerCase().equals("null") &&

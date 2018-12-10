@@ -1289,6 +1289,20 @@ class ExactKeysUnitTest
         ];
     }
 
+    /**
+     * @param array[][]  $params = require __DIR__ . '../config/params.php'
+     */
+    public function provideReturnInRequire($params)
+    {
+        $params[''];
+        $real = require __DIR__ . '/../config/params.php';
+        $real[''];
+        return [
+            [$real, ['value1', 'value2', 'value3']],
+            [$params, ['value1', 'value2', 'value3']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
