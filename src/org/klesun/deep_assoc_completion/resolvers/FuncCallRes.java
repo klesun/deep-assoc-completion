@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.Function;
 import com.jetbrains.php.lang.psi.elements.GroupStatement;
+import com.jetbrains.php.lang.psi.elements.PhpClass;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
@@ -138,6 +139,23 @@ public class FuncCallRes extends Lang
         // PHP string is not java string, of course, but pretty close
         String unescaped = StringEscapeUtils.unescapeJava(joined);
         DeepType type = new DeepType(call, PhpType.STRING, unescaped);
+        return type;
+    }
+
+    private DeepType get_object_vars(IFuncCtx callCtx, FunctionReferenceImpl call)
+    {
+        It<PhpClass> clses = callCtx.hasArgs()
+            ? callCtx.getArg(0)
+                .fap(mt -> ArrCtorRes.resolveMtCls(mt, call.getProject()))
+            : Tls.findParent(call, PhpClass.class, a -> true).itr();
+        DeepType type = new DeepType(call, PhpType.ARRAY);
+        clses.fap(cls -> cls.getFields())
+            .flt(fld -> !fld.getModifier().isStatic())
+            .fch(fld -> type.addKey(fld.getName(), fld)
+                .addType(() -> opt(fld.getDefaultValue())
+                    .cst(PhpExpression.class)
+                    .fap(expr -> ctx.subCtxEmpty().findExprType(expr))
+                    .wap(ts -> new Mt(ts)), fld.getType()));
         return type;
     }
 
@@ -452,6 +470,8 @@ public class FuncCallRes extends Lang
                 return list(arrt);
             } else if (name.equals("get_called_class")) {
                 return ctx.getSelfType().map(idea -> DeepType.makeClsRef(call, idea));
+            } else if (name.equals("get_object_vars")) {
+                return list(get_object_vars(callCtx, call));
             } else if (name.equals("curl_getinfo") && !callCtx.getArg(1).has()) {
                 return list(curl_getinfo(call));
             } else if (name.equals("stream_get_meta_data")) {

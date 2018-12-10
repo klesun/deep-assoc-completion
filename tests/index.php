@@ -982,10 +982,6 @@ class DeepKeysTest
         $this->getProfile('');
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
     public function setDynamicPropsFromArr()
     {
         $nepgear = \DeepTest\Nepgear::__set_state([
@@ -993,6 +989,10 @@ class DeepKeysTest
             '' => 'Cursed Sword',
         ]);
     }
+
+    //============================
+    // not implemented follow
+    //============================
 
     private static function testUndefinedKeyError()
     {

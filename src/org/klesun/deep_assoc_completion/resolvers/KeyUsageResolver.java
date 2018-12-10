@@ -56,17 +56,19 @@ public class KeyUsageResolver extends Lang
             .fap(arg -> It.cnc(
                 findUsedIndexes(meth, arg.getName())
                     .map(idx -> idx.getValue())
-                    .fop(toCast(StringLiteralExpressionImpl.class))
-                    .wap(lits -> {
-                        DeepType assoct = new DeepType(arg, PhpType.ARRAY);
-                        lits.fch(lit -> {
-                            S<Mt> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
-                                .fap(acc -> new KeyUsageResolver(nextCtx, depthLeft - 1).findExprTypeFromUsage(acc)).wap(Mt::new);
-                            assoct.addKey(lit.getContents(), lit)
-                                .addType(getType, PhpType.UNSET);
-                        });
-                        return list(assoct);
-                    }),
+                    .cst(PhpExpression.class)
+                    .fap(lit -> nextCtx.limitResolveDepth(15, lit)
+                        .unq(t -> t.stringValue)
+                        .fap(t -> opt(t.stringValue)
+                            .map(name -> {
+                                DeepType assoct = new DeepType(arg, PhpType.ARRAY);
+                                S<Mt> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
+                                    .fap(acc -> new KeyUsageResolver(nextCtx, depthLeft - 1).findExprTypeFromUsage(acc)).wap(Mt::new);
+                                assoct.addKey(name, t.definition)
+                                    .addType(getType, PhpType.UNSET);
+                                return assoct;
+                            }))
+                    ),
                 opt(arg.getDocComment())
                     .map(doc -> doc.getParamTagByName(arg.getName()))
                     .fap(doc -> new DocParamRes(nextCtx).resolve(doc)),
@@ -250,6 +252,7 @@ public class KeyUsageResolver extends Lang
                     .flt(fld -> !caretVar.equals(fld.getClassReference()))
                     .fap(fld -> opt(fld.getClassReference()))
                     .fap(fld -> fakeCtx.findExprType(fld))
+                    // TODO: add declared field names here too
                     .fap(objt -> objt.props.vls())
                     .fap(prop -> prop.keyType.getTypes.get()),
                 // $this->props[$varName]

@@ -13,15 +13,16 @@ class Nepgear
 {
     use TSetState;
 
-    public $bracer;
+    public $bracer = 123;
     public $pants;
     public $weapon;
     public $armor;
 
-    // TODO: support completion when it is in a tratit/abstract class too
+    // TODO: support completion when it is in a trait/abstract class too
     public static function __set_state($an_array)
     {
         $self = new static();
+        get_object_vars($self);
         // both ways should provide completion
         foreach (get_object_vars($self) as $name => $value) {
             $self->$name = $an_array[$name] ?? null;
