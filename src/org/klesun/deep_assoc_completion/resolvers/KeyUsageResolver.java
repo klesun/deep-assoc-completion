@@ -251,6 +251,16 @@ public class KeyUsageResolver extends Lang
                     .fap(fld -> opt(fld.getClassReference()))
                     .fap(fld -> fakeCtx.findExprType(fld))
                     .fap(objt -> objt.props.vls())
+                    .fap(prop -> prop.keyType.getTypes.get()),
+                // $this->props[$varName]
+                opt(refVar.getParent())
+                    .cst(ArrayIndex.class)
+                    .fap(idx -> opt(idx.getParent()))
+                    .cst(ArrayAccessExpression.class)
+                    .fap(acc -> opt(acc.getValue()))
+                    .cst(PhpExpression.class)
+                    .fap(value -> fakeCtx.findExprType(value))
+                    .fap(objt -> objt.keys)
                     .fap(prop -> prop.keyType.getTypes.get())
             ));
     }

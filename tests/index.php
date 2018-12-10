@@ -966,18 +966,6 @@ class DeepKeysTest
         $car[''];
     }
 
-    //============================
-    // not implemented follow
-    //============================
-
-    public function setDynamicPropsFromArr()
-    {
-        $nepgear = \DeepTest\Nepgear::__set_state([
-            // should suggest: weapon, bracer, pants, armor
-            '' => 'Cursed Sword',
-        ]);
-    }
-
     private function getProfile(string $profileName)
     {
         $profiles = [
@@ -992,6 +980,18 @@ class DeepKeysTest
     {
         // should suggest: ['dev', 'prod', 'student']
         $this->getProfile('');
+    }
+
+    //============================
+    // not implemented follow
+    //============================
+
+    public function setDynamicPropsFromArr()
+    {
+        $nepgear = \DeepTest\Nepgear::__set_state([
+            // should suggest: weapon, bracer, pants, armor
+            '' => 'Cursed Sword',
+        ]);
     }
 
     private static function testUndefinedKeyError()
