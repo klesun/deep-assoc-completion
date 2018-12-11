@@ -45,14 +45,15 @@ public class ArrCtorRes extends Lang
     public static It<PhpClass> resolveMtCls(Mt mtArg, Project project)
     {
         It<PhpClass> resolved = opt(mtArg)
-            .map(mt -> mt.getIdeaType()).itr()
+            .fap(mt -> mt.getIdeaTypes())
             .cct(mtArg.types.fap(t -> t.clsRefType))
             .fap(tpe -> resolveIdeaTypeCls(tpe, project))
             ;
         if (!resolved.has()) {
             // allow no namespace in php doc class references
             PhpIndex idx = PhpIndex.getInstance(project);
-            return It(ideaTypeToFqn(mtArg.getIdeaType()))
+            return mtArg.getIdeaTypes()
+                .fap(it -> ideaTypeToFqn(it))
                 .flt(fqn -> !fqn.isEmpty())
                 .fap(clsName -> {
                     clsName = clsName.replaceAll("^\\\\", "");

@@ -101,7 +101,7 @@ public class FuncCtx extends Lang implements IFuncCtx
                 argGetters.sub(orderObj.order)
                     .map((argGetter, i) -> getCached(i, argGetter))
                     .fch((mt, i) -> allArgs.addKey(i + "", ref)
-                        .addType(() -> mt, mt.getIdeaType()));
+                        .addType(() -> mt, mt.getIdeaTypes().fst().def(PhpType.EMPTY)));
                 return new Mt(list(allArgs));
             });
         }

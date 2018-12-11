@@ -38,7 +38,7 @@ public class DeepType extends Lang
     private DeepType(PsiElement definition, PhpType briefType, String stringValue, boolean isExactPsi)
     {
         this.definition = definition;
-        this.briefType = briefType;
+        this.briefType = briefType.filterUnknown();
         this.stringValue = stringValue;
         this.isExactPsi = isExactPsi;
     }

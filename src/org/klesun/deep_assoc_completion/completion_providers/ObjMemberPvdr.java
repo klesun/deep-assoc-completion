@@ -115,7 +115,6 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
 
                     // IDEA did not resolve the class on it's own - worth trying Deep resolution
                     Mt mt = funcCtx.findExprType(ref).wap(Mt::new);
-                    getAssignedProps(mt).fch(el -> result.addElement(el));
                     return ArrCtorRes.resolveMtCls(mt, ref.getProject())
                         .fap(cls -> list(
                             It(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
@@ -125,6 +124,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                                 || ref.getText().equals("$this"))
                             .flt(fld -> !fld.getModifier().isStatic())
                             .map(m -> makeLookup(m))
+                            .cct(getAssignedProps(mt).map(a -> a))
                             .cct(getMagicProps(cls, funcCtx)
                                 .fap(t -> makeMagicLookup(t)))
                         );

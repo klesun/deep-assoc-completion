@@ -50,7 +50,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
     {
         return tit.fap(t -> t.keys)
             .fap(k -> k.keyType.getNames()
-                .map(strVal -> makeLookupBase("$" + strVal, Mt.getIdeaTypeSt(k.getTypes()).toString()))
+                .map(strVal -> makeLookupBase("$" + strVal, k.getTypes().map(t -> t.briefType).unq().str("|")))
                 .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, -1000 - i)))
             .unq(l -> l.getLookupString());
     }

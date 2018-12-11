@@ -71,9 +71,9 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         @Nullable PhpType result = null;
         try {
             result = Tls.cast(PhpExpression.class, psi)
-                .map(exp -> funcCtx.findExprType(exp))
-                .map(tit -> Mt.getIdeaTypeSt(tit))
-                .def(null);
+                .fap(exp -> funcCtx.findExprType(exp))
+                .map(t -> t.briefType)
+                .wap(tit -> Mt.joinIdeaTypes(tit));
         } catch (Throwable exc) {
             // throwing some exceptions further would cause class to become undefined
             L<Class> allowedExceptions = list(ControlFlowException.class);

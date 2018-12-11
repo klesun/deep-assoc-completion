@@ -154,14 +154,9 @@ public class Mt extends Lang
         return ideaType;
     }
 
-    public static PhpType getIdeaTypeSt(It<DeepType> types)
+    public It<PhpType> getIdeaTypes()
     {
-        return joinIdeaTypes(types.map(t -> t.briefType));
-    }
-
-    public PhpType getIdeaType()
-    {
-        return getIdeaTypeSt(It(types));
+        return It(types).map(t -> t.briefType).unq();
     }
 
     public String getBriefValueText(int maxLen, Set<DeepType> circularRefs)

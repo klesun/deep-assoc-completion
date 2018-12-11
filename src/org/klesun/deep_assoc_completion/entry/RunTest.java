@@ -24,9 +24,7 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.*;
 import java.util.List;
 
 import static org.klesun.lang.Lang.*;
@@ -62,7 +60,7 @@ public class RunTest extends AnAction
                 FuncCtx funcCtx = new FuncCtx(search);
                 return funcCtx.findExprType(retVal);
             })
-            .fap(t -> Mt.getKeySt(t, null))
+            .fap(t -> Mt.getKeySt(t, null)).arr()
             .fap((rett, i) -> {
                 CaseContext ctx = new CaseContext(logger);
                 ctx.dataProviderName = func.getName();
@@ -84,9 +82,13 @@ public class RunTest extends AnAction
             .els(() -> System.out.println("Failed to find data-providing functions"))
             .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
             .fap(tuple -> {
-                L<String> actualKeys = tuple.b.getTypes().fap(t -> t.keys).fap(k -> k.keyType.getNames()).arr();
                 L<String> expectedKeys = new Mt(tuple.c.getTypes())
                     .getKey(null).getStringValues().arr();
+                It<String> actualKeys = tuple.b.getTypes().fap(t -> t.keys).fap(k -> k.keyType.getNames());
+                if (expectedKeys.size() == 0) {
+                    logger.logErrShort();
+                    return list(new Error(tuple.a, "Expected keys are empty"));
+                }
                 try {
                     //logger.logMsg("doing " + tuple.a.dataProviderName + " #" + tuple.a.testNumber);
                     return tuple.a.testCaseExact(actualKeys, expectedKeys);
@@ -114,6 +116,7 @@ public class RunTest extends AnAction
             });
 
         L<Error> msgs = It.cnc(errors, exactKeyErrors).arr();
+        logger.flushed = true;
         logger.logMsg("");
         msgs.fch(logger::logErr);
         double seconds = (System.nanoTime() - startTime) / 1000000000.0;
@@ -159,20 +162,30 @@ public class RunTest extends AnAction
             return errors;
         }
 
-        private List<Error> testCaseExact(L<String> actual, L<String> expected) {
+        private List<Error> testCaseExact(It<String> actual, L<String> expected) {
             List<Error> errors = list();
-            Collection<String> unexpectedKeys = CollectionUtils.subtract(new LinkedHashSet(actual), new LinkedHashSet(expected));
-            Collection<String> absentKeys = CollectionUtils.subtract(new LinkedHashSet(expected), new LinkedHashSet(actual));
+            Set<String> expectedAll = new LinkedHashSet<>(expected);
+            Set<String> absentKeys = new LinkedHashSet<>(expected);
+            Set<String> unexpectedKeys = new LinkedHashSet<>();
+            for (String actualKey: actual) {
+                if (expectedAll.contains(actualKey)) {
+                    if (absentKeys.contains(actualKey)) {
+                        absentKeys.remove(actualKey);
+                        logger.logSucShort();
+                    }
+                } else {
+                    if (!unexpectedKeys.contains(actualKey)) {
+                        unexpectedKeys.add(actualKey);
+                        logger.logErrShort();
+                    }
+                }
+            }
             if (!absentKeys.isEmpty()) {
                 errors.add(new Error(this, "Result does not have expected keys: " + Tls.implode(", ", L(absentKeys))));
+                logger.logErrShort();
             }
             if (!unexpectedKeys.isEmpty()) {
                 errors.add(new Error(this, "Result has unexpected keys: " + Tls.implode(", ", L(unexpectedKeys))));
-            }
-            if (unexpectedKeys.isEmpty() && absentKeys.isEmpty()) {
-                logger.logSucShort();
-            } else {
-                logger.logErrShort();
             }
             return errors;
         }
@@ -196,6 +209,7 @@ public class RunTest extends AnAction
 
     private static class Logger
     {
+        public boolean flushed = false;
         String wholeText = "";
         int caret = 0;
         int sucCnt = 0;
@@ -226,6 +240,9 @@ public class RunTest extends AnAction
         {
             String msg = "Error in " + err.dataProviderName + " #" + err.testNumber + " " +
                 L(err.keyChain).rdc((a,b) -> a + ", " + b, "") + " " + err.message;
+            if (!flushed) {
+                msg = "\n" + msg;
+            }
             logMsg(msg);
         }
 

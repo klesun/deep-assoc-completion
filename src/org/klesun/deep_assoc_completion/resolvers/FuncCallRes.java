@@ -100,7 +100,7 @@ public class FuncCallRes extends Lang
             flip.addKey(KeyType.unknown(call), call).addType(() -> newValueMt, PhpType.MIXED);
         }
         for (String key: newKeys) {
-            flip.addKey(key, call).addType(() -> newValueMt, Mt.getIdeaTypeSt(It(newValueMt.types)));
+            flip.addKey(key, call).addType(() -> newValueMt, It(newValueMt.types).map(t -> t.briefType).fst().def(PhpType.EMPTY));
         }
         return flip;
     }

@@ -135,13 +135,13 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
     public static LookupElementBuilder makeFullLookup(Mt mt, String keyName, Set<String> comments)
     {
-        Mt keyMt = It(mt.types).btw((t, i) -> System.out.println("zhopa type " + i + " " + t.definition.getText())).fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::new);
+        Mt keyMt = It(mt.types).fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::new);
         String comment = Tls.implode(" ", comments);
         String briefValue = keyMt.getBriefValueText(BRIEF_VALUE_MAX_LEN);
         if (!comment.trim().equals("")) {
             briefValue = Tls.substr(briefValue, 0, 12) + " " + comment;
         }
-        String ideaTypeStr = keyMt.getIdeaType().filterUnknown().toStringResolved();
+        String ideaTypeStr = keyMt.getIdeaTypes().lmt(2).str("|");
         return makePaddedLookup(keyName, ideaTypeStr, briefValue);
     }
 
