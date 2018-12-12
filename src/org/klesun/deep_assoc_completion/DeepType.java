@@ -17,6 +17,7 @@ import java.util.*;
  */
 public class DeepType extends Lang
 {
+    // maybe should make it a memoizing iterable?
     public final L<Key> keys = new L<>();
     // just like array keys, but dynamic object properties
     public final Dict<Key> props = new Dict<>(L());
