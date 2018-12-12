@@ -56,8 +56,10 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
                     String key = funcCtx.findExprType(literal).wap(Mt::getStringValueSt);
                     return funcCtx.findExprType(srcExpr)
                         .fap(arrt -> arrt.keys)
-                        .flt(k -> k.keyType.getNames().any(n -> n.equals(key)))
-                        .map(k -> k.definition);
+                        .fap(k -> k.keyType.getTypes.get())
+                        .flt(t -> Objects.equals(t.stringValue, key))
+                        .map(t -> t.definition)
+                        .unq();
                 }));
     }
 
