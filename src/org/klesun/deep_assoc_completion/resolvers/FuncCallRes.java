@@ -68,16 +68,12 @@ public class FuncCallRes extends Lang
     private DeepType array_combine(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
         DeepType combine = new DeepType(call, PhpType.ARRAY);
-        Dict<L<DeepType>> keyToTypes = callCtx.getArgMt(0).getEl().types
-            .arr().gop(t -> opt(t.stringValue));
         S<Mt> getElMt = Tls.onDemand(() -> callCtx.getArgMt(1).getEl());
         PhpType ideaElType = L(call.getParameters()).gat(1)
             .fop(toCast(PhpExpression.class))
             .map(e -> e.getType()).def(PhpType.MIXED);
-        keyToTypes.fch((types,keyName) -> combine
-            .addKey(keyName, types.map(t -> t.definition).fst().def(call))
-            .addType(getElMt, ideaElType));
-        combine.addKey(KeyType.unknown(call), call).addType(getElMt, PhpType.MIXED);
+        combine.addKey(KeyType.mt(() -> It(callCtx.getArgMt(0).getEl().types), call))
+            .addType(getElMt, ideaElType);
         return combine;
     }
 
