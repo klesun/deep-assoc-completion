@@ -133,9 +133,9 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
             .fap(srcExpr -> funcCtx.findExprType(srcExpr));
     }
 
-    public static LookupElementBuilder makeFullLookup(Mt mt, String keyName, Set<String> comments)
+    public static LookupElementBuilder makeFullLookup(Mt arrMt, String keyName, Set<String> comments)
     {
-        Mt keyMt = It(mt.types).fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::new);
+        Mt keyMt = It(arrMt.types).fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::new);
         String comment = Tls.implode(" ", comments);
         String briefValue = keyMt.getBriefValueText(BRIEF_VALUE_MAX_LEN);
         if (!comment.trim().equals("")) {
@@ -255,13 +255,13 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
 
         // disabled for now since it causes infinite hangs. I guess they happen in getBriefValueText, some infinite recursion there probably
         // hangs at this: `$result[static::RESERVATION]['itinerary'][$i]['departureDt'] += $utcTimesBySegNum[$rSeg['segmentNumber']]['departureDt'] ?? []`
-//        nameToMutLookup
-//            .fch((mutLook, keyName) -> {
-//                search.overrideMaxExpr = som(search.getExpressionsResolved() + 25);
-//                Set<String> comments = opt(keyToComments.get(keyName)).def(new HashSet<>());
-//                LookupElementBuilder lookup = makeFullLookup(mt, keyName, comments);
-//                search.overrideMaxExpr = non();
-//                mutLook.lookupData = lookup;
-//            });
+        nameToMutLookup
+            .fch((mutLook, keyName) -> {
+                search.overrideMaxExpr = som(search.getExpressionsResolved() + 25);
+                Set<String> comments = opt(keyToComments.get(keyName)).def(new HashSet<>());
+                LookupElementBuilder lookup = makeFullLookup(arrMt, keyName, comments);
+                search.overrideMaxExpr = non();
+                mutLook.lookupData = lookup;
+            });
     }
 }
