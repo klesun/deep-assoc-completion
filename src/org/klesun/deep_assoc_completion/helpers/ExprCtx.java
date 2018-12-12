@@ -26,14 +26,21 @@ public class ExprCtx implements IExprCtx {
     final public int depth;
     final private FuncCtx funcCtx;
     final public PsiElement expr;
+    final public Opt<ExprCtx> parent;
     final public L<ExprCtx> children = list();
     public boolean doNotCache = false;
     public Opt<Integer> typeCnt = non();
 
-    public ExprCtx(FuncCtx funcCtx, PsiElement expr, int depth) {
+    private ExprCtx(FuncCtx funcCtx, PsiElement expr, int depth, Opt<ExprCtx> parent) {
         this.funcCtx = funcCtx;
         this.expr = expr;
         this.depth = depth;
+        this.parent = parent;
+
+    }
+
+    public ExprCtx(FuncCtx funcCtx, PsiElement expr, int depth) {
+        this(funcCtx, expr, depth, non());
     }
 
     public IFuncCtx func() {
@@ -41,7 +48,7 @@ public class ExprCtx implements IExprCtx {
     }
 
     private ExprCtx subExpr(PsiElement expr, FuncCtx funcCtx) {
-        ExprCtx nextCtx = new ExprCtx(funcCtx, expr, depth + 1);
+        ExprCtx nextCtx = new ExprCtx(funcCtx, expr, depth + 1, som(this));
         nextCtx.doNotCache = this.doNotCache;
         children.add(nextCtx);
         return nextCtx;
@@ -111,7 +118,7 @@ public class ExprCtx implements IExprCtx {
 
     public It<DeepType> limitResolveDepth(int depthLimit, PhpExpression expr) {
         int depth = Math.max(funcCtx.getSearch().maxDepth - depthLimit, this.depth);
-        ExprCtx nextCtx = new ExprCtx(funcCtx, expr, depth);
+        ExprCtx nextCtx = new ExprCtx(funcCtx, expr, depth, som(this));
         nextCtx.doNotCache  = true;
         children.add(nextCtx);
         return It(nextCtx.findExprType(expr));

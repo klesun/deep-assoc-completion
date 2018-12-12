@@ -156,7 +156,7 @@ public class Mt extends Lang
 
     public It<PhpType> getIdeaTypes()
     {
-        return It(types).map(t -> t.briefType).unq();
+        return It(types).map(t -> t.briefType).map(it -> it.filterMixed()).unq();
     }
 
     public String getBriefValueText(int maxLen, Set<DeepType> circularRefs)

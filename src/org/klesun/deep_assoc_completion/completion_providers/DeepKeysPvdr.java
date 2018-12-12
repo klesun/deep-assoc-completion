@@ -141,7 +141,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         if (!comment.trim().equals("")) {
             briefValue = Tls.substr(briefValue, 0, 12) + " " + comment;
         }
-        String ideaTypeStr = keyMt.getIdeaTypes().lmt(2).str("|");
+        String ideaTypeStr = keyMt.getIdeaTypes().flt(it -> !it.isEmpty()).lmt(2).str("|");
         return makePaddedLookup(keyName, ideaTypeStr, briefValue);
     }
 
@@ -206,7 +206,7 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                     result.addElement(PrioritizedLookupElement.withPriority(mutLookup, basePriority - keyNames.size()));
                     nameToMutLookup.put(keyName, mutLookup);
 
-                    String briefTypeRaw = Mt.getKeyBriefTypeSt(k.getBriefTypes()).filterUnknown().toStringResolved();
+                    String briefTypeRaw = Mt.getKeyBriefTypeSt(k.getBriefTypes()).filterUnknown().filterMixed().toStringResolved();
                     mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "");
                 }
                 String comment = Tls.implode(" ", k.comments);

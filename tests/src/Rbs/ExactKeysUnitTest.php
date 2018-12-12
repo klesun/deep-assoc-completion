@@ -30,7 +30,7 @@ class ExactKeysUnitTest
             [$imported, ['response_code', 'errors', 'result']],
             [$imported['result'], ['accessStatus', 'fieldsAvailable', 'pnrFields', 'dumps', 'errorData']],
             [$imported['result']['pnrFields'], [
-                'fieldName',
+                'fieldName',                               'serviceSsrList',
                 'flightServiceInfo',                       'sample',
                 'frequentFlyerInfo',                       'reservation',
                 'seatInfo',                                'cars',
@@ -54,13 +54,13 @@ class ExactKeysUnitTest
                 'validatingCarrierFromItinerary',          'verifyConnectionTimes',
                 'transborderAvailabilityInfo',             'repeatedItinerary',
                 'contractInfo',                            'docSsrList',
-                'forcedHistoricFare',                      'serviceSsrList',
             ]],
         ];
     }
 
     public function provideImportPnrNext01()
     {
+        $this->importPnr()['result']['pnrFields']['reservation']['passengers'][0][''];
         return [
             [$this->importPnr()['result']['pnrFields']['reservation']['passengers'][0], ['ageGroup', 'firstName', 'title', 'nameNumber', 'lastName', 'age', 'success', 'rawNumber', 'dob', 'ptc', 'carrierText', 'parsedNumber', 'joinedFirstNames']],
         ];

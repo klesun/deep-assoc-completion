@@ -28,7 +28,6 @@ public class SearchContext extends Lang
     final public Opt<Project> project;
     // for performance measurement
     private int expressionsResolved = 0;
-    final public L<PhpExpression> psiTrace = L();
     final private Map<IFuncCtx, Map<PhpExpression, Iterable<DeepType>>> ctxToExprToResult = new HashMap<>();
     public Opt<Integer> overrideMaxExpr = non();
     final public Map<PsiFile, Collection<FieldReferenceImpl>> fileToFieldRefs = new HashMap<>();
@@ -75,7 +74,7 @@ public class SearchContext extends Lang
         ).def(10000);
     }
 
-    private <T> boolean endsWith(L<T> superList, L<T> subList)
+    private static <T> boolean endsWith(L<T> superList, L<T> subList)
     {
         for (int i = 0; i < subList.size(); ++i) {
             if (i >= superList.size() || !superList.get(-i - 1).equals(subList.get(-i - 1))) {
@@ -86,14 +85,14 @@ public class SearchContext extends Lang
     }
 
     // should probably keep expression tree and start using this again
-    private boolean isRecursion()
+    private static boolean isRecursion(L<PsiElement> psiTrace)
     {
         // imagine sequence: a b c d e f g e f g
         //                           ^_____^_____
         // I'm not sure this assumption is right, but I'll try to
         // treat any case where end repeats pre-end as recursion
         for (int i = 0; i < psiTrace.size() / 2; ++i) {
-            L<PhpExpression> subList = psiTrace.sub(psiTrace.size() - i * 2 - 2, i + 1);
+            L<PsiElement> subList = psiTrace.sub(psiTrace.size() - i * 2 - 2, i + 1);
             if (endsWith(psiTrace, subList)) {
                 return true;
             }
@@ -157,6 +156,19 @@ public class SearchContext extends Lang
         return !exprCtx.doNotCache;
     }
 
+    // TODO: iterator
+    private static L<PsiElement> getExprChain(ExprCtx ctx)
+    {
+        L<PsiElement> fromEnd = list();
+        while (ctx != null) {
+            if (!fromEnd.lst().equals(som(ctx.expr))) {
+                fromEnd.add(ctx.expr);
+            }
+            ctx = ctx.parent.def(null);
+        }
+        return fromEnd.rvr();
+    }
+
     public Iterable<DeepType> findExprType(PhpExpression expr, ExprCtx exprCtx)
     {
         long time = System.nanoTime();
@@ -169,6 +181,7 @@ public class SearchContext extends Lang
         if (exprCtx.depth > maxDepth) {
             return It.non();
         }
+        L<PsiElement> chain = getExprChain(exprCtx);
         if (++expressionsResolved > getMaxExpressions()) {
             return It.non();
         } else if (timeout.flt(tout -> seconds > tout).has()) {
@@ -180,6 +193,8 @@ public class SearchContext extends Lang
             if (debug) {
                 //System.out.println(indent + "<< TAKING RESULT FROM CACHE");
             }
+        } else if (isRecursion(chain)) {
+            return It.non();
         } else {
             if (shouldCache(exprCtx)) {
                 putToCache(exprCtx.func(), expr, list());
