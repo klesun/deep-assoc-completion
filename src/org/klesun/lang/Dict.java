@@ -84,7 +84,7 @@ public class Dict<T> implements Map<String, T>
     @NotNull public Set<Entry<String, T>> entrySet() {return subject.entrySet();}
     // add them only for compatibility with Java's Map interface, but you
     // should instantly pass all values to the constructor nevertheless
-    @Deprecated public T put(String key, T value) {return subject.put(key, value);}
-    @Deprecated public T remove(Object key) {return subject.remove(key);}
-    @Deprecated public void putAll(@NotNull Map<? extends String, ? extends T> m) {subject.putAll(m);}
+    public T put(String key, T value) {return subject.put(key, value);}
+    public T remove(Object key) {return subject.remove(key);}
+    public void putAll(@NotNull Map<? extends String, ? extends T> m) {subject.putAll(m);}
 }

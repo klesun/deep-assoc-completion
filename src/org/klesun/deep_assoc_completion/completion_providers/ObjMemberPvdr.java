@@ -93,6 +93,24 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                 .withTypeText("from __get()"));
     }
 
+    private It<? extends LookupElement> resolveObj(PhpExpression ref, FuncCtx funcCtx)
+    {
+        Mt mt = funcCtx.findExprType(ref).wap(Mt::new);
+        return ArrCtorRes.resolveMtCls(mt, ref.getProject())
+            .fap(cls -> list(
+                It(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
+                It(cls.getFields())
+                ).fap(a -> a)
+                    .flt(fld -> fld.getModifier().isPublic()
+                        || ref.getText().equals("$this"))
+                    .flt(fld -> !fld.getModifier().isStatic())
+                    .map(m -> makeLookup(m))
+                    .cct(getAssignedProps(mt).map(a -> a))
+                    .cct(getMagicProps(cls, funcCtx)
+                        .fap(t -> makeMagicLookup(t)))
+            );
+    }
+
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
@@ -111,24 +129,8 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             options = opt(parameters.getPosition().getParent())
                 .fop(toCast(MemberReference.class))
                 .map(mem -> mem.getClassReference())
-                .fap(ref -> {
-
-                    // IDEA did not resolve the class on it's own - worth trying Deep resolution
-                    Mt mt = funcCtx.findExprType(ref).wap(Mt::new);
-                    return ArrCtorRes.resolveMtCls(mt, ref.getProject())
-                        .fap(cls -> list(
-                            It(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
-                            It(cls.getFields())
-                        ).fap(a -> a)
-                            .flt(fld -> fld.getModifier().isPublic()
-                                || ref.getText().equals("$this"))
-                            .flt(fld -> !fld.getModifier().isStatic())
-                            .map(m -> makeLookup(m))
-                            .cct(getAssignedProps(mt).map(a -> a))
-                            .cct(getMagicProps(cls, funcCtx)
-                                .fap(t -> makeMagicLookup(t)))
-                        );
-                });
+                // IDEA did not resolve the class on it's own - worth trying Deep resolution
+                .fap(ref -> resolveObj(ref, funcCtx));
             times.put("iteratorDone", System.nanoTime() - startTime);
         }
         Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()).arr());
