@@ -54,10 +54,10 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
         <completion.contributor language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.RestoreBuiltinCbtr"/>
         <psi.referenceContributor implementation="org.klesun.deep_assoc_completion.entry.ArrFuncRefCbtr"/>
 
-        <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.DeepKeysGoToDecl"/>
+        <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.MainGoToDecl"/>
+
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.completion_providers.ArrayColumnPvdr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.ArrFuncRefGoToDecl"/>
-        <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.DeepObjMemberGoToDecl"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.completion_providers.EqStrValsPvdr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.completion_providers.ArrayKeyExistsPvdr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.completion_providers.UsedKeysPvdr"/>

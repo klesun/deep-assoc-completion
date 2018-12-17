@@ -1,8 +1,5 @@
 package org.klesun.deep_assoc_completion.go_to_decl_providers;
 
-import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
-import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
@@ -13,7 +10,7 @@ import com.jetbrains.php.lang.psi.elements.ArrayIndex;
 import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.helpers.*;
@@ -26,21 +23,8 @@ import java.util.*;
 /**
  * go to declaration functionality for associative array keys
  */
-public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
+public class DeepKeysGoToDecl extends Lang
 {
-    private Opt<PsiElement> lastCaretPsi = non();
-    private boolean lastFinished = true;
-
-    private static PsiElement truncateOnLineBreak(PsiElement psi)
-    {
-        PsiElement truncated = psi.getFirstChild();
-        while (psi.getText().contains("\n") && truncated != null) {
-            psi = truncated;
-            truncated = psi.getFirstChild();
-        }
-        return psi;
-    }
-
     private static It<PsiElement> resolveAssocKey(PsiElement psiElement, FuncCtx funcCtx)
     {
         return opt(psiElement)
@@ -109,40 +93,15 @@ public class DeepKeysGoToDecl extends Lang implements GotoDeclarationHandler
             .fap(tag -> new DocParamRes(exprCtx).resolve(tag));
     }
 
-    @Nullable
-    @Override
-    public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement nullPsi, int mouseOffset, Editor editor)
+    public static It<? extends PsiElement> resolveDeclPsis(@NotNull PsiElement psiElement, int mouseOffset, FuncCtx funcCtx)
     {
-        Boolean prevFinished = lastFinished;
-        lastFinished = false;
-        Boolean isSecondAttempt = lastCaretPsi.map(last -> last.equals(nullPsi)).def(false);
-        It<PsiElement> psiit = opt(nullPsi)
-            .fap(psiElement -> {
-                SearchContext search = new SearchContext(psiElement.getProject())
-                    .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
-                FuncCtx funcCtx = new FuncCtx(search);
-                It<PsiElement> it = It.frs(
-                    () -> It.cnc(
-                        resolveAssocKey(psiElement, funcCtx),
-                        resolveDocAt(psiElement, mouseOffset)
-                    ),
-                    () -> resolveDocResult(psiElement)
-                        .map(t -> t.definition)
-                );
-                return it.map(psi -> truncateOnLineBreak(psi))
-                    .end((itpsi) -> !isSecondAttempt || !prevFinished)
-                    .unq();
-            });
-        L<PsiElement> arr = psiit.arr();
-        lastCaretPsi = opt(nullPsi);
-        lastFinished = true;
-        return arr.toArray(new PsiElement[arr.size()]);
-    }
-
-    @Nullable
-    @Override
-    public String getActionText(DataContext dataContext) {
-        // dunno what this does
-        return null;
+        return It.frs(
+            () -> It.cnc(
+                resolveAssocKey(psiElement, funcCtx),
+                resolveDocAt(psiElement, mouseOffset)
+            ),
+            () -> resolveDocResult(psiElement)
+                .map(t -> t.definition)
+        );
     }
 }

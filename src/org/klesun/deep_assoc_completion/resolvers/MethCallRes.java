@@ -197,8 +197,8 @@ public class MethCallRes extends Lang
             return impls.fap(m -> It.cnc(
                 opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
                     .fap(tag -> parseReturnDoc(tag, finalCtx)),
-                ClosRes.getReturnedValue(m, finalCtx),
-                opt(m.getReturnType()).fap(rt -> list(new DeepType(rt, rt.getType())))
+                opt(m.getReturnType()).fap(rt -> list(new DeepType(rt, rt.getType()))),
+                ClosRes.getReturnedValue(m, finalCtx)
             ));
         };
     }

@@ -1091,7 +1091,7 @@ class ExactKeysUnitTest
             ['ticketNumber' => '0123456789013', 'invoiceNumber' => '13412315', 'isVoided' => false],
         ];
         $combined = static::combineTicketsAndInvoices($tickets, $invoices);
-        $combined[0]['ticketInvoiceInfo'][''];
+        $combined[0]['ticketInvoiceInfo']['ticketNumber'];
         return [
             [$combined[0], ['ticketNumber', 'name', 'ticketInvoiceInfo']],
             [$combined[0]['ticketInvoiceInfo'], ['ticketNumber', 'invoiceNumber', 'isVoided']],
