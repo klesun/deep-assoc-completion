@@ -41,10 +41,10 @@ public class ArrFuncRefNamePvdr extends CompletionProvider<CompletionParameters>
     }
 
     /** @return type of an associative array with vars to suggest as keys */
-    public static It<Method> resolve(StringLiteralExpression literal, boolean isAutoPopup, Editor editor)
+    public static It<Method> resolve(StringLiteralExpression literal, boolean isAutoPopup)
     {
-        SearchContext search = new SearchContext(editor.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
+        SearchContext search = new SearchContext(literal.getProject())
+            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, literal.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
         return opt(literal.getParent())
             .map(arrVal -> arrVal.getParent())
@@ -70,7 +70,7 @@ public class ArrFuncRefNamePvdr extends CompletionProvider<CompletionParameters>
     {
         It<Method> methods = opt(parameters.getPosition().getParent())
             .cst(StringLiteralExpressionImpl.class)
-            .fap(literal -> resolve(literal, parameters.isAutoPopup(), parameters.getEditor()));
+            .fap(literal -> resolve(literal, parameters.isAutoPopup()));
 
         methods.map(m -> makeLookup(m)).fch(result::addElement);
     }

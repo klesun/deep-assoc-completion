@@ -3,8 +3,10 @@ package org.klesun.deep_assoc_completion.go_to_decl_providers;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_assoc_completion.completion_providers.ArrFuncRefNamePvdr;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepKeysGoToDecl;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepObjMemberGoToDecl;
@@ -31,6 +33,11 @@ public class MainGoToDecl implements GotoDeclarationHandler {
         return It.cnc(non()
             , DeepKeysGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx).map(a -> a)
             , DeepObjMemberGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx).map(a -> a)
+            , opt(psiElement.getParent()) // [self::class, 'soSomeStuff']
+                .cst(StringLiteralExpressionImpl.class)
+                .fap(literal -> ArrFuncRefNamePvdr.resolve(literal, true)
+                    .flt(meth -> meth.getName().equals(literal.getContents()))
+                ).map(a -> a)
         );
     }
 
