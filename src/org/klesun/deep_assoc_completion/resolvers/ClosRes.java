@@ -88,7 +88,11 @@ public class ClosRes extends Lang
                 .fop(toCast(PhpUseList.class))
                 .fap(u -> It(u.getChildren()))
                 .fop(toCast(Variable.class))
-                .map(closVar -> T2(closVar.getName(), Tls.onDemand(() -> ctx.findExprType(closVar).mem())))
+                .map(closVar -> {
+                    S<MemIt<DeepType>> sup = Tls.onDemand(() ->
+                        ctx.findExprType(closVar).mem());
+                    return T2(closVar.getName(), sup);
+                })
                 .arr();
             IExprCtx closCtx = callCtx.withClosure(closureVars);
             return new MemIt<>(getReturnedValue(func, closCtx).iterator());

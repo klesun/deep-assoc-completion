@@ -84,7 +84,6 @@ public class SearchContext extends Lang
         return true;
     }
 
-    // should probably keep expression tree and start using this again
     private static boolean isRecursion(L<PsiElement> psiTrace)
     {
         // imagine sequence: a b c d e f g e f g
@@ -156,7 +155,6 @@ public class SearchContext extends Lang
         return !exprCtx.doNotCache;
     }
 
-    // TODO: iterator
     private static L<PsiElement> getExprChain(ExprCtx ctx)
     {
         L<PsiElement> fromEnd = list();

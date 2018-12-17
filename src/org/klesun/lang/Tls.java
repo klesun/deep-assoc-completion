@@ -171,17 +171,31 @@ public class Tls extends Lang
         return result;
     }
 
-    public static <T> S<T> onDemand(S<T> f)
+    public static class OnDemand<T> implements S<T>
     {
-        Mutable<T> value = new Mutable<>(null);
-        Mutable<Boolean> demanded = new Mutable<>(false);
-        return () -> {
-            if (!demanded.get()) {
-                value.set(f.get());
-                demanded.set(true);
+        final private S<T> f;
+        private Opt<T> value = non();
+
+        OnDemand(S<T> f)
+        {
+            this.f = f;
+        }
+
+        @Override
+        public T get() {
+            if (!value.has()) {
+                value = new Opt<>(f.get(), true);
             }
-            return value.get();
-        };
+            return value.unw();
+        }
+        public boolean has() {
+            return value.has();
+        }
+    }
+
+    public static <T> OnDemand<T> onDemand(S<T> f)
+    {
+        return new OnDemand<>(f);
     }
 
     public static It<Integer> range(int l, int r)

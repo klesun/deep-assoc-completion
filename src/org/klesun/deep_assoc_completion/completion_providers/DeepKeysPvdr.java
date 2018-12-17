@@ -155,34 +155,12 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    @Override
-    protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
+    private T2<Dict<MutableLookup>, Map<String, Set<String>>> addNameOnly(Mt arrMt, CompletionResultSet result, boolean includeQuotes, C<String> onFirst)
     {
-        int depth = getMaxDepth(parameters);
-        SearchContext search = new SearchContext(parameters).setDepth(depth);
-        FuncCtx funcCtx = new FuncCtx(search);
-        search.isMain = true;
-        Set<String> suggested = new HashSet<>();
-        PsiElement caretPsi = parameters.getPosition(); // usually leaf element
-        Opt<PsiElement> firstParent = opt(caretPsi.getParent());
-        boolean includeQuotes = firstParent
-            .fop(toCast(StringLiteralExpression.class)) // inside ['']
-            .uni(l -> false, () -> true); // else just inside []
-
-        long startTime = System.nanoTime();
-        Mutable<Long> firstTime = new Mutable<>(-1L);
-        Dict<MutableLookup> nameToMutLookup = new Dict<>(new LinkedHashMap<>());
-        // preliminary keys without type - they may be at least 3 times faster in some cases
-
-        ExprCtx exprCtx = new ExprCtx(funcCtx, caretPsi, 0);
-        It<DeepType> arrTit = resolveAtPsi(caretPsi, exprCtx);
         Set<String> keyNames = new LinkedHashSet<>();
         Map<String, Set<String>> keyToComments = new HashMap<>();
-        System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");
-        arrTit.has();
-        System.out.println("checked if iterator has anything, took " + search.getExpressionsResolved() + " expressions");
-
-        Mt arrMt = new Mt(arrTit);
+        Mutable<Boolean> isFirst = new Mutable<>(true);
+        Dict<MutableLookup> nameToMutLookup = new Dict<>(new LinkedHashMap<>());
         arrMt.types.fap(t -> t.keys).fch((k,i) -> {
             k.keyType.getTypes.get().fch((kt,j) -> {
                 L<String> keyNamesToAdd = list();
@@ -195,9 +173,9 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 }
                 L<String> newKeyNamesToAdd = keyNamesToAdd.flt(kn -> !keyNames.contains(kn)).arr();
                 for (String keyName: newKeyNamesToAdd) {
-                    if (firstTime.get() == -1) {
-                        System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
-                        firstTime.set(System.nanoTime() - startTime);
+                    if (isFirst.get()) {
+                        isFirst.set(false);
+                        onFirst.accept(keyName);
                     }
                     keyNames.add(keyName);
                     LookupElementBuilder justName = makePaddedLookup(keyName, "resolving...", "");
@@ -223,6 +201,41 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
                 }
             });
         });
+        return T2(nameToMutLookup, keyToComments);
+    }
+
+    @Override
+    protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
+    {
+        int depth = getMaxDepth(parameters);
+        SearchContext search = new SearchContext(parameters).setDepth(depth);
+        FuncCtx funcCtx = new FuncCtx(search);
+        search.isMain = true;
+        Set<String> suggested = new HashSet<>();
+        PsiElement caretPsi = parameters.getPosition(); // usually leaf element
+        Opt<PsiElement> firstParent = opt(caretPsi.getParent());
+        boolean includeQuotes = firstParent
+            .fop(toCast(StringLiteralExpression.class)) // inside ['']
+            .uni(l -> false, () -> true); // else just inside []
+
+        long startTime = System.nanoTime();
+        Mutable<Long> firstTime = new Mutable<>(-1L);
+
+        ExprCtx exprCtx = new ExprCtx(funcCtx, caretPsi, 0);
+        It<DeepType> arrTit = resolveAtPsi(caretPsi, exprCtx);
+        System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");
+        arrTit.has();
+        System.out.println("checked if iterator has anything, took " + search.getExpressionsResolved() + " expressions");
+
+        Mt arrMt = new Mt(arrTit);
+        // preliminary keys without type - they may be at least 3 times faster in some cases
+        T2<Dict<MutableLookup>, Map<String, Set<String>>> tuple = addNameOnly(arrMt, result, includeQuotes, (keyName) -> {
+            System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
+            firstTime.set(System.nanoTime() - startTime);
+        });
+        Dict<MutableLookup> nameToMutLookup = tuple.a;
+        Map<String, Set<String>> keyToComments = tuple.b;
+
         long elapsed = System.nanoTime() - startTime;
         System.out.println("Resolved all key names in " + search.getExpressionsResolved() + " expressions");
         result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() +
@@ -253,8 +266,6 @@ public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
         // following code calculates deeper type info for
         // completion options and updates them in the dialog
 
-        // disabled for now since it causes infinite hangs. I guess they happen in getBriefValueText, some infinite recursion there probably
-        // hangs at this: `$result[static::RESERVATION]['itinerary'][$i]['departureDt'] += $utcTimesBySegNum[$rSeg['segmentNumber']]['departureDt'] ?? []`
         nameToMutLookup
             .fch((mutLook, keyName) -> {
                 search.overrideMaxExpr = som(search.getExpressionsResolved() + 25);

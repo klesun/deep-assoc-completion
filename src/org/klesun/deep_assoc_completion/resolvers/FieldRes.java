@@ -125,7 +125,7 @@ public class FieldRes extends Lang
 
     public It<DeepType> resolve(FieldReferenceImpl fieldRef)
     {
-        S<Mt> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
+        Tls.OnDemand<Mt> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
             .fop(ref -> Opt.fst(
                 () -> ctx.getSelfType()
                     .flt(typ -> ref.getText().equals("static"))
@@ -135,10 +135,12 @@ public class FieldRes extends Lang
             ))
             .def(Mt.INVALID_PSI));
 
-        S<MemIt<PhpClass>> getCls = Tls.onDemand(() -> opt(getObjMt.get())
+        Tls.OnDemand<MemIt<PhpClass>> getCls = Tls.onDemand(() -> opt(getObjMt.get())
             .fap(mt -> ArrCtorRes.resolveMtCls(mt, fieldRef.getProject())).mem());
 
-        It<Field> declarations = It.frs(
+        // declarations taken from IDEA type, without deep resolution,
+        // since it would be very long in a laravel project otherwise
+        It<Field> briefDecls = It.frs(
             () -> opt(fieldRef)
                 .flt(ref -> !ref.getText().startsWith("static::")) // IDEA is bad at static:: resolution
                 .fap(ref -> It(ref.multiResolve(false)))
@@ -148,9 +150,9 @@ public class FieldRes extends Lang
                 .fap(cls -> cls.getFields())
                 .flt(f -> f.getName().equals(fieldRef.getName()))
         );
-        It<DeepType> propDocTs = It(list());
+        It<DeepType> dynamicPropTs = It(list());
         It<DeepType> magicPropTs = It(list());
-        if (!declarations.has()) {
+        if (!briefDecls.has() || getObjMt.has()) {
             String name = fieldRef.getName();
             name = "".equals(name) ? null : name;
             if (name == null) {
@@ -161,15 +163,15 @@ public class FieldRes extends Lang
                     .wap(Mt::getStringValueSt);
             }
             String finalName = name;
-            propDocTs = getObjMt.get().types
+            dynamicPropTs = getObjMt.get().types
                 .fap(t -> Mt.getPropSt(t, finalName));
             IExprCtx magicCtx = ctx.subCtxMagicProp(fieldRef);
             magicPropTs = getCls.get()
                 .fap(cls -> opt(fieldRef.getName())
                     .fap(nme -> resolveMagicProp(cls, magicCtx)));
         }
-        It<DeepType> declTypes = declsToTypes(fieldRef, declarations);
+        It<DeepType> declTypes = declsToTypes(fieldRef, briefDecls);
 
-        return It.cnc(propDocTs, magicPropTs, declTypes);
+        return It.cnc(dynamicPropTs, magicPropTs, declTypes);
     }
 }
