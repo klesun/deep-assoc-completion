@@ -7,6 +7,7 @@ import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.completion_providers.ArrFuncRefNamePvdr;
+import org.klesun.deep_assoc_completion.completion_providers.ArrayColumnPvdr;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepKeysGoToDecl;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepObjMemberGoToDecl;
@@ -31,8 +32,9 @@ public class MainGoToDecl implements GotoDeclarationHandler {
     private It<? extends PsiElement> resolveDeclPsis(@NotNull PsiElement psiElement, int mouseOffset, FuncCtx funcCtx)
     {
         return It.cnc(non()
-            , DeepKeysGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx).map(a -> a)
-            , DeepObjMemberGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx).map(a -> a)
+            , DeepKeysGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
+            , DeepObjMemberGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
+            , ArrayColumnPvdr.resolveDeclPsis(psiElement, mouseOffset)
             , opt(psiElement.getParent()) // [self::class, 'soSomeStuff']
                 .cst(StringLiteralExpressionImpl.class)
                 .fap(literal -> ArrFuncRefNamePvdr.resolve(literal, true)

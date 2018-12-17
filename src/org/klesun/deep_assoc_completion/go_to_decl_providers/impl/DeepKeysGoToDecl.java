@@ -93,7 +93,7 @@ public class DeepKeysGoToDecl extends Lang
             .fap(tag -> new DocParamRes(exprCtx).resolve(tag));
     }
 
-    public static It<? extends PsiElement> resolveDeclPsis(@NotNull PsiElement psiElement, int mouseOffset, FuncCtx funcCtx)
+    public static It<PsiElement> resolveDeclPsis(@NotNull PsiElement psiElement, int mouseOffset, FuncCtx funcCtx)
     {
         return It.frs(
             () -> It.cnc(

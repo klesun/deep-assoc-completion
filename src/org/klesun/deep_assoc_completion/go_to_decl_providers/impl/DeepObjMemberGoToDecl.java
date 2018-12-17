@@ -31,7 +31,7 @@ public class DeepObjMemberGoToDecl extends Lang
         ).fap(a -> a).unq();
     }
 
-    public static It<? extends PsiElement> resolveDeclPsis(@NotNull PsiElement leaf, int mouseOffset, FuncCtx funcCtx)
+    public static It<PsiElement> resolveDeclPsis(@NotNull PsiElement leaf, int mouseOffset, FuncCtx funcCtx)
     {
         return opt(leaf.getParent())
             .fop(toCast(MemberReference.class))
@@ -47,6 +47,6 @@ public class DeepObjMemberGoToDecl extends Lang
                         .flt(propt -> Objects.equals(propt.stringValue, mem.getName()))
                         .map(prop -> prop.definition)
                 ).fap(a -> a))
-            );
+            ).map(a -> a);
     }
 }

@@ -36,7 +36,7 @@ import java.util.Set;
 /**
  * go to declaration functionality for key name in `array_column($segments, 'segmentNumber')`
  */
-public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters> implements GotoDeclarationHandler
+public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
 {
     private static LookupElementBuilder makeLookupBase(String keyName, String type)
     {
@@ -79,10 +79,10 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters> im
             .fap(tit -> Mt.getElSt(tit)));
     }
 
-    private It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup, Editor editor)
+    private static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
         SearchContext search = new SearchContext(lit.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
+            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
         return Opt.fst(
@@ -93,55 +93,25 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters> im
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        long startTime = System.nanoTime();
         It<DeepType> tit = opt(parameters.getPosition().getParent())
             .fop(toCast(StringLiteralExpression.class))
-            .fap(lit -> resolve(lit, parameters.isAutoPopup(), parameters.getEditor()));
+            .fap(lit -> resolve(lit, parameters.isAutoPopup()));
 
         makeOptions(tit).fch(result::addElement);
-        long elapsed = System.nanoTime() - startTime;
     }
 
     // ================================
     //  GotoDeclarationHandler part follows
     // ================================
 
-    // just treating a symptom. i dunno why duplicates appear - they should not
-    private static void removeDuplicates(List<PsiElement> psiTargets)
+    public static It<PsiElement> resolveDeclPsis(@NotNull PsiElement psiElement, int mouseOffset)
     {
-        Set<PsiElement> fingerprints = new HashSet<>();
-        int size = psiTargets.size();
-        for (int k = size - 1; k >= 0; --k) {
-            if (fingerprints.contains(psiTargets.get(k))) {
-                psiTargets.remove(k);
-            }
-            fingerprints.add(psiTargets.get(k));
-        }
-    }
-
-    @Nullable
-    @Override
-    public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
-    {
-        L<PsiElement> psiTargets = opt(psiElement)
-            .map(psi -> psi.getParent())
+        return opt(psiElement.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
-            .fap(literal -> resolve(literal, false, editor)
+            .fap(literal -> resolve(literal, false)
                 .fap(arrayType -> arrayType.keys)
                 .fap(k -> k.keyType.getTypes.get())
                 .flt(kt -> literal.getContents().equals(kt.stringValue)))
-            .map(t -> t.definition)
-            .arr();
-
-        removeDuplicates(psiTargets);
-
-        return psiTargets.toArray(new PsiElement[psiTargets.size()]);
-    }
-
-    @Nullable
-    @Override
-    public String getActionText(DataContext dataContext) {
-        // dunno what this does
-        return null;
+            .map(t -> t.definition);
     }
 }
