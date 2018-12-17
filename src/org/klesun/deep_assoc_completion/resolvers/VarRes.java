@@ -245,28 +245,28 @@ public class VarRes
         return !filtered.isEmpty();
     }
 
-    public It<DeepType> resolve(Variable variable)
+    public It<DeepType> resolve(Variable caretVar)
     {
-        It<PsiElement> references = findDeclarations(variable)
-            .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable))
+        It<PsiElement> references = findDeclarations(caretVar)
+            .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, caretVar))
             ;
 
         // @var docs are a special case since they give type
         // info from any position (above/below/right of/left of the var declaration)
-        It<DeepType> docTypes = getDocType(variable);
-        Opt<Function> caretScope = Tls.findParent(variable, Function.class, a -> true)
-            .fop(func -> variable.getParent() instanceof PhpUseList
+        It<DeepType> docTypes = getDocType(caretVar);
+        Opt<Function> caretScope = Tls.findParent(caretVar, Function.class, a -> true)
+            .fop(func -> caretVar.getParent() instanceof PhpUseList
                 ? Tls.findParent(func, Function.class, a -> true) : som(func));
-        Opt<PsiFile> caretFile = opt(variable.getContainingFile());
+        Opt<PsiFile> caretFile = opt(caretVar.getContainingFile());
 
         L<Assign> asses = references
             .fap(refPsi -> {
                 Opt<Function> declScope = Tls.findParent(refPsi, Function.class, a -> true);
                 Opt<PsiFile> declFile = opt(refPsi.getContainingFile());
-                if (declFile.equals(caretFile) && !declScope.equals(caretScope)) {
+                if (declFile.equals(caretFile) && !declScope.equals(caretScope) && ctx.getClosureVars().has()) {
                     return non(); // refPsi is outside the function, a closure, handled manually
                 }
-                return resolveRef(refPsi, ScopeFinder.didSurelyHappen(refPsi, variable));
+                return resolveRef(refPsi, ScopeFinder.didSurelyHappen(refPsi, caretVar));
             })
             .arr();
 
@@ -282,13 +282,13 @@ public class VarRes
             asses = asses.sub(lastDeclPos);
         }
 
-        DeepType typeFromIdea = new DeepType(variable);
-        It<DeepType> thisType = opt(variable)
+        DeepType typeFromIdea = new DeepType(caretVar);
+        It<DeepType> thisType = opt(caretVar)
             .flt(vari -> vari.getText().equals("$this"))
             .fap(vari -> ctx.getThisType());
 
         It<DeepType> closureType = ctx.getClosureVars().itr()
-            .flt(t2 -> t2.a.equals(variable.getName()))
+            .flt(t2 -> t2.a.equals(caretVar.getName()))
             .fap(t2 -> t2.b.get());
 
         return It.cnc(

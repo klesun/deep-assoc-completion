@@ -1073,7 +1073,7 @@ class ExactKeysUnitTest
         $invoices[0]['invoiceNumber'];
         $numToInv = array_combine(array_column($invoices, 'ticketNumber'), $invoices);
         return array_map(function($ticket)use($numToInv){
-            $numToInv[0]['invoiceNumber'];
+            $numToInv['0123456789012']['invoiceNumber'];
             $ticket['ticketInvoiceInfo'] = $numToInv[$ticket['ticketNumber']] ?? null;
             $ticket['ticketInvoiceInfo'][''];
             return $ticket;
