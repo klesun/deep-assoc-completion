@@ -149,7 +149,7 @@ public class ArgRes extends Lang
     {
         return Tls.cast(MethodImpl.class, func)
             // if caret is inside this function, when passed args are unknown
-            .flt(a -> !trace.func().hasArgs())
+            .flt(a -> !trace.func().areArgsKnown())
             .flt(a -> func.getParameters().length > 0)
             .fap(meth -> {
                 PsiFile file = func.getContainingFile();
@@ -254,7 +254,7 @@ public class ArgRes extends Lang
                     .fap(xpr -> trace.subCtxEmpty().findExprType(xpr))
             ));
         It<DeepType> genericTit = It();
-        if (!trace.func().hasArgs()) {
+        if (!trace.func().areArgsKnown()) {
             // passed args not known - if caret was inside this function
             genericTit = It(peekOutside(param));
         } else {

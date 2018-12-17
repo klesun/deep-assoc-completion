@@ -223,10 +223,17 @@ public class FuncCtx extends Lang implements IFuncCtx
         return closCtx;
     }
 
+    /** will return false if function was called with 0 arguments or args unknown */
     public boolean hasArgs()
     {
         // this probably must also include clsIdeaType.has()...
         return argGetters.size() > 0 || instGetter.has();
+    }
+
+    /** will return true if function was called with 0 arguments */
+    public boolean areArgsKnown()
+    {
+        return !argPsiType.equals(EArgPsiType.NONE);
     }
 
     public SearchContext getSearch()
