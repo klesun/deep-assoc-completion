@@ -92,7 +92,7 @@ public class DeepKeysCbtr extends CompletionContributor
                 .withSuperParent(1, StringLiteralExpression.class)
                 .withSuperParent(3, ArrayCreationExpression.class)
                 ,
-            new ArrFuncRefPvdr()
+            new ArrFuncRefNamePvdr()
         );
         // associative key
         this.extend(

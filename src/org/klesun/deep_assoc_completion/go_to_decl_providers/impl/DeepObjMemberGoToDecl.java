@@ -1,4 +1,4 @@
-package org.klesun.deep_assoc_completion.go_to_decl_providers;
+package org.klesun.deep_assoc_completion.go_to_decl_providers.impl;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.MemberReference;

@@ -6,6 +6,8 @@ import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
+import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepKeysGoToDecl;
+import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepObjMemberGoToDecl;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.lang.It;

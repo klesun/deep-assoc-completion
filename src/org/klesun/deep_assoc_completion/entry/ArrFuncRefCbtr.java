@@ -23,7 +23,8 @@ import static org.klesun.lang.Lang.*;
  * [$this, 'doSomething']
  * [$someObj, 'doSomething']
  *
- * phpstorm's contributor only links them when array is passed to
+ * phpstorm's contributor only links them when array is passed to the
+ * function, but not when you have array of callbacks for example
  */
 public class ArrFuncRefCbtr extends PsiReferenceContributor
 {
