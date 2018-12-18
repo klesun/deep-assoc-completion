@@ -41,7 +41,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     {
         LookupElementBuilder base = LookupElementBuilder.create(member.getName())
             .bold()
-            .withIcon(DeepKeysPvdr.getIcon())
+            .withIcon(AssocKeyPvdr.getIcon())
             .withTypeText(member.getType().filterUnknown().toString());
 
         return Opt.fst(
@@ -65,7 +65,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             .fap(prop -> prop.keyType.getNames()
                 .map(name -> LookupElementBuilder.create(name)
                     .bold()
-                    .withIcon(DeepKeysPvdr.getIcon())
+                    .withIcon(AssocKeyPvdr.getIcon())
                     .withTypeText(prop.getBriefTypes().wap(its -> {
                         PhpType ideaType = new PhpType();
                         its.fch(ideaType::add);
@@ -89,7 +89,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         return opt(t.stringValue)
             .map(propName -> LookupElementBuilder.create(propName)
                 .bold()
-                .withIcon(DeepKeysPvdr.getIcon())
+                .withIcon(AssocKeyPvdr.getIcon())
                 .withTypeText("from __get()"));
     }
 
@@ -120,7 +120,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             builtIns.add(otherSourceResult.getLookupElement());
         });
         SearchContext search = new SearchContext(parameters)
-            .setDepth(DeepKeysPvdr.getMaxDepth(parameters));
+            .setDepth(AssocKeyPvdr.getMaxDepth(parameters));
 
         Dict<Long> times = new Dict<>(list());
         It<? extends LookupElement> options = It(list());

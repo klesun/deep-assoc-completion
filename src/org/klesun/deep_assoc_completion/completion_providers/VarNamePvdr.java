@@ -42,7 +42,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
     {
         return LookupElementBuilder.create(keyName)
             .bold()
-            .withIcon(DeepKeysPvdr.getIcon())
+            .withIcon(AssocKeyPvdr.getIcon())
             .withTypeText(type);
     }
 
@@ -117,7 +117,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
     private It<DeepType> resolve(VariableImpl caretVar, boolean isAutoPopup, Editor editor)
     {
         SearchContext search = new SearchContext(caretVar.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
+            .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
         if (isAutoPopup) {
             // it would be sad if it deeply scanned global
             // vars in whole project when you just type a var

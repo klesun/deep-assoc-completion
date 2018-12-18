@@ -25,7 +25,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters>
     {
         return LookupElementBuilder.create(keyName)
             .bold()
-            .withIcon(DeepKeysPvdr.getIcon())
+            .withIcon(AssocKeyPvdr.getIcon())
             .withTypeText(type);
     }
 
@@ -117,7 +117,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters>
     public static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
         SearchContext search = new SearchContext(lit.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
+            .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 

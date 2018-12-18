@@ -38,7 +38,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         return keyEntry.keyType.getNames()
             .map(name -> LookupElementBuilder.create(name)
                 .bold()
-                .withIcon(DeepKeysPvdr.getIcon())
+                .withIcon(AssocKeyPvdr.getIcon())
                 .withTypeText(type));
     }
 
@@ -61,7 +61,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     private static Mt resolve(ArrayCreationExpression lit, boolean isAutoPopup)
     {
         SearchContext search = new SearchContext(lit.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
+            .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 

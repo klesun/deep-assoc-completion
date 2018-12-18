@@ -22,9 +22,9 @@ import java.util.*;
 import static org.klesun.lang.Lang.*;
 
 /**
- * contains the completion logic
+ * $arr[''];
  */
-public class DeepKeysPvdr extends CompletionProvider<CompletionParameters>
+public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 {
     final private static int BRIEF_VALUE_MAX_LEN = 50;
 

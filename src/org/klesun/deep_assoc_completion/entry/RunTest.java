@@ -11,9 +11,8 @@ import com.intellij.ui.awt.RelativePoint;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import org.apache.commons.collections.CollectionUtils;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
+import org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
@@ -56,7 +55,7 @@ public class RunTest extends AnAction
             .fop(toCast(PhpExpression.class))
             .fap(retVal -> {
                 SearchContext search = new SearchContext(retVal.getProject())
-                    .setDepth(DeepKeysPvdr.getMaxDepth(false, retVal.getProject()));
+                    .setDepth(AssocKeyPvdr.getMaxDepth(false, retVal.getProject()));
                 FuncCtx funcCtx = new FuncCtx(search);
                 return funcCtx.findExprType(retVal);
             })

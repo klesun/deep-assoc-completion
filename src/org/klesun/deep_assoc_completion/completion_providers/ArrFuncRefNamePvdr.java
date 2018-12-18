@@ -5,20 +5,17 @@ import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.ExprCtx;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.It;
-import org.klesun.lang.L;
 
 import static org.klesun.lang.Lang.*;
 
@@ -36,7 +33,7 @@ public class ArrFuncRefNamePvdr extends CompletionProvider<CompletionParameters>
     {
         return LookupElementBuilder.create(method.getName())
             .bold()
-            .withIcon(DeepKeysPvdr.getIcon())
+            .withIcon(AssocKeyPvdr.getIcon())
             .withTypeText(method.getLocalType(false).filterUnknown().toString());
     }
 
@@ -44,7 +41,7 @@ public class ArrFuncRefNamePvdr extends CompletionProvider<CompletionParameters>
     public static It<Method> resolve(StringLiteralExpression literal, boolean isAutoPopup)
     {
         SearchContext search = new SearchContext(literal.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, literal.getProject()));
+            .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, literal.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
         return opt(literal.getParent())
             .map(arrVal -> arrVal.getParent())

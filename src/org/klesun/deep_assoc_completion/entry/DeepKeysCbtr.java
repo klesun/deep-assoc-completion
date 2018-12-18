@@ -33,7 +33,7 @@ public class DeepKeysCbtr extends CompletionContributor
             PlatformPatterns.psiElement()
                 .withSuperParent(1, StringLiteralExpression.class)
                 .withSuperParent(2, ArrayIndex.class),
-            new DeepKeysPvdr()
+            new AssocKeyPvdr()
         );
         // $arr[];
         this.extend(
@@ -42,7 +42,7 @@ public class DeepKeysCbtr extends CompletionContributor
                 .withSuperParent(1, ConstantReference.class) // I dunno why
                 .withSuperParent(2, ArrayIndex.class)
                 ,
-            new DeepKeysPvdr()
+            new AssocKeyPvdr()
         );
         // @param $a = SomeClass::
         this.extend(

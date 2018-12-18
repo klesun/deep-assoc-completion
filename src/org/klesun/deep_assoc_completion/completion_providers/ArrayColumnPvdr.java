@@ -3,11 +3,7 @@ package org.klesun.deep_assoc_completion.completion_providers;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
-import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
-import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
@@ -15,13 +11,11 @@ import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
 import org.klesun.lang.It;
-import org.klesun.lang.L;
 
 import static org.klesun.lang.Lang.*;
 
@@ -29,7 +23,6 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -42,7 +35,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
     {
         return LookupElementBuilder.create(keyName)
             .bold()
-            .withIcon(DeepKeysPvdr.getIcon())
+            .withIcon(AssocKeyPvdr.getIcon())
             .withTypeText(type);
     }
 
@@ -82,7 +75,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
     private static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
         SearchContext search = new SearchContext(lit.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
+            .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
         return Opt.fst(

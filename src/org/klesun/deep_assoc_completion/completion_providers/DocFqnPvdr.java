@@ -23,7 +23,7 @@ import org.klesun.lang.Tls;
 
 import java.util.HashSet;
 
-import static org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr.getMaxDepth;
+import static org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr.getMaxDepth;
 import static org.klesun.lang.Lang.*;
 
 /**
@@ -93,12 +93,12 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                 extractTypedFqnPart(expr, tagValue.getProject(), tagValue)
                     .fap(options -> options)
                     .map((lookup) -> LookupElementBuilder.create(lookup)
-                        .withIcon(DeepKeysPvdr.getIcon())),
+                        .withIcon(AssocKeyPvdr.getIcon())),
                 // assoc array completion
                 opt(PsiFileFactory.getInstance(tagValue.getProject()).createFileFromText(PhpLanguage.INSTANCE, prefix + expr + ";"))
                     .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))
-                    .map(psi -> DeepKeysPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::new))
-                    .fap(mt -> mt.getKeyNames().map(k -> DeepKeysPvdr.makeFullLookup(mt, k, new HashSet<>())))
+                    .map(psi -> AssocKeyPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::new))
+                    .fap(mt -> mt.getKeyNames().map(k -> AssocKeyPvdr.makeFullLookup(mt, k, new HashSet<>())))
             ));
     }
 

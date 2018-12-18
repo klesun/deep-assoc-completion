@@ -7,7 +7,7 @@ import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.completion_providers.*;
-import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepKeysGoToDecl;
+import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.AssocKeyGoToDecl;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepObjMemberGoToDecl;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.SearchContext;
@@ -30,7 +30,7 @@ public class MainGoToDecl implements GotoDeclarationHandler {
     private It<? extends PsiElement> resolveDeclPsis(@NotNull PsiElement psiElement, int mouseOffset, FuncCtx funcCtx)
     {
         return It.cnc(non()
-            , DeepKeysGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
+            , AssocKeyGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
             , DeepObjMemberGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
             , ArrayColumnPvdr.resolveDeclPsis(psiElement, mouseOffset)
             , ArrayKeyExistsPvdr.resolveDeclPsis(psiElement, mouseOffset)
@@ -68,7 +68,7 @@ public class MainGoToDecl implements GotoDeclarationHandler {
         It<PsiElement> psiit = opt(nullPsi)
             .fap(psiElement -> {
                 SearchContext search = new SearchContext(psiElement.getProject())
-                    .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
+                    .setDepth(AssocKeyPvdr.getMaxDepth(false, psiElement.getProject()));
                 FuncCtx funcCtx = new FuncCtx(search);
                 return resolveDeclPsis(psiElement, mouseOffset, funcCtx)
                     .map(psi -> truncateOnLineBreak(psi));

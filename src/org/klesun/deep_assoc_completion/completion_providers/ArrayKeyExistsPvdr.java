@@ -26,7 +26,7 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
     {
         return LookupElementBuilder.create(keyName)
                 .bold()
-                .withIcon(DeepKeysPvdr.getIcon())
+                .withIcon(AssocKeyPvdr.getIcon())
                 .withTypeText(type);
     }
 
@@ -67,7 +67,7 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
     private static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
         SearchContext search = new SearchContext(lit.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
+            .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 
         return It.cnc(

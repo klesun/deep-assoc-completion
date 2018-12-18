@@ -12,7 +12,7 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
+import org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
@@ -23,7 +23,7 @@ import java.util.*;
 /**
  * go to declaration functionality for associative array keys
  */
-public class DeepKeysGoToDecl extends Lang
+public class AssocKeyGoToDecl extends Lang
 {
     private static It<PsiElement> resolveAssocKey(PsiElement psiElement, FuncCtx funcCtx)
     {
@@ -84,7 +84,7 @@ public class DeepKeysGoToDecl extends Lang
     private static It<DeepType> resolveDocResult(PsiElement psiElement)
     {
         SearchContext search = new SearchContext(psiElement.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(false, psiElement.getProject()));
+            .setDepth(AssocKeyPvdr.getMaxDepth(false, psiElement.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, psiElement, 0);
 
