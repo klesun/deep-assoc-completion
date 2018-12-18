@@ -36,12 +36,16 @@ public class MainGoToDecl implements GotoDeclarationHandler {
             , DeepKeysGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
             , DeepObjMemberGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
             , ArrayColumnPvdr.resolveDeclPsis(psiElement, mouseOffset)
-            , EqStrValsPvdr.resolveDeclPsis(psiElement, mouseOffset)
             , opt(psiElement.getParent()) // [self::class, 'soSomeStuff']
                 .cst(StringLiteralExpressionImpl.class)
-                .fap(literal -> ArrFuncRefNamePvdr.resolve(literal, true)
-                    .flt(meth -> meth.getName().equals(literal.getContents()))
-                ).map(a -> a)
+                .fap(lit -> It.cnc(It.non()
+                    , ArrFuncRefNamePvdr.resolve(lit, false)
+                        .flt(meth -> meth.getName().equals(lit.getContents()))
+                        .map(a -> a)
+                    , EqStrValsPvdr.resolve(lit, false)
+                        .flt(t -> lit.getContents().equals(t.stringValue))
+                        .map(t -> t.definition)
+                ))
         );
     }
 

@@ -6,11 +6,9 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
-import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
@@ -116,7 +114,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters>
                 .fap(t -> Mt.getElSt(t)));
     }
 
-    private static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
+    public static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
         SearchContext search = new SearchContext(lit.getProject())
             .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
@@ -146,18 +144,5 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters>
         if (seconds > 0.1) {
             System.out.println("resolved str values in " + seconds + " seconds");
         }
-    }
-
-    // ================================
-    //  GotoDeclarationHandler part follows
-    // ================================
-
-    public static It<PsiElement> resolveDeclPsis(@NotNull PsiElement psi, int mouseOffset)
-    {
-        return opt(psi.getParent())
-            .fop(toCast(StringLiteralExpressionImpl.class))
-            .fap(lit -> resolve(lit, false)
-                .flt(t -> lit.getContents().equals(t.stringValue))
-                .map(t -> t.definition));
     }
 }
