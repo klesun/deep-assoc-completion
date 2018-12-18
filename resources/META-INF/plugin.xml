@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.12.12.001</version>
+    <version>2018.12.18.001</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,11 +37,11 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Enable brief value preview back, freezes issue was solved by recursion detection</li>
-        <li>Fix: Go To the original string literal, not to a var in which it was stored</li>
-        <li>Optimize: Recursion detection in expression chain is back. Tests run 2 times faster, yay</li>
-        <li>Optimize: Return iterator in array_combine resolution instead of resolving full type at once</li>
-        <li>Optimize: Do not iterate over _all_ results to just get the reduced IDEA type at once - return iterator instead</li>
+        <li>Make all GoTo providers navigate instantly to the first found definition on first _Ctrl + Click_ instead of wasting dozens of seconds looking for _all_ definitions (_Ctrl + Click_ same key again if you need all of them)</li>
+        <li>Fix: do not miss completion from closure vars _inside the function itself_</li>
+        <li>Show transpiled js code in a scratch file (Instead of just printing it in STDOUT)</li>
+        <li>Optimize: do not treat function calls with 0 passed arguments as if arguments were unknown</li>
+        <li>Major folder structure refactoring (may cause unexpected bugs, should not, but just in case listing it here)</li>
     </ul>
     ]]>
     </change-notes>
