@@ -6,10 +6,7 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.klesun.deep_assoc_completion.completion_providers.ArrFuncRefNamePvdr;
-import org.klesun.deep_assoc_completion.completion_providers.ArrayColumnPvdr;
-import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
-import org.klesun.deep_assoc_completion.completion_providers.EqStrValsPvdr;
+import org.klesun.deep_assoc_completion.completion_providers.*;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepKeysGoToDecl;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepObjMemberGoToDecl;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
@@ -36,6 +33,7 @@ public class MainGoToDecl implements GotoDeclarationHandler {
             , DeepKeysGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
             , DeepObjMemberGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
             , ArrayColumnPvdr.resolveDeclPsis(psiElement, mouseOffset)
+            , ArrayKeyExistsPvdr.resolveDeclPsis(psiElement, mouseOffset)
             , opt(psiElement.getParent()) // [self::class, 'soSomeStuff']
                 .cst(StringLiteralExpressionImpl.class)
                 .fap(lit -> It.cnc(It.non()
