@@ -1,14 +1,17 @@
-package org.klesun.deep_assoc_completion;
+package org.klesun.deep_assoc_completion.resolvers;
 
-import com.intellij.psi.*;
-import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.AssignmentExpression;
+import com.jetbrains.php.lang.psi.elements.ClassConstantReference;
+import com.jetbrains.php.lang.psi.elements.ParenthesizedExpression;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.helpers.ExprCtx;
+import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.IExprCtx;
-import org.klesun.deep_assoc_completion.resolvers.*;
-import org.klesun.lang.*;
+import org.klesun.lang.It;
+import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 import static org.klesun.lang.Lang.*;
 
@@ -17,7 +20,7 @@ import static org.klesun.lang.Lang.*;
  * Unlike original jetbrain's type resolver, this
  * includes associative array key information
  */
-public class DeepTypeResolver
+public class MainRes
 {
     private static It<DeepType> resolveClsConst(ClassConstantReference cst, IExprCtx ctx)
     {
