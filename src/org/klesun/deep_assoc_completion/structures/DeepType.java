@@ -66,7 +66,7 @@ public class DeepType extends Lang
         this(definition, Tls.getIdeaType(definition));
     }
 
-    DeepType(StringLiteralExpressionImpl lit)
+    public DeepType(StringLiteralExpressionImpl lit)
     {
         this(lit, PhpType.STRING, lit.getContents());
     }

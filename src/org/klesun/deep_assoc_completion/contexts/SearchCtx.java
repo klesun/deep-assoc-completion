@@ -6,9 +6,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
-import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.MainRes;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
+import org.klesun.deep_assoc_completion.resolvers.MainRes;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
 
 import java.util.Collection;
@@ -198,7 +198,7 @@ public class SearchCtx extends Lang
                 putToCache(exprCtx.func(), expr, list());
             }
 
-            It<DeepType> tit = MainRes.resolveIn(expr, exprCtx)
+            It<DeepType> tit = new MainRes(exprCtx).resolve(expr)
                 //.lmt(1000) // .lmt() is just a safety measure, it should not be needed if everything works properly
                 .unq() // .unq() before caching is important since types taken from cache would grow in count exponentially otherwise
                 ;

@@ -1,4 +1,4 @@
-package org.klesun.deep_assoc_completion.structures;
+package org.klesun.deep_assoc_completion.resolvers;
 
 import com.jetbrains.php.lang.psi.elements.AssignmentExpression;
 import com.jetbrains.php.lang.psi.elements.ClassConstantReference;
@@ -6,12 +6,11 @@ import com.jetbrains.php.lang.psi.elements.ParenthesizedExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.resolvers.*;
-import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
-import org.klesun.lang.Opt;
+import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
 
 import static org.klesun.lang.Lang.*;
@@ -20,21 +19,22 @@ import static org.klesun.lang.Lang.*;
  * Provides mechanism to determine expression type.
  * Unlike original jetbrain's type resolver, this
  * includes associative array key information
- *
- * TODO: move to /resolvers/
- *  for some reason tests fail when I put this class in a separate module
- *  from DeepType. Could it be there is a reflection somewhere?
  */
-public class MainRes
-{
-    private static It<DeepType> resolveClsConst(ClassConstantReference cst, IExprCtx ctx)
+public class MainRes {
+    final private IExprCtx ctx;
+
+    public MainRes(IExprCtx ctx)
+    {
+        this.ctx = ctx;
+    }
+    private It<DeepType> resolveClsConst(ClassConstantReference cst)
     {
         if ("class".equals(cst.getName())) {
             return opt(cst.getClassReference())
                 .fap(cls -> new MiscRes(ctx).resolveClassReference(cst, cls))
                 .map(ideaType -> DeepType.makeClsRef(cst, ideaType));
         } else {
-            return It(cst.multiResolve(false))
+            return Lang.It(cst.multiResolve(false))
                 .map(ref -> ref.getElement())
                 .fop(toCast(ClassConstImpl.class))
                 .map(a -> a.getDefaultValue())
@@ -43,9 +43,9 @@ public class MainRes
         }
     }
 
-    public static It<DeepType> resolveIn(PhpExpression expr, IExprCtx ctx)
+    public It<DeepType> resolve(PhpExpression expr)
     {
-        It<DeepType> tit = It.frs(() -> It.non()
+        return It.frs(() -> It.non()
             , () -> Tls.cast(VariableImpl.class, expr)
                 .fap(v -> new VarRes(ctx).resolve(v))
             , () -> Tls.cast(ArrayCreationExpressionImpl.class, expr)
@@ -54,8 +54,6 @@ public class MainRes
                 .fap(call -> new FuncCallRes(ctx).resolve(call))
             , () -> Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .fap(keyAccess -> new ArrAccRes(ctx).resolve(keyAccess))
-            , () -> Tls.cast(StringLiteralExpressionImpl.class, expr)
-                .fap(lit -> list(new DeepType(lit)))
             , () -> Tls.cast(StringLiteralExpressionImpl.class, expr)
                 .fap(lit -> list(new DeepType(lit)))
             , () -> Tls.cast(ConstantReferenceImpl.class, expr)
@@ -104,7 +102,7 @@ public class MainRes
                     return clsTit;
                 })
             , () -> Tls.cast(ClassConstantReferenceImpl.class, expr)
-                .fap(cst -> resolveClsConst(cst, ctx))
+                .fap(cst -> resolveClsConst(cst))
             , () -> Tls.cast(PhpExpressionImpl.class, expr)
                 .map(v -> v.getFirstChild())
                 .fop(toCast(FunctionImpl.class))
@@ -117,19 +115,10 @@ public class MainRes
             , () -> new MiscRes(ctx).resolve(expr)
             , () -> Tls.cast(MethodReferenceImpl.class, expr)
                 .fap(call -> new MethCallRes(ctx).resolveCall(call))
-        );
-        if (tit.has()) {
-            return tit;
-        }
-
-        return Opt.fst(
-            () -> opt(null) // for coma formattingx
-            // I can't understand why moving this to the list above causes option chain test to fail
             , () -> Tls.cast(FieldReferenceImpl.class, expr)
-                .map(fieldRef -> new FieldRes(ctx).resolve(fieldRef))
-
+                .fap(fieldRef -> new FieldRes(ctx).resolve(fieldRef))
             , () -> Tls.cast(PhpExpression.class, expr)
-                .map(t -> list(new DeepType(t)))
-        ).fap(a -> a);
+                .fap(t -> list(new DeepType(t)))
+        );
     }
 }
