@@ -1,4 +1,4 @@
-package org.klesun.deep_assoc_completion.resolvers;
+package org.klesun.deep_assoc_completion.structures;
 
 import com.jetbrains.php.lang.psi.elements.AssignmentExpression;
 import com.jetbrains.php.lang.psi.elements.ClassConstantReference;
@@ -6,6 +6,7 @@ import com.jetbrains.php.lang.psi.elements.ParenthesizedExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.resolvers.*;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
@@ -19,6 +20,10 @@ import static org.klesun.lang.Lang.*;
  * Provides mechanism to determine expression type.
  * Unlike original jetbrain's type resolver, this
  * includes associative array key information
+ *
+ * TODO: move to /resolvers/
+ *  for some reason tests fail when I put this class in a separate module
+ *  from DeepType. Could it be there is a reflection somewhere?
  */
 public class MainRes
 {

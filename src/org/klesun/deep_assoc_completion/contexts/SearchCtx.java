@@ -7,7 +7,7 @@ import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.resolvers.MainRes;
+import org.klesun.deep_assoc_completion.structures.MainRes;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.lang.*;
 
