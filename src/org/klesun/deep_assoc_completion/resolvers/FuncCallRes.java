@@ -10,9 +10,13 @@ import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.ScopeFinder;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.contexts.IFuncCtx;
+import org.klesun.deep_assoc_completion.structures.ArgOrder;
+import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.helpers.ScopeFinder;
 import org.klesun.deep_assoc_completion.helpers.*;
+import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
 public class FuncCallRes extends Lang

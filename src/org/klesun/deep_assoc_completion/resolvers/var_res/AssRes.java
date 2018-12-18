@@ -5,9 +5,11 @@ import com.jetbrains.php.lang.psi.elements.ArrayAccessExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.Assign;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.structures.Assign;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
+import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
 import java.util.List;

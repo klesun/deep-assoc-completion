@@ -1,4 +1,4 @@
-package org.klesun.deep_assoc_completion;
+package org.klesun.deep_assoc_completion.structures;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.NewExpression;
@@ -6,6 +6,7 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.lang.*;
 

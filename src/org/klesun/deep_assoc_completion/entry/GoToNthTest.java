@@ -13,6 +13,9 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
 import com.jetbrains.php.lang.psi.elements.Method;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.lang.L;
@@ -52,7 +55,7 @@ public class GoToNthTest extends AnAction
 
     public void actionPerformed(AnActionEvent e)
     {
-        SearchContext search = new SearchContext(opt(e.getData(LangDataKeys.EDITOR)).map(ed -> ed.getProject()).def(null))
+        SearchCtx search = new SearchCtx(opt(e.getData(LangDataKeys.EDITOR)).map(ed -> ed.getProject()).def(null))
             .setDepth(20);
         FuncCtx funcCtx = new FuncCtx(search);
         Opt<PsiFile> psiFileOpt = opt(e.getData(LangDataKeys.PSI_FILE));

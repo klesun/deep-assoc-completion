@@ -1,4 +1,4 @@
-package org.klesun.deep_assoc_completion;
+package org.klesun.deep_assoc_completion.helpers;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;

@@ -6,7 +6,7 @@ import com.jetbrains.php.lang.psi.elements.PhpClass;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.completion_providers.ObjMemberPvdr;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.It;

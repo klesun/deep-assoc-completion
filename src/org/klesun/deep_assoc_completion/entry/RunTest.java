@@ -11,11 +11,11 @@ import com.intellij.ui.awt.RelativePoint;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
@@ -54,7 +54,7 @@ public class RunTest extends AnAction
             .map(ret -> ret.getArgument())
             .fop(toCast(PhpExpression.class))
             .fap(retVal -> {
-                SearchContext search = new SearchContext(retVal.getProject())
+                SearchCtx search = new SearchCtx(retVal.getProject())
                     .setDepth(AssocKeyPvdr.getMaxDepth(false, retVal.getProject()));
                 FuncCtx funcCtx = new FuncCtx(search);
                 return funcCtx.findExprType(retVal);

@@ -4,9 +4,14 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
+import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
 import java.util.HashSet;
@@ -294,7 +299,7 @@ public class KeyUsageResolver extends Lang
 
     public Mt resolve(ArrayCreationExpression arrCtor)
     {
-        SearchContext fakeSearch = new SearchContext(arrCtor.getProject());
+        SearchCtx fakeSearch = new SearchCtx(arrCtor.getProject());
         FuncCtx funcCtx = new FuncCtx(fakeSearch);
         IExprCtx fakeCtx = new ExprCtx(funcCtx, arrCtor, 0);
 

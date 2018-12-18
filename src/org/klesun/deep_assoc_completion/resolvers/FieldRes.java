@@ -6,11 +6,12 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.*;
-import org.klesun.deep_assoc_completion.helpers.IExprCtx;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
+import org.klesun.deep_assoc_completion.structures.Assign;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
 
 import java.util.Collection;

@@ -1,4 +1,4 @@
-package org.klesun.deep_assoc_completion.helpers;
+package org.klesun.deep_assoc_completion.contexts;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDirectory;
@@ -7,7 +7,7 @@ import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
 
 import java.util.Collection;

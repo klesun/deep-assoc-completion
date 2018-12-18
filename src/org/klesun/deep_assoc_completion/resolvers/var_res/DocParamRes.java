@@ -12,10 +12,8 @@ import com.jetbrains.php.lang.psi.elements.GroupStatement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.Statement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.ExprCtx;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.IExprCtx;
+import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 

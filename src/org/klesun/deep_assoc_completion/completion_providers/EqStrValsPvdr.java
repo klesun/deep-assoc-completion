@@ -10,7 +10,11 @@ import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.lang.It;
@@ -116,7 +120,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters>
 
     public static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
-        SearchContext search = new SearchContext(lit.getProject())
+        SearchCtx search = new SearchCtx(lit.getProject())
             .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);

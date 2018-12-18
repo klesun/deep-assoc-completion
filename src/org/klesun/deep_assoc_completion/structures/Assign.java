@@ -1,9 +1,7 @@
-package org.klesun.deep_assoc_completion;
+package org.klesun.deep_assoc_completion.structures;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.helpers.KeyType;
-import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.It;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;

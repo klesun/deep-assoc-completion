@@ -11,7 +11,11 @@ import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
@@ -69,7 +73,7 @@ public class AssocKeyGoToDecl extends Lang
                     .createFileFromText(PhpLanguage.INSTANCE, fileText);
                 int offset = mouseOffset - doc.getTextOffset() + prefix.length();
 
-                FuncCtx ctx = new FuncCtx(new SearchContext(psiElement.getProject()));
+                FuncCtx ctx = new FuncCtx(new SearchCtx(psiElement.getProject()));
                 ctx.fakeFileSource = opt(doc);
                 IExprCtx exprCtx = new ExprCtx(ctx, psiElement, 0);
 
@@ -83,7 +87,7 @@ public class AssocKeyGoToDecl extends Lang
 
     private static It<DeepType> resolveDocResult(PsiElement psiElement)
     {
-        SearchContext search = new SearchContext(psiElement.getProject())
+        SearchCtx search = new SearchCtx(psiElement.getProject())
             .setDepth(AssocKeyPvdr.getMaxDepth(false, psiElement.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, psiElement, 0);

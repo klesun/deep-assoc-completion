@@ -20,7 +20,11 @@ import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.VarRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
@@ -116,7 +120,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
     /** @return type of an associative array with vars to suggest as keys */
     private It<DeepType> resolve(VariableImpl caretVar, boolean isAutoPopup, Editor editor)
     {
-        SearchContext search = new SearchContext(caretVar.getProject())
+        SearchCtx search = new SearchCtx(caretVar.getProject())
             .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
         if (isAutoPopup) {
             // it would be sad if it deeply scanned global

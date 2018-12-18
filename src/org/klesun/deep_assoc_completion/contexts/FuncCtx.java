@@ -1,9 +1,11 @@
-package org.klesun.deep_assoc_completion.helpers;
+package org.klesun.deep_assoc_completion.contexts;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.structures.ArgOrder;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.*;
 
@@ -16,7 +18,7 @@ public class FuncCtx extends Lang implements IFuncCtx
 
     final private Opt<FuncCtx> parent;
     final public Opt<PsiElement> uniqueRef;
-    final private SearchContext search;
+    final private SearchCtx search;
     final private L<S<Mt>> argGetters;
     private L<Integer> variadicOrders = L();
     public Opt<Lang.S<Mt>> instGetter = opt(null);
@@ -29,7 +31,7 @@ public class FuncCtx extends Lang implements IFuncCtx
 
     private HashMap<Integer, Mt> cachedArgs = new HashMap<>();
 
-    public FuncCtx(SearchContext search)
+    public FuncCtx(SearchCtx search)
     {
         this.argGetters = L();
         this.search = search;
@@ -236,7 +238,7 @@ public class FuncCtx extends Lang implements IFuncCtx
         return !argPsiType.equals(EArgPsiType.NONE);
     }
 
-    public SearchContext getSearch()
+    public SearchCtx getSearch()
     {
         return search;
     }

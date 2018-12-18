@@ -1,6 +1,6 @@
 package org.klesun.lang;
 
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.lang.iterators.*;
 
 import java.util.*;
@@ -28,7 +28,7 @@ public class It<A> implements Iterable<A>
 
     public It(Iterable<A> sourceIter)
     {
-        if (SearchContext.DEBUG_DEFAULT) {
+        if (SearchCtx.DEBUG_DEFAULT) {
             createdAt = som(new Exception("here iterator was created"));
         }
         this.source = sourceIter;
@@ -80,7 +80,7 @@ public class It<A> implements Iterable<A>
             disposedAt.thn(exc::initCause);
             throw exc;
         }
-        if (SearchContext.DEBUG_DEFAULT) {
+        if (SearchCtx.DEBUG_DEFAULT) {
             disposedAt = som(new Exception());
         }
         Iterator<A> iter = getIterator();

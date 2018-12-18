@@ -762,6 +762,7 @@ class DeepKeysTest
     private static function testArrayKeysGoTo()
     {
         $arr = ['itinerary' => ['KIVKBP', 'KBPRIX'], 'paxes' => ['Vova', 'Petja']];
+        $arr[''];
         $keys = array_keys($arr);
         $newArr = [];
         foreach ($keys as $key) {

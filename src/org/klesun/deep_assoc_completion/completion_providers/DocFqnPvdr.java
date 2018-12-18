@@ -15,6 +15,10 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocReturnTag
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
@@ -81,7 +85,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
         );
     }
 
-    private It<LookupElement> parseDocValue(String docValue, SearchContext search, PsiElement tagValue, String regex)
+    private It<LookupElement> parseDocValue(String docValue, SearchCtx search, PsiElement tagValue, String regex)
     {
         FuncCtx ctx = new FuncCtx(search);
         ctx.fakeFileSource = opt(tagValue);
@@ -102,7 +106,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
             ));
     }
 
-    private It<LookupElement> parseTagValue(PsiElement tagValue, SearchContext search)
+    private It<LookupElement> parseTagValue(PsiElement tagValue, SearchCtx search)
     {
         String docValue = tagValue.getText();
         String regex = DocFqnPvdr.regex;
@@ -130,7 +134,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         int depth = getMaxDepth(parameters);
-        SearchContext search = new SearchContext(parameters).setDepth(depth);
+        SearchCtx search = new SearchCtx(parameters).setDepth(depth);
 
         opt(parameters.getPosition().getParent())
             .fap(tagValue -> parseTagValue(tagValue, search))
@@ -145,7 +149,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
             if (docTag instanceof PhpDocReturnTagImpl) {
                 regex = returnRegex;
             }
-            SearchContext search = new SearchContext(parameters).setDepth(getMaxDepth(parameters));
+            SearchCtx search = new SearchCtx(parameters).setDepth(getMaxDepth(parameters));
             parseDocValue(docTag.getTagValue(), search, docTag, regex)
                 .fch(result::addElement);
         });

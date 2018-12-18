@@ -12,9 +12,9 @@ import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.lang.It;
 import org.klesun.lang.Tls;
 
@@ -66,7 +66,7 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
 
     private static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
-        SearchContext search = new SearchContext(lit.getProject())
+        SearchCtx search = new SearchCtx(lit.getProject())
             .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
 

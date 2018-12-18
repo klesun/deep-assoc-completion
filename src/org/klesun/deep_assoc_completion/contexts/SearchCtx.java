@@ -1,4 +1,4 @@
-package org.klesun.deep_assoc_completion.helpers;
+package org.klesun.deep_assoc_completion.contexts;
 
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.openapi.project.Project;
@@ -6,7 +6,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.resolvers.MainRes;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.lang.*;
@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class SearchContext extends Lang
+public class SearchCtx extends Lang
 {
     // parametrized fields
     private long startTime = System.nanoTime();
@@ -33,29 +33,29 @@ public class SearchContext extends Lang
     final public Map<PsiFile, Collection<FieldReferenceImpl>> fileToFieldRefs = new HashMap<>();
     public boolean isMain = false;
 
-    public SearchContext(Project project)
+    public SearchCtx(Project project)
     {
         this.project = opt(project);
     }
 
-    public SearchContext(CompletionParameters parameters)
+    public SearchCtx(CompletionParameters parameters)
     {
         this(parameters.getEditor().getProject());
     }
 
-    public SearchContext setDepth(int depth)
+    public SearchCtx setDepth(int depth)
     {
         this.maxDepth = depth;
         return this;
     }
 
-    public SearchContext setTimeout(double timeout)
+    public SearchCtx setTimeout(double timeout)
     {
         this.timeout = opt(timeout);
         return this;
     }
 
-    public SearchContext setDebug(boolean debug)
+    public SearchCtx setDebug(boolean debug)
     {
         this.debug = debug;
         return this;

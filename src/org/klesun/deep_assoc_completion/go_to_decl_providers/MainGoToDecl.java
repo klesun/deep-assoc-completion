@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.completion_providers.*;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.AssocKeyGoToDecl;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepObjMemberGoToDecl;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
@@ -67,7 +67,7 @@ public class MainGoToDecl implements GotoDeclarationHandler {
         Boolean isSecondAttempt = lastCaretPsi.map(last -> last.equals(nullPsi)).def(false);
         It<PsiElement> psiit = opt(nullPsi)
             .fap(psiElement -> {
-                SearchContext search = new SearchContext(psiElement.getProject())
+                SearchCtx search = new SearchCtx(psiElement.getProject())
                     .setDepth(AssocKeyPvdr.getMaxDepth(false, psiElement.getProject()));
                 FuncCtx funcCtx = new FuncCtx(search);
                 return resolveDeclPsis(psiElement, mouseOffset, funcCtx)

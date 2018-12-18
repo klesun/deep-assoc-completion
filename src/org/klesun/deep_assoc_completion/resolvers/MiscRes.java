@@ -4,20 +4,21 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiPolyVariantReference;
-import com.intellij.psi.search.FilenameIndex;
-import com.intellij.psi.search.GlobalSearchScope;
-import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.NewExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.TernaryExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.IExprCtx;
+import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
+/**
+ * simple expressions that can be supported with
+ * just few lines of code are gathered here
+ */
 public class MiscRes extends Lang
 {
     final private IExprCtx ctx;

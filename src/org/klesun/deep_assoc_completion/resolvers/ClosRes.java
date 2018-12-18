@@ -3,8 +3,8 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
-import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.helpers.IExprCtx;
+import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 

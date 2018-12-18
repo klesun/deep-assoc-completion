@@ -15,12 +15,12 @@ import com.jetbrains.php.lang.psi.elements.Parameter;
 import com.jetbrains.php.lang.psi.elements.ParameterList;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr;
-import org.klesun.deep_assoc_completion.helpers.ExprCtx;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.IExprCtx;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.lang.It;
 import org.klesun.lang.Tls;
@@ -34,7 +34,7 @@ public class ShowDocs extends AnAction
 {
     public static It<DeepType> findPsiType(PsiElement psi)
     {
-        SearchContext search = new SearchContext(psi.getProject())
+        SearchCtx search = new SearchCtx(psi.getProject())
             .setDepth(AssocKeyPvdr.getMaxDepth(false, psi.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, psi, 0);

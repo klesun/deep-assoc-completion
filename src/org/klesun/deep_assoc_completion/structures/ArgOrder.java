@@ -1,4 +1,4 @@
-package org.klesun.deep_assoc_completion.helpers;
+package org.klesun.deep_assoc_completion.structures;
 
 /**
  * represents order of a function argument and

@@ -9,7 +9,9 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProvi
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.jetbrains.annotations.Nullable;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.structures.ArgOrder;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;

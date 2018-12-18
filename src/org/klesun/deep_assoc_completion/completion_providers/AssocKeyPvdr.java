@@ -9,7 +9,11 @@ import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.icons.DeepIcons;
@@ -149,7 +153,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
     {
         String indent = Tls.range(0, depth).rdc((sum,i) -> sum + " ", "");
         int typeCnt = root.typeCnt.def(0);
-        System.out.println(indent + SearchContext.formatPsi(root.expr) + " " + typeCnt + " types " + (typeCnt > 100 ? "many yopta" : ""));
+        System.out.println(indent + SearchCtx.formatPsi(root.expr) + " " + typeCnt + " types " + (typeCnt > 100 ? "many yopta" : ""));
         for (ExprCtx subCtx: root.children) {
             printExprTree(subCtx, depth + 1);
         }
@@ -208,7 +212,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         int depth = getMaxDepth(parameters);
-        SearchContext search = new SearchContext(parameters).setDepth(depth);
+        SearchCtx search = new SearchCtx(parameters).setDepth(depth);
         FuncCtx funcCtx = new FuncCtx(search);
         search.isMain = true;
         Set<String> suggested = new HashSet<>();

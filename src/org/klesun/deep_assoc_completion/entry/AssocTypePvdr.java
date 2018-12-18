@@ -10,9 +10,9 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.resolve.types.PhpTypeProvider3;
 import org.jetbrains.annotations.Nullable;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.lang.L;
 import org.klesun.lang.Lang;
 import org.klesun.lang.Tls;
@@ -62,7 +62,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
 
         // Type Provider is called at random points of time breaking
         // my recursive formatting in STDOUT, so always setDebug(false)
-        SearchContext search = new SearchContext(psi.getProject())
+        SearchCtx search = new SearchCtx(psi.getProject())
             .setDepth(settings.bgTypePvdrDepthLimit)
             .setTimeout(settings.bgTypePvdrTimeout / 1000)
             .setDebug(false);

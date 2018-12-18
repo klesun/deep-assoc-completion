@@ -10,7 +10,11 @@ import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.deep_assoc_completion.DeepType;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
@@ -119,7 +123,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         result.runRemainingContributors(parameters, otherSourceResult -> {
             builtIns.add(otherSourceResult.getLookupElement());
         });
-        SearchContext search = new SearchContext(parameters)
+        SearchCtx search = new SearchCtx(parameters)
             .setDepth(AssocKeyPvdr.getMaxDepth(parameters));
 
         Dict<Long> times = new Dict<>(list());

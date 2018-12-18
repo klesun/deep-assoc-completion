@@ -11,9 +11,9 @@ import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.deep_assoc_completion.helpers.ExprCtx;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
+import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.It;
 
@@ -40,7 +40,7 @@ public class ArrFuncRefNamePvdr extends CompletionProvider<CompletionParameters>
     /** @return type of an associative array with vars to suggest as keys */
     public static It<Method> resolve(StringLiteralExpression literal, boolean isAutoPopup)
     {
-        SearchContext search = new SearchContext(literal.getProject())
+        SearchCtx search = new SearchCtx(literal.getProject())
             .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, literal.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
         return opt(literal.getParent())
