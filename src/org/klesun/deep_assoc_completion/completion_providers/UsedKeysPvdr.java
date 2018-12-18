@@ -6,25 +6,20 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
-import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
-import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.elements.ArrayCreationExpression;
+import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
+import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
 import org.klesun.lang.It;
-import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static org.klesun.lang.Lang.*;
@@ -35,7 +30,7 @@ import static org.klesun.lang.Lang.*;
  * made first of all for cases when function takes an associative array and it
  * is a pain to collect key names one-by-one from the function implementation
  */
-public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> implements GotoDeclarationHandler
+public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
 {
     private static It<LookupElement> makeLookup(DeepType.Key keyEntry)
     {
@@ -63,10 +58,10 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
                 )));
     }
 
-    private Mt resolve(ArrayCreationExpression lit, boolean isAutoPopup, Editor editor)
+    private static Mt resolve(ArrayCreationExpression lit, boolean isAutoPopup)
     {
         SearchContext search = new SearchContext(lit.getProject())
-            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
+            .setDepth(DeepKeysPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 
@@ -83,7 +78,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
                     .fop(el -> opt(el.getKey()))
                     .fop(toCast(StringLiteralExpressionImpl.class))
                     .map(lit -> lit.getContents()).wap(tit -> new HashSet<>(tit.arr()));
-                return resolve(arrCtor, parameters.isAutoPopup(), parameters.getEditor())
+                return resolve(arrCtor, parameters.isAutoPopup())
                     .types.fap(t -> t.keys.flt(k -> k.keyType.getNames().any(n -> !alreadyDeclared.contains(n))));
             });
 
@@ -101,42 +96,15 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters> imple
     //  GotoDeclarationHandler part follows
     // ================================
 
-    // just treating a symptom. i dunno why duplicates appear - they should not
-    private static void removeDuplicates(List<PsiElement> psiTargets)
+    public static It<PsiElement> resolveDeclPsis(@NotNull PsiElement psi, int mouseOffset)
     {
-        Set<PsiElement> fingerprints = new HashSet<>();
-        int size = psiTargets.size();
-        for (int k = size - 1; k >= 0; --k) {
-            if (fingerprints.contains(psiTargets.get(k))) {
-                psiTargets.remove(k);
-            }
-            fingerprints.add(psiTargets.get(k));
-        }
-    }
-
-    @Nullable
-    @Override
-    public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor) {
-
-        L<PsiElement> psiTargets = opt(psiElement)
-            .map(psi -> psi.getParent())
+        return opt(psi.getParent())
             .fop(toCast(StringLiteralExpressionImpl.class))
             .fap(lit -> opt(lit.getFirstChild())
                 .fop(c -> assertArrCtorKey(c))
-                .fap(arrCtor -> resolve(arrCtor, false, editor)
+                .fap(arrCtor -> resolve(arrCtor, false)
                     .types.fap(t -> t.keys).fap(k -> k.keyType.getTypes.get())
                     .flt(k -> lit.getContents().equals(k.stringValue))
-                    .map(k -> k.definition))).arr();
-
-        removeDuplicates(psiTargets);
-
-        return psiTargets.toArray(new PsiElement[psiTargets.size()]);
-    }
-
-    @Nullable
-    @Override
-    public String getActionText(DataContext dataContext) {
-        // renames the "Declaration" action if returned value is not null
-        return null;
+                    .map(k -> k.definition)));
     }
 }

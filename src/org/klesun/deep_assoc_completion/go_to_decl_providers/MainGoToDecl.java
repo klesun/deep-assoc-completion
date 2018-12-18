@@ -34,6 +34,7 @@ public class MainGoToDecl implements GotoDeclarationHandler {
             , DeepObjMemberGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
             , ArrayColumnPvdr.resolveDeclPsis(psiElement, mouseOffset)
             , ArrayKeyExistsPvdr.resolveDeclPsis(psiElement, mouseOffset)
+            , UsedKeysPvdr.resolveDeclPsis(psiElement, mouseOffset)
             , opt(psiElement.getParent()) // [self::class, 'soSomeStuff']
                 .cst(StringLiteralExpressionImpl.class)
                 .fap(lit -> It.cnc(It.non()
