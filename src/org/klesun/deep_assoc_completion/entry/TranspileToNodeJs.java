@@ -1,40 +1,30 @@
 package org.klesun.deep_assoc_completion.entry;
 
+import com.intellij.ide.scratch.ScratchFileService;
+import com.intellij.ide.scratch.ScratchRootType;
+import com.intellij.ide.util.PsiNavigationSupport;
+import com.intellij.lang.javascript.JavascriptLanguage;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
-import com.intellij.openapi.ui.MessageType;
-import com.intellij.openapi.ui.popup.Balloon;
-import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl;
-import com.intellij.ui.awt.RelativePoint;
-import com.jetbrains.php.PhpIndex;
-import com.jetbrains.php.lang.parser.PhpElementTypes;
 import com.jetbrains.php.lang.psi.PhpElementType;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ForeachImpl;
-import com.jetbrains.php.lang.psi.elements.impl.GroupStatementSimpleImpl;
 import com.jetbrains.php.lang.psi.elements.impl.PhpUseListImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StatementImpl;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.klesun.deep_assoc_completion.DeepType;
-import org.klesun.deep_assoc_completion.completion_providers.DeepKeysPvdr;
-import org.klesun.deep_assoc_completion.helpers.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.helpers.SearchContext;
-import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.VarRes;
 import org.klesun.lang.It;
-import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
-import java.awt.*;
-import java.util.*;
-import java.util.List;
+import java.util.Iterator;
 
 import static org.klesun.lang.Lang.*;
 
@@ -170,14 +160,12 @@ public class TranspileToNodeJs extends AnAction
         // TODO: add whitespace generally here
         // TODO: $arr[] = $val; -> $arr.push($val)
         // TODO: unset -> delete
-        // TODO: output in a scratch file, not STDOUT
         // TODO: process whole directories, not just one file
         // TODO: do not add coma after last object element if there weren't any in original
         // TODO: if ($zhopa = getZhopa()) {...} -> let $zhopa; if ($zhopa = getZhopa()) {...}
         // TODO: class constants
         // TODO: put properties in constructor - node does not allow properties directly in class body
         // TODO: do not add let in +=
-        // TODO: proper php single quote literal escaping: '/\s*/' -> '/\\s*/'
         Iterable<String> result = It.frs(() -> It.non()
             , () -> Tls.cast(LeafPsiElement.class, psi)
                 .map(leaf ->
@@ -250,6 +238,23 @@ public class TranspileToNodeJs extends AnAction
             .map(c -> transpilePsi(c))).str("");
     }
 
+    private void openAsScratchFile(String text, AnActionEvent e)
+    {
+        opt(e.getData(LangDataKeys.PROJECT)).thn(project -> {
+            VirtualFile file = ScratchRootType.getInstance().createScratchFile(
+                project, "transpiled", JavascriptLanguage.INSTANCE,
+                text, ScratchFileService.Option.create_new_always
+            );
+            if (file != null) {
+                PsiNavigationSupport.getInstance().createNavigatable(project, file, 0).navigate(true);
+                PsiFile nullPsiFile = PsiManager.getInstance(project).findFile(file);
+                opt(e.getData(LangDataKeys.IDE_VIEW))
+                    .thn(ideView -> opt(nullPsiFile)
+                        .thn(psiFile -> ideView.selectElement(psiFile)));
+            }
+        });
+    }
+
     @Override
     public void actionPerformed(AnActionEvent e)
     {
@@ -258,5 +263,6 @@ public class TranspileToNodeJs extends AnAction
             .map(psiTexts -> Tls.implode("", psiTexts))
             .def("Error: could not retrieve current file");
         System.out.println(output);
+        openAsScratchFile(output, e);
     }
 }
