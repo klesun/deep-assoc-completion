@@ -6,41 +6,35 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
-import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIndex;
-import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.Function;
+import com.jetbrains.php.lang.psi.elements.FunctionReference;
+import com.jetbrains.php.lang.psi.elements.Global;
+import com.jetbrains.php.lang.psi.elements.Variable;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
-import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.helpers.*;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.VarRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
-import org.klesun.lang.L;
 import org.klesun.lang.Tls;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import static org.klesun.lang.Lang.*;
 
 // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
 // should suggest possible values of 'type'
-public class VarNamePvdr extends CompletionProvider<CompletionParameters> implements GotoDeclarationHandler
+public class VarNamePvdr extends CompletionProvider<CompletionParameters>
 {
     private static LookupElementBuilder makeLookupBase(String keyName, String type)
     {
@@ -118,10 +112,10 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
     }
 
     /** @return type of an associative array with vars to suggest as keys */
-    private It<DeepType> resolve(VariableImpl caretVar, boolean isAutoPopup, Editor editor)
+    private static It<DeepType> resolve(VariableImpl caretVar, boolean isAutoPopup)
     {
         SearchCtx search = new SearchCtx(caretVar.getProject())
-            .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, editor.getProject()));
+            .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, caretVar.getProject()));
         if (isAutoPopup) {
             // it would be sad if it deeply scanned global
             // vars in whole project when you just type a var
@@ -145,7 +139,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
         result.runRemainingContributors(parameters, true);
         It<DeepType> tit = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
             .fop(toCast(VariableImpl.class))
-            .fap(lit -> resolve(lit, parameters.isAutoPopup(), parameters.getEditor()));
+            .fap(lit -> resolve(lit, parameters.isAutoPopup()));
 
         makeOptions(tit).fch(lookupElement -> result.addElement(lookupElement));
         long elapsed = System.nanoTime() - startTime;
@@ -159,41 +153,13 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters> implem
     //  GotoDeclarationHandler part follows
     // ================================
 
-    // just treating a symptom. i dunno why duplicates appear - they should not
-    private static void removeDuplicates(List<PsiElement> psiTargets)
+    public static It<PsiElement> resolveDeclPsis(@NotNull PsiElement psi, int mouseOffset)
     {
-        Set<PsiElement> fingerprints = new HashSet<>();
-        int size = psiTargets.size();
-        for (int k = size - 1; k >= 0; --k) {
-            if (fingerprints.contains(psiTargets.get(k))) {
-                psiTargets.remove(k);
-            }
-            fingerprints.add(psiTargets.get(k));
-        }
-    }
-
-    @Nullable
-    @Override
-    public PsiElement[] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor) {
-
-        L<PsiElement> psiTargets = opt(psiElement)
-            .map(psi -> psi.getParent())
+        return opt(psi.getParent())
             .fop(toCast(VariableImpl.class))
-            .fap(lit -> resolve(lit, false, editor)
+            .fap(lit -> resolve(lit, false)
                 .fap(globt -> globt.keys)
                 .flt(k -> k.keyType.getNames().any(n -> n.equals(lit.getName())))
-                .map(t -> t.definition))
-                .arr();
-
-        removeDuplicates(psiTargets);
-
-        return psiTargets.toArray(new PsiElement[psiTargets.size()]);
-    }
-
-    @Nullable
-    @Override
-    public String getActionText(DataContext dataContext) {
-        // renames the "Declaration" action if returned value is not null
-        return null;
+                .map(t -> t.definition));
     }
 }
