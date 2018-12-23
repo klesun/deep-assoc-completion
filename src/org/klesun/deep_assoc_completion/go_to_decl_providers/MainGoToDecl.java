@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion.go_to_decl_providers;
 
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
+import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
@@ -79,5 +80,10 @@ public class MainGoToDecl implements GotoDeclarationHandler {
         lastCaretPsi = opt(nullPsi);
         lastFinished = true;
         return arr.toArray(new PsiElement[arr.size()]);
+    }
+
+    // need for pre-183.5153.4
+    public @Nullable String getActionText(DataContext dataContext) {
+        return null;
     }
 }

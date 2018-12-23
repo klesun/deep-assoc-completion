@@ -37,11 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Make all GoTo providers navigate instantly to the first found definition on first _Ctrl + Click_ instead of wasting dozens of seconds looking for _all_ definitions (_Ctrl + Click_ same key again if you need all of them)</li>
-        <li>Fix: do not miss completion from closure vars _inside the function itself_</li>
-        <li>Show transpiled js code in a scratch file (Instead of just printing it in STDOUT)</li>
-        <li>Optimize: do not treat function calls with 0 passed arguments as if arguments were unknown</li>
-        <li>Major folder structure refactoring (may cause unexpected bugs, should not, but just in case listing it here)</li>
+        <li>Fix compatibility with pre-183.5153.4 - getActionText did not have default implementation</li>
     </ul>
     ]]>
     </change-notes>
