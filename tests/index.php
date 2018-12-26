@@ -1056,3 +1056,32 @@ $get = new get;
 $get->random(array('myVar'), 'strArgKey');
 
 echo $my;
+
+
+<?php
+
+class someSubclass
+{
+    public $x = 'rrr';
+}
+
+class someClass
+{
+    public function method()
+    {
+        /**
+         *  @var stdClass $row {
+         *       @property \someSubclass subName description
+         *       @property stdClass childPurchase {
+         *           @property int id some description
+         *           @property float price
+         *       }
+         *}
+         */
+        while($row = $result->fetch_object())
+        {
+            $row->subName->;        // should suggest: x
+            $row->childPurchase->;  // should suggest: id, price
+        }
+    }
+}

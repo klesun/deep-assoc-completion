@@ -33,7 +33,7 @@ public class DocParamRes extends Lang
         String desc;
 
         PropDoc(String type, String name, String desc) {
-            this.type = type;
+            this.type = type.startsWith("\\") ? type : "\\" + type;
             this.name = name;
             this.desc = desc;
         }
@@ -67,7 +67,7 @@ public class DocParamRes extends Lang
      *      }
      * }
      */
-    private static L<PropDoc> parseObjDoc(String body)
+    private static L<PropDoc> parseMiraObjPropertyDoc(String body)
     {
         Mutable<Integer> depth = new Mutable<>(0);
         L<PropDoc> props = L();
@@ -94,16 +94,19 @@ public class DocParamRes extends Lang
 
     private static Opt<DeepType> propDescToType(String propDesc, PsiElement decl)
     {
-        L<PropDoc> props = parseObjDoc(propDesc);
+        L<PropDoc> props = parseMiraObjPropertyDoc(propDesc);
         if (props.size() > 0) {
             DeepType type = new DeepType(decl, PhpType.OBJECT);
-            props.fch(prop -> type.addProp(prop.name, decl)
-                .addType(
-                    () -> propDescToType(prop.desc, decl)
-                        .map(t -> new Mt(list(t)))
-                        .def(Mt.INVALID_PSI),
-                    new PhpType().add("\\" + prop.type))
-                );
+            props.fch(prop -> {
+                PhpType fqnType = new PhpType().add(prop.type);
+                type.addProp(prop.name, decl)
+                    .addType(
+                        () -> propDescToType(prop.desc, decl).itr()
+                            .cct(list(new DeepType(decl, fqnType, false)))
+                            .wap(Mt::new),
+                        fqnType
+                    );
+            });
 
             return opt(type);
         } else {
@@ -136,7 +139,7 @@ public class DocParamRes extends Lang
             () -> opt(doc.getParent())
                 .fop(toCast(PhpDocComment.class))
                 .fop(full -> getDocCommentText(full))
-                .fap(clean -> parseObjDoc(clean))
+                .fap(clean -> parseMiraObjPropertyDoc(clean))
                 .flt(prop -> nameMatches(prop, doc))
                 .fop(prop -> propDescToType(prop.desc, doc))
                 .wap(types -> opt(types))
