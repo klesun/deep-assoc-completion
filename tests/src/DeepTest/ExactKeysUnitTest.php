@@ -1259,6 +1259,7 @@ class ExactKeysUnitTest
                 ['calories' => 'not so many', 'cooking_time' => 'slow'],
             ],
         ];
+        $data->;
         return $data->{$name};
     }
 

@@ -50,7 +50,7 @@ public class ArrCtorRes extends Lang
             .fap(tpe -> resolveIdeaTypeCls(tpe, project))
             ;
         if (!resolved.has()) {
-            // allow no namespace in php doc class references
+            // allow to omit namespace in php doc class references
             PhpIndex idx = PhpIndex.getInstance(project);
             return mtArg.getIdeaTypes()
                 .fap(it -> ideaTypeToFqn(it))

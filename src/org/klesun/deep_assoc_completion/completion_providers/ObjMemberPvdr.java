@@ -109,10 +109,9 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                         || ref.getText().equals("$this"))
                     .flt(fld -> !fld.getModifier().isStatic())
                     .map(m -> makeLookup(m))
-                    .cct(getAssignedProps(mt).map(a -> a))
                     .cct(getMagicProps(cls, funcCtx)
                         .fap(t -> makeMagicLookup(t)))
-            );
+            ).cct(getAssignedProps(mt).map(a -> a));
     }
 
     @Override
