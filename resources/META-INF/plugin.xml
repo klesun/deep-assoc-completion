@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.12.26.001</version>
+    <version>2018.12.26.002</version>
     <vendor email="safronevev@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
 
     <description><![CDATA[
@@ -37,11 +37,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>
-            #60 Fix: do not miss assigned property completion when class is not resolved
-            <br/>
-            It was a typo that .cct(getAssignedProps(mt) got inside "class resolved" condition branch. Worked OK before 0b97b6a6e40818fa157ce4dbcf6ade0c59a5d283 because _mixed_ was treated as a class
-        </li>
+        <li>#60 Provide Mira @property notation completion from class name as well</li>
+        <li>#60 Fix: do not miss assigned property completion when class is not resolved <br/> It was a typo that .cct(getAssignedProps(mt) got inside "class resolved" condition branch. Worked OK before 0b97b6a6e40818fa157ce4dbcf6ade0c59a5d283 because _mixed_ was treated as a class</li>
     </ul>
     ]]>
     </change-notes>
