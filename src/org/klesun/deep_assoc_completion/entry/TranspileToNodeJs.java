@@ -3,10 +3,11 @@ package org.klesun.deep_assoc_completion.entry;
 import com.intellij.ide.scratch.ScratchFileService;
 import com.intellij.ide.scratch.ScratchRootType;
 import com.intellij.ide.util.PsiNavigationSupport;
-import com.intellij.lang.javascript.JavascriptLanguage;
+import com.intellij.lang.Language;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
+import com.intellij.openapi.fileTypes.PlainTextLanguage;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -241,8 +242,16 @@ public class TranspileToNodeJs extends AnAction
     private void openAsScratchFile(String text, AnActionEvent e)
     {
         opt(e.getData(LangDataKeys.PROJECT)).thn(project -> {
+            Language lang; // see #61, Javascript Support may be disabled
+            try {
+                Class yourClass = Class.forName("com.intellij.lang.javascript.JavascriptLanguage");
+                lang = (Language)yourClass.getField("INSTANCE").get(null);
+            } catch (Exception exc) {
+                System.out.println("Could not instantiate Javascript language");
+                lang = PlainTextLanguage.INSTANCE;
+            }
             VirtualFile file = ScratchRootType.getInstance().createScratchFile(
-                project, "transpiled", JavascriptLanguage.INSTANCE,
+                project, "transpiled", lang,
                 text, ScratchFileService.Option.create_new_always
             );
             if (file != null) {
