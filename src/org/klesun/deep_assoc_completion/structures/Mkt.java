@@ -12,6 +12,11 @@ public class Mkt {
         return new DeepType(psi, PhpType.STRING, content);
     }
 
+    public static DeepType str(PsiElement psi)
+    {
+        return new DeepType(psi, PhpType.STRING);
+    }
+
     public static DeepType inte(PsiElement psi)
     {
         return new DeepType(psi, PhpType.INT);

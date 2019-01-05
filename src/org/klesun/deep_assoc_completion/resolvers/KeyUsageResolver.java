@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.built_in_typedefs.ArgTypeDefs;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
@@ -16,9 +17,6 @@ import org.klesun.lang.*;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import static org.klesun.deep_assoc_completion.structures.Mkt.assoc;
-import static org.klesun.deep_assoc_completion.structures.Mkt.*;
 
 /**
  * takes associative array that caret points at and returns
@@ -218,63 +216,6 @@ public class KeyUsageResolver extends Lang
                 .fap(methCall -> (new MethCallRes(fakeCtx)).getModelRowType(methCall, meth)));
     }
 
-    private DeepType stream_context_create(Function def)
-    {
-        return assoc(def, list(
-            T2("http", assoc(def, list(
-                T2("header", str(def, "Content-type: application/x-www-form-urlencoded\\r\\n").mt()),
-                T2("method", new Mt(list("GET", "POST", "OPTIONS", "PUT", "HEAD", "DELETE", "CONNECT", "TRACE", "PATCH").map(m -> str(def, m)))),
-                T2("content", str(def, "name=Vasya&age=26&price=400").mt()),
-                T2("user_agent", str(def, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36").mt()),
-                T2("proxy", str(def, "tcp://proxy.example.com:5100").mt()),
-                T2("request_fulluri", bool(def).mt()),
-                T2("follow_location", inte(def).mt()),
-                T2("max_redirects", inte(def).mt()),
-                T2("protocol_version", floate(def).mt()),
-                T2("timeout", floate(def).mt()),
-                T2("ignore_errors", bool(def).mt())
-            )).mt()),
-            T2("socket", assoc(def, list(
-                T2("bindto", str(def, "128.211.185.166:3345").mt()),
-                T2("backlog", inte(def).mt()),
-                T2("ipv6_v6only", bool(def).mt()),
-                T2("so_reuseport", inte(def).mt()),
-                T2("so_broadcast", inte(def).mt()),
-                T2("tcp_nodelay", bool(def).mt())
-            )).mt()),
-            T2("ftp", assoc(def, list(
-                T2("overwrite", bool(def).mt()),
-                T2("resume_pos", inte(def).mt()),
-                T2("proxy", str(def, "tcp://squid.example.com:8000").mt())
-            )).mt()),
-            T2("ssl", assoc(def, list(
-                T2("peer_name", bool(def).mt()),
-                T2("verify_peer", bool(def).mt()),
-                T2("verify_peer_name", bool(def).mt()),
-                T2("allow_self_signed", bool(def).mt()),
-                T2("cafile", str(def, "/path/to/cert/auth/file").mt()),
-                T2("capath", str(def, "/path/to/cert/auth/dir").mt()),
-                T2("local_cert", str(def, "/path/to/cert.pem").mt()),
-                T2("local_pk", str(def, "/path/to/private/key.pem").mt()),
-                T2("passphrase", str(def, "qwerty123").mt()),
-                T2("verify_depth", inte(def).mt()),
-                T2("ciphers", str(def, "ALL:!COMPLEMENTOFDEFAULT:!eNULL").mt()),
-                T2("capture_peer_cert", bool(def).mt()),
-                T2("capture_peer_cert_chain", bool(def).mt()),
-                T2("SNI_enabled", bool(def).mt()),
-                T2("disable_compression", bool(def).mt()),
-                T2("peer_fingerprint", new Mt(list(str(def, "tcp://squid.example.com:8000"), arr(def))))
-            )).mt()),
-            T2("phar", assoc(def, list(
-                T2("compress", inte(def).mt()),
-                T2("metadata", mixed(def).mt())
-            )).mt()),
-            T2("zip", assoc(def, list(
-                T2("cafile", str(def, "qwerty123").mt())
-            )).mt())
-        ));
-    }
-
     private It<DeepType> findBuiltInArgType(Function builtInFunc, int argOrder, ParameterList argList)
     {
         return Tls.cast(Method.class, builtInFunc)
@@ -288,7 +229,7 @@ public class KeyUsageResolver extends Lang
                 opt(builtInFunc.getName())
                     .flt(n -> n.equals("stream_context_create"))
                     .flt(n -> argOrder == 0)
-                    .map(n -> stream_context_create(builtInFunc)),
+                    .map(n -> ArgTypeDefs.stream_context_create(builtInFunc)),
                 findKeysUsedInArrayMap(builtInFunc, argList, argOrder)
             ));
     }

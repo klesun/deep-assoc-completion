@@ -144,7 +144,7 @@ class ExactKeysUnitTest
         $list[] = [$stat, [
             'dev', // 2049,
             'ino', // 13238274,
-            'mode', // 16877,
+            'mode', // 16877,ob_get_status
             'nlink', // 30,
             'uid', // 1000,
             'gid', // 1000,
