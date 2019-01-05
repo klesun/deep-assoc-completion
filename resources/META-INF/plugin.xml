@@ -2,7 +2,7 @@
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
     <version>2018.12.28.001</version>
-    <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/phpstorm-deep-keys">Klesun</vendor>
+    <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
 <ul>

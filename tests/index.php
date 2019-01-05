@@ -1082,3 +1082,22 @@ while($row = $result->fetch_object())
 }
     }
 }
+
+stream_context_create([
+    'http' => [
+        ''
+    ],
+    'ftp' => [
+        'resume_pos' => '',
+    ],
+    'phar' => [
+        ''
+    ],
+
+//    'http' => [
+//        'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+//        'method'  => 'POST',
+//        'content' => http_build_query($data)
+//    ]
+]);
+

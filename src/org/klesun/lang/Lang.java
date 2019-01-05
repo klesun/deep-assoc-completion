@@ -1,7 +1,5 @@
 package org.klesun.lang;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.*;
 import java.util.function.*;
 
@@ -21,6 +19,11 @@ public class Lang
         {
             this.a = a;
             this.b = b;
+        }
+
+        public <Tnew> Tnew nme(F2<T1, T2, Tnew> namer)
+        {
+            return namer.apply(a,b);
         }
     }
 

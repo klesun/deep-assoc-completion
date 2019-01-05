@@ -17,6 +17,7 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.helpers.ScopeFinder;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.structures.KeyType;
+import org.klesun.deep_assoc_completion.structures.Mkt;
 import org.klesun.lang.*;
 
 public class FuncCallRes extends Lang
@@ -161,13 +162,9 @@ public class FuncCallRes extends Lang
 
     public static DeepType makeAssoc(PsiElement psi, Iterable<T2<String, PhpType>> keys)
     {
-        DeepType assoct = new DeepType(psi, PhpType.ARRAY);
-        for (T2<String, PhpType> key: keys) {
-            DeepType deepType = new DeepType(psi, key.b);
-            Mt mt = new Mt(list(deepType));
-            assoct.addKey(key.a, psi).addType(() -> mt, key.b);
-        }
-        return assoct;
+        return Mkt.assoc(psi, It(keys)
+            .map(t -> t.nme((keyName, ideaType) ->
+                T2(keyName, new DeepType(psi, ideaType).mt()))));
     }
 
     private static DeepType curl_getinfo(FunctionReferenceImpl call)

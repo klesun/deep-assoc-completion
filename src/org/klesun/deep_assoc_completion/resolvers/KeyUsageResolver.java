@@ -8,14 +8,17 @@ import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
-import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.helpers.*;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.klesun.deep_assoc_completion.structures.Mkt.assoc;
+import static org.klesun.deep_assoc_completion.structures.Mkt.*;
 
 /**
  * takes associative array that caret points at and returns
@@ -32,13 +35,12 @@ public class KeyUsageResolver extends Lang
         this.depthLeft = depthLeft;
     }
 
-    private Mt resolveReplaceKeys(ParameterList argList, int order)
+    private It<DeepType> resolveReplaceKeys(ParameterList argList, int order)
     {
         return It(argList.getParameters())
             .flt((psi, i) -> i < order)
             .fop(toCast(PhpExpression.class))
-            .fap(exp -> fakeCtx.findExprType(exp))
-            .wap(Mt::new);
+            .fap(exp -> fakeCtx.findExprType(exp));
     }
 
     private static It<ArrayIndex> findUsedIndexes(Function meth, String varName)
@@ -170,29 +172,35 @@ public class KeyUsageResolver extends Lang
         );
     }
 
-    private It<DeepType> findKeysUsedInArrayMap(Function meth, ParameterList argList, PhpExpression arrCtor)
+    private It<DeepType> findKeysUsedInArrayMap(Function meth, ParameterList argList, int caretArgOrder)
     {
         return opt(meth.getName())
             .flt(n -> n.equals("array_map"))
             .map(n -> L(argList.getParameters()))
-            .flt(args -> args.indexOf(arrCtor) == 1)
+            .flt(args -> caretArgOrder == 1)
             .fop(args -> args.gat(0))
             .fop(func -> Tls.cast(PhpExpressionImpl.class, func)
                 .map(expr -> expr.getFirstChild())
                 .fop(toCast(Function.class))) // TODO: support in a var
             .fap(func -> {
                 DeepType arrt = new DeepType(argList, PhpType.ARRAY);
-                arrt.addKey(KeyType.unknown(argList)).addType(Tls.onDemand(() -> findArgTypeFromUsage(func, 0, fakeCtx.subCtxSingleArgArr(arrCtor)).wap(Mt::new)));
+                DeepType.Key k = arrt.addKey(KeyType.unknown(argList));
+                L(argList.getParameters()).gat(caretArgOrder)
+                    .cst(PhpExpression.class)
+                    .thn(arrCtor -> k.addType(Tls.onDemand(() -> {
+                        IExprCtx subCtx = fakeCtx.subCtxSingleArgArr(arrCtor);
+                        return findArgTypeFromUsage(func, 0, subCtx).wap(Mt::new);
+                    })));
                 return list(arrt);
             });
     }
 
-    private It<DeepType> findKeysUsedInPdoExec(Function meth, ParameterList argList, PhpExpression arrCtor)
+    private It<DeepType> findKeysUsedInPdoExec(Method meth, ParameterList argList, int caretArgOrder)
     {
-        return Tls.cast(Method.class, meth)
+        return som(meth)
             .flt(m -> "\\PDOStatement".equals(opt(m.getContainingClass()).map(cls -> cls.getFQN()).def("")))
             .flt(m -> "execute".equals(m.getName()))
-            .flt(m -> L(argList.getParameters()).indexOf(arrCtor) == 0)
+            .flt(m -> caretArgOrder == 0)
             .fop(m -> opt(argList.getParent()))
             .fop(toCast(MethodReference.class))
             .fop(methRef -> opt(methRef.getClassReference()))
@@ -201,13 +209,88 @@ public class KeyUsageResolver extends Lang
                 .map(varName -> T2(varName, pdostt.definition))));
     }
 
-    private It<DeepType> findKeysUsedInModelGet(Function func, ParameterList argList, PhpExpression arrCtor)
+    private It<DeepType> findKeysUsedInModelGet(Method func, ParameterList argList, int caretArgOrder)
     {
-        return Tls.cast(Method.class, func)
-            .flt(m -> L(argList.getParameters()).indexOf(arrCtor) == 0)
+        return som(func)
+            .flt(m -> caretArgOrder == 0)
             .fap(meth -> opt(argList.getParent())
                 .cst(MethodReference.class)
                 .fap(methCall -> (new MethCallRes(fakeCtx)).getModelRowType(methCall, meth)));
+    }
+
+    private DeepType stream_context_create(Function def)
+    {
+        return assoc(def, list(
+            T2("http", assoc(def, list(
+                T2("header", str(def, "Content-type: application/x-www-form-urlencoded\\r\\n").mt()),
+                T2("method", new Mt(list("GET", "POST", "OPTIONS", "PUT", "HEAD", "DELETE", "CONNECT", "TRACE", "PATCH").map(m -> str(def, m)))),
+                T2("content", str(def, "name=Vasya&age=26&price=400").mt()),
+                T2("user_agent", str(def, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36").mt()),
+                T2("proxy", str(def, "tcp://proxy.example.com:5100").mt()),
+                T2("request_fulluri", bool(def).mt()),
+                T2("follow_location", inte(def).mt()),
+                T2("max_redirects", inte(def).mt()),
+                T2("protocol_version", floate(def).mt()),
+                T2("timeout", floate(def).mt()),
+                T2("ignore_errors", bool(def).mt())
+            )).mt()),
+            T2("socket", assoc(def, list(
+                T2("bindto", str(def, "128.211.185.166:3345").mt()),
+                T2("backlog", inte(def).mt()),
+                T2("ipv6_v6only", bool(def).mt()),
+                T2("so_reuseport", inte(def).mt()),
+                T2("so_broadcast", inte(def).mt()),
+                T2("tcp_nodelay", bool(def).mt())
+            )).mt()),
+            T2("ftp", assoc(def, list(
+                T2("overwrite", bool(def).mt()),
+                T2("resume_pos", inte(def).mt()),
+                T2("proxy", str(def, "tcp://squid.example.com:8000").mt())
+            )).mt()),
+            T2("ssl", assoc(def, list(
+                T2("peer_name", bool(def).mt()),
+                T2("verify_peer", bool(def).mt()),
+                T2("verify_peer_name", bool(def).mt()),
+                T2("allow_self_signed", bool(def).mt()),
+                T2("cafile", str(def, "/path/to/cert/auth/file").mt()),
+                T2("capath", str(def, "/path/to/cert/auth/dir").mt()),
+                T2("local_cert", str(def, "/path/to/cert.pem").mt()),
+                T2("local_pk", str(def, "/path/to/private/key.pem").mt()),
+                T2("passphrase", str(def, "qwerty123").mt()),
+                T2("verify_depth", inte(def).mt()),
+                T2("ciphers", str(def, "ALL:!COMPLEMENTOFDEFAULT:!eNULL").mt()),
+                T2("capture_peer_cert", bool(def).mt()),
+                T2("capture_peer_cert_chain", bool(def).mt()),
+                T2("SNI_enabled", bool(def).mt()),
+                T2("disable_compression", bool(def).mt()),
+                T2("peer_fingerprint", new Mt(list(str(def, "tcp://squid.example.com:8000"), arr(def))))
+            )).mt()),
+            T2("phar", assoc(def, list(
+                T2("compress", inte(def).mt()),
+                T2("metadata", mixed(def).mt())
+            )).mt()),
+            T2("zip", assoc(def, list(
+                T2("cafile", str(def, "qwerty123").mt())
+            )).mt())
+        ));
+    }
+
+    private It<DeepType> findBuiltInArgType(Function builtInFunc, int argOrder, ParameterList argList)
+    {
+        return Tls.cast(Method.class, builtInFunc)
+            .uni(meth -> It.cnc(
+                findKeysUsedInPdoExec(meth, argList, argOrder),
+                findKeysUsedInModelGet(meth, argList, argOrder)
+            ), () -> It.cnc(
+                opt(builtInFunc.getName())
+                    .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
+                    .fap(n -> resolveReplaceKeys(argList, argOrder)),
+                opt(builtInFunc.getName())
+                    .flt(n -> n.equals("stream_context_create"))
+                    .flt(n -> argOrder == 0)
+                    .map(n -> stream_context_create(builtInFunc)),
+                findKeysUsedInArrayMap(builtInFunc, argList, argOrder)
+            ));
     }
 
     // if arg is assoc array - will return type with keys accessed on it
@@ -228,15 +311,10 @@ public class KeyUsageResolver extends Lang
                             )).def(fakeCtx.subCtxEmpty());
                             return findArgTypeFromUsage(ipl, order, nextCtx);
                         }),
-                        opt(meth.getName())
-                            .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
-                            .fap(n -> resolveReplaceKeys(argList, order).types),
-                        findKeysUsedInArrayMap(meth, argList, arrCtor),
-                        findKeysUsedInPdoExec(meth, argList, arrCtor),
-                        findKeysUsedInModelGet(meth, argList, arrCtor),
                         opt(argList.getParent())
                             .fop(toCast(NewExpressionImpl.class))
-                            .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types)
+                            .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types),
+                        findBuiltInArgType(meth, order, argList)
                     ));
             });
     }
