@@ -39,12 +39,20 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     private static It<LookupElement> makeLookup(DeepType.Key keyEntry)
     {
         Opt<String> briefVal = keyEntry.getBriefVal();
-        String type = keyEntry.getTypes().fst().map(t -> t.briefType.toString()).def("from usage");
+        String type = keyEntry.getTypes().fst()
+            .map(t -> t.briefType.toString())
+            .flt(t -> t.length() > 0).def("mixed");
+        String comment = Tls.implode(" ", keyEntry.comments);
+        String briefValue = briefVal.map(v -> " = " + v).def("");
+        if (!comment.trim().equals("")) {
+            briefValue = Tls.substr(briefValue, 0, 12) + " " + comment;
+        }
+        final String briefValueF = briefValue;
         return keyEntry.keyType.getNames()
             .map(name -> LookupElementBuilder.create(name)
                 .bold()
                 .withIcon(AssocKeyPvdr.getIcon())
-                .withTailText(briefVal.map(v -> " = " + v).def(""), true)
+                .withTailText(briefValueF, true)
                 .withTypeText(type));
     }
 

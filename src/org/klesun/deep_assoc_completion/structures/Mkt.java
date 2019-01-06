@@ -3,6 +3,8 @@ package org.klesun.deep_assoc_completion.structures;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.lang.Opt;
+
 import static org.klesun.lang.Lang.*;
 
 /** short for "Make Type" */
@@ -47,6 +49,11 @@ public class Mkt {
         return new DeepType(psi, PhpType.BOOLEAN, (content ? 1 : 0) + "");
     }
 
+    public static DeepType res(PsiElement psi)
+    {
+        return new DeepType(psi, PhpType.RESOURCE);
+    }
+
     public static DeepType arr(PsiElement psi)
     {
         return new DeepType(psi, PhpType.ARRAY);
@@ -64,6 +71,16 @@ public class Mkt {
             PhpType ideaType = key.b.getIdeaTypes().fst().def(PhpType.UNSET);
             assoct.addKey(key.a, psi).addType(Granted(key.b), ideaType);
         }
+        return assoct;
+    }
+
+    public static DeepType assocCmnt(PsiElement psi, Iterable<T3<String, Mt, Opt<String>>> keys)
+    {
+        DeepType assoct = new DeepType(psi, PhpType.ARRAY, false);
+        keys.forEach(t -> t.nme((keyName, mt, cmnt) -> {
+            PhpType ideaType = mt.getIdeaTypes().fst().def(PhpType.UNSET);
+            assoct.addKey(keyName, psi).addType(Granted(mt), ideaType).addComments(cmnt);
+        }));
         return assoct;
     }
 

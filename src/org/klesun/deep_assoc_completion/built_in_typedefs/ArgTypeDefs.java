@@ -124,13 +124,35 @@ public class ArgTypeDefs
                 return som(assoc(builtInFunc, list(
                     T2("x", mixed(builtInFunc).mt()),
                     T2("y", mixed(builtInFunc).mt()),
+                    T2("width", mixed(builtInFunc).mt()),
                     T2("height", mixed(builtInFunc).mt())
                 )));
-            } else {
-                return non();
             }
-        } else {
-            return It.non();
+        } else if ("imagecrop".equals(builtInFunc.getName())) {
+            if (argOrder == 1) {
+                return som(assoc(builtInFunc, list(
+                    T2("x", mixed(builtInFunc).mt()),
+                    T2("y", mixed(builtInFunc).mt()),
+                    T2("width", mixed(builtInFunc).mt()),
+                    T2("height", mixed(builtInFunc).mt())
+                )));
+            }
+        } else if ("proc_open".equals(builtInFunc.getName())) {
+            if (argOrder == 1) {
+                return som(assocCmnt(builtInFunc, list(
+                    T3("0", mixed(builtInFunc).mt(), som("STDIN")),
+                    T3("1", mixed(builtInFunc).mt(), som("STDOUT")),
+                    T3("2", mixed(builtInFunc).mt(), som("STDERR"))
+                )));
+            } else if (argOrder == 5) {
+                return som(assocCmnt(builtInFunc, list(
+                    T3("suppress_errors", bool(builtInFunc).mt(), non()),
+                    T3("bypass_shell", bool(builtInFunc).mt(), non()),
+                    T3("context", res(builtInFunc).mt(), som("= stream_context_create()")),
+                    T3("binary_pipes", mixed(builtInFunc).mt(), non())
+                )));
+            }
         }
+        return It.non();
     }
 }

@@ -40,6 +40,16 @@ public class Lang
             this.b = b;
             this.c = c;
         }
+
+        public <Tnew> Tnew nme(F3<T1, T2, T3, Tnew> namer)
+        {
+            return namer.apply(a,b,c);
+        }
+
+        public void nme(C3<T1, T2, T3> namer)
+        {
+            namer.accept(a,b,c);
+        }
     }
 
     // tuple of 4 elements
@@ -92,6 +102,11 @@ public class Lang
     @FunctionalInterface
     public interface F3<T,U,S, R> {
         R apply(T t, U u, S s);
+    }
+
+    @FunctionalInterface
+    public interface C3<T,U,S> {
+        void accept(T t, U u, S s);
     }
 
     @FunctionalInterface

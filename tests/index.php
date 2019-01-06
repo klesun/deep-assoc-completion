@@ -1122,3 +1122,7 @@ imageaffine($img, [
 ], [
     '' => '',
 ]);
+
+proc_open('ls', [0 => 1], &$pipes, $cwd, $env, [
+    ''
+]);
