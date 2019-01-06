@@ -133,6 +133,7 @@ class ExactKeysUnitTest
         ]];
         $lastError = error_get_last();
         $lastError[''];
+        $lastError['type'] === E_CORE_WARNING;
         $list[] = [$lastError, [
             'type', // 2,
             'message', // 'proc_get_status() expects parameter 1 to be resource, null given',

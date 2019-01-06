@@ -8,6 +8,7 @@ import org.klesun.deep_assoc_completion.resolvers.MainRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
+import org.klesun.lang.Tls;
 
 import static org.klesun.deep_assoc_completion.structures.Mkt.*;
 import static org.klesun.lang.Lang.*;
@@ -109,12 +110,25 @@ public class ArgTypeDefs
             .fap(cstDef -> MainRes.resolveConst(cstDef, ctx));
     }
 
-    public It<DeepType> getArgType(Function builtInFunc, int argOrder)
+    public Iterable<DeepType> getArgType(Function builtInFunc, int argOrder)
     {
         if ("stream_context_create".equals(builtInFunc.getName()) && argOrder == 0) {
-            return It(som(stream_context_create(builtInFunc)));
+            return som(stream_context_create(builtInFunc));
         } else if ("image_type_to_mime_type".equals(builtInFunc.getName()) && argOrder == 0) {
             return image_type_to_mime_type(builtInFunc);
+        } else if ("imageaffine".equals(builtInFunc.getName())) {
+            if (argOrder == 1) {
+                return som(assoc(builtInFunc, Tls.range(0, 6)
+                    .map(n -> T2(n + "", mixed(builtInFunc).mt()))));
+            } else if (argOrder == 2) {
+                return som(assoc(builtInFunc, list(
+                    T2("x", mixed(builtInFunc).mt()),
+                    T2("y", mixed(builtInFunc).mt()),
+                    T2("height", mixed(builtInFunc).mt())
+                )));
+            } else {
+                return non();
+            }
         } else {
             return It.non();
         }

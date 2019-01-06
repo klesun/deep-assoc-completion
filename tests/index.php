@@ -1116,3 +1116,9 @@ function __construct(array $options = array())
 {
     $options[''];
 }
+
+imageaffine($img, [
+    '' => '',
+], [
+    '' => '',
+]);
