@@ -36,7 +36,14 @@ public class MainRes {
                 .fop(toCast(ClassConstImpl.class))
                 .map(a -> a.getDefaultValue())
                 .fop(toCast(PhpExpression.class))
-                .fap(exp -> ctx.subCtxEmpty().findExprType(exp));
+                .fap(exp -> ctx.subCtxEmpty().findExprType(exp))
+                // modifying type is actually pretty bad since it could be
+                // cached, but for constants we are neglecting that, because nah
+                .btw(t -> opt(cst.getClassReference())
+                    .cst(ClassReferenceImpl.class)
+                    .map(ref -> ref.getFQN())
+                    .thn(fqn -> t.cstName = opt(cst.getName())
+                        .map(cstName -> fqn + "::" + cstName)));
         }
     }
 

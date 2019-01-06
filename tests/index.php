@@ -2,6 +2,7 @@
 
 use DeepTest\TestData;
 use Illuminate\Database\Eloquent\Model, Lib\Utils\Fp;
+use NeptuniaNs\Plutia;
 
 class DeepKeysTest
 {
@@ -1108,3 +1109,8 @@ $doStuff = function($arg = ZHOPA){};
 $doStuff('');
 
 image_type_to_mime_type('');
+
+$toyType = Plutia::TOY_NEP;
+if ($toyType === \NeptuniaNs\Plutia::TOY_NEP) {
+
+}
