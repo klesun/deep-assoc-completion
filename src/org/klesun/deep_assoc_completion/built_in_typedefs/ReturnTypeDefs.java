@@ -7,8 +7,7 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 
 import static org.klesun.deep_assoc_completion.structures.Mkt.*;
-import static org.klesun.lang.Lang.T2;
-import static org.klesun.lang.Lang.list;
+import static org.klesun.lang.Lang.*;
 
 public class ReturnTypeDefs {
 
@@ -226,5 +225,37 @@ public class ReturnTypeDefs {
             T2("user", str(call).mt()),
             T2("pass", str(call).mt())
         ));
+    }
+
+    public static Iterable<DeepType> getReturnType(FunctionReferenceImpl call, IFuncCtx callCtx)
+    {
+        String name = opt(call.getName()).def("");
+        if (name.equals("curl_getinfo") && !callCtx.getArg(1).has()) {
+            return list(curl_getinfo(call));
+        } else if (name.equals("stream_get_meta_data")) {
+            return list(stream_get_meta_data(call));
+        } else if (name.equals("mysqli_get_links_stats")) {
+            return list(mysqli_get_links_stats(call));
+        } else if (name.equals("localeconv")) {
+            return list(localeconv(call));
+        } else if (name.equals("proc_get_status")) {
+            return list(proc_get_status(call));
+        } else if (name.equals("getrusage")) {
+            return list(getrusage(call));
+        } else if (name.equals("error_get_last")) {
+            return list(error_get_last(call));
+        } else if (name.equals("dns_get_record")) {
+            return list(dns_get_record(call));
+        } else if (list("stat", "fstat", "lstat").contains(name)) {
+            return list(fstat(call));
+        } else if (name.equals("ob_get_status")) {
+            return list(ob_get_status(callCtx, call));
+        } else if (name.equals("getimagesize")) {
+            return list(getimagesize(call));
+        } else if (name.equals("parse_url")) {
+            return list(parse_url(call));
+        } else {
+            return list();
+        }
     }
 }

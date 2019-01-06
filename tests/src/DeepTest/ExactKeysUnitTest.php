@@ -65,6 +65,7 @@ class ExactKeysUnitTest
             'cached_plinks',
         ]];
         $localeMeta = localeconv();
+        $localeMeta[''];
         $list[] = [$localeMeta, [
             'decimal_point', // '.',
             'thousands_sep', // '',

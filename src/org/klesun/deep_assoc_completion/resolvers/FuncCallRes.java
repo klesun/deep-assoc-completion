@@ -10,17 +10,19 @@ import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.klesun.deep_assoc_completion.built_in_typedefs.ReturnTypeDefs;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.IFuncCtx;
+import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.helpers.ScopeFinder;
 import org.klesun.deep_assoc_completion.structures.ArgOrder;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.helpers.ScopeFinder;
-import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.deep_assoc_completion.structures.Mkt;
-import org.klesun.lang.*;
-
-import static org.klesun.deep_assoc_completion.built_in_typedefs.ReturnTypeDefs.*;
+import org.klesun.lang.It;
+import org.klesun.lang.L;
+import org.klesun.lang.Lang;
+import org.klesun.lang.Tls;
 
 public class FuncCallRes extends Lang
 {
@@ -255,36 +257,14 @@ public class FuncCallRes extends Lang
                 return ctx.getSelfType().map(idea -> DeepType.makeClsRef(call, idea));
             } else if (name.equals("get_object_vars")) {
                 return list(get_object_vars(callCtx, call));
-            } else if (name.equals("curl_getinfo") && !callCtx.getArg(1).has()) {
-                return list(curl_getinfo(call));
-            } else if (name.equals("stream_get_meta_data")) {
-                return list(stream_get_meta_data(call));
-            } else if (name.equals("mysqli_get_links_stats")) {
-                return list(mysqli_get_links_stats(call));
-            } else if (name.equals("localeconv")) {
-                return list(localeconv(call));
-            } else if (name.equals("proc_get_status")) {
-                return list(proc_get_status(call));
-            } else if (name.equals("getrusage")) {
-                return list(getrusage(call));
-            } else if (name.equals("error_get_last")) {
-                return list(error_get_last(call));
-            } else if (name.equals("dns_get_record")) {
-                return list(dns_get_record(call));
-            } else if (list("stat", "fstat", "lstat").contains(name)) {
-                return list(fstat(call));
-            } else if (name.equals("ob_get_status")) {
-                return list(ob_get_status(callCtx, call));
-            } else if (name.equals("getimagesize")) {
-                return list(getimagesize(call));
-            } else if (name.equals("parse_url")) {
-                return list(parse_url(call));
             } else {
-                // try to get type info from standard_2.php
-                return opt(call.resolve())
-                    .fop(toCast(Function.class))
-                    .map(func -> new DeepType(call, getDocType(func)))
-                    .itr();
+                return It.frs(
+                    () -> ReturnTypeDefs.getReturnType(call, callCtx),
+                    () -> opt(call.resolve())
+                        // try to get type info from standard_2.php
+                        .fop(toCast(Function.class))
+                        .map(func -> new DeepType(call, getDocType(func)))
+                );
             }
         }).def(list());
     }
