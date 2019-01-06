@@ -139,7 +139,7 @@ public class MethCallRes extends Lang
                 .unq(t2 -> t2.a);
             return It.cnc(
                 som(new DeepType(methCall, ideaType)),
-                fieldNames.map(nme -> KeyUsageResolver.makeAssoc(nme.b, som(nme)))
+                fieldNames.map(nme -> UsageResolver.makeAssoc(nme.b, som(nme)))
             );
         });
     }

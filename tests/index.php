@@ -1126,3 +1126,16 @@ imageaffine($img, [
 proc_open('ls', [0 => 1], &$pipes, $cwd, $env, [
     ''
 ]);
+
+JSON_PRETTY_PRINT;
+
+str_pad('asd', '0', '');
+
+json_encode(null, '');
+
+SIGKILL;
+
+pcntl_signal(SIGQUIT, function($code, $info){
+    $code === SIGILL;
+    $info['code'];
+});

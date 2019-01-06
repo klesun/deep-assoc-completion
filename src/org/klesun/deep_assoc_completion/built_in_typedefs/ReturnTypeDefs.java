@@ -261,7 +261,7 @@ public class ReturnTypeDefs
     }
     private It<DeepType> image_type_to_mime_type(FunctionReferenceImpl call)
     {
-        return ArgTypeDefs.MIME_TYPES.map(nme -> nme.b)
+        return Cst.IMAGETYPE_.map(nme -> nme.b)
             .map(strVal -> str(call, strVal));
     }
 

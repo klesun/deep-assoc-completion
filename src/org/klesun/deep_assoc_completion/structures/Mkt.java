@@ -1,8 +1,12 @@
 package org.klesun.deep_assoc_completion.structures;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.resolvers.MainRes;
+import org.klesun.lang.It;
 import org.klesun.lang.Opt;
 
 import static org.klesun.lang.Lang.*;
@@ -25,6 +29,11 @@ public class Mkt {
     }
 
     public static DeepType inte(PsiElement psi, Integer content)
+    {
+        return new DeepType(psi, PhpType.INT, content + "");
+    }
+
+    public static DeepType inte(PsiElement psi, String content)
     {
         return new DeepType(psi, PhpType.INT, content + "");
     }
@@ -52,6 +61,11 @@ public class Mkt {
     public static DeepType res(PsiElement psi)
     {
         return new DeepType(psi, PhpType.RESOURCE);
+    }
+
+    public static DeepType callable(PsiElement psi)
+    {
+        return new DeepType(psi, PhpType.CALLABLE);
     }
 
     public static DeepType arr(PsiElement psi)
@@ -82,6 +96,13 @@ public class Mkt {
             assoct.addKey(keyName, psi).addType(Granted(mt), ideaType).addComments(cmnt);
         }));
         return assoct;
+    }
+
+    public static It<DeepType> cst(IExprCtx ctx, Iterable<String> cstNames)
+    {
+        return ctx.getProject().map(p -> PhpIndex.getInstance(p))
+            .fap(idx -> It(cstNames).fap(nme -> It(idx.getConstantsByName(nme)))
+                .fap(cstDef -> MainRes.resolveConst(cstDef, ctx)));
     }
 
     public static DeepType mixed(PsiElement psi)

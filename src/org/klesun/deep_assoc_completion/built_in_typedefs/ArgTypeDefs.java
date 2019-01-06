@@ -1,13 +1,10 @@
 package org.klesun.deep_assoc_completion.built_in_typedefs;
 
-import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.Function;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.resolvers.MainRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
-import org.klesun.lang.L;
 import org.klesun.lang.Tls;
 
 import static org.klesun.deep_assoc_completion.structures.Mkt.*;
@@ -21,28 +18,6 @@ public class ArgTypeDefs
     {
         this.ctx = ctx;
     }
-
-    // T2(constantName, mimeTypeStr)
-    final public static L<T2<String, String>> MIME_TYPES = list(
-        T2("IMAGETYPE_GIF"     , "image/gif"),
-        T2("IMAGETYPE_JPEG"    , "image/jpeg"),
-        T2("IMAGETYPE_PNG"     , "image/png"),
-        T2("IMAGETYPE_SWF"     , "application/x-shockwave-flash"),
-        T2("IMAGETYPE_PSD"     , "image/psd"),
-        T2("IMAGETYPE_BMP"     , "image/bmp"),
-        T2("IMAGETYPE_TIFF_II" , "(intel byte order)	image/tiff"),
-        T2("IMAGETYPE_TIFF_MM" , "(motorola byte order)	image/tiff"),
-        T2("IMAGETYPE_JPC"     , "application/octet-stream"),
-        T2("IMAGETYPE_JP2"     , "image/jp2"),
-        T2("IMAGETYPE_JPX"     , "application/octet-stream"),
-        T2("IMAGETYPE_JB2"     , "application/octet-stream"),
-        T2("IMAGETYPE_SWC"     , "application/x-shockwave-flash"),
-        T2("IMAGETYPE_IFF"     , "image/iff"),
-        T2("IMAGETYPE_WBMP"    , "image/vnd.wap.wbmp"),
-        T2("IMAGETYPE_XBM"     , "image/xbm"),
-        T2("IMAGETYPE_ICO"     , "image/vnd.microsoft.icon"),
-        T2("IMAGETYPE_WEBP"    , "image/webp")
-    );
 
     // first arg
     private static DeepType stream_context_create(Function def)
@@ -105,18 +80,25 @@ public class ArgTypeDefs
     // first arg
     private It<DeepType> image_type_to_mime_type(Function def)
     {
-        PhpIndex idx = PhpIndex.getInstance(def.getProject());
-        return MIME_TYPES.fap(nme -> It(idx.getConstantsByName(nme.a)))
-            .fap(cstDef -> MainRes.resolveConst(cstDef, ctx));
+        It<String> cstNames = Cst.IMAGETYPE_.map(t -> t.a);
+        return cst(ctx, cstNames);
     }
 
     public Iterable<DeepType> getArgType(Function builtInFunc, int argOrder)
     {
-        if ("stream_context_create".equals(builtInFunc.getName()) && argOrder == 0) {
+        String name = opt(builtInFunc.getName()).def("");
+        if (list("stream_context_create", "stream_context_get_default", "stream_context_set_default").contains(name) && argOrder == 0) {
             return som(stream_context_create(builtInFunc));
-        } else if ("image_type_to_mime_type".equals(builtInFunc.getName()) && argOrder == 0) {
+        } else if ("stream_context_set_params".equals(builtInFunc.getName()) && argOrder == 1) {
+            return som(assoc(builtInFunc, list(
+                T2("notification", callable(builtInFunc).mt()),
+                T2("options", mixed(builtInFunc).mt())
+            )));
+        } else if ("stream_context_set_option".equals(name) && argOrder == 1) {
+            return som(stream_context_create(builtInFunc));
+        } else if ("image_type_to_mime_type".equals(name) && argOrder == 0) {
             return image_type_to_mime_type(builtInFunc);
-        } else if ("imageaffine".equals(builtInFunc.getName())) {
+        } else if ("imageaffine".equals(name)) {
             if (argOrder == 1) {
                 return som(assoc(builtInFunc, Tls.range(0, 6)
                     .map(n -> T2(n + "", mixed(builtInFunc).mt()))));
@@ -128,7 +110,7 @@ public class ArgTypeDefs
                     T2("height", mixed(builtInFunc).mt())
                 )));
             }
-        } else if ("imagecrop".equals(builtInFunc.getName())) {
+        } else if ("imagecrop".equals(name)) {
             if (argOrder == 1) {
                 return som(assoc(builtInFunc, list(
                     T2("x", mixed(builtInFunc).mt()),
@@ -137,7 +119,7 @@ public class ArgTypeDefs
                     T2("height", mixed(builtInFunc).mt())
                 )));
             }
-        } else if ("proc_open".equals(builtInFunc.getName())) {
+        } else if ("proc_open".equals(name)) {
             if (argOrder == 1) {
                 return som(assocCmnt(builtInFunc, list(
                     T3("0", mixed(builtInFunc).mt(), som("STDIN")),
@@ -151,6 +133,14 @@ public class ArgTypeDefs
                     T3("context", res(builtInFunc).mt(), som("= stream_context_create()")),
                     T3("binary_pipes", mixed(builtInFunc).mt(), non())
                 )));
+            }
+        } else if ("str_pad".equals(name) && argOrder == 2) {
+            return cst(ctx, list("STR_PAD_LEFT", "STR_PAD_RIGHT", "STR_PAD_BOTH"));
+        } else if ("json_encode".equals(name) && argOrder == 1) {
+            return cst(ctx, Cst.JSON_.map(cst -> cst.a));
+        } else if ("pcntl_signal".equals(name)) {
+            if (argOrder == 0) {
+                return cst(ctx, Cst.SIG.map(cst -> cst.a));
             }
         }
         return It.non();

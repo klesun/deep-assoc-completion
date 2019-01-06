@@ -22,12 +22,12 @@ import java.util.Set;
  * takes associative array that caret points at and returns
  * all key names that will be accessed on this array later
  */
-public class KeyUsageResolver extends Lang
+public class UsageResolver extends Lang
 {
     final private IExprCtx fakeCtx;
     final private int depthLeft;
 
-    public KeyUsageResolver(IExprCtx fakeCtx, int depthLeft)
+    public UsageResolver(IExprCtx fakeCtx, int depthLeft)
     {
         this.fakeCtx = fakeCtx;
         this.depthLeft = depthLeft;
@@ -68,7 +68,7 @@ public class KeyUsageResolver extends Lang
                             .map(name -> {
                                 DeepType assoct = new DeepType(arg, PhpType.ARRAY);
                                 S<Mt> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
-                                    .fap(acc -> new KeyUsageResolver(nextCtx, depthLeft - 1).findExprTypeFromUsage(acc)).wap(Mt::new);
+                                    .fap(acc -> new UsageResolver(nextCtx, depthLeft - 1).findExprTypeFromUsage(acc)).wap(Mt::new);
                                 assoct.addKey(name, t.definition)
                                     .addType(getType, PhpType.UNSET);
                                 return assoct;
@@ -80,7 +80,7 @@ public class KeyUsageResolver extends Lang
                 opt(arg.getDefaultValue())
                     .cst(PhpExpression.class)
                     .fap(xpr -> nextCtx.subCtxEmpty().findExprType(xpr)),
-                new KeyUsageResolver(nextCtx, depthLeft - 1).findVarTypeFromUsage(arg)
+                new UsageResolver(nextCtx, depthLeft - 1).findVarTypeFromUsage(arg)
             ));
     }
 
@@ -91,7 +91,7 @@ public class KeyUsageResolver extends Lang
             .fop(toCast(ParameterImpl.class))
             .fap(arg -> findVarReferences(arg))
             .fop(var -> opt(var.getParent()))
-            // TODO: include not just dirrect calls,
+            // TODO: include not just direct calls,
             // but also array_map and other built-ins
             .fop(toCast(FunctionReference.class))
             .fop(call -> L(call.getParameters()).gat(caretArgOrder))

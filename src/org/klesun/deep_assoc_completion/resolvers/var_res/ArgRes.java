@@ -6,17 +6,25 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
-import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.Function;
+import com.jetbrains.php.lang.psi.elements.FunctionReference;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_assoc_completion.built_in_typedefs.Cst;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.resolvers.ClosRes;
+import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
+import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
 import org.klesun.deep_assoc_completion.structures.ArgOrder;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.helpers.*;
-import org.klesun.deep_assoc_completion.resolvers.ClosRes;
-import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
-import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
-import org.klesun.lang.*;
+import org.klesun.deep_assoc_completion.structures.Mkt;
+import org.klesun.lang.It;
+import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 public class ArgRes extends Lang
 {
@@ -65,6 +73,15 @@ public class ArgRes extends Lang
                 return L(call.getParameters()).gat(0)
                     .fop(toCast(PhpExpression.class))
                     .fap(arr -> trace.subCtxEmpty().findExprType(arr).fap(Mt::getElSt));
+            } else if (argOrderInLambda == 0 && "pcntl_signal".equals(call.getName())) {
+                return Mkt.cst(trace.subCtxEmpty(), Cst.SIG.map(a -> a.a));
+            } else if (argOrderInLambda == 1 && "pcntl_signal".equals(call.getName())) {
+                return som(Mkt.assoc(call, list(
+                    T2("signo", Mkt.inte(call, 11).mt()),
+                    T2("errno", Mkt.inte(call, 0).mt()),
+                    T2("code", Mkt.inte(call, 0).mt()),
+                    T2("addr", Mkt.inte(call, "4294967314173").mt())
+                ))).itr();
             }
         }
         return It.non();
@@ -112,7 +129,7 @@ public class ArgRes extends Lang
                                 , () -> It(call.multiResolve(false))
                                     .fop(res -> opt(res.getElement()))
                                     .fop(toCast(Function.class))
-                                    .fap(func -> new KeyUsageResolver(subCtx, 3)
+                                    .fap(func -> new UsageResolver(subCtx, 3)
                                         .resolveArgCallArrKeys(func, funcVarOrder, caretArgOrder))
                             );
                         }))

@@ -18,7 +18,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.helpers.*;
-import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
+import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
 import org.klesun.lang.It;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -79,7 +79,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 
-        return new KeyUsageResolver(exprCtx, 3).resolve(lit);
+        return new UsageResolver(exprCtx, 3).resolve(lit);
     }
 
     @Override

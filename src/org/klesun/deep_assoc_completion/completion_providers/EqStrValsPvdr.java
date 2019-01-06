@@ -16,7 +16,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.GuiUtil;
 import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
+import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
 
@@ -70,7 +70,7 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters>
 
     private static It<DeepType> resolveUsedValues(StringLiteralExpression lit, IExprCtx funcCtx)
     {
-        return new KeyUsageResolver(funcCtx, 3).findExprTypeFromUsage(lit);
+        return new UsageResolver(funcCtx, 3).findExprTypeFromUsage(lit);
     }
 
     /** in_array($type, ['']) */
