@@ -1,9 +1,12 @@
 package org.klesun.deep_assoc_completion.built_in_typedefs;
 
 import com.jetbrains.php.lang.psi.elements.Function;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.KeyType;
+import org.klesun.deep_assoc_completion.structures.Mkt;
 import org.klesun.lang.It;
 import org.klesun.lang.Tls;
 
@@ -138,10 +141,22 @@ public class ArgTypeDefs
             return cst(ctx, list("STR_PAD_LEFT", "STR_PAD_RIGHT", "STR_PAD_BOTH"));
         } else if ("json_encode".equals(name) && argOrder == 1) {
             return cst(ctx, Cst.JSON_.map(cst -> cst.a));
-        } else if ("pcntl_signal".equals(name)) {
-            if (argOrder == 0) {
-                return cst(ctx, Cst.SIG.map(cst -> cst.a));
-            }
+        } else if ("pcntl_signal".equals(name) && argOrder == 0) {
+            return cst(ctx, Cst.SIG.map(cst -> cst.a));
+        } else if ("curl_setopt".equals(name) && argOrder == 1) {
+            return cst(ctx, Cst.CURLOPT_().map(cst -> cst.a));
+        } else if ("curl_setopt_array".equals(name) && argOrder == 1) {
+            DeepType arrt = new DeepType(builtInFunc, PhpType.ARRAY, false);
+            Cst.CURLOPT_().fch(t -> t.nme((cstName, getType, descr) -> {
+                Mkt.cst(ctx, som(cstName)).fch(cst -> {
+                    Mt valmt = getType.apply(cst.definition);
+                    S<It<DeepType>> ktit = Granted(som(cst).itr());
+                    arrt.addKey(KeyType.mt(ktit, cst.definition))
+                        .addType(Granted(valmt), valmt.getIdeaTypes().fst().def(PhpType.UNSET))
+                        .addComments(opt(descr).flt(c -> c.length() > 0));
+                });
+            }));
+            return som(arrt);
         }
         return It.non();
     }

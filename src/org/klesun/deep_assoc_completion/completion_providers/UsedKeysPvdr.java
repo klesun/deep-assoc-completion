@@ -36,6 +36,15 @@ import static org.klesun.lang.Lang.*;
  */
 public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
 {
+    private static LookupElementBuilder makeLookupBase(String name, String briefValueF, String type)
+    {
+        return  LookupElementBuilder.create(name)
+            .bold()
+            .withIcon(AssocKeyPvdr.getIcon())
+            .withTailText(briefValueF, true)
+            .withTypeText(type);
+    }
+
     private static It<LookupElement> makeLookup(DeepType.Key keyEntry)
     {
         Opt<String> briefVal = keyEntry.getBriefVal();
@@ -45,15 +54,21 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         String comment = Tls.implode(" ", keyEntry.comments);
         String briefValue = briefVal.map(v -> " = " + v).def("");
         if (!comment.trim().equals("")) {
-            briefValue = Tls.substr(briefValue, 0, 12) + " " + comment;
+            briefValue = Tls.substr(briefValue, 0, 12) + " " + Tls.substr(comment, 0, 60);
         }
         final String briefValueF = briefValue;
-        return keyEntry.keyType.getNames()
-            .map(name -> LookupElementBuilder.create(name)
-                .bold()
-                .withIcon(AssocKeyPvdr.getIcon())
-                .withTailText(briefValueF, true)
-                .withTypeText(type));
+        return It(keyEntry.keyType.getTypes.get())
+            .unq(t -> t.stringValue)
+            .fap((t, i) -> It.cnc(
+                opt(t.stringValue)
+                    .flt(strVal -> !t.cstName.has() || !t.isNumber)
+                    .map(strVal -> makeLookupBase(strVal, briefValueF, type))
+                    .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 2000 - i)),
+                t.cstName
+                    .map(cstName -> makeLookupBase(cstName, briefValueF, type)
+                        .withInsertHandler(GuiUtil.toAlwaysRemoveQuotes()))
+                    .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 2000 - i + 50))
+            ));
     }
 
     private static Opt<ArrayCreationExpression> assertArrCtorKey(PsiElement caretPsi)

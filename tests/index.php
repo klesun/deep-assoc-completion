@@ -1139,3 +1139,12 @@ pcntl_signal(SIGQUIT, function($code, $info){
     $code === SIGILL;
     $info['code'];
 });
+
+$curl = curl_init('http://google.com');
+curl_setopt($curl, '', 1234);
+curl_setopt_array($curl, [
+    CURLOPT_FTP_USE_EPSV => '',
+]);
+
+
+
