@@ -14,9 +14,10 @@ import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
-import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.helpers.*;
+import org.klesun.deep_assoc_completion.helpers.GuiUtil;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.KeyUsageResolver;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
 
 import static org.klesun.lang.Lang.*;
@@ -27,17 +28,29 @@ public class EqStrValsPvdr extends CompletionProvider<CompletionParameters>
 {
     private static LookupElementBuilder makeLookupBase(String keyName, String type)
     {
-        return LookupElementBuilder.create(keyName)
+        LookupElementBuilder lookup = LookupElementBuilder.create(keyName)
             .bold()
             .withIcon(AssocKeyPvdr.getIcon())
             .withTypeText(type);
+        if ("int".equals(type)) {
+            lookup = lookup.withInsertHandler(GuiUtil.toRemoveIntStrQuotes());
+        }
+        return lookup;
     }
 
     private static It<LookupElement> makeOptions(It<DeepType> tit)
     {
-        return tit.fop(t -> opt(t.stringValue)).unq()
-            .map(strVal -> makeLookupBase(strVal, "string"))
-            .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, 2000 - i));
+        return tit.unq(t -> t.stringValue).fap((t, i) -> It.cnc(
+            opt(t.stringValue)
+                .flt(strVal -> !t.cstName.has() || !t.isNumber)
+                .map(strVal -> makeLookupBase(strVal, t.briefType + ""))
+                .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 2000 - i)),
+            t.cstName
+                .map(cstName -> makeLookupBase(cstName, t.briefType + "")
+                    .withTailText(opt(t.stringValue).map(strVal -> " = " + strVal).def(""), true)
+                    .withInsertHandler(GuiUtil.toAlwaysRemoveQuotes()))
+                .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 2000 - i + 50))
+        ));
     }
 
     /** $type === '' */

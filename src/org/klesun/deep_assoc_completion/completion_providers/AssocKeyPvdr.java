@@ -3,7 +3,6 @@ package org.klesun.deep_assoc_completion.completion_providers;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
@@ -58,22 +57,6 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         return getMaxDepth(parameters.isAutoPopup(), parameters.getEditor().getProject());
     }
 
-    private static InsertHandler<LookupElement> makeInsertHandler()
-    {
-        return (ctx, lookup) -> {
-            int from = ctx.getStartOffset();
-            int to = ctx.getTailOffset();
-            if (Tls.isNum(lookup.getLookupString()) && from != to) {
-                if (ctx.getEditor().getDocument().getText(TextRange.create(from - 1, from)).equals("'") &&
-                    ctx.getEditor().getDocument().getText(TextRange.create(to, to + 1)).equals("'")
-                ) {
-                    ctx.getEditor().getDocument().deleteString(to, to + 1);
-                    ctx.getEditor().getDocument().deleteString(from - 1, from);
-                }
-            }
-        };
-    }
-
     private static LookupElementBuilder makePaddedLookup(String keyName, String ideaType, String briefVal)
     {
         ideaType = !ideaType.equals("") ? ideaType : "?";
@@ -85,7 +68,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         briefVal = Tls.substr(briefVal, 0, BRIEF_VALUE_MAX_LEN - keyName.length());
         return LookupElementBuilder.create(keyName)
             .withBoldness(!Tls.isNum(keyName))
-            .withInsertHandler(makeInsertHandler())
+            .withInsertHandler(GuiUtil.toRemoveIntStrQuotes())
             .withTailText(briefVal, true)
             .withIcon(getIcon())
             .withTypeText(ideaType, false);
@@ -99,7 +82,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
     {
         public LookupElementBuilder lookupData;
         private boolean includeQuotes;
-        private InsertHandler<LookupElement> onInsert = makeInsertHandler();
+        private InsertHandler<LookupElement> onInsert = GuiUtil.toRemoveIntStrQuotes();
 
         public MutableLookup(LookupElementBuilder lookupData, boolean includeQuotes) {
             this.lookupData = lookupData;

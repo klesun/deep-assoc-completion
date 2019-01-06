@@ -1,9 +1,6 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
-import com.jetbrains.php.lang.psi.elements.AssignmentExpression;
-import com.jetbrains.php.lang.psi.elements.ClassConstantReference;
-import com.jetbrains.php.lang.psi.elements.ParenthesizedExpression;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
@@ -43,6 +40,16 @@ public class MainRes {
         }
     }
 
+    public static It<DeepType> resolveConst(Constant cst, IExprCtx ctx)
+    {
+        return opt(cst.getValue())
+            .fop(toCast(PhpExpression.class))
+            .fap(exp -> ctx.findExprType(exp))
+            // modifying type is actually pretty bad since it could be
+            // cached, but for constants we are neglecting that, because nah
+            .btw(t -> t.cstName = opt(cst.getName()));
+    }
+
     public It<DeepType> resolve(PhpExpression expr)
     {
         return It.frs(() -> It.non()
@@ -72,10 +79,8 @@ public class MainRes {
                     !cst.getText().toLowerCase().equals("false"))
                 .fap(cst -> It(cst.multiResolve(false))
                     .map(ref -> ref.getElement())
-                    .fop(toCast(PhpDefineImpl.class))
-                    .fop(def -> opt(def.getValue()))
-                    .fop(toCast(PhpExpression.class))
-                    .fap(exp -> ctx.findExprType(exp)))
+                    .cst(Constant.class)
+                    .fap(def -> resolveConst(def, ctx)))
             , () -> Tls.cast(AssignmentExpression.class, expr)
                 .map(ass -> ass.getValue())
                 .fop(toCast(PhpExpression.class))

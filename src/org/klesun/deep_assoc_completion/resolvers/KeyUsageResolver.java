@@ -226,10 +226,7 @@ public class KeyUsageResolver extends Lang
                 opt(builtInFunc.getName())
                     .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
                     .fap(n -> resolveReplaceKeys(argList, argOrder)),
-                opt(builtInFunc.getName())
-                    .flt(n -> n.equals("stream_context_create"))
-                    .flt(n -> argOrder == 0)
-                    .map(n -> ArgTypeDefs.stream_context_create(builtInFunc)),
+                new ArgTypeDefs(fakeCtx.subCtxEmpty()).getArgType(builtInFunc, argOrder),
                 findKeysUsedInArrayMap(builtInFunc, argList, argOrder)
             ));
     }

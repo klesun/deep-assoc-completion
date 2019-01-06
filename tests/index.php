@@ -1062,6 +1062,9 @@ class someSubclass
     public $x = 'rrr';
 }
 
+const ZHOPA = 123;
+//define('ZHOPA', '123');
+
 class someClass
 {
     public function method()
@@ -1088,7 +1091,7 @@ stream_context_create([
         ''
     ],
     'ftp' => [
-        'resume_pos' => '',
+        '' => '',
     ],
     'phar' => [
         ''
@@ -1101,3 +1104,7 @@ stream_context_create([
 //    ]
 ]);
 
+$doStuff = function($arg = ZHOPA){};
+$doStuff('');
+
+image_type_to_mime_type('');

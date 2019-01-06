@@ -31,6 +31,8 @@ public class DeepType extends Lang
     public final LinkedHashSet<String> pdoBindVars = new LinkedHashSet<>();
     public Opt<IExprCtx> ctorArgs = opt(null);
     public Opt<PhpType> clsRefType = non();
+    // constant name
+    public Opt<String> cstName = non();
     public final @Nullable String stringValue;
     public final PsiElement definition;
     public final PhpType briefType;
