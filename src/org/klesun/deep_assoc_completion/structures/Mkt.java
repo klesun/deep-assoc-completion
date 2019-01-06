@@ -22,9 +22,19 @@ public class Mkt {
         return new DeepType(psi, PhpType.INT);
     }
 
+    public static DeepType inte(PsiElement psi, Integer content)
+    {
+        return new DeepType(psi, PhpType.INT, content + "");
+    }
+
     public static DeepType floate(PsiElement psi)
     {
         return new DeepType(psi, PhpType.FLOAT);
+    }
+
+    public static DeepType floate(PsiElement psi, double content)
+    {
+        return new DeepType(psi, PhpType.FLOAT, content + "");
     }
 
     public static DeepType bool(PsiElement psi)
@@ -32,14 +42,24 @@ public class Mkt {
         return new DeepType(psi, PhpType.BOOLEAN);
     }
 
+    public static DeepType bool(PsiElement psi, Boolean content)
+    {
+        return new DeepType(psi, PhpType.BOOLEAN, (content ? 1 : 0) + "");
+    }
+
     public static DeepType arr(PsiElement psi)
     {
         return new DeepType(psi, PhpType.ARRAY);
     }
 
+    public static DeepType arr(PsiElement psi, Mt elt)
+    {
+        return elt.getInArray(psi);
+    }
+
     public static DeepType assoc(PsiElement psi, Iterable<T2<String, Mt>> keys)
     {
-        DeepType assoct = new DeepType(psi, PhpType.ARRAY);
+        DeepType assoct = new DeepType(psi, PhpType.ARRAY, false);
         for (T2<String, Mt> key: keys) {
             PhpType ideaType = key.b.getIdeaTypes().fst().def(PhpType.UNSET);
             assoct.addKey(key.a, psi).addType(Granted(key.b), ideaType);

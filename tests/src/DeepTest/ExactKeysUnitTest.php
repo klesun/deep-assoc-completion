@@ -18,6 +18,7 @@ class ExactKeysUnitTest
         $handle = curl_init('google.com');
         $response = curl_exec($handle);
         $curlInfo = curl_getinfo($handle);
+        $curlInfo[''];
         $list[] = [$curlInfo, [
             'url', // 'http://google.com/',
             'content_type', // 'text/html; charset=UTF-8',
@@ -47,6 +48,7 @@ class ExactKeysUnitTest
             'local_port', // 57382,
         ]];
         $streamMeta = stream_get_meta_data(STDIN);
+        $streamMeta[''];
         $list[] = [$streamMeta, [
             'timed_out', // false,
             'blocked', // true,
@@ -87,15 +89,26 @@ class ExactKeysUnitTest
             'mon_grouping', // [],
         ]];
         $procMeta = proc_get_status($handle);
+        $procMeta[''];
         $list[] = [$procMeta, [
-            'command', // string - The command string that was passed to proc_open().
-            'pid', // int - process id
-            'running', // bool - TRUE if the process is still running, FALSE if it has terminated.
-            'signaled', // bool - TRUE if the child process has been terminated by an uncaught signal. Always set to FALSE on Windows.
-            'stopped', // bool - TRUE if the child process has been stopped by a signal. Always set to FALSE on Windows.
-            'exitcode', // int - The exit code returned by the process (which is only meaningful if running is FALSE). Only first call of this function return real value, next calls return -1.
-            'termsig', // int - The number of the signal that caused the child process to terminate its execution (only meaningful if signaled is TRUE).
-            'stopsig', // int - The number of the signal that caused the child process to stop its execution (only meaningful if stopped is TRUE).
+            'command' => 'ls',
+            'pid' => 29879,
+            'running' => false,
+            'signaled' => false,
+            'stopped' => false,
+            'exitcode' => 0,
+            'termsig' => 0,
+            'stopsig' => 0,
+
+
+            'command', // 'ls', string - The command string that was passed to proc_open().
+            'pid', // 29879, int - process id
+            'running', // false, bool - TRUE if the process is still running, FALSE if it has terminated.
+            'signaled', // false, bool - TRUE if the child process has been terminated by an uncaught signal. Always set to FALSE on Windows.
+            'stopped', // false, bool - TRUE if the child process has been stopped by a signal. Always set to FALSE on Windows.
+            'exitcode', // 0, int - The exit code returned by the process (which is only meaningful if running is FALSE). Only first call of this function return real value, next calls return -1.
+            'termsig', // 0, int - The number of the signal that caused the child process to terminate its execution (only meaningful if signaled is TRUE).
+            'stopsig', // 0, int - The number of the signal that caused the child process to stop its execution (only meaningful if stopped is TRUE).
         ]];
         $rusage = getrusage();
         $list[] = [$rusage, [
@@ -118,6 +131,7 @@ class ExactKeysUnitTest
             'ru_stime.tv_sec', // 0,
         ]];
         $lastError = error_get_last();
+        $lastError[''];
         $list[] = [$lastError, [
             'type', // 2,
             'message', // 'proc_get_status() expects parameter 1 to be resource, null given',
@@ -125,6 +139,7 @@ class ExactKeysUnitTest
             'line', // 1,
         ]];
         $dnsRecord = dns_get_record('google.com');
+        $dnsRecord[0][''];
         $list[] = [$dnsRecord[rand()], [
             'host', // 'google.com',
             'class', // 'IN',
@@ -142,6 +157,7 @@ class ExactKeysUnitTest
             'value', // 'pki.goog▒',
         ]];
         $stat = stat('/home/klesun'); // same for fstat(), lstat()
+        $stat[''];
         $list[] = [$stat, [
             'dev', // 2049,
             'ino', // 13238274,
@@ -169,6 +185,7 @@ class ExactKeysUnitTest
             'buffer_used', // 1,
         ]];
         $imgInfo = getimagesize('avatar.png');
+        $imgInfo[''];
         $list[] = [$imgInfo, [
             '0', // 200,
             '1', // 200,
@@ -179,6 +196,7 @@ class ExactKeysUnitTest
             'channels',
         ]];
         $urlInfo = parse_url('https://mail.google.com/mail/u/1/&onpage=40#inbox/FMfcgxvzKQhBBjPqwdDkmmrgBMGfHvjz?page=5');
+        $urlInfo[''];
         $list[] = [$urlInfo, [
             'scheme', // 'https',
             'host', // 'mail.google.com',

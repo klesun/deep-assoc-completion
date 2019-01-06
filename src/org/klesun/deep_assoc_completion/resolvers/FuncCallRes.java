@@ -259,7 +259,7 @@ public class FuncCallRes extends Lang
                 return list(get_object_vars(callCtx, call));
             } else {
                 return It.frs(
-                    () -> ReturnTypeDefs.getReturnType(call, callCtx),
+                    () -> new ReturnTypeDefs(ctx.subCtxEmpty()).getReturnType(call, callCtx),
                     () -> opt(call.resolve())
                         // try to get type info from standard_2.php
                         .fop(toCast(Function.class))

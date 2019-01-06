@@ -179,19 +179,30 @@ public class Mt extends Lang
                 briefValues.add("{" + Tls.implode(", ", keyNames.map(k -> k + ":")) + "}");
             }
         }
-        It<String> strvals = types.fop(t -> opt(t.stringValue));
+        It<String> strvals = types.fop(litt -> opt(litt.stringValue)
+            .map(s -> {
+                boolean literal = types.all((t, i) -> t.definition.getText().equals(s))
+                    || litt.briefType.equals(PhpType.INT)
+                    || litt.briefType.equals(PhpType.FLOAT);
+                if (literal) {
+                    return s;
+                } else if (litt.briefType.equals(PhpType.BOOLEAN) && "1".equals(s)) {
+                    return "true";
+                } else if (litt.briefType.equals(PhpType.BOOLEAN) && "0".equals(s)) {
+                    return "false";
+                } else {
+                    return "'" + s + "'";
+                }
+            })).unq();
         if (strvals.has()) {
-            briefValues.add(Tls.implode("|", strvals
-                .arr().grp(a -> a).kys()
-                .map(s -> (types.all((t,i) -> t.definition.getText().equals(s)))
-                    ? s : "'" + s + "'")));
+            briefValues.add(Tls.implode("|", strvals));
         }
         if (types.any(t -> t.getListElemTypes().has())) {
             briefValues.add("[" + getEl().getBriefValueText(maxLen, circularRefs) + "]");
         }
         if (briefValues.isEmpty() && types.size() > 0) {
             It<String> psiParts = types.flt(t -> t.isExactPsi).map(t -> Tls.singleLine(t.definition.getText(), 40));
-            briefValues.add(Tls.implode("|", psiParts.arr().grp(a -> a).kys()));
+            briefValues.add(Tls.implode("|", psiParts.unq()));
         }
         String fullStr = Tls.implode("|", briefValues);
 
