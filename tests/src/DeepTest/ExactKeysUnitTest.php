@@ -91,16 +91,6 @@ class ExactKeysUnitTest
         $procMeta = proc_get_status($handle);
         $procMeta[''];
         $list[] = [$procMeta, [
-            'command' => 'ls',
-            'pid' => 29879,
-            'running' => false,
-            'signaled' => false,
-            'stopped' => false,
-            'exitcode' => 0,
-            'termsig' => 0,
-            'stopsig' => 0,
-
-
             'command', // 'ls', string - The command string that was passed to proc_open().
             'pid', // 29879, int - process id
             'running', // false, bool - TRUE if the process is still running, FALSE if it has terminated.
