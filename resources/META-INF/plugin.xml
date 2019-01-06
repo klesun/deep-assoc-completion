@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.12.28.001</version>
+    <version>2018.01.06.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -37,7 +37,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#61 Check if Javascript plugin is enabled before using it for syntax highlighting</li>
+        <li>Suggest class constants in string === value completion (Not just it's actual string value)</li>
+        <li>Add completion of keys in stream_context_create() params</li>
     </ul>
     ]]>
     </change-notes>
