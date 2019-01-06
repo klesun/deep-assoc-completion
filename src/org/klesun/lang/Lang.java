@@ -220,4 +220,31 @@ public class Lang
         return new It<>(list());
     }
 
+    /**
+     * will have special behaviour in places where
+     * we have a getter with already resolved value
+     */
+    public static <T> S<T> Granted(T value)
+    {
+        // return () -> value;
+        return new Granted<>(value);
+    }
+
+    public static class Granted<T> implements Tls.IOnDemand<T>
+    {
+        final private T value;
+
+        public Granted(T value) {
+            this.value = value;
+        }
+
+        public T get() {
+            return value;
+        }
+
+        @Override
+        public Opt<T> ifHas() {
+            return som(value);
+        }
+    }
 }

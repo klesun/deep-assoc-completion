@@ -171,7 +171,12 @@ public class Tls extends Lang
         return result;
     }
 
-    public static class OnDemand<T> implements S<T>
+    public interface IOnDemand<T> extends S<T>
+    {
+        Opt<T> ifHas();
+    }
+
+    public static class OnDemand<T> implements IOnDemand<T>
     {
         final private S<T> f;
         private Opt<T> value = non();
@@ -179,6 +184,9 @@ public class Tls extends Lang
         OnDemand(S<T> f)
         {
             this.f = f;
+            if (f instanceof Granted) {
+                this.get();
+            }
         }
 
         @Override
@@ -190,6 +198,10 @@ public class Tls extends Lang
         }
         public boolean has() {
             return value.has();
+        }
+
+        public Opt<T> ifHas() {
+            return value;
         }
     }
 

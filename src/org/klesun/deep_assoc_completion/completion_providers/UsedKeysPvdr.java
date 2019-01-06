@@ -38,11 +38,13 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
 {
     private static It<LookupElement> makeLookup(DeepType.Key keyEntry)
     {
+        Opt<String> briefVal = keyEntry.getBriefVal();
         String type = keyEntry.getTypes().fst().map(t -> t.briefType.toString()).def("from usage");
         return keyEntry.keyType.getNames()
             .map(name -> LookupElementBuilder.create(name)
                 .bold()
                 .withIcon(AssocKeyPvdr.getIcon())
+                .withTailText(briefVal.map(v -> " = " + v).def(""), true)
                 .withTypeText(type));
     }
 
@@ -83,6 +85,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
                     .fop(toCast(StringLiteralExpressionImpl.class))
                     .map(lit -> lit.getContents()).wap(tit -> new HashSet<>(tit.arr()));
                 return resolve(arrCtor, parameters.isAutoPopup())
+
                     .types.fap(t -> t.keys.flt(k -> k.keyType.getNames().any(n -> !alreadyDeclared.contains(n))));
             });
 

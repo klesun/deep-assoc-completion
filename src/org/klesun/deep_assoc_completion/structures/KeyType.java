@@ -2,11 +2,11 @@ package org.klesun.deep_assoc_completion.structures;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.lang.*;
+import org.klesun.lang.It;
+import org.klesun.lang.MemIt;
+import org.klesun.lang.Tls;
 
 import static org.klesun.lang.Lang.*;
-
-import static org.klesun.lang.Lang.opt;
 
 /** is there actually a point in having this and Mt as two separate classes? */
 public class KeyType

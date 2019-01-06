@@ -17,10 +17,7 @@ import com.jetbrains.php.lang.psi.elements.PhpUse;
 import com.jetbrains.php.lang.psi.elements.impl.PhpUseListImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.lang.It;
-import org.klesun.lang.L;
 import org.klesun.lang.Tls;
-
-import java.util.List;
 
 import static org.klesun.lang.Lang.*;
 
@@ -37,6 +34,12 @@ public class RemoveUnusedUsesSaveHandler implements FileDocumentManagerListener
             if (DeepSettings.inst(project).removeUnusedImportsOnSaveEnabled) {
                 PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
                 if (psiFile == null) continue;
+
+                // TODO: check if file has syntax errors! It may report false unused imports otherwise
+                // @see https://intellij-support.jetbrains.com/hc/en-us/community/posts/206778625/comments/206721629
+                // DaemonCodeAnalyzerImpl codeAnalyzer = (DaemonCodeAnalyzerImpl)DaemonCodeAnalyzer.getInstance(myProject);
+                // List infos = codeAnalyzer.runMainPasses(psiFile, document,
+                // progress);
 
                 PhpUnusedAliasInspection inspection = new PhpUnusedAliasInspection();
                 InspectionManager manager = InspectionManager.getInstance(psiFile.getProject());

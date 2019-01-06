@@ -1066,10 +1066,6 @@ class someSubclass
 const ZHOPA = 123;
 //define('ZHOPA', '123');
 
-class someClass
-{
-    public function method()
-    {
 /**
  *  @var $row = (object)[
  *       'subName' => new \someSubclass,
@@ -1084,33 +1080,39 @@ while($row = $result->fetch_object())
     $row->subName->;        // should suggest: x
     $row->childPurchase->;  // should suggest: id, price
 }
-    }
-}
 
 stream_context_create([
     'http' => [
         ''
     ],
-    'ftp' => [
-        '' => '',
-    ],
-    'phar' => [
-        ''
-    ],
-
-//    'http' => [
-//        'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-//        'method'  => 'POST',
-//        'content' => http_build_query($data)
-//    ]
+//    'ftp' => [
+//        '' => '',
+//    ],
+//    'phar' => [
+//        ''
+//    ],
 ]);
 
-$doStuff = function($arg = ZHOPA){};
-$doStuff('');
+/** @param $arg3 = ['obj' => (object)['a' => 5, 'b' => 6]] */
+$doStuff = function($arg = ZHOPA, $arg2 = Plutia::TOY_NEP, $arg3){};
+$doStuff(ZHOPA, '', ['']);
 
 image_type_to_mime_type('');
 
 $toyType = Plutia::TOY_NEP;
 if ($toyType === \NeptuniaNs\Plutia::TOY_NEP) {
 
+}
+
+/**
+ * Initializes this class with the given options.
+ *
+ * @param array $options = [
+ *     'required' => true, // Whether this element is required
+ *     'label' => 'NET Price', // The display name for this element
+ * ]
+ */
+function __construct(array $options = array())
+{
+    $options[''];
 }

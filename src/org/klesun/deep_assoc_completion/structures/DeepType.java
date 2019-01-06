@@ -112,7 +112,7 @@ public class DeepType extends Lang
     public Key addKey(String name, PsiElement definition)
     {
         DeepType kt = new DeepType(definition, PhpType.STRING, name);
-        KeyType keyType = KeyType.mt(() -> It(som(kt)), definition);
+        KeyType keyType = KeyType.mt(Granted(It(som(kt))), definition);
         Key keyEntry = new Key(keyType, definition);
         keys.add(keyEntry);
         return keyEntry;
@@ -143,7 +143,7 @@ public class DeepType extends Lang
     {
         final public KeyType keyType;
         // TODO: rename to valueTypeGetters
-        final private L<S<Mt>> typeGetters = L();
+        final private L<Tls.OnDemand<Mt>> typeGetters = L();
         // to get quick built-in type info
         final private L<PhpType> briefTypes = L();
         // where Go To Definition will lead
@@ -184,9 +184,26 @@ public class DeepType extends Lang
             return briefTypes;
         }
 
-        public L<S<Mt>> getTypeGetters()
+        public L<Tls.OnDemand<Mt>> getTypeGetters()
         {
             return typeGetters;
+        }
+
+        public Opt<String> getBriefKey()
+        {
+            return It(keyType.getTypes.get()).fst()
+                .fop(t -> opt(t.stringValue))
+                .map(n -> n + ":");
+        }
+
+        public Opt<String> getBriefVal()
+        {
+            return typeGetters
+                .fap(g -> g.ifHas())
+                .fap(mt -> mt.types)
+                .fap(t -> t.getBriefVal()).unq()
+                .wap(fqns -> fqns.arr())
+                .wap(fqns -> fqns.size() > 0 ? som(fqns.itr().str("|")) : non());
         }
     }
 
@@ -247,26 +264,36 @@ public class DeepType extends Lang
         return result;
     }
 
+    public Opt<String> getBriefVal()
+    {
+        String typeInfo = null;
+        if (stringValue != null) {
+            typeInfo = "'" + stringValue + "'";
+        } else if (keys.has()) {
+            typeInfo = "[" + keys.fap(k -> k.getBriefKey()).unq().str() + "]";
+        } else if (returnTypeGetters.has()) {
+            typeInfo = "(...) ==> {...}";
+        } else if (clsRefType.has()) {
+            typeInfo = clsRefType.unw() + "::class";
+        } else if (props.size() > 0) {
+            typeInfo = "obj(" + props.kys().str() + ")";
+        }
+        return opt(typeInfo);
+    }
+
     @Override
     public String toString()
     {
-        String typeInfo = "unk()";
-        if (stringValue != null) {
-            typeInfo = "str(" + stringValue + ")";
-        } else if (keys.has()) {
-            typeInfo = "arr(" + keys.map(k -> k.definition.getText()).str() + ")";
-        } else if (props.size() > 0) {
-            typeInfo = "obj(" + props.kys().str() + ")";
-        } else if (isNumber) {
-            typeInfo = "int";
-        } else if (returnTypeGetters.has()) {
-            typeInfo = "fun()";
-        } else if (clsRefType.has()) {
-            typeInfo = "cls(" + clsRefType.unw() + ")";
-        } else if (ctorArgs.has()) {
-            typeInfo = "new()";
+        Opt<String> typeInfoOpt = getBriefVal();
+        String typeInfo = getBriefVal().def("unk()");
+        if (!typeInfoOpt.has()) {
+            if (isNumber) {
+                typeInfo = "int";
+            } else if (ctorArgs.has()) {
+                typeInfo = "new()";
+            }
         }
-        return typeInfo + " " + briefType + " " + Tls.singleLine(definition.getText(), 60);
+        return "deep(" + typeInfo + ")" + " " + briefType + " " + Tls.singleLine(definition.getText(), 60);
     }
 
     public boolean hasNumberIndexes()
