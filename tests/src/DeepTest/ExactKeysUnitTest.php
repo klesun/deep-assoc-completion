@@ -111,6 +111,7 @@ class ExactKeysUnitTest
             'stopsig', // 0, int - The number of the signal that caused the child process to stop its execution (only meaningful if stopped is TRUE).
         ]];
         $rusage = getrusage();
+        $rusage[''];
         $list[] = [$rusage, [
             'ru_oublock', // 528,
             'ru_inblock', // 0,

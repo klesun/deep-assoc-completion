@@ -185,7 +185,7 @@ public class Mt extends Lang
                     || litt.briefType.equals(PhpType.INT)
                     || litt.briefType.equals(PhpType.FLOAT);
                 if (literal) {
-                    return s;
+                    return litt.cstName.def(s);
                 } else if (litt.briefType.equals(PhpType.BOOLEAN) && "1".equals(s)) {
                     return "true";
                 } else if (litt.briefType.equals(PhpType.BOOLEAN) && "0".equals(s)) {
