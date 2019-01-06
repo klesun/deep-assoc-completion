@@ -259,6 +259,11 @@ public class ReturnTypeDefs
             T2("pass", str(call).mt())
         ));
     }
+    private It<DeepType> image_type_to_mime_type(FunctionReferenceImpl call)
+    {
+        return ArgTypeDefs.MIME_TYPES.map(nme -> nme.b)
+            .map(strVal -> str(call, strVal));
+    }
 
     public Iterable<DeepType> getReturnType(FunctionReferenceImpl call, IFuncCtx callCtx)
     {
@@ -287,6 +292,8 @@ public class ReturnTypeDefs
             return list(getimagesize(call));
         } else if (name.equals("parse_url")) {
             return list(parse_url(call));
+        } else if (name.equals("image_type_to_mime_type")) {
+            return image_type_to_mime_type(call);
         } else {
             return list();
         }

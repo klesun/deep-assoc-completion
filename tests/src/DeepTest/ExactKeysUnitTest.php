@@ -207,6 +207,7 @@ class ExactKeysUnitTest
             'user', //
             'pass', //
         ]];
+        image_type_to_mime_type() === 'image/png';
         return $list;
     }
 
