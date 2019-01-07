@@ -157,6 +157,25 @@ public class ArgTypeDefs
                 });
             }));
             return som(arrt);
+        } else if ("file_put_contents".equals(name) && argOrder == 2) {
+            return cst(ctx, list("FILE_APPEND", "FILE_USE_INCLUDE_PATH", "LOCK_EX"));
+        } else if ("preg_match".equals(name) && argOrder == 3) {
+            return cst(ctx, list("PREG_OFFSET_CAPTURE", "PREG_UNMATCHED_AS_NULL"));
+        } else if ("preg_split".equals(name) && argOrder == 3) {
+            return cst(ctx, list("PREG_SPLIT_NO_EMPTY", "PREG_SPLIT_DELIM_CAPTURE", "PREG_SPLIT_OFFSET_CAPTURE"));
+        } else if ("preg_match_all".equals(name) && argOrder == 3) {
+            return cst(ctx, list("PREG_SET_ORDER", "PREG_PATTERN_ORDER", "PREG_OFFSET_CAPTURE", "PREG_UNMATCHED_AS_NULL"));
+        } else if ("simplexml_load_string".equals(name) && argOrder == 2
+                || "simplexml_load_file".equals(name) && argOrder == 2
+        ) {
+            return cst(ctx, list(
+                "LIBXML_NOCDATA", "LIBXML_NOBLANKS", "LIBXML_NOEMPTYTAG", "LIBXML_NOEMPTYTAG", "LIBXML_NOERROR",
+                "LIBXML_NONET", "LIBXML_NOWARNING", "LIBXML_NOXMLDECL", "LIBXML_NSCLEAN", "LIBXML_PARSEHUGE",
+                "LIBXML_PEDANTIC", "LIBXML_XINCLUDE", "LIBXML_ERR_ERROR", "LIBXML_ERR_FATAL", "LIBXML_ERR_NONE",
+                "LIBXML_ERR_WARNING", "LIBXML_VERSION", "LIBXML_DOTTED_VERSION", "LIBXML_SCHEMA_CREATE",
+                "LIBXML_BIGLINES", "LIBXML_COMPACT", "LIBXML_DTDATTR", "LIBXML_DTDLOAD", "LIBXML_DTDVALID",
+                "LIBXML_HTML_NOIMPLIED", "LIBXML_HTML_NODEFDTD"
+            ));
         }
         return It.non();
     }

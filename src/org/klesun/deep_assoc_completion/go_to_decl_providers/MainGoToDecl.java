@@ -43,7 +43,7 @@ public class MainGoToDecl implements GotoDeclarationHandler {
                     , ArrFuncRefNamePvdr.resolve(lit, false)
                         .flt(meth -> meth.getName().equals(lit.getContents()))
                         .map(a -> a)
-                    , EqStrValsPvdr.resolve(lit, false)
+                    , StrValsPvdr.resolve(lit, false)
                         .flt(t -> lit.getContents().equals(t.stringValue))
                         .map(t -> t.definition)
                 ))

@@ -1154,3 +1154,12 @@ $arr[$lagami->getLame];
 
 $brothers = ['ololo', 'trololo'];
 $brothers[1];
+
+file_put_contents('text.txt', 'abababa', '');
+
+preg_match('/asd/', 'asd', $matches, '');
+preg_split('/asd/', 'asd', -1, '');
+preg_match_all('/asd/', 'asd', $matches, '');
+simplexml_load_string('<root/>', null, '2.9.1');
+simplexml_load_file('<root/>', null, '0');
+preg_last_error() === '';

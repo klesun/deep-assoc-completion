@@ -121,7 +121,7 @@ public class DeepKeysCbtr extends CompletionContributor
             PlatformPatterns.psiElement()
                 .withSuperParent(1, StringLiteralExpression.class)
                 ,
-            new EqStrValsPvdr()
+            new StrValsPvdr()
         );
         // $GLOBALS['myVar'] = 123;
         // $myV;

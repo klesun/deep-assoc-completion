@@ -24,7 +24,7 @@ import static org.klesun.lang.Lang.*;
 
 // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
 // should suggest possible values of 'type'
-public class EqStrValsPvdr extends CompletionProvider<CompletionParameters>
+public class StrValsPvdr extends CompletionProvider<CompletionParameters>
 {
     private static LookupElementBuilder makeLookupBase(String keyName, String type)
     {

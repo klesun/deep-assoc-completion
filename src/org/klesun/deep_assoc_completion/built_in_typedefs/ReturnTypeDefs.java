@@ -294,6 +294,16 @@ public class ReturnTypeDefs
             return list(parse_url(call));
         } else if (name.equals("image_type_to_mime_type")) {
             return image_type_to_mime_type(call);
+        } else if (name.equals("preg_last_error")) {
+            return cst(ctx, list(
+                "PREG_NO_ERROR",
+                "PREG_INTERNAL_ERROR",
+                "PREG_BACKTRACK_LIMIT_ERROR",
+                "PREG_RECURSION_LIMIT_ERROR",
+                "PREG_BAD_UTF8_ERROR",
+                "PREG_BAD_UTF8_OFFSET_ERROR",
+                "PREG_JIT_STACKLIMIT_ERROR"
+            ));
         } else {
             return list();
         }
