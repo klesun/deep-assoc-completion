@@ -101,7 +101,8 @@ public class AssocKeyGoToDecl extends Lang
     {
         return It.frs(
             () -> It.cnc(
-                resolveAssocKey(psiElement, funcCtx),
+                resolveAssocKey(psiElement, funcCtx)
+                    .flt(declPsi -> !ScopeFinder.isPartOf(psiElement, declPsi)),
                 resolveDocAt(psiElement, mouseOffset)
             ),
             () -> resolveDocResult(psiElement)

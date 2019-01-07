@@ -41,7 +41,7 @@ public class ScopeFinder extends Lang
         return result;
     }
 
-    private static boolean isPartOf(PsiElement child, PsiElement grandParent)
+    public static boolean isPartOf(PsiElement child, PsiElement grandParent)
     {
         PsiElement parent = child;
         while (parent != null) {

@@ -1146,5 +1146,11 @@ curl_setopt_array($curl, [
     CURLOPT_FTP_USE_EPSV => '',
 ]);
 
+$arr = [];
+$megami = ['a' => new Plutia()]['a'];
+$arr[$megami->getName()] = 123;
+$lagami = (object)['getLame' => 123];
+$arr[$lagami->getLame];
 
-
+$brothers = ['ololo', 'trololo'];
+$brothers[1];
