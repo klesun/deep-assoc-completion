@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.01.06.002</version>
+    <version>2018.01.08.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -37,6 +37,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
+        <li>Add file_put_contents/preg_*/simplexml_load_string/preg_last_error constant completion</li>
+        <li>Fix: do not _Ctrl + B_ to key decl if caret is on it already. Fixes a nasty thing that you would not get GoTo of a magic method if it is used as a key</li>
         <li>Add constant arg completion to curl_setopt_array/json_encode/str_pad/pcntl_signal and few more small functions</li>
         <li>Suggest class constants in string === value completion (Not just it's actual string value)</li>
         <li>Add completion of keys in stream_context_create() params</li>
