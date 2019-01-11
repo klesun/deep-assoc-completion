@@ -73,7 +73,7 @@ public class VarRes
             .fop(toCast(ParameterListImpl.class))
             .map(par -> par.getParent())
             .fop(toCast(FunctionReferenceImpl.class))
-            .flt(call -> "array_unshift".equals(call.getName()))
+            .flt(call -> "array_unshift".equals(call.getName()) || "array_push".equals(call.getName()))
             .fop(call -> {
                 L<PsiElement> args = L(call.getParameters());
                 boolean isCaretArr = args.gat(0).map(arg -> arg.isEquivalentTo(varRef)).def(false);
