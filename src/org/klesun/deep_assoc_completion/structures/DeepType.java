@@ -317,4 +317,11 @@ public class DeepType extends Lang
     {
         return new Mt(list(this));
     }
+
+    /** a handy method to do stuff in same expression */
+    public DeepType btw(C<DeepType> addData)
+    {
+        addData.accept(this);
+        return this;
+    }
 }

@@ -160,12 +160,25 @@ public class MethCallRes extends Lang
                     getBindVars(strType).fch(type.pdoBindVars::add);
                 });
             types = It(list(type));
-        } else if (clsNme.equals("PDOStatement") && meth.getName().equals("fetch")) {
+        } else if (clsNme.equals("PDOStatement") && meth.getName().equals("fetch")
+                || clsNme.equals("mysqli_result") && meth.getName().equals("fetch_assoc")
+        ) {
             It<DeepType> pdoTypes = opt(methCall.getClassReference())
                 .fop(toCast(PhpExpression.class))
                 .fap(obj -> ctx.findExprType(obj))
                 .fap(t -> t.pdoFetchTypes);
             types = It(pdoTypes);
+        } else if (clsNme.equals("mysqli") && meth.getName().equals("query")) {
+            MemIt<DeepType> rowTypes = argCtx.func().getArg(0).fap(mt -> mt.types)
+                .map(strType -> parseSqlSelect(strType, meth.getProject())).mem();
+            types = It.cnc(
+                som(new DeepType(methCall).btw(t -> {
+                    // it's not a PDO, but nah
+                    rowTypes.fch((rowt, i) -> t.pdoFetchTypes.add(rowt));
+                })),
+                // since PHP 5.4 mysqli_result can also be iterated
+                som(Mt.getInArraySt(It(rowTypes), methCall))
+            );
         }
         It<DeepType> modelRowTypes = getModelRowType(methCall, meth);
         It<DeepType> modelRowArrTypes = !modelRowTypes.has() ? It.non() :

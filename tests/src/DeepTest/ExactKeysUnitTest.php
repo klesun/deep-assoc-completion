@@ -1316,6 +1316,31 @@ class ExactKeysUnitTest
         ];
     }
 
+    public function provideMysqliIterator()
+    {
+        $rows = [];
+        $mysqli = new \mysqli("10.128.128.150", "stasadm", "G0a4wa&", "rbstools");
+        $result = $mysqli->query("SELECT id, iata_code, name FROM airports limit 20;");
+        foreach ($result as $row) {
+            $rows[] = $row;
+        }
+        $rows[0][''];
+        return [
+            [$rows[0], ['id', 'iata_code', 'name']],
+        ];
+    }
+
+    public function provideMysqliFetchAssoc()
+    {
+        $mysqli = new \mysqli("10.128.128.150", "stasadm", "G0a4wa&", "rbstools");
+        $result = $mysqli->query("SELECT id, iata_code, name FROM airports limit 20;");
+        $row = $result->fetch_assoc();
+        $row[''];
+        return [
+            [$row, ['id', 'iata_code', 'name']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
