@@ -26,6 +26,7 @@ public class DeepSettingsForm implements Configurable
     private JFormattedTextField implicitDepthLimit;
     private JCheckBox removeUnusedImportsOnSaveEnabled;
     private JFormattedTextField totalExpressionLimit;
+    private JCheckBox passArgsToImplementations;
 
     @Nls
     @Override
@@ -48,6 +49,7 @@ public class DeepSettingsForm implements Configurable
     public boolean isModified() {
         return !getSettings().bgTypePvdrEnabled == bgTypePvdrEnabled.isSelected()
             || !getSettings().removeUnusedImportsOnSaveEnabled == removeUnusedImportsOnSaveEnabled.isSelected()
+            || !getSettings().passArgsToImplementations == passArgsToImplementations.isSelected()
             || !getSettings().bgTypePvdrDepthLimit.toString().equals(bgTypePvdrDepthLimit.getText())
             || !getSettings().bgTypePvdrTimeout.toString().equals(bgTypePvdrTimeout.getText())
             || !getSettings().explicitDepthLimit.toString().equals(explicitDepthLimit.getText())
@@ -75,7 +77,7 @@ public class DeepSettingsForm implements Configurable
     @Override
     public void apply() throws ConfigurationException {
         getSettings().bgTypePvdrEnabled = bgTypePvdrEnabled.isSelected();
-        getSettings().removeUnusedImportsOnSaveEnabled = removeUnusedImportsOnSaveEnabled.isSelected();
+        getSettings().passArgsToImplementations = passArgsToImplementations.isSelected();
         getSettings().bgTypePvdrDepthLimit = validateInt(bgTypePvdrDepthLimit, 0, 100);
         getSettings().bgTypePvdrTimeout = validateInt(bgTypePvdrTimeout, 5, 10000);
         getSettings().explicitDepthLimit = validateInt(explicitDepthLimit, 0, 100);
@@ -87,6 +89,7 @@ public class DeepSettingsForm implements Configurable
     public void reset() {
         bgTypePvdrEnabled.setSelected(getSettings().bgTypePvdrEnabled);
         removeUnusedImportsOnSaveEnabled.setSelected(getSettings().removeUnusedImportsOnSaveEnabled);
+        passArgsToImplementations.setSelected(getSettings().passArgsToImplementations);
         bgTypePvdrDepthLimit.setText(getSettings().bgTypePvdrDepthLimit.toString());
         bgTypePvdrTimeout.setText(getSettings().bgTypePvdrTimeout.toString());
         explicitDepthLimit.setText(getSettings().explicitDepthLimit.toString());

@@ -19,6 +19,7 @@ public class DeepSettings implements PersistentStateComponent<DeepSettings> {
     public Integer implicitDepthLimit = 30;
     public Integer totalExpressionLimit = 7500;
     public Boolean removeUnusedImportsOnSaveEnabled = false;
+    public Boolean passArgsToImplementations = false;
 
     public static DeepSettings inst(Project project) {
         return ServiceManager.getService(project, DeepSettings.class);

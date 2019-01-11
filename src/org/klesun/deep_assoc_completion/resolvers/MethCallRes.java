@@ -10,6 +10,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -70,8 +71,8 @@ public class MethCallRes extends Lang
         String sql = opt(strType.stringValue).def("");
         int regexFlags = Pattern.DOTALL | Pattern.CASE_INSENSITIVE;
         Opt<L<String>> matched = Opt.fst(
-            () -> Tls.regex("SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql, regexFlags),
-            () -> Tls.regex("SELECT\\s+(\\S.*)", sql, regexFlags) // partial SQL without FROM
+            () -> Tls.regex("\\s*SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql, regexFlags),
+            () -> Tls.regex("\\s*SELECT\\s+(\\S.*)", sql, regexFlags) // partial SQL without FROM
         );
         matched.fap(matches -> {
             It<String> fields = It(matches.gat(0).def("").split(",", -1));
@@ -170,6 +171,7 @@ public class MethCallRes extends Lang
             types = It(pdoTypes);
         } else if (clsNme.equals("mysqli") && meth.getName().equals("query")) {
             MemIt<DeepType> rowTypes = argCtx.func().getArg(0).fap(mt -> mt.types)
+                .flt(strType -> !opt(strType.stringValue).def("").equals(""))
                 .map(strType -> parseSqlSelect(strType, meth.getProject())).mem();
             types = It.cnc(
                 som(new DeepType(methCall).btw(t -> {
@@ -204,7 +206,9 @@ public class MethCallRes extends Lang
                 impls = It.cnc(list(meth), findOverridingMethods(meth));
                 // ignore $this and args in implementations
                 // since there may be dozens of them (Laravel)
-                funcCtx = funcCtx.subCtxEmpty();
+                if (!DeepSettings.inst(meth.getProject()).passArgsToImplementations) {
+                    funcCtx = funcCtx.subCtxEmpty();
+                }
             }
             IExprCtx finalCtx = funcCtx;
             return impls.fap(m -> It.cnc(
