@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.01.11.001</version>
+    <version>2018.01.11.002</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -37,6 +37,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
+        <li>Add a flag in settings to use passed args in interface method call return type resolution from implementations (false by default, because Laravel)</li>
+        <li>Infer array type from `array_push` as well (not just `array_unshift` and `$arr[] = ...`)</li>
         <li>Infer keys from mysqli_result (and, same as PDO, 'SELECT * FROM abc' will work as well if you connect DB to IDEA)</li>
     </ul>
     ]]>
