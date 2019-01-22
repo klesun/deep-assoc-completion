@@ -209,7 +209,13 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         Mutable<Long> firstTime = new Mutable<>(-1L);
 
         ExprCtx exprCtx = new ExprCtx(funcCtx, caretPsi, 0);
-        It<DeepType> arrTit = resolveAtPsi(caretPsi, exprCtx);
+        It<DeepType> arrTit;
+        try {
+            arrTit = resolveAtPsi(caretPsi, exprCtx);
+        } catch (Throwable exc) {
+            printExprTree(exprCtx, 0);
+            throw exc;
+        }
         System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");
         arrTit.has();
         System.out.println("checked if iterator has anything, took " + search.getExpressionsResolved() + " expressions");

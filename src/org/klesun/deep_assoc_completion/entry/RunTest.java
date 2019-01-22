@@ -91,7 +91,8 @@ public class RunTest extends AnAction
                 try {
                     //logger.logMsg("doing " + tuple.a.dataProviderName + " #" + tuple.a.testNumber);
                     return tuple.a.testCaseExact(actualKeys, expectedKeys);
-                } catch (RuntimeException exc) {
+                } catch (Throwable exc) {
+
                     String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
                         + "\n" + Tls.getStackTrace(exc)
                         ;
@@ -106,7 +107,7 @@ public class RunTest extends AnAction
                 try {
                     //logger.logMsg("doing " + tuple.a.dataProviderName + " #" + tuple.a.testNumber);
                     return tuple.a.testCasePartial(list(tuple.b), tuple.c);
-                } catch (RuntimeException exc) {
+                } catch (Throwable exc) {
                     String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
                         + "\n" + Tls.getStackTrace(exc)
                         ;

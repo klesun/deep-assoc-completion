@@ -4,11 +4,9 @@ class ExactKeysUnitTest
 {
     private function importPnr()
     {
-        $imported = \Rbs\Process\Common\ImportPnr\ImportPnrAction::makeByGds([
-            'gdsName' => 'apollo',
-            'recordLocator' => 'qwe123',
-            'pnrFields' => ['reservation'],
-        ])->execute();
+        $imported = (new \Rbs\Process\Common\ImportPnr\ImportPnrAction)->execute();
+        $imported['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'][''];
+
         $imported[''];
         $imported['result'][''];
         $imported['result']['pnrFields'][''];
@@ -68,6 +66,7 @@ class ExactKeysUnitTest
 
     public function provideImportPnrNext02()
     {
+        $this->importPnr()['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'][''];
         return [
             [$this->importPnr()['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'], ['firstNameNumber', 'fieldNumber', 'absolute', 'raw', 'isInfant']],
             //[$imported['result']['pnrFields']['fareQuoteInfo'], ['pricingList' => [], 'error' => []]],
