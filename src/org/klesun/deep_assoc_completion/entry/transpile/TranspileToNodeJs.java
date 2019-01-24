@@ -1,4 +1,4 @@
-package org.klesun.deep_assoc_completion.entry;
+package org.klesun.deep_assoc_completion.entry.transpile;
 
 import com.intellij.ide.scratch.ScratchFileService;
 import com.intellij.ide.scratch.ScratchRootType;
@@ -18,7 +18,6 @@ import com.jetbrains.php.lang.psi.PhpElementType;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ForeachImpl;
 import com.jetbrains.php.lang.psi.elements.impl.PhpUseListImpl;
-import com.jetbrains.php.lang.psi.elements.impl.StatementImpl;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.FuncCallRes;
@@ -285,13 +284,13 @@ public class TranspileToNodeJs extends AnAction
             .map(c -> trans(c))).str("");
     }
 
-    private void openAsScratchFile(String text, AnActionEvent e)
+    public static void openAsScratchFile(String text, AnActionEvent e, String name)
     {
         opt(e.getData(LangDataKeys.PROJECT)).thn(project -> {
             Language lang = L(Language.findInstancesByMimeType("text/javascript")).fst()
                 .def(PlainTextLanguage.INSTANCE);
             VirtualFile file = ScratchRootType.getInstance().createScratchFile(
-                project, "transpiled.js", lang,
+                project, name, lang,
                 text, ScratchFileService.Option.create_new_always
             );
             if (file != null) {
@@ -312,6 +311,6 @@ public class TranspileToNodeJs extends AnAction
             .map(psiTexts -> Tls.implode("", psiTexts))
             .def("Error: could not retrieve current file");
         System.out.println(output);
-        openAsScratchFile(output, e);
+        openAsScratchFile(output, e, "transpiled.js");
     }
 }

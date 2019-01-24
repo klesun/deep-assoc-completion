@@ -100,9 +100,13 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
                     description="Go to PHPUnit test case by number (place caret inside @dataProvider function before usage)"
             />
 
-            <action id="TranspileToNodeJs" text="Transpile to JS code (beta)"
-                    class="org.klesun.deep_assoc_completion.entry.TranspileToNodeJs"
+            <action id="TranspileToNodeJs" text="Transpile to JS code"
+                    class="org.klesun.deep_assoc_completion.entry.transpile.TranspileToNodeJs"
                     description="Convert stuff like `['a' => 5]` to `{'a': 5}`, keep unsupported constructs unchanged"
+            />
+            <action id="TranspiledPhpBuiltIns" text="Transpiled PHP built-ins"
+                    class="org.klesun.deep_assoc_completion.entry.transpile.TranspiledPhpBuiltIns"
+                    description="Generates a js file with built-in PHP function implementations, like array_map, trim, preg_match..."
             />
 
             <add-to-group group-id="ToolsMenu"/>
