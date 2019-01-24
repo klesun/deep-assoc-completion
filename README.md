@@ -69,6 +69,10 @@ Did you ever want an ability to find out which exactly test case does phpunit me
   
 ![String Value Completion](https://user-images.githubusercontent.com/5202330/48870610-2b563400-edea-11e8-93c1-c8bbd973726b.png)  
 
+### Transpile to JS code (not related to completion anyhow, but whatever)
+
+![Transpile to JS code](https://user-images.githubusercontent.com/5202330/51703012-293c6b80-200d-11e9-9479-e51c5f7bbfaf.png)  
+
 ## Completion sources
 
 ### Argument type resolution based on what was passed to the function
