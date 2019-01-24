@@ -99,7 +99,7 @@ public class TranspileToNodeJs extends AnAction
         It<PsiElement> args = It(typed.getParameters());
         String name = typed.getName();
         name = "__construct".equals(name) ? "constructor" : name;
-        return name + "("
+        return (typed.isStatic() ? "static " : "") + name + "("
             + args.map(st -> transpilePsi(st)).str(", ")
             + ") {\n"
             + stats.map(st -> getIndent(st) + transpilePsi(st)).str("\n")
@@ -175,6 +175,10 @@ public class TranspileToNodeJs extends AnAction
                     leaf.getText().equals(".=") ? "+=" :
                     leaf.getText().equals("?:") ? "||" :
                     leaf.getText().equals("??") ? "||" :
+                    leaf.getText().equals("self") ? "this" :
+                    leaf.getText().equals("static") ? "this" :
+                    leaf.getText().equals("namespace") ? "// namespace" :
+                    leaf.getText().equals("elseif") ? "else if" :
                     leaf.getText())
             , () -> Tls.cast(PhpClass.class, psi)
                 .map(cls -> getChildrenWithLeaf(cls))
@@ -242,16 +246,10 @@ public class TranspileToNodeJs extends AnAction
     private void openAsScratchFile(String text, AnActionEvent e)
     {
         opt(e.getData(LangDataKeys.PROJECT)).thn(project -> {
-            Language lang; // see #61, Javascript Support may be disabled
-            try {
-                Class yourClass = Class.forName("com.intellij.lang.javascript.JavascriptLanguage");
-                lang = (Language)yourClass.getField("INSTANCE").get(null);
-            } catch (Exception exc) {
-                System.out.println("Could not instantiate Javascript language");
-                lang = PlainTextLanguage.INSTANCE;
-            }
+            Language lang = L(Language.findInstancesByMimeType("text/javascript")).fst()
+                .def(PlainTextLanguage.INSTANCE);
             VirtualFile file = ScratchRootType.getInstance().createScratchFile(
-                project, "transpiled", lang,
+                project, "transpiled.js", lang,
                 text, ScratchFileService.Option.create_new_always
             );
             if (file != null) {
