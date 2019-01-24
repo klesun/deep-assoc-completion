@@ -116,11 +116,8 @@ public class UsageResolver extends Lang
     private static It<Variable> findVarReferences(PhpNamedElement caretVar)
     {
         return Tls.findParent(caretVar, Function.class, a -> true)
-            .fap(meth -> Tls.findChildren(
-                meth.getLastChild(),
-                Variable.class,
-                subPsi -> !(subPsi instanceof Function)
-            ).flt(varUsage -> caretVar.getName().equals(varUsage.getName())));
+            .fap(meth -> FuncCallRes.findUsedVars(meth.getLastChild()))
+            .flt(varUsage -> caretVar.getName().equals(varUsage.getName()));
     }
 
     public static DeepType makeAssoc(PsiElement psi, Iterable<T2<String, PsiElement>> keys)

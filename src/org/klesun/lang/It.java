@@ -197,7 +197,7 @@ public class It<A> implements Iterable<A>
 
     public It<A> lmt(int limit)
     {
-        Iterator<A> lator = new EndIterator<>(dispose(), (el,i) -> i >= limit);
+        Iterator<A> lator = new EndIterator<>(dispose(), (el,i) -> i >= limit, false);
         return It(() -> lator);
     }
 
@@ -273,6 +273,14 @@ public class It<A> implements Iterable<A>
         return has() ? Lang.som(dispose().next()) : Lang.non();
     }
 
+    public Opt<A> lst() {
+        Opt<A> result = opt(null);
+        for (A el: this) {
+            result = som(el);
+        }
+        return result;
+    }
+
     public boolean has()
     {
         if (disposed) {
@@ -344,11 +352,15 @@ public class It<A> implements Iterable<A>
     }
 
     // end stream the moment endPred returns true (in case of timeout for example)
-    // includes the value on which endPred returned true
+    public It<A> end(Boolean exclusive, F<A, Boolean> endPred)
+    {
+        Iterator<A> endor = new EndIterator<>(dispose(), endPred, exclusive);
+        return new It<>(() -> endor);
+    }
+
     public It<A> end(F<A, Boolean> endPred)
     {
-        Iterator<A> endor = new EndIterator<>(dispose(), endPred);
-        return new It<>(() -> endor);
+        return end(false, endPred);
     }
 
     public Iterator<A> iterator()

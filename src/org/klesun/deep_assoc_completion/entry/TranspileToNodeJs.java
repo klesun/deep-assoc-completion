@@ -20,8 +20,11 @@ import com.jetbrains.php.lang.psi.elements.impl.ForeachImpl;
 import com.jetbrains.php.lang.psi.elements.impl.PhpUseListImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StatementImpl;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.klesun.deep_assoc_completion.resolvers.ClosRes;
+import org.klesun.deep_assoc_completion.resolvers.FuncCallRes;
 import org.klesun.deep_assoc_completion.resolvers.VarRes;
 import org.klesun.lang.It;
+import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
@@ -83,6 +86,16 @@ public class TranspileToNodeJs extends AnAction
             .def("");
     }
 
+    private static String getStIndent(PsiElement psi)
+    {
+        return It.cnc(som(psi), Tls.getParents(psi))
+            .fap(par -> opt(par.getPrevSibling())
+                .cst(PsiWhiteSpaceImpl.class)
+                .fop(ws -> Tls.regex("^(\\s*\\n)(\\s*?)$", ws.getText()))
+                .fop(ma -> ma.gat(1)))
+            .fst().def("");
+    }
+
     private static String getOutdent(PsiElement psi)
     {
         return opt(psi.getNextSibling())
@@ -92,18 +105,35 @@ public class TranspileToNodeJs extends AnAction
             .def("");
     }
 
-    private static String transpileMethod(Method typed)
+    private static String transpileFunction(Function typed)
     {
         It<PsiElement> stats = Tls.findChildren(typed, GroupStatement.class)
             .fst().fap(gr -> It(gr.getStatements()));
-        It<PsiElement> args = It(typed.getParameters());
+        L<PsiElement> args = L(typed.getParameters());
         String name = typed.getName();
         name = "__construct".equals(name) ? "constructor" : name;
-        return (typed.isStatic() ? "static " : "") + name + "("
+
+        L<String> argNames = args.itr().cst(Parameter.class)
+            .map(arg -> arg.getName()).arr();
+        L<String> closureVars = ClosRes.getClosureVars(typed)
+            .map(v -> v.getName()).arr();
+        L<String> usedVars = opt(typed.getLastChild())
+            .fap(grpst -> FuncCallRes.findUsedVars(grpst))
+            .map(v -> v.getName())
+            .flt(varName -> !argNames.contains(varName))
+            .flt(varName -> !closureVars.contains(varName))
+            .unq().arr();
+
+        String mods = Tls.cast(Method.class, typed)
+            .map(meth -> meth.isStatic() ? "static " : "").def("");
+        Boolean isMeth = Tls.cast(Method.class, typed).has();
+        return mods + name + "("
             + args.map(st -> transpilePsi(st)).str(", ")
-            + ") {\n"
+            + ") " + (isMeth ? "" : "=>") + " {\n"
+            + (usedVars.size() == 0 ? "" :
+                getStIndent(typed) + "    let " + Tls.implode(", ", usedVars.map(v -> "$" + v)) + ";\n")
             + stats.map(st -> getIndent(st) + transpilePsi(st)).str("\n")
-            + "\n" + getIndent(typed) + "}";
+            + "\n" + getStIndent(typed) + "}";
     }
 
     private static Opt<String> transpileArray(ArrayCreationExpression typed)
@@ -147,8 +177,8 @@ public class TranspileToNodeJs extends AnAction
                 return valuePartOpt.map(valuePart -> {
                     String arrPart = transpilePsi(arr);
                     String content = keyOpt
-                        .map(key -> "let [" + key.getText() + ", " + valuePart + "] of Object.entries(" + arrPart + ")")
-                        .def("let " + valuePart + " of " + arrPart);
+                        .map(key -> "[" + key.getText() + ", " + valuePart + "] of Object.entries(" + arrPart + ")")
+                        .def(valuePart + " of " + arrPart);
                     return "for (" + content + ") {\n"
                         + stats.map(st -> getIndent(st) + transpilePsi(st)).str("\n")
                         + "}";
@@ -188,8 +218,8 @@ public class TranspileToNodeJs extends AnAction
                 .fap(typed -> transpileImport(typed))
             , () -> Tls.cast(PhpModifierList.class, psi)
                 .map(typed -> "")
-            , () -> Tls.cast(Method.class, psi)
-                .map(typed -> transpileMethod(typed))
+            , () -> Tls.cast(Function.class, psi)
+                .map(typed -> transpileFunction(typed))
             , () -> Tls.cast(Parameter.class, psi)
                 .map(typed -> (typed.getText().startsWith("...") ? "..." : "") + "$" + typed.getName())
             , () -> Tls.cast(Variable.class, psi)
@@ -200,7 +230,7 @@ public class TranspileToNodeJs extends AnAction
                         .fop(ass -> opt(ass.getParent()))
                         .any(st -> st.getClass().equals(StatementImpl.class));
                     String varName = typed.getText().equals("$this") ? "this" : typed.getText();
-                    return (isDeclSt ? "let " : "") + varName;
+                    return varName;
                 })
             , () -> Tls.cast(FieldReference.class, psi)
                 .map(typed -> transpilePsi(typed.getClassReference()) + ".$" + typed.getName())

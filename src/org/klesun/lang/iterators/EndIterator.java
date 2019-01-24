@@ -1,31 +1,53 @@
 package org.klesun.lang.iterators;
 
 import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
 
 import java.util.Iterator;
+
+import static org.klesun.lang.Lang.som;
 
 public class EndIterator<A> implements Iterator<A> {
     private final Iterator<A> sourceIt;
     private final Lang.F2<A, Integer, Boolean> endPred;
-    boolean end;
-    int i = 0;
+    private final Boolean exclusive;
+    private boolean end;
+    private Opt<A> current;
+    private int i = 0;
 
-    public EndIterator(Iterator<A> sourceIt, Lang.F2<A, Integer, Boolean> endPred) {
+    private Opt<A> getCurrent() {
+        if (!current.has()) {
+            while (sourceIt.hasNext()) {
+                A value = sourceIt.next();
+                ++i;
+                this.current = som(value);
+                break;
+            }
+        }
+        return this.current;
+    }
+
+    public EndIterator(Iterator<A> sourceIt, Lang.F2<A, Integer, Boolean> endPred, Boolean exclusive) {
         this.sourceIt = sourceIt;
         this.endPred = endPred;
+        this.exclusive = exclusive;
         end = false;
     }
 
-    public EndIterator(Iterator<A> sourceIt, Lang.F<A, Boolean> endPred) {
-        this(sourceIt, (el,i) -> endPred.apply(el));
+    public EndIterator(Iterator<A> sourceIt, Lang.F<A, Boolean> endPred, Boolean exclusive) {
+        this(sourceIt, (el,i) -> endPred.apply(el), exclusive);
     }
 
     public boolean hasNext() {
-        return !end && sourceIt.hasNext();
+        if (exclusive) {
+            return getCurrent().any(value -> !endPred.apply(value, i));
+        } else {
+            return !end && getCurrent().has();
+        }
     }
 
     public A next() {
-        A next = sourceIt.next();
+        A next = getCurrent().unw();
         end = endPred.apply(next, i++);
         return next;
     }

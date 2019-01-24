@@ -80,14 +80,19 @@ public class ClosRes extends Lang
         );
     }
 
+    public static It<Variable> getClosureVars(Function func)
+    {
+        return It(func.getChildren())
+            .fop(toCast(PhpUseList.class))
+            .fap(u -> It(u.getChildren()))
+            .fop(toCast(Variable.class));
+    }
+
     public DeepType resolve(FunctionImpl func)
     {
         DeepType result = new DeepType(func, func.getLocalType(true));
         result.returnTypeGetters.add((callCtx) -> {
-            L<T2<String, S<MemIt<DeepType>>>> closureVars = It(func.getChildren())
-                .fop(toCast(PhpUseList.class))
-                .fap(u -> It(u.getChildren()))
-                .fop(toCast(Variable.class))
+            L<T2<String, S<MemIt<DeepType>>>> closureVars = getClosureVars(func)
                 .map(closVar -> {
                     S<MemIt<DeepType>> sup = Tls.onDemand(() ->
                         ctx.findExprType(closVar).mem());

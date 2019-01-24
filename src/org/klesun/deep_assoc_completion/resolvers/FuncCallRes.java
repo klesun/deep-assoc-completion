@@ -1,10 +1,7 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
-import com.jetbrains.php.lang.psi.elements.Function;
-import com.jetbrains.php.lang.psi.elements.GroupStatement;
-import com.jetbrains.php.lang.psi.elements.PhpClass;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
@@ -33,12 +30,17 @@ public class FuncCallRes extends Lang
         this.ctx = ctx;
     }
 
-    private static It<VariableImpl> findVarRefsInFunc(GroupStatement meth, String varName)
+    public static It<Variable> findUsedVars(PsiElement meth)
     {
         return Tls.findChildren(
-            meth, VariableImpl.class,
-            subPsi -> !(subPsi instanceof FunctionImpl)
-        ).flt(varUsage -> varName.equals(varUsage.getName()));
+            meth, Variable.class,
+            subPsi -> !(subPsi instanceof Function)
+        );
+    }
+
+    private static It<Variable> findVarRefsInFunc(GroupStatement meth, String varName)
+    {
+        return findUsedVars(meth).flt(varUsage -> varName.equals(varUsage.getName()));
     }
 
     private static PhpType getDocType(Function func)
@@ -118,7 +120,7 @@ public class FuncCallRes extends Lang
                 .fch(i -> callCtx.getArg(i)
                     .map(keyt -> keyt.getStringValue())
                     .thn(varName -> {
-                        L<VariableImpl> refs = findVarRefsInFunc(scope, varName)
+                        L<Variable> refs = findVarRefsInFunc(scope, varName)
                             .flt(ref -> ScopeFinder.didPossiblyHappen(ref, call)).arr()
                             ;
                         if (refs.size() > 0) {

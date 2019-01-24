@@ -7,6 +7,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -48,20 +49,34 @@ public class Tls extends Lang
         return getStackTrace(new Exception());
     }
 
+    public static It<PsiElement> getParents(PsiElement psi)
+    {
+        PsiElement parent = psi.getParent();
+        return It(() -> new Iterator<PsiElement>() {
+            private PsiElement current = parent;
+            public boolean hasNext() {
+                return current != null;
+            }
+            public PsiElement next() {
+                PsiElement prev = current;
+                current = current.getParent();
+                return prev;
+            }
+        });
+    }
+
     public static <T extends PsiElement> Opt<T> findParent(
         PsiElement psi,
         Class<T> cls,
         Predicate<PsiElement> continuePred
     ) {
-        PsiElement parent = psi.getParent();
-        while (parent != null) {
+        for (PsiElement parent: getParents(psi)) {
             Opt<T> matching = Tls.cast(cls, parent);
             if (matching.has()) {
                 return matching;
             } else if (!continuePred.test(parent)) {
                 break;
             }
-            parent = parent.getParent();
         }
         return opt(null);
     }
