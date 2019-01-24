@@ -159,7 +159,6 @@ public class TranspileToNodeJs extends AnAction
     private static String transpilePsi(PsiElement psi)
     {
         // TODO: add whitespace generally here
-        // TODO: $arr[] = $val; -> $arr.push($val)
         // TODO: unset -> delete
         // TODO: process whole directories, not just one file
         // TODO: do not add coma after last object element if there weren't any in original
@@ -167,6 +166,7 @@ public class TranspileToNodeJs extends AnAction
         // TODO: class constants
         // TODO: put properties in constructor - node does not allow properties directly in class body
         // TODO: do not add let in +=
+        // list($raw, $data) = $matches;
         Iterable<String> result = It.frs(() -> It.non()
             , () -> Tls.cast(LeafPsiElement.class, psi)
                 .map(leaf ->
@@ -237,6 +237,16 @@ public class TranspileToNodeJs extends AnAction
                     } else {
                         return non();
                     }
+                })
+            , () -> Tls.cast(AssignmentExpression.class, psi)
+                .fap(ass -> {
+                    // $arr[] = 1 + 1; -> $arr.push(1 + 1);
+                    return opt(ass.getVariable())
+                        .cst(ArrayAccessExpression.class)
+                        .flt(acc -> opt(acc.getIndex()).map(idx -> idx.getText()).def("").equals(""))
+                        .fap(acc -> opt(ass.getValue()).map(el -> transpilePsi(el))
+                            .fap(eltxt -> opt(acc.getValue()).map(el -> transpilePsi(el))
+                                .map(arrtxt -> arrtxt + ".push(" + eltxt + ")")));
                 })
         );
         return It(result).def(getChildrenWithLeaf(psi)
