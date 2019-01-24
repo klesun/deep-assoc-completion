@@ -128,11 +128,11 @@ public class TranspileToNodeJs extends AnAction
             .map(meth -> meth.isStatic() ? "static " : "").def("");
         Boolean isMeth = Tls.cast(Method.class, typed).has();
         return mods + name + "("
-            + args.map(st -> transpilePsi(st)).str(", ")
+            + args.map(st -> trans(st)).str(", ")
             + ") " + (isMeth ? "" : "=>") + " {\n"
             + (usedVars.size() == 0 ? "" :
                 getStIndent(typed) + "    let " + Tls.implode(", ", usedVars.map(v -> "$" + v)) + ";\n")
-            + stats.map(st -> getIndent(st) + transpilePsi(st)).str("\n")
+            + stats.map(st -> getIndent(st) + trans(st)).str("\n")
             + "\n" + getStIndent(typed) + "}";
     }
 
@@ -141,7 +141,7 @@ public class TranspileToNodeJs extends AnAction
         L<ArrayHashElement> hashes = L(typed.getHashElements());
         if (hashes.size() > 0) {
             L<String> subTokens = getChildrenWithLeaf(typed)
-                .arr().sub(1, -1).map(c -> transpilePsi(c)).arr();
+                .arr().sub(1, -1).map(c -> trans(c)).arr();
             return som("{" + subTokens.str("") +  "}");
         } else {
             return non();
@@ -157,7 +157,7 @@ public class TranspileToNodeJs extends AnAction
         It<PsiElement> stats = Tls.findChildren(typed, GroupStatement.class)
             .fst().fap(gr -> It(gr.getStatements()));
         return "catch (" + typed.getException().getText() + ") {\n"
-            + stats.map(st -> getIndent(st) + transpilePsi(st)).str("\n")
+            + stats.map(st -> getIndent(st) + trans(st)).str("\n")
             + "}";
     }
 
@@ -172,19 +172,23 @@ public class TranspileToNodeJs extends AnAction
                     () -> som("[" + tuple.map(vari -> vari.getText()).str(", ") + "]")
                 );
                 return valuePartOpt.map(valuePart -> {
-                    String arrPart = transpilePsi(arr);
+                    String arrPart = trans(arr);
                     String content = keyOpt
                         .map(key -> "[" + key.getText() + ", " + valuePart + "] of Object.entries(" + arrPart + ")")
                         .def(valuePart + " of " + arrPart);
                     return "for (" + content + ") {\n"
-                        + stats.map(st -> getIndent(st) + transpilePsi(st)).str("\n")
+                        + stats.map(st -> getIndent(st) + trans(st)).str("\n")
                         + "}";
                 });
             }));
     }
 
-    private static String transpilePsi(PsiElement psi)
+    private static String trans(PsiElement psi)
     {
+        if (psi == null) {
+            return "";
+        }
+
         // TODO: unset -> delete
         // TODO: process whole directories, not just one file
         // TODO: class constants
@@ -197,7 +201,6 @@ public class TranspileToNodeJs extends AnAction
                     leaf.getText().equals("(int)") ? "+" :
                     leaf.getText().equals(".") ? "+" :
                     leaf.getText().equals(".=") ? "+=" :
-                    leaf.getText().equals("?:") ? "||" :
                     leaf.getText().equals("??") ? "||" :
                     leaf.getText().equals("self") ? "this" :
                     leaf.getText().equals("static") ? "this" :
@@ -207,7 +210,7 @@ public class TranspileToNodeJs extends AnAction
             , () -> Tls.cast(PhpClass.class, psi)
                 .map(cls -> getChildrenWithLeaf(cls))
                 .fap(parts -> removeClsMods(parts)
-                    .map(part -> transpilePsi(part)))
+                    .map(part -> trans(part)))
             , () -> Tls.cast(PhpUseListImpl.class, psi)
                 .fap(typed -> transpileImport(typed))
             , () -> Tls.cast(PhpModifierList.class, psi)
@@ -227,9 +230,9 @@ public class TranspileToNodeJs extends AnAction
                     return varName;
                 })
             , () -> Tls.cast(FieldReference.class, psi)
-                .map(typed -> transpilePsi(typed.getClassReference()) + ".$" + typed.getName())
+                .map(typed -> trans(typed.getClassReference()) + ".$" + typed.getName())
             , () -> Tls.cast(MethodReference.class, psi)
-                .map(typed -> transpilePsi(typed.getClassReference()) + "." + typed.getName() + "(" + It(typed.getParameters()).map(arg -> transpilePsi(arg)).str(", ") + ")")
+                .map(typed -> trans(typed.getClassReference()) + "." + typed.getName() + "(" + It(typed.getParameters()).map(arg -> trans(arg)).str(", ") + ")")
             , () -> Tls.cast(ArrayCreationExpression.class, psi).itr()
                 .fap(typed -> transpileArray(typed))
             , () -> Tls.cast(Catch.class, psi).itr()
@@ -237,7 +240,7 @@ public class TranspileToNodeJs extends AnAction
             , () -> Tls.cast(ForeachImpl.class, psi).itr()
                 .fap(typed -> transpileForeach(typed))
             , () -> Tls.cast(ClassConstantReference.class, psi)
-                .map(typed -> transpilePsi(typed.getClassReference()) + '.' + typed.getName())
+                .map(typed -> trans(typed.getClassReference()) + '.' + typed.getName())
             , () -> Tls.cast(StringLiteralExpression.class, psi)
                 .map(typed -> {
                     if (!typed.isSingleQuote()) {
@@ -254,7 +257,7 @@ public class TranspileToNodeJs extends AnAction
                     PsiElement[] args = call.getParameters();
                     if ("preg_match".equals(call.getName()) && args.length > 2) {
                         String matchesVar = args[2].getText();
-                        return som(matchesVar + " = " + call.getName() + "(" + It(call.getParameters()).map(arg -> transpilePsi(arg)).str(", ") + ")");
+                        return som(matchesVar + " = " + call.getName() + "(" + It(call.getParameters()).map(arg -> trans(arg)).str(", ") + ")");
                     } else {
                         return non();
                     }
@@ -265,25 +268,36 @@ public class TranspileToNodeJs extends AnAction
                     return opt(ass.getVariable())
                         .cst(ArrayAccessExpression.class)
                         .flt(acc -> opt(acc.getIndex()).map(idx -> idx.getText()).def("").equals(""))
-                        .fap(acc -> opt(ass.getValue()).map(el -> transpilePsi(el))
-                            .fap(eltxt -> opt(acc.getValue()).map(el -> transpilePsi(el))
+                        .fap(acc -> opt(ass.getValue()).map(el -> trans(el))
+                            .fap(eltxt -> opt(acc.getValue()).map(el -> trans(el))
                                 .map(arrtxt -> arrtxt + ".push(" + eltxt + ")")));
                 })
             , () -> Tls.cast(ArrayHashElement.class, psi)
                 .fap(hash -> opt(hash.getKey())
                     .fop(key -> opt(hash.getValue())
                         .map(val -> {
-                            String keyExpr = transpilePsi(key);
+                            String keyExpr = trans(key);
                             if (!keyExpr.startsWith("\"") && !keyExpr.startsWith("'") ||
                                 !(key instanceof StringLiteralExpression)
                             ) {
                                 keyExpr = "[" + keyExpr + "]";
                             }
-                            return keyExpr + ": " + transpilePsi(val);
+                            return keyExpr + ": " + trans(val);
                         })))
+            , () -> Tls.cast(MultiassignmentExpression.class, psi)
+                .map(multiass -> {
+                    It<String> vars = It(multiass.getVariables()).map(v -> trans(v));
+                    return "[" + vars.str(", ") + "] = " +
+                        opt(multiass.getValue())
+                            .map(v -> trans(v)).def("");
+                })
+            , () -> Tls.cast(TernaryExpression.class, psi)
+                .flt(tern -> tern.isShort())
+                .map(tern -> trans(tern.getCondition()) +
+                    " || " + trans(tern.getFalseVariant()))
         );
         return It(result).def(getChildrenWithLeaf(psi)
-            .map(c -> transpilePsi(c))).str("");
+            .map(c -> trans(c))).str("");
     }
 
     private void openAsScratchFile(String text, AnActionEvent e)
@@ -309,7 +323,7 @@ public class TranspileToNodeJs extends AnAction
     public void actionPerformed(AnActionEvent e)
     {
         String output = opt(e.getData(LangDataKeys.PSI_FILE))
-            .map(psiFile -> It(psiFile.getChildren()).map(psi -> transpilePsi(psi)))
+            .map(psiFile -> It(psiFile.getChildren()).map(psi -> trans(psi)))
             .map(psiTexts -> Tls.implode("", psiTexts))
             .def("Error: could not retrieve current file");
         System.out.println(output);
