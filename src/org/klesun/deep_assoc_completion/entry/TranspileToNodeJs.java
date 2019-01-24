@@ -185,10 +185,8 @@ public class TranspileToNodeJs extends AnAction
 
     private static String transpilePsi(PsiElement psi)
     {
-        // TODO: add whitespace generally here
         // TODO: unset -> delete
         // TODO: process whole directories, not just one file
-        // TODO: do not add coma after last object element if there weren't any in original
         // TODO: class constants
         // TODO: put properties in constructor - node does not allow properties directly in class body
         // list($raw, $data) = $matches;
@@ -197,6 +195,7 @@ public class TranspileToNodeJs extends AnAction
                 .map(leaf ->
                     leaf.getText().equals("<?php") ? "" :
                     leaf.getText().equals("(int)") ? "+" :
+                    leaf.getText().equals(".") ? "+" :
                     leaf.getText().equals(".=") ? "+=" :
                     leaf.getText().equals("?:") ? "||" :
                     leaf.getText().equals("??") ? "||" :
@@ -237,9 +236,6 @@ public class TranspileToNodeJs extends AnAction
                 .map(typed -> transpileCatch(typed))
             , () -> Tls.cast(ForeachImpl.class, psi).itr()
                 .fap(typed -> transpileForeach(typed))
-            , () -> Tls.cast(ConcatenationExpression.class, psi)
-                .map(typed -> transpilePsi(typed.getLeftOperand()) + " + "
-                            + transpilePsi(typed.getRightOperand()))
             , () -> Tls.cast(ClassConstantReference.class, psi)
                 .map(typed -> transpilePsi(typed.getClassReference()) + '.' + typed.getName())
             , () -> Tls.cast(StringLiteralExpression.class, psi)
