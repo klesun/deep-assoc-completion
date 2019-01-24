@@ -5,6 +5,7 @@ import org.klesun.lang.Opt;
 
 import java.util.Iterator;
 
+import static org.klesun.lang.Lang.non;
 import static org.klesun.lang.Lang.som;
 
 public class EndIterator<A> implements Iterator<A> {
@@ -12,17 +13,12 @@ public class EndIterator<A> implements Iterator<A> {
     private final Lang.F2<A, Integer, Boolean> endPred;
     private final Boolean exclusive;
     private boolean end;
-    private Opt<A> current;
+    private Opt<A> current = non();
     private int i = 0;
 
     private Opt<A> getCurrent() {
-        if (!current.has()) {
-            while (sourceIt.hasNext()) {
-                A value = sourceIt.next();
-                ++i;
-                this.current = som(value);
-                break;
-            }
+        if (!current.has() && sourceIt.hasNext()) {
+            this.current = som(sourceIt.next());
         }
         return this.current;
     }
