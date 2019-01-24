@@ -138,17 +138,14 @@ public class TranspileToNodeJs extends AnAction
 
     private static Opt<String> transpileArray(ArrayCreationExpression typed)
     {
-        return It(typed.getHashElements())
-            .fal(hash -> opt(hash.getKey())
-                .fop(key -> opt(hash.getValue())
-                    .map(val -> getIndent(key)
-                        + (key instanceof StringLiteralExpression
-                            ? key.getText() : "[" + transpilePsi(key) + "]")
-                        + ": " + transpilePsi(val)
-                        + (opt(hash.getNextPsiSibling()).any(next -> next.getText().equals("]")) ? "" : ",")
-                        + getOutdent(val))))
-            .flt(parts -> parts.size() > 0)
-            .map(parts -> "{" + parts.itr().str("") + "}");
+        L<ArrayHashElement> hashes = L(typed.getHashElements());
+        if (hashes.size() > 0) {
+            L<String> subTokens = getChildrenWithLeaf(typed)
+                .arr().sub(1, -1).map(c -> transpilePsi(c)).arr();
+            return som("{" + subTokens.str("") +  "}");
+        } else {
+            return non();
+        }
     }
 
     private static String transpileCatch(Catch typed)
@@ -192,10 +189,8 @@ public class TranspileToNodeJs extends AnAction
         // TODO: unset -> delete
         // TODO: process whole directories, not just one file
         // TODO: do not add coma after last object element if there weren't any in original
-        // TODO: if ($zhopa = getZhopa()) {...} -> let $zhopa; if ($zhopa = getZhopa()) {...}
         // TODO: class constants
         // TODO: put properties in constructor - node does not allow properties directly in class body
-        // TODO: do not add let in +=
         // list($raw, $data) = $matches;
         Iterable<String> result = It.frs(() -> It.non()
             , () -> Tls.cast(LeafPsiElement.class, psi)
@@ -278,6 +273,18 @@ public class TranspileToNodeJs extends AnAction
                             .fap(eltxt -> opt(acc.getValue()).map(el -> transpilePsi(el))
                                 .map(arrtxt -> arrtxt + ".push(" + eltxt + ")")));
                 })
+            , () -> Tls.cast(ArrayHashElement.class, psi)
+                .fap(hash -> opt(hash.getKey())
+                    .fop(key -> opt(hash.getValue())
+                        .map(val -> {
+                            String keyExpr = transpilePsi(key);
+                            if (!keyExpr.startsWith("\"") && !keyExpr.startsWith("'") ||
+                                !(key instanceof StringLiteralExpression)
+                            ) {
+                                keyExpr = "[" + keyExpr + "]";
+                            }
+                            return keyExpr + ": " + transpilePsi(val);
+                        })))
         );
         return It(result).def(getChildrenWithLeaf(psi)
             .map(c -> transpilePsi(c))).str("");

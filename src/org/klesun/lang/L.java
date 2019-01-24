@@ -282,4 +282,9 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
     {
         return new It<>(s);
     }
+
+    public String str(String delim)
+    {
+        return itr().str(delim);
+    }
 }
