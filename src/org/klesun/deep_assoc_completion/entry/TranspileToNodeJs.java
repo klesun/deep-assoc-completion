@@ -96,15 +96,6 @@ public class TranspileToNodeJs extends AnAction
             .fst().def("");
     }
 
-    private static String getOutdent(PsiElement psi)
-    {
-        return opt(psi.getNextSibling())
-            .cst(PsiWhiteSpaceImpl.class)
-            .fop(ws -> Tls.regex("^(\\s*\\n).*$", ws.getText()))
-            .fop(ma -> ma.gat(0))
-            .def("");
-    }
-
     private static String transpileFunction(Function typed)
     {
         It<PsiElement> stats = Tls.findChildren(typed, GroupStatement.class)
@@ -220,19 +211,13 @@ public class TranspileToNodeJs extends AnAction
             , () -> Tls.cast(Parameter.class, psi)
                 .map(typed -> (typed.getText().startsWith("...") ? "..." : "") + "$" + typed.getName())
             , () -> Tls.cast(Variable.class, psi)
-                .map(typed -> {
-                    Boolean isDeclSt = opt(typed.getParent())
-                        .cst(AssignmentExpression.class)
-                        .flt(ass -> typed.equals(ass.getVariable()))
-                        .fop(ass -> opt(ass.getParent()))
-                        .any(st -> st.getClass().equals(StatementImpl.class));
-                    String varName = typed.getText().equals("$this") ? "this" : typed.getText();
-                    return varName;
-                })
+                .map(typed -> typed.getText().equals("$this") ? "this" : typed.getText())
             , () -> Tls.cast(FieldReference.class, psi)
                 .map(typed -> trans(typed.getClassReference()) + ".$" + typed.getName())
             , () -> Tls.cast(MethodReference.class, psi)
-                .map(typed -> trans(typed.getClassReference()) + "." + typed.getName() + "(" + It(typed.getParameters()).map(arg -> trans(arg)).str(", ") + ")")
+                .map(typed -> trans(typed.getClassReference()) + "." + typed.getName() + "(" + trans(typed.getParameterList()) + ")")
+            , () -> Tls.cast(FunctionReference.class, psi)
+                .map(typed -> "php." + typed.getName() + "(" + trans(typed.getParameterList()) + ")")
             , () -> Tls.cast(ArrayCreationExpression.class, psi).itr()
                 .fap(typed -> transpileArray(typed))
             , () -> Tls.cast(Catch.class, psi).itr()
