@@ -112,6 +112,11 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>
         return itr().fap(flatten);
     }
 
+    public <Tnew extends T> It<Tnew> cst(Class<Tnew> cls)
+    {
+        return itr().cst(cls);
+    }
+
     public boolean any(Predicate<T> pred)
     {
         return Lang.It(this).any(pred);

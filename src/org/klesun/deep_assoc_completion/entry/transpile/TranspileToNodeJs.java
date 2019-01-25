@@ -16,6 +16,8 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl;
 import com.jetbrains.php.lang.psi.PhpElementType;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
+import com.jetbrains.php.lang.psi.elements.impl.ConstantReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ForeachImpl;
 import com.jetbrains.php.lang.psi.elements.impl.PhpUseListImpl;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -64,14 +66,27 @@ public class TranspileToNodeJs extends AnAction
         });
     }
 
+    private static String makeImport(PhpReference pathPsi)
+    {
+        String path = pathPsi.getText();
+        String root = Tls.findParent(pathPsi, PhpNamespace.class, a -> true)
+            .map(ns -> L(ns.getChildren()).cst(PhpNamespaceReference.class)
+                .map(nsref -> L(nsref.getText().split("\\\\"))
+                    .map(dirname -> "..").str("/") + "/").fst().def(""))
+            .map(ns -> ns + "..") // current dir is a separate PSI
+            .def("");
+
+        return "require('" + root + path.replace("\\", "/") + ".js')";
+    }
+
     private static Opt<String> transpileImport(PhpUseListImpl lst)
     {
         return It(lst.getDeclarations())
             .fal(usePsi -> opt(usePsi.getTargetReference())
             .map(pathPsi -> {
-                String path = pathPsi.getText();
+                String require = makeImport(pathPsi);
                 String alias = opt(usePsi.getAliasName()).def(pathPsi.getName());
-                return "const " + alias + " = require('" + path.replace("\\", "/") + "');";
+                return "const " + alias + " = " + require + ";";
             }))
             .map(vals -> vals.itr().str("\n"));
     }
@@ -192,11 +207,29 @@ public class TranspileToNodeJs extends AnAction
                     leaf.getText().equals(".") ? "+" :
                     leaf.getText().equals(".=") ? "+=" :
                     leaf.getText().equals("??") ? "||" :
-                    leaf.getText().equals("self") ? "this" :
-                    leaf.getText().equals("static") ? "this" :
                     leaf.getText().equals("namespace") ? "// namespace" :
                     leaf.getText().equals("elseif") ? "else if" :
                     leaf.getText())
+            , () -> Tls.cast(ClassReferenceImpl.class, psi)
+                .map(ref -> {
+                    if (ref.getText().equals("self") || ref.getText().equals("static")) {
+                        Boolean calledInStatic = Tls
+                            .findParent(psi, Method.class, a -> true)
+                            .any(m -> m.isStatic());
+                        if (calledInStatic) {
+                            return "this";
+                        } else {
+                            return "this.prototype";
+                        }
+                    } else {
+                        String clsPath = ref.getText();
+                        if (!clsPath.contains("\\")) {
+                            return clsPath;
+                        } else {
+                            return makeImport(ref);
+                        }
+                    }
+                })
             , () -> Tls.cast(PhpClass.class, psi)
                 .map(cls -> getChildrenWithLeaf(cls))
                 .fap(parts -> removeClsMods(parts)
@@ -225,6 +258,8 @@ public class TranspileToNodeJs extends AnAction
                 .fap(typed -> transpileForeach(typed))
             , () -> Tls.cast(ClassConstantReference.class, psi)
                 .map(typed -> trans(typed.getClassReference()) + '.' + typed.getName())
+            , () -> Tls.cast(ConstantReferenceImpl.class, psi)
+                .map(cst -> "php." + cst.getText())
             , () -> Tls.cast(StringLiteralExpression.class, psi)
                 .map(typed -> {
                     if (!typed.isSingleQuote()) {
