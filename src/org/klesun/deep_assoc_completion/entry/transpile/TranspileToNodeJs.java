@@ -259,7 +259,8 @@ public class TranspileToNodeJs extends AnAction
             , () -> Tls.cast(ClassConstantReference.class, psi)
                 .map(typed -> trans(typed.getClassReference()) + '.' + typed.getName())
             , () -> Tls.cast(ConstantReferenceImpl.class, psi)
-                .map(cst -> "php." + cst.getText())
+                .map(cst -> list("true", "false", "null").contains(cst.getText())
+                    ? cst.getText() : "php." + cst.getText())
             , () -> Tls.cast(StringLiteralExpression.class, psi)
                 .map(typed -> {
                     if (!typed.isSingleQuote()) {
