@@ -66,17 +66,23 @@ public class TranspileToNodeJs extends AnAction
         });
     }
 
-    private static String makeImport(PhpReference pathPsi)
+    private static String makeImport(PhpReference pathPsi, Boolean fromRoot)
     {
-        String path = pathPsi.getText();
+        String path = pathPsi.getText().replace("\\", "/");
         String root = Tls.findParent(pathPsi, PhpNamespace.class, a -> true)
             .map(ns -> L(ns.getChildren()).cst(PhpNamespaceReference.class)
                 .map(nsref -> L(nsref.getText().split("\\\\"))
-                    .map(dirname -> "..").str("/") + "/").fst().def(""))
-            .map(ns -> ns + "..") // current dir is a separate PSI
+                    .map(dirname -> "..").str("/")).fst().def(""))
+            .map(ns -> ns + "/..") // current dir is a separate PSI
             .def("");
-
-        return "require('" + root + path.replace("\\", "/") + ".js')";
+        if (fromRoot && !path.startsWith("/")) {
+            path = "/" + path;
+        }
+        if (path.startsWith("/")) {
+            return "require('" + root + path + ".js')";
+        } else {
+            return "require('" + path + ".js')";
+        }
     }
 
     private static Opt<String> transpileImport(PhpUseListImpl lst)
@@ -84,7 +90,7 @@ public class TranspileToNodeJs extends AnAction
         return It(lst.getDeclarations())
             .fal(usePsi -> opt(usePsi.getTargetReference())
             .map(pathPsi -> {
-                String require = makeImport(pathPsi);
+                String require = makeImport(pathPsi, true);
                 String alias = opt(usePsi.getAliasName()).def(pathPsi.getName());
                 return "const " + alias + " = " + require + ";";
             }))
@@ -226,7 +232,7 @@ public class TranspileToNodeJs extends AnAction
                         if (!clsPath.contains("\\")) {
                             return clsPath;
                         } else {
-                            return makeImport(ref);
+                            return makeImport(ref, false);
                         }
                     }
                 })
