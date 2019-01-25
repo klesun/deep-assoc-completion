@@ -2,7 +2,8 @@
 /**
  * this file provides implementations for built-in
  * php functions that work more or less same way
- * (be careful with the functions that write to a passed vars, like preg_match)
+ * (be careful with the functions that write to a passed
+ * var, like preg_match, they will 100% work differently)
  */
 
 let util = require('util');
@@ -15,13 +16,40 @@ let strval = (value) => value === null || value === false || value === undefined
 let STR_PAD_LEFT = 0;
 let STR_PAD_RIGHT = 1;
 
+let php = exports;
 exports.empty = empty;
 exports.intval = (value) => +value;
 exports.boolval = (value) => empty(value) ? true : false;
-exports.trim = (value) => strval(value).trim();
+exports.ltrim = (str, chars = ' \n\t') => {
+	str = strval(str);
+	let startAt = 0;
+	for (let i = startAt; i <= str.length; ++i) {
+		if (chars.includes(str[i])) {
+			startAt = i + 1;
+		} else {
+			break;
+		}
+	}
+	return str.slice(startAt);
+	//return str.replace(/^\s+/, '');
+};
+exports.rtrim = (str, chars = ' \n\t') => {
+	str = strval(str);
+	let endAt = str.length;
+	for (let i = endAt; i > 0; --i) {
+		if (chars.includes(str[i - 1])) {
+			endAt = i - 1;
+		} else {
+			break;
+		}
+	}
+	return str.slice(0, endAt);
+	//return str.replace(/\s+$/, '');
+};
+exports.trim = (value, chars = ' \n\t') => php.ltrim(php.rtrim(value, chars), chars);
 exports.strval = strval;
 exports.strtoupper = (value) => strval(value).toUpperCase();
-exports.substr = (str, from, length) => str.slice(from, from + length);
+exports.substr = (str, from, length) => str.slice(from, length !== undefined ? from + length : undefined);
 exports.str_pad = ($input, $pad_length, $pad_string = " ", $pad_type = STR_PAD_RIGHT) => {
 	if ($pad_type == STR_PAD_RIGHT) {
 		return strval($input).padEnd($pad_length, $pad_string);
@@ -38,8 +66,18 @@ exports.strtotime = (dtStr) => {
 		return Date.now() / 1000;
 	} else if (dtStr.match(/^\d{4}-\d{2}-\d{2}(\d{2}:\d{2}:\d{2})?$/)) {
 		return Date.parse(dtStr) / 1000;
+	} else if (dtStr.match(/^\d{2}:\d{2} [AP]M$/)) {
+		return Date.parse('2016-01-01 ' + dtStr) / 1000;
 	} else {
 		throw new Error('Unsupported date str format - ' + dtStr);
+	}
+};
+let safe = f => {
+	try {
+		return f();
+	} catch (exc) {
+		//throw exc;
+		return null;
 	}
 };
 exports.date = (format, epoch) => {
@@ -51,13 +89,13 @@ exports.date = (format, epoch) => {
 		dtObj.setSeconds(epoch);
 	}
 	if (format === 'Y-m-d H:i:s') {
-		return dtObj.toISOString().slice(0, '2018-12-05T22:13:41'.length).replace('T', ' ');
+		return safe(() => dtObj.toISOString().slice(0, '2018-12-05T22:13:41'.length).replace('T', ' '));
 	} else if (format === 'Y-m-d') {
-		return dtObj.toISOString().slice(0, '2018-12-05'.length);
+		return safe(() => dtObj.toISOString().slice(0, '2018-12-05'.length));
 	} else if (format === 'm-d') {
-		return dtObj.toISOString().slice('2018-'.length, '2018-12-05'.length);
+		return safe(() => dtObj.toISOString().slice('2018-'.length, '2018-12-05'.length));
 	} else if (format === 'H:i') {
-		return dtObj.toISOString().slice('2018-12-05T'.length, '2018-12-05T22:13'.length);
+		return safe(() => dtObj.toISOString().slice('2018-12-05T'.length, '2018-12-05T22:13'.length));
 	} else {
 		throw new Error('Unsupported date format - ' + format);
 	}
@@ -76,8 +114,6 @@ exports.explode = (delim, str) => str.split(delim);
 exports.json_encode = (str) => JSON.stringify(str);
 exports.json_decode = (str) => str ? JSON.parse(str) : null;
 exports.ucfirst = str => str.slice(0, 1).toUpperCase() + str.slice(1);
-exports.ltrim = str => str.replace(/^\s+/, '');
-exports.rtrim = str => str.replace(/\s+$/, '');
 exports.strlen = str => (str + "").length;
 exports.array_key_exists = (key, obj) => key in obj;
 exports.substr_replace = (str, replace, start, length = null) => {
@@ -114,6 +150,15 @@ exports.preg_replace_callback = (pattern, callback, str) => {
 	});
 };
 exports.preg_match = (pattern, str, matches = null, phpFlags = null) => {
+	if (typeof pattern === 'string') {
+		let match = pattern.match(/^\/(.*)\/([a-z]*)$/);
+		if (match) {
+			let [_, content, flags] = match;
+			// php takes content and flags in one string,
+			// but js takes them as separate arguments
+			pattern = new RegExp(content, flags);
+		}
+	}
 	if (phpFlags) {
 		throw new Error('Fourth preg_match argument, php flags, is not supported - ' + phpFlags);
 	} else {
@@ -156,7 +201,18 @@ exports.array_flip = (obj) => {
 	}
 	return newObj;
 };
+let normFunc = (func) => {
+	if (typeof func === 'string') {
+		if (func in php) {
+			func = php[func];
+		} else {
+			throw Error('Unsupported built-in function - ' + func);
+		}
+	}
+	return func;
+};
 exports.array_map = (func, obj, additionalValues = []) => {
+	func = normFunc(func);
 	let newObj = Array.isArray(obj) ? [] : {};
 	for (let [key, val] of Object.entries(obj)) {
 		newObj[key] = func(val, additionalValues[key]);
@@ -164,6 +220,7 @@ exports.array_map = (func, obj, additionalValues = []) => {
 	return newObj;
 };
 exports.array_filter = (obj, func, flags = null) => {
+	func = normFunc(func) || ((v) => !empty(v));
 	if (flags) {
 		throw new Error('array_filter php flags are not supported');
 	}
@@ -181,10 +238,31 @@ exports.str_split = (str, size = 1) => {
 	}
 	let chunks = [];
 	for (let i = 0; i < str.length; i += size) {
-		chunks.push(str.slice(i, size));
+		chunks.push(str.slice(i, i + size));
 	}
 	return chunks;
 };
+exports.range = (start, end, step = 1) => {
+	if (!step) {
+		throw Error('Step arg must not be 0');
+	}
+	let arr = [];
+	if (start >= end) {
+		for (let i = 0; i <= end; i += Math.abs(step)) {
+			arr.push(i);
+		}
+	} else {
+		// I hate it so much for this behaviour...
+		for (let i = 0; i >= end; i -= Math.abs(step)) {
+			arr.push(i);
+		}
+	}
+	return arr;
+};
+
+let isPlainObject = (val) => val && val.constructor && val.constructor.name === 'Object';
+exports.is_array = val => Array.isArray(val) || isPlainObject(val);
+exports.count = val => Object.values(val).length;
 
 //exports.PREG_OFFSET_CAPTURE = 256;
 
