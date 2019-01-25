@@ -65,9 +65,9 @@ exports.strtotime = (dtStr) => {
 	if (dtStr === 'now') {
 		return Date.now() / 1000;
 	} else if (dtStr.match(/^\d{4}-\d{2}-\d{2}(\d{2}:\d{2}:\d{2})?$/)) {
-		return Date.parse(dtStr) / 1000;
+		return Date.parse(dtStr + ' Z') / 1000;
 	} else if (dtStr.match(/^\d{2}:\d{2} [AP]M$/)) {
-		return Date.parse('2016-01-01 ' + dtStr) / 1000;
+		return Date.parse('2016-01-01 ' + dtStr + ' Z') / 1000;
 	} else {
 		throw new Error('Unsupported date str format - ' + dtStr);
 	}
@@ -85,8 +85,7 @@ exports.date = (format, epoch) => {
 	if (epoch === undefined) {
 		dtObj = new Date();
 	} else {
-		dtObj = new Date(1970, 0, 1); // Epoch
-		dtObj.setSeconds(epoch);
+		dtObj = new Date(epoch * 1000);
 	}
 	if (format === 'Y-m-d H:i:s') {
 		return safe(() => dtObj.toISOString().slice(0, '2018-12-05T22:13:41'.length).replace('T', ' '));
