@@ -23,15 +23,6 @@ class ExactKeysUnitTest
         return $imported;
     }
 
-    public function provideArrayMapInfRec(ApolloPnrFieldsOnDemand $provider)
-    {
-        $imported = $provider->getReservation();
-        $imported['passengers'][0][''];
-        return [
-            [$imported['passengers'][0], ['lastName']],
-        ];
-    }
-
     public function provideImportPnrHeader()
     {
         $imported = $this->importPnr();

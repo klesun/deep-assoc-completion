@@ -1344,4 +1344,27 @@ class ExactKeysUnitTest
     //=============================
     // following are not implemented yet
     //=============================
+
+    /** @param $reservation = self::getReservation() */
+    public static function transformReservation($reservation)
+    {
+        $reservation['passengers'] = [];
+        $reservation['passengers'] = array_map('doStuff', $reservation['passengers']);
+        return $reservation;
+    }
+
+    public static function getReservation()
+    {
+        // must pass some args, won't reproduce otherwise
+        return self::transformReservation($a);
+    }
+
+    public function provideArrayMapInfRec()
+    {
+        $imported = self::getReservation();
+        $imported['passengers'][0][''];
+        return [
+            [$imported['passengers'][0], ['lastName']],
+        ];
+    }
 }
