@@ -9,11 +9,11 @@ import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.resolvers.MainRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.PsiSig;
 import org.klesun.lang.*;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class SearchCtx extends Lang
@@ -28,10 +28,12 @@ public class SearchCtx extends Lang
     final public Opt<Project> project;
     // for performance measurement
     private int expressionsResolved = 0;
-    final private Map<IFuncCtx, Map<PhpExpression, Iterable<DeepType>>> ctxToExprToResult = new HashMap<>();
+    final private Map<PsiSig, Iterable<DeepType>> ctxToExprToResult = new HashMap<>();
     public Opt<Integer> overrideMaxExpr = non();
     final public Map<PsiFile, Collection<FieldReferenceImpl>> fileToFieldRefs = new HashMap<>();
     public boolean isMain = false;
+
+    public Opt<ExprCtx> currentExpr = non();
 
     public SearchCtx(Project project)
     {
@@ -99,16 +101,10 @@ public class SearchCtx extends Lang
         return false;
     }
 
-    private Opt<Iterable<DeepType>> takeFromCache(IFuncCtx ctx, PhpExpression expr)
+    private Opt<Iterable<DeepType>> takeFromCache(IExprCtx ctx, PhpExpression expr)
     {
-        if (!ctxToExprToResult.containsKey(ctx)) {
-            return opt(null);
-        }
-        if (!ctxToExprToResult.get(ctx).containsKey(expr)) {
-            return opt(null);
-        }
-        Iterable<DeepType> mt = ctxToExprToResult.get(ctx).get(expr);
-        return opt(mt);
+        PsiSig sig = new PsiSig(expr, ctx);
+        return opt(ctxToExprToResult.get(sig));
     }
 
     public static String formatPsi(PsiElement expr)
@@ -118,36 +114,11 @@ public class SearchCtx extends Lang
         return Tls.singleLine(expr.getText(), 120) + " - " + expr.getContainingFile().getName() + ":" + phpLineNum;
     }
 
-    private void putToCache(IFuncCtx ctx, PhpExpression expr, Iterable<DeepType> result)
+    private void putToCache(IExprCtx ctx, PhpExpression expr, Iterable<DeepType> result)
     {
-        if (!ctxToExprToResult.containsKey(ctx)) {
-            ctxToExprToResult.put(ctx, new HashMap<>());
-        }
-        if (ctxToExprToResult.get(ctx).containsKey(expr)) {
-            ctxToExprToResult.get(ctx).remove(expr);
-        }
-        ctxToExprToResult.get(ctx).put(expr, result);
-    }
-
-    private void printCache()
-    {
-        Map<PhpExpression, L<IFuncCtx>> psiToCtxs = new LinkedHashMap<>();
-        ctxToExprToResult.forEach((ctx, psiToMt) -> {
-            psiToMt.forEach((psi, mt) -> {
-                if (!psiToCtxs.containsKey(psi)) {
-                    psiToCtxs.put(psi, list());
-                }
-                psiToCtxs.get(psi).add(ctx);
-            });
-        });
-        L(psiToCtxs.keySet())
-            .srt(psi -> -psiToCtxs.get(psi).size())
-            .fch(psi -> {
-                System.out.println("  ** PSI: " + formatPsi(psi));
-                psiToCtxs.get(psi).fch(ctx -> {
-                    System.out.println("   +-- Ctx: " + ctx.hashCode() + " " + ctx);
-                });
-            });
+        PsiSig sig = new PsiSig(expr, ctx);
+        ctxToExprToResult.remove(sig);
+        ctxToExprToResult.put(sig, result);
     }
 
     private boolean shouldCache(ExprCtx exprCtx)
@@ -169,6 +140,8 @@ public class SearchCtx extends Lang
 
     public Iterable<DeepType> findExprType(PhpExpression expr, ExprCtx exprCtx)
     {
+        currentExpr = som(exprCtx);
+
         long time = System.nanoTime();
         double seconds = (time - startTime) / 1000000000.0;
         if (!debug && (time - lastReportTime) / 1000000000.0 > 1.0) {
@@ -186,7 +159,7 @@ public class SearchCtx extends Lang
             return It.non();
         }
 
-        Opt<Iterable<DeepType>> result = takeFromCache(exprCtx.func(), expr);
+        Opt<Iterable<DeepType>> result = takeFromCache(exprCtx, expr);
         if (result.has()) {
             if (debug) {
                 //System.out.println(indent + "<< TAKING RESULT FROM CACHE");
@@ -195,7 +168,7 @@ public class SearchCtx extends Lang
             return It.non();
         } else {
             if (shouldCache(exprCtx)) {
-                putToCache(exprCtx.func(), expr, list());
+                putToCache(exprCtx, expr, list());
             }
 
             It<DeepType> tit = new MainRes(exprCtx).resolve(expr)
@@ -205,7 +178,7 @@ public class SearchCtx extends Lang
             Iterable<DeepType> mit = new MemIt<>(tit.iterator());
             result = som(mit);
             if (shouldCache(exprCtx)) {
-                result.thn(mt -> putToCache(exprCtx.func(), expr, mit));
+                result.thn(mt -> putToCache(exprCtx, expr, mit));
             }
         }
 
