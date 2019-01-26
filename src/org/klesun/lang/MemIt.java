@@ -1,17 +1,17 @@
 package org.klesun.lang;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Predicate;
-import static org.klesun.lang.Lang.*;
+
+import static org.klesun.lang.Lang.C2;
+import static org.klesun.lang.Lang.It;
 
 /**
  * a wrapper for an iterator, that remembers all retrieved elements
  * and reuses them on the next attempt to iterate over it
  */
-public class MemIt<A> implements Iterable<A>
+public class MemIt<A> implements Iterable<A>, IIt<A>
 {
     final private Node head = new Node(null); // first value will be skipped
     final private Iterator<A> source;

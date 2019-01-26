@@ -18,7 +18,7 @@ import static org.klesun.lang.Lang.*;
  * recreating the array as well as the ability to progress step by step
  * to distribute processor time evenly among different type sources
  */
-public class It<A> implements Iterable<A>
+public class It<A> implements Iterable<A>, IIt<A>
 {
     private Opt<Iterator<A>> iterator = Lang.non();
     private Iterable<A> source;

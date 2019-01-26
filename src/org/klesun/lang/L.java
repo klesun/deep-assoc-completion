@@ -11,7 +11,7 @@ import java.util.function.Predicate;
  * the class (yeah, less performance, but easier to read)
  * some integration with Opt class
  */
-public class L<@NonNull T> extends ListWrapper<T> implements List<T>
+public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IIt<T>
 {
     L(List<T> source)
     {
