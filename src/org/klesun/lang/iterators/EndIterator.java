@@ -44,6 +44,7 @@ public class EndIterator<A> implements Iterator<A> {
 
     public A next() {
         A next = getCurrent().unw();
+        current = Lang.non();
         end = endPred.apply(next, i++);
         return next;
     }
