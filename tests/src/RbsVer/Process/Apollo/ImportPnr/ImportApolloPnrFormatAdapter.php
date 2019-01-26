@@ -7,10 +7,11 @@ use RbsVer\Process\Common\ImportPnr\ImportPnrCommonFormatAdapter;
  */
 class ImportApolloPnrFormatAdapter
 {
-    public static function transformReservation()
+    /** @param $reservation = IGdsPnrFieldsProvider::getReservation() */
+    public static function transformReservation($reservation)
     {
         $reservation['passengers'] = [];
-        $reservation = ImportPnrCommonFormatAdapter::addContextDataToPaxes($reservation);
+        $reservation['passengers'] = array_map('doStuff', $reservation['passengers']);
         return $reservation;
     }
 }

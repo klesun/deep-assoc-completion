@@ -1,5 +1,8 @@
 <?php
 
+use RbsVer\Process\Apollo\ImportPnr\ApolloPnrFieldsOnDemand;
+use RbsVer\Process\Common\ImportPnr\IGdsPnrFieldsProvider;
+
 class ExactKeysUnitTest
 {
     private function importPnr()
@@ -20,12 +23,12 @@ class ExactKeysUnitTest
         return $imported;
     }
 
-    public function provideArrayMapInfRec()
+    public function provideArrayMapInfRec(ApolloPnrFieldsOnDemand $provider)
     {
-        $imported = (new \RbsVer\Process\Common\ImportPnr\ImportPnrAction)->execute();
-        $imported['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'][''];
+        $imported = $provider->getReservation();
+        $imported['passengers'][0][''];
         return [
-            [$imported['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'], ['absolute', 'lastNameNumber', 'firstNameNumber']],
+            [$imported['passengers'][0], ['lastName']],
         ];
     }
 

@@ -7,6 +7,6 @@ class ApolloPnrFieldsOnDemand implements IGdsPnrFieldsProvider
     public function getReservation()
     {
         // must pass some args, won't reproduce otherwise
-        return ImportApolloPnrFormatAdapter::transformReservation($this->reservationInfo, $this->baseDate);
+        return ImportApolloPnrFormatAdapter::transformReservation($a);
     }
 }
