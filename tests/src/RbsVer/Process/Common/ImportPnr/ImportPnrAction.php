@@ -1,5 +1,5 @@
 <?php
-namespace Rbs\Process\Common\ImportPnr;
+namespace RbsVer\Process\Common\ImportPnr;
 
 class ImportPnrAction
 {

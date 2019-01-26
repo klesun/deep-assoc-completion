@@ -2,9 +2,9 @@
 namespace DeepTest;
 
 use Lib\ParamValidation\DictP;
-use Rbs\Parsers\Apollo\PricingParser\DataStructureWriters\PricingStructureWriter;
-use Rbs\Parsers\Sabre\Pricing\PqParserFull;
-use Rbs\Parsers\Sabre\Pricing\PqParserUnshiftOverflow;
+use RbsVer\Parsers\Apollo\PricingParser\DataStructureWriters\PricingStructureWriter;
+use RbsVer\Parsers\Sabre\Pricing\PqParserFull;
+use RbsVer\Parsers\Sabre\Pricing\PqParserUnshiftOverflow;
 use TestSamples\CmsSessionMemoryOverflow\CmsStatefulSession;
 use TouhouNs\ReimuHakurei;
 use TouhouNs\YakumoRan;

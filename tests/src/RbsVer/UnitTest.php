@@ -1,10 +1,11 @@
 <?php
+namespace RbsVer;
 
 class UnitTest
 {
     public function provideImportPnr()
     {
-        $imported = \Rbs\Process\Common\ImportPnr\ImportPnrAction::makeByGds([
+        $imported = \RbsVer\Process\Common\ImportPnr\ImportPnrAction::makeByGds([
             'gdsName' => 'apollo',
             'recordLocator' => 'qwe123',
             'pnrFields' => ['reservation'],

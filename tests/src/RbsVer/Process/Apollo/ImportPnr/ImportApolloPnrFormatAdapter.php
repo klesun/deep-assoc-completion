@@ -1,6 +1,6 @@
 <?php
-namespace Rbs\Process\Apollo\ImportPnr;
-use Rbs\Process\Common\ImportPnr\ImportPnrCommonFormatAdapter;
+namespace RbsVer\Process\Apollo\ImportPnr;
+use RbsVer\Process\Common\ImportPnr\ImportPnrCommonFormatAdapter;
 
 /**
  * transforms output of the ImportApolloPnrAction to a common for any GDS structure

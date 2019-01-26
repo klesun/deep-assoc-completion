@@ -1,6 +1,6 @@
 <?php
-namespace Rbs\Process\Common\ImportPnr;
-use Rbs\Process\Apollo\ImportPnr\ImportApolloPnrFormatAdapter;
+namespace RbsVer\Process\Common\ImportPnr;
+use RbsVer\Process\Apollo\ImportPnr\ImportApolloPnrFormatAdapter;
 
 /**
  * it behaves same as normal (online) PNR fields provider, but uses initially

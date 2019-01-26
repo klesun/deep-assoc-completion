@@ -20,6 +20,15 @@ class ExactKeysUnitTest
         return $imported;
     }
 
+    public function provideArrayMapInfRec()
+    {
+        $imported = (new \RbsVer\Process\Common\ImportPnr\ImportPnrAction)->execute();
+        $imported['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'][''];
+        return [
+            [$imported['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'], ['absolute', 'lastNameNumber', 'firstNameNumber']],
+        ];
+    }
+
     public function provideImportPnrHeader()
     {
         $imported = $this->importPnr();

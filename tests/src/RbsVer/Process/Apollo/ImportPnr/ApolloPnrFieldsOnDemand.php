@@ -1,6 +1,6 @@
 <?php
-namespace Rbs\Process\Apollo\ImportPnr;
-use Rbs\Process\Common\ImportPnr\IGdsPnrFieldsProvider;
+namespace RbsVer\Process\Apollo\ImportPnr;
+use RbsVer\Process\Common\ImportPnr\IGdsPnrFieldsProvider;
 
 class ApolloPnrFieldsOnDemand implements IGdsPnrFieldsProvider
 {
