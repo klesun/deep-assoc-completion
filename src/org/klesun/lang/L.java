@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * shorter names; convenient map(), filter() right inside
@@ -32,11 +31,6 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IIt<T>
         return index >= 0 && index < s.size() ? Lang.opt(s.get(index)) : Lang.opt(null);
     }
 
-    public Opt<T> fst()
-    {
-        return gat(0);
-    }
-
     public Opt<T> lst()
     {
         return gat(-1);
@@ -45,31 +39,6 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IIt<T>
     public L<T> def(L<T> fallback)
     {
         return size() > 0 ? this : fallback;
-    }
-
-    public It<T> flt(Lang.F2<T, Integer, Boolean> pred)
-    {
-        return Lang.It(this).flt(pred);
-    }
-
-    public It<T> flt(Predicate<T> pred)
-    {
-        return flt((val, i) -> pred.test(val));
-    }
-
-    public <@NonNull Tnew> It<Tnew> map(Lang.F<T, @NonNull Tnew> f)
-    {
-        return Lang.It(this).map(f);
-    }
-
-    public <@NonNull Tnew> It<Tnew> map(Lang.F2<T, Integer, Tnew> f)
-    {
-        return Lang.It(this).map(f);
-    }
-
-    public <Tnew> L<Tnew> mop(Lang.F<T, Tnew> f)
-    {
-        return this.mop((el, i) -> f.apply(el));
     }
 
     /** same as map, but also removes null values from the result */
@@ -85,43 +54,6 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IIt<T>
         return result;
     }
 
-    /**
-     * "fop" stands for "Filter Optional"
-     * this is a combination of map and filter
-     */
-    public <Tnew> It<Tnew> fop(Lang.F<T, Opt<Tnew>> convert)
-    {
-        return fop((el, i) -> convert.apply(el));
-    }
-
-    public <Tnew> It<Tnew> fop(Lang.F2<T, Integer, Opt<Tnew>> convert)
-    {
-        return Lang.It(this).fop(convert);
-    }
-
-    /**
-     * "fop" stands for flat map - flattens list by lambda
-     */
-    public <Tnew> It<Tnew> fap(Lang.F<T, Iterable<Tnew>> flatten)
-    {
-        return fap((el, i) -> flatten.apply(el));
-    }
-
-    public <Tnew> It<Tnew> fap(Lang.F2<T, Integer, Iterable<Tnew>> flatten)
-    {
-        return itr().fap(flatten);
-    }
-
-    public <Tnew extends T> It<Tnew> cst(Class<Tnew> cls)
-    {
-        return itr().cst(cls);
-    }
-
-    public boolean any(Predicate<T> pred)
-    {
-        return Lang.It(this).any(pred);
-    }
-
     public boolean has()
     {
         return size() > 0;
@@ -130,11 +62,6 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IIt<T>
     public L<T> arr()
     {
         return this;
-    }
-
-    public boolean all(Lang.F2<T, Integer, Boolean> pred)
-    {
-        return Lang.It(this).all(pred);
     }
 
     /**
@@ -161,12 +88,6 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IIt<T>
         for (int i = 0; i < s.size(); ++i) {
             f.accept(s.get(i), i);
         }
-    }
-
-    /** "rdc" stands for "reduce" */
-    public <Tnew> Tnew rdc(Lang.F2<Tnew, T, Tnew> f, Tnew initialValue)
-    {
-        return itr().rdc(f, initialValue);
     }
 
     public String toString()
@@ -281,15 +202,5 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IIt<T>
             }
         }
         return Lang.list();
-    }
-
-    public It<T> itr()
-    {
-        return new It<>(s);
-    }
-
-    public String str(String delim)
-    {
-        return itr().str(delim);
     }
 }

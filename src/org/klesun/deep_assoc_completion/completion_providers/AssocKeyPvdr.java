@@ -132,13 +132,20 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         return makePaddedLookup(keyName, ideaTypeStr, briefValue);
     }
 
-    private static void printExprTree(ExprCtx root, int depth)
+    private static void printExprTree(ExprCtx root, SearchCtx search, int depth)
     {
         String indent = Tls.range(0, depth).rdc((sum,i) -> sum + " ", "");
         int typeCnt = root.typeCnt.def(0);
-        System.out.println(indent + SearchCtx.formatPsi(root.expr) + " " + typeCnt + " types " + (typeCnt > 100 ? "many yopta" : ""));
+        if (search.currentExpr.equals(som(root))) {
+            System.out.println("======================================= current expression =======================================");
+        }
+        if (root.parent.any(p -> p.expr == root.expr)) {
+            // a fake expr ctx created for func call resolution
+        } else {
+            System.out.println(indent + SearchCtx.formatPsi(root.expr) + " " + typeCnt + " types " + (typeCnt > 100 ? "many yopta" : ""));
+        }
         for (ExprCtx subCtx: root.children) {
-            printExprTree(subCtx, depth + 1);
+            printExprTree(subCtx, search, depth + 1);
         }
     }
 
@@ -149,7 +156,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         Mutable<Boolean> isFirst = new Mutable<>(true);
         Dict<MutableLookup> nameToMutLookup = new Dict<>(new LinkedHashMap<>());
         arrMt.types.fap(t -> t.keys).fch((k,i) -> {
-            k.keyType.getTypes.get().fch((kt,j) -> {
+            k.keyType.getTypes.get().itr().fch((kt,j) -> {
                 L<String> keyNamesToAdd = list();
                 if (kt.stringValue == null) {
                     for (int n = 0; n < 5; ++n) {
@@ -213,7 +220,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         try {
             arrTit = resolveAtPsi(caretPsi, exprCtx);
         } catch (Throwable exc) {
-            printExprTree(exprCtx, 0);
+            printExprTree(exprCtx, search, 0);
             throw exc;
         }
         System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");

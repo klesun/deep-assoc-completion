@@ -37,7 +37,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#64 Bugfix: infinite iterator when you _Ctrl+B_ on same doc/key twice (IDE freezed)</li>
+        <li>#64 Bugfix: infinite iterator when you _Ctrl+B_ on same doc/key twice (IDE froze)</li>
     </ul>
     ]]>
     </change-notes>

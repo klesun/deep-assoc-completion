@@ -176,7 +176,7 @@ public class MethCallRes extends Lang
             types = It.cnc(
                 som(new DeepType(methCall).btw(t -> {
                     // it's not a PDO, but nah
-                    rowTypes.fch((rowt, i) -> t.pdoFetchTypes.add(rowt));
+                    rowTypes.itr().fch((rowt, i) -> t.pdoFetchTypes.add(rowt));
                 })),
                 // since PHP 5.4 mysqli_result can also be iterated
                 som(Mt.getInArraySt(It(rowTypes), methCall))
@@ -201,9 +201,9 @@ public class MethCallRes extends Lang
     public static F<IExprCtx, It<DeepType>> findMethRetType(Method meth)
     {
         return (IExprCtx funcCtx) -> {
-            It<Method> impls = It(list(meth));
+            L<Method> impls = list(meth);
             if (meth.isAbstract()) {
-                impls = It.cnc(list(meth), findOverridingMethods(meth));
+                impls = It.cnc(list(meth), findOverridingMethods(meth)).arr();
                 // ignore $this and args in implementations
                 // since there may be dozens of them (Laravel)
                 if (!DeepSettings.inst(meth.getProject()).passArgsToImplementations) {

@@ -1,13 +1,14 @@
 package org.klesun.lang;
 
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
-import org.klesun.lang.iterators.*;
+import org.klesun.lang.iterators.ArrayIterator;
+import org.klesun.lang.iterators.ThenIterator;
 
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
+import static org.klesun.lang.Lang.It;
+import static org.klesun.lang.Lang.L;
 import static org.klesun.lang.Lang.*;
 
 /**
@@ -18,7 +19,7 @@ import static org.klesun.lang.Lang.*;
  * recreating the array as well as the ability to progress step by step
  * to distribute processor time evenly among different type sources
  */
-public class It<A> implements Iterable<A>, IIt<A>
+public class It<A> implements IIt<A>
 {
     private Opt<Iterator<A>> iterator = Lang.non();
     private Iterable<A> source;
@@ -60,8 +61,6 @@ public class It<A> implements Iterable<A>, IIt<A>
         // my implementation of these functions seems to be slower than built-in Stream-s, but I can't
         // make Stream versions to actually return a lazy iterator without instantly resolving all values
         return It(args).fap(ble -> ble);
-//        return new It<>(Arrays.stream(args)
-//            .flatMap(iter -> StreamSupport.stream(iter.spliterator(), false)));
     }
 
     /** don't use this unless you just want to check if it is empty */
@@ -89,196 +88,11 @@ public class It<A> implements Iterable<A>, IIt<A>
         return iter;
     }
 
-    private Stream<A> disposeStream()
-    {
-        return StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(dispose(), Spliterator.ORDERED),
-            false);
-    }
-
-    public It<A> cct(Iterable<A> more)
-    {
-        return It.cnc(this, more);
-    }
-
-    public <B> It<B> map(F<A, B> mapper)
-    {
-        return map((el, i) -> mapper.apply(el));
-        //return new It<>(disposeStream().map(mapper));
-    }
-
-    public <B> It<B> map(F2<A, Integer, B> mapper)
-    {
-        Iterator<B> mator = new MapIterator<>(dispose(), mapper);
-        return new It<>(() -> mator);
-//        Mutable<Integer> mutI = new Mutable<>(0);
-//        return new It<>(disposeStream().map(el -> {
-//            int i = mutI.get();
-//            mutI.set(i + 1);
-//            return mapper.apply(el, i);
-//        }));
-    }
-
-    public It<A> flt(F2<A, Integer, Boolean> pred)
-    {
-        Iterator<A> fitor = new FilterIterator<>(dispose(), pred);
-        return new It<>(() -> fitor);
-//        return new It<>(disposeStream().filter(el -> {
-//            int i = mutI.get();
-//            mutI.set(i + 1);
-//            return pred.apply(el, i);
-//        }));
-    }
-
-    public It<A> flt(Predicate<A> pred)
-    {
-        return flt((el, i) -> pred.test(el));
-    }
-
-    public <B> It<B> fap(F2<A, Integer, Iterable<B>> flatten)
-    {
-        Iterator<B> fator = new FlatMapIterator<>(dispose(), flatten);
-        return It(() -> fator);
-//        Mutable<Integer> mutI = new Mutable<>(0);
-//        return new It<>(disposeStream()
-//            .map(el -> {
-//                int i = mutI.get();
-//                mutI.set(i + 1);
-//                return flatten.apply(el, i);
-//            })
-//            .flatMap(a -> StreamSupport.stream(a.spliterator(), false)));
-    }
-
-    public <B> It<B> fap(F<A, Iterable<B>> flatten)
-    {
-        return fap((el, i) -> flatten.apply(el));
-    }
-
-    public <B extends A> It<B> cst(Class<B> cls)
-    {
-        return fap(val -> Tls.cast(cls, val));
-    }
-
-    public <B> It<B> fop(F2<A, Integer, Opt<B>> convert)
-    {
-        return map(convert).fap(a -> a.itr());
-    }
-
-    /** flat map optional, remove elements that don't match */
-    public <B> It<B> fop(F<A, Opt<B>> convert)
-    {
-        return map(convert).fap(a -> a.itr());
-    }
-
-    /** flat map optional, become empty optional if at least one element does not match */
-    public <B> Opt<L<B>> fal(F<A, Opt<B>> convert)
-    {
-        L<Opt<B>> opts = map(convert).arr();
-        if (opts.any(opt -> !opt.has())) {
-            return new Opt<>(null);
-        } else {
-            L<B> vals = opts.map(opt -> opt.unw()).arr();
-            return som(vals);
-        }
-    }
-
-    public It<A> unq()
-    {
-        Set<A> occurences = new HashSet<>();
-        return flt(t -> {
-            if (occurences.contains(t)) {
-                return false;
-            } else {
-                occurences.add(t);
-                return true;
-            }
-        });
-    }
-
-    public It<A> lmt(int limit)
-    {
-        Iterator<A> lator = new EndIterator<>(dispose(), (el,i) -> i >= limit, false);
-        return It(() -> lator);
-    }
-
-    public It<A> unq(F<A, Object> getHash)
-    {
-        Set<Object> occurences = new HashSet<>();
-        return flt(t -> {
-            Object hash = getHash.apply(t);
-            if (occurences.contains(hash)) {
-                return false;
-            } else {
-                occurences.add(hash);
-                return true;
-            }
-        });
-    }
-
-    public It<A> def(Iterable<A> fallback)
-    {
-        return has() ? this : It(fallback);
-    }
-
-    public void fch(C<A> f)
-    {
-        dispose().forEachRemaining(f);
-        //disposeStream().forEach(f);
-    }
-
-    // like fch() but executed not at once, but when iterator is actually disposed. for debug
-    public It<A> btw(C2<A, Integer> f)
-    {
-        return flt((el,i) -> {
-            f.accept(el, i);
-            return true;
-        });
-    }
-
     // execute on the first hasNext() call that returns false
     public It<A> thn(C<Integer> f)
     {
         Iterator<A> tator = new ThenIterator<>(dispose(), f);
         return new It<>(() -> tator);
-    }
-
-    public It<A> btw(C<A> f)
-    {
-        return btw((el, i) -> f.accept(el));
-    }
-
-    public void fch(C2<A, Integer> f)
-    {
-        Mutable<Integer> mutI = new Mutable<>(0);
-        dispose().forEachRemaining(el -> {
-            int i = mutI.get();
-            mutI.set(i + 1);
-            f.accept(el, i);
-        });
-    }
-
-//    public Opt<A> fst()
-//    {
-//        return disposeStream().findFirst()
-//            .map(val -> opt(val))
-//            .orElse(opt(null));
-//    }
-
-    public <B> B wap(F<It<A>, B> wrapper)
-    {
-        return wrapper.apply(this);
-    }
-
-    public Opt<A> fst() {
-        return has() ? Lang.som(dispose().next()) : Lang.non();
-    }
-
-    public Opt<A> lst() {
-        Opt<A> result = opt(null);
-        for (A el: this) {
-            result = som(el);
-        }
-        return result;
     }
 
     public boolean has()
@@ -303,64 +117,37 @@ public class It<A> implements Iterable<A>, IIt<A>
         return arr;
     }
 
-    /** "rdc" stands for "reduce" */
-    public <Tnew> Tnew rdc(Lang.F2<Tnew, A, Tnew> f, Tnew initialValue)
+    public void fch(Lang.C2<A, Integer> f)
     {
-        Tnew value = initialValue;
+        Lang.Mutable<Integer> mutI = new Lang.Mutable<>(0);
+        iterator().forEachRemaining(el -> {
+            int i = mutI.get();
+            mutI.set(i + 1);
+            f.accept(el, i);
+        });
+    }
+
+    public <B> B wap(Lang.F<It<A>, B> wrapper)
+    {
+        return wrapper.apply(It(this));
+    }
+
+    public void fch(Lang.C<A> f)
+    {
+        iterator().forEachRemaining(f);
+    }
+
+    public It<A> cct(Iterable<A> more)
+    {
+        return It.cnc(this, more);
+    }
+
+    public Opt<A> lst() {
+        Opt<A> result = opt(null);
         for (A el: this) {
-            value = f.apply(value, el);
+            result = som(el);
         }
-        return value;
-    }
-
-    public String str(String delim)
-    {
-        return Tls.implode(delim, arr().map(val -> val.toString()));
-    }
-
-    public String str()
-    {
-        return str(", ");
-    }
-
-    public boolean any(Predicate<A> pred)
-    {
-        Iterable<A> iter = this::dispose;
-        for (A el: iter) {
-            if (pred.test(el)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean all(F2<A, Integer, Boolean> pred)
-    {
-        Iterable<A> iter = this::dispose;
-        int i = 0;
-        for (A el: iter) {
-            if (!pred.apply(el, i++)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public boolean all(Predicate<A> pred)
-    {
-        return all((el, i) -> pred.test(el));
-    }
-
-    // end stream the moment endPred returns true (in case of timeout for example)
-    public It<A> end(Boolean exclusive, F<A, Boolean> endPred)
-    {
-        Iterator<A> endor = new EndIterator<>(dispose(), endPred, exclusive);
-        return new It<>(() -> endor);
-    }
-
-    public It<A> end(F<A, Boolean> endPred)
-    {
-        return end(false, endPred);
+        return result;
     }
 
     public Iterator<A> iterator()

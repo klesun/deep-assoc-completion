@@ -2,16 +2,14 @@ package org.klesun.lang;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Predicate;
 
-import static org.klesun.lang.Lang.C2;
 import static org.klesun.lang.Lang.It;
 
 /**
  * a wrapper for an iterator, that remembers all retrieved elements
  * and reuses them on the next attempt to iterate over it
  */
-public class MemIt<A> implements Iterable<A>, IIt<A>
+public class MemIt<A> implements IIt<A>
 {
     final private Node head = new Node(null); // first value will be skipped
     final private Iterator<A> source;
@@ -63,6 +61,10 @@ public class MemIt<A> implements Iterable<A>, IIt<A>
         };
     }
 
+    public boolean has() {
+        return It(this).has();
+    }
+
     private class Node
     {
         final A value;
@@ -72,64 +74,6 @@ public class MemIt<A> implements Iterable<A>, IIt<A>
         {
             this.value = value;
         }
-    }
-
-    public <Tnew> It<Tnew> fop(Lang.F<A, Opt<Tnew>> convert)
-    {
-        return fop((el, i) -> convert.apply(el));
-    }
-
-    public <Tnew> It<Tnew> fop(Lang.F2<A, Integer, Opt<Tnew>> convert)
-    {
-        return It(this).fop(convert);
-    }
-
-    /**
-     * "fop" stands for flat map - flattens list by lambda
-     */
-    public <Tnew> It<Tnew> fap(Lang.F<A, Iterable<Tnew>> flatten)
-    {
-        return fap((el, i) -> flatten.apply(el));
-    }
-
-    public <Tnew> It<Tnew> fap(Lang.F2<A, Integer, Iterable<Tnew>> flatten)
-    {
-        return It(this).fap(flatten);
-    }
-
-    public boolean any(Predicate<A> pred)
-    {
-        return It(this).any(pred);
-    }
-
-    public boolean has()
-    {
-        return It(this).has();
-    }
-
-    public It<A> flt(Lang.F2<A, Integer, Boolean> pred)
-    {
-        return Lang.It(this).flt(pred);
-    }
-
-    public It<A> flt(Predicate<A> pred)
-    {
-        return flt((val, i) -> pred.test(val));
-    }
-
-    public void fch(C2<A, Integer> action)
-    {
-        It(this).fch(action);
-    }
-
-    public <@NonNull Tnew> It<Tnew> map(Lang.F<A, @NonNull Tnew> f)
-    {
-        return Lang.It(this).map(f);
-    }
-
-    public <@NonNull Tnew> It<Tnew> map(Lang.F2<A, Integer, Tnew> f)
-    {
-        return Lang.It(this).map(f);
     }
 
     public L<A> arr()
