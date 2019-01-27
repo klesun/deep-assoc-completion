@@ -139,7 +139,7 @@ public class VarRes
                 It<DeepType> artit = ctx.findExprType(arr);
                 if (opt(varRef).equals(keyVarOpt)) {
                     return artit.fap(t -> t.keys)
-                        .fap(k -> k.keyType.getTypes.get())
+                        .fap(k -> k.keyType.getTypes())
                         .fap(t -> opt(t.stringValue)
                             .map(name -> new DeepType(t.definition, PhpType.STRING, name)));
                 } else if (!valOpt.has()) {

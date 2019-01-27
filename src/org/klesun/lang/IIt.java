@@ -6,10 +6,10 @@ import org.klesun.lang.iterators.FlatMapIterator;
 import org.klesun.lang.iterators.MapIterator;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import static org.klesun.lang.Lang.It;
 import static org.klesun.lang.Lang.*;
 
 /**
@@ -30,14 +30,12 @@ public interface IIt<A> extends Iterable<A> {
 
     default <B> It<B> map(Lang.F2<A, Integer, B> mapper)
     {
-        Iterator<B> mator = new MapIterator<>(iterator(), mapper);
-        return new It<>(() -> mator);
+        return new It<>(() -> new MapIterator<>(iterator(), mapper));
     }
 
     default It<A> flt(Lang.F2<A, Integer, Boolean> pred)
     {
-        Iterator<A> fitor = new FilterIterator<>(iterator(), pred);
-        return new It<>(() -> fitor);
+        return new It<>(() -> new FilterIterator<>(iterator(), pred));
     }
 
     default It<A> flt(Predicate<A> pred)
@@ -47,8 +45,7 @@ public interface IIt<A> extends Iterable<A> {
 
     default <B> It<B> fap(Lang.F2<A, Integer, Iterable<B>> flatten)
     {
-        Iterator<B> fator = new FlatMapIterator<>(iterator(), flatten);
-        return It(() -> fator);
+        return It(() -> new FlatMapIterator<>(iterator(), flatten));
     }
 
     default <B> It<B> fap(Lang.F<A, Iterable<B>> flatten)
@@ -103,8 +100,7 @@ public interface IIt<A> extends Iterable<A> {
 
     default It<A> lmt(int limit)
     {
-        Iterator<A> lator = new EndIterator<>(iterator(), (el, i) -> i >= limit, false);
-        return It(() -> lator);
+        return It(() -> new EndIterator<>(iterator(), (el, i) -> i + 1 >= limit, false));
     }
 
     default It<A> unq(Lang.F<A, Object> getHash)
@@ -123,10 +119,10 @@ public interface IIt<A> extends Iterable<A> {
 
     default It<A> def(Iterable<A> fallback)
     {
-        return has() ? It(this) : It(fallback);
+        return It.frs(() -> this, () -> fallback);
     }
 
-    // like fch() but executed not at once, but when iterator is actually iteratord. for debug
+    // like fch() but executed not at once, but when iterator is actually disposedd. for debug
     default It<A> btw(Lang.C2<A, Integer> f)
     {
         return flt((el,i) -> {
@@ -195,8 +191,7 @@ public interface IIt<A> extends Iterable<A> {
     // end stream the moment endPred returns true (in case of timeout for example)
     default It<A> end(Boolean exclusive, F<A, Boolean> endPred)
     {
-        Iterator<A> endor = new EndIterator<>(iterator(), endPred, exclusive);
-        return new It<>(() -> endor);
+        return new It<>(() -> new EndIterator<>(iterator(), endPred, exclusive));
     }
 
     default It<A> end(F<A, Boolean> endPred)

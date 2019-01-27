@@ -35,7 +35,7 @@ public class AssRes extends Lang
             DeepType arr = new DeepType(psi, PhpType.ARRAY);
             KeyType nextKey = keys.get(0);
             L<KeyType> furtherKeys = keys.sub(1);
-            S<Iterable<DeepType>> memoized = Tls.onDemand(() -> new MemIt<>(getType.get().iterator()));
+            S<Iterable<DeepType>> memoized = Tls.onDemand(() -> new MemIt<>(getType.get()));
             arr.addKey(nextKey, nextKey.definition).addType(() ->
                 makeType(furtherKeys, memoized, psi, briefType).wap(Mt::new), briefType);
             return It(list(arr));
@@ -61,7 +61,7 @@ public class AssRes extends Lang
             KeyType name = opt(nextKey.getIndex())
                 .map(index -> index.getValue())
                 .fop(toCast(PhpExpression.class))
-                .map(key -> KeyType.mt(() -> ctx.findExprType(key), key))
+                .map(key -> KeyType.mt(ctx.findExprType(key), key))
                 .def(KeyType.integer(nextKey));
             reversedKeys.add(name);
 

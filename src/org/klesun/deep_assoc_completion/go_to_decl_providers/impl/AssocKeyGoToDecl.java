@@ -44,7 +44,7 @@ public class AssocKeyGoToDecl extends Lang
                     String key = funcCtx.findExprType(literal).wap(Mt::getStringValueSt);
                     return funcCtx.findExprType(srcExpr)
                         .fap(arrt -> arrt.keys)
-                        .fap(k -> k.keyType.getTypes.get())
+                        .fap(k -> k.keyType.getTypes())
                         .flt(t -> Objects.equals(t.stringValue, key))
                         .map(t -> t.definition)
                         .unq();

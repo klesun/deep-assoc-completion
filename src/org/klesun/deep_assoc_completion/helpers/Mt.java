@@ -34,7 +34,7 @@ public class Mt extends Lang
         // I'm not sure I'm good mathematician enough to find
         // out the algorithm that would not produce them with
         // all these recursions, so I'm just removing dupes here
-        this.types = new MemIt<>(types.iterator());
+        this.types = new MemIt<>(types);
         this.reason = reason;
     }
     public Mt(Iterable<DeepType> types)
@@ -96,7 +96,7 @@ public class Mt extends Lang
     public static It<DeepType> getPropSt(DeepType type, String keyName)
     {
         return type.props.vls()
-            .flt(k -> keyName == null || k.keyType.getTypes.get()
+            .flt(k -> keyName == null || k.keyType.getTypes()
                 .any(kt -> keyName.equals(kt.stringValue)
                     || kt.stringValue == null))
             .fap(k -> k.getTypes());
@@ -106,7 +106,7 @@ public class Mt extends Lang
     {
         return It.cnc(
             type.keys
-                .flt(k -> keyName == null || k.keyType.getTypes.get()
+                .flt(k -> keyName == null || k.keyType.getTypes()
                     .any(kt -> keyName.equals(kt.stringValue)
                         || kt.stringValue == null
                         && (!kt.isNumber() || Tls.isNum(keyName))))

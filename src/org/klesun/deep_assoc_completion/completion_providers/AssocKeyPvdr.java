@@ -156,7 +156,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         Mutable<Boolean> isFirst = new Mutable<>(true);
         Dict<MutableLookup> nameToMutLookup = new Dict<>(new LinkedHashMap<>());
         arrMt.types.fap(t -> t.keys).fch((k,i) -> {
-            k.keyType.getTypes.get().itr().fch((kt,j) -> {
+            k.keyType.getTypes().itr().fch((kt,j) -> {
                 L<String> keyNamesToAdd = list();
                 if (kt.stringValue == null) {
                     for (int n = 0; n < 5; ++n) {

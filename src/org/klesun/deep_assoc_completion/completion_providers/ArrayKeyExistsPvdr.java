@@ -97,7 +97,7 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
             .fop(toCast(StringLiteralExpressionImpl.class))
             .fap(lit -> resolve(lit, false)
                 .fap(t -> t.keys)
-                .fap(k -> k.keyType.getTypes.get())
+                .fap(k -> k.keyType.getTypes())
                 .flt(kt -> lit.getContents().equals(kt.stringValue))
                 .map(t -> t.definition));
     }

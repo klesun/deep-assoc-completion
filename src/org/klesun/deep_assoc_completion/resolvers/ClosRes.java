@@ -100,7 +100,7 @@ public class ClosRes extends Lang
                 })
                 .arr();
             IExprCtx closCtx = callCtx.withClosure(closureVars);
-            return new MemIt<>(getReturnedValue(func, closCtx).iterator());
+            return new MemIt<>(getReturnedValue(func, closCtx));
         });
         return result;
     }

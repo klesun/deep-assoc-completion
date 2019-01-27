@@ -4,45 +4,49 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.lang.It;
 import org.klesun.lang.MemIt;
-import org.klesun.lang.Tls;
 
 import static org.klesun.lang.Lang.*;
 
 /** is there actually a point in having this and Mt as two separate classes? */
 public class KeyType
 {
-    final public S<MemIt<DeepType>> getTypes;
+    final public MemIt<DeepType> getTypes;
     final public PsiElement definition;
 
-    private KeyType(S<MemIt<DeepType>> getTypes, PsiElement definition)
+    private KeyType(MemIt<DeepType> getTypes, PsiElement definition)
     {
         this.definition = definition;
         this.getTypes = getTypes;
     }
 
-    public static KeyType mt(S<It<DeepType>> mtg, PsiElement definition)
+    public static KeyType mt(Iterable<DeepType> mtg, PsiElement definition)
     {
         Iterable<DeepType> anyt = som(new DeepType(definition, PhpType.MIXED));
-        return new KeyType(Tls.onDemand(() -> new MemIt<>(mtg.get().def(anyt).iterator())), definition);
+        return new KeyType(It(mtg).def(anyt).mem(), definition);
     }
 
     public static KeyType integer(PsiElement psi)
     {
-        return new KeyType(() -> new MemIt<>(som(new DeepType(psi, PhpType.INT)).iterator()), psi);
+        return new KeyType(new MemIt<>(som(new DeepType(psi, PhpType.INT))), psi);
     }
 
     public static KeyType unknown(PsiElement psi)
     {
-        return new KeyType(() -> new MemIt<>(som(new DeepType(psi, PhpType.MIXED)).iterator()), psi);
+        return new KeyType(new MemIt<>(som(new DeepType(psi, PhpType.MIXED))), psi);
+    }
+
+    public MemIt<DeepType> getTypes()
+    {
+        return getTypes;
     }
 
     public It<String> getNames()
     {
-        return getTypes.get().fap(t -> opt(t.stringValue));
+        return getTypes().fap(t -> opt(t.stringValue));
     }
 
     public It<T2<String, DeepType>> getNameToMt()
     {
-        return getTypes.get().fap(t -> opt(t.stringValue).map(str -> T2(str, t)));
+        return getTypes().fap(t -> opt(t.stringValue).map(str -> T2(str, t)));
     }
 }

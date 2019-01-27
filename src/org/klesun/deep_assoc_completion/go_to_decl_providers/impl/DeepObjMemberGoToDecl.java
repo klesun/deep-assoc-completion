@@ -43,7 +43,7 @@ public class DeepObjMemberGoToDecl extends Lang
                     ArrCtorRes.resolveMtCls(mt, mem.getProject())
                         .fap(cls -> resolveMember(cls, mem.getName(), funcCtx)),
                     mt.getAssignedProps()
-                        .fap(prop -> prop.keyType.getTypes.get())
+                        .fap(prop -> prop.keyType.getTypes())
                         .flt(propt -> Objects.equals(propt.stringValue, mem.getName()))
                         .map(prop -> prop.definition)
                 ).fap(a -> a))

@@ -4,7 +4,6 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
-import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.built_in_typedefs.ReturnTypeDefs;
@@ -16,10 +15,7 @@ import org.klesun.deep_assoc_completion.structures.ArgOrder;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.deep_assoc_completion.structures.Mkt;
-import org.klesun.lang.It;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 public class FuncCallRes extends Lang
 {
@@ -71,7 +67,8 @@ public class FuncCallRes extends Lang
                 .addType(getElMt, call.getType().elementType()));
             return mapped;
         });
-        S<It<DeepType>> ktg = () -> arrMt.types.fap(t -> t.keys).fap(k -> k.keyType.getTypes.get());
+        MemIt<DeepType.Key> srcKeys = arrMt.types.fap(t -> t.keys).mem();
+        It<DeepType> ktg = srcKeys.fap(k -> k.keyType.getTypes());
         mapRetType.addKey(KeyType.mt(ktg, call), call).addType(getElMt, PhpType.MIXED);
         return It.cnc(list(mapRetType), eachTMapped);
     }
@@ -83,7 +80,7 @@ public class FuncCallRes extends Lang
         PhpType ideaElType = L(call.getParameters()).gat(1)
             .fop(toCast(PhpExpression.class))
             .map(e -> e.getType()).def(PhpType.MIXED);
-        combine.addKey(KeyType.mt(() -> It(callCtx.getArgMt(0).getEl().types), call))
+        combine.addKey(KeyType.mt(callCtx.getArgMt(0).getEl().types, call))
             .addType(getElMt, ideaElType);
         return combine;
     }
@@ -229,7 +226,7 @@ public class FuncCallRes extends Lang
                 DeepType arrt = new DeepType(call, PhpType.ARRAY);
                 arrt.addKey(KeyType.integer(call)).addType(Tls.onDemand(() -> callCtx.getArgMt(0).types
                     .fap(t -> t.keys)
-                    .fap(k -> k.keyType.getTypes.get())
+                    .fap(k -> k.keyType.getTypes())
                     .fap(kt -> opt(kt.stringValue)
                         .map(keyName -> new DeepType(kt.definition, PhpType.STRING, keyName)))
                     .wap(types -> new Mt(types))));

@@ -272,7 +272,7 @@ public class UsageResolver extends Lang
                     .fap(fld -> fakeCtx.findExprType(fld))
                     // TODO: add declared field names here too
                     .fap(objt -> objt.props.vls())
-                    .fap(prop -> prop.keyType.getTypes.get()),
+                    .fap(prop -> prop.keyType.getTypes()),
                 // $this->props[$varName]
                 opt(refVar.getParent())
                     .cst(ArrayIndex.class)
@@ -282,7 +282,7 @@ public class UsageResolver extends Lang
                     .cst(PhpExpression.class)
                     .fap(value -> fakeCtx.findExprType(value))
                     .fap(objt -> objt.keys)
-                    .fap(prop -> prop.keyType.getTypes.get())
+                    .fap(prop -> prop.keyType.getTypes())
             ));
     }
 

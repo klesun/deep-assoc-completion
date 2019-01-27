@@ -57,7 +57,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
             briefValue = Tls.substr(briefValue, 0, 12) + " " + Tls.substr(comment, 0, 60);
         }
         final String briefValueF = briefValue;
-        return It(keyEntry.keyType.getTypes.get())
+        return It(keyEntry.keyType.getTypes())
             .unq(t -> t.stringValue)
             .fap((t, i) -> It.cnc(
                 opt(t.stringValue)
@@ -133,7 +133,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
             .fap(lit -> opt(lit.getFirstChild())
                 .fop(c -> assertArrCtorKey(c))
                 .fap(arrCtor -> resolve(arrCtor, false)
-                    .types.fap(t -> t.keys).fap(k -> k.keyType.getTypes.get())
+                    .types.fap(t -> t.keys).fap(k -> k.keyType.getTypes())
                     .flt(k -> lit.getContents().equals(k.stringValue))
                     .map(k -> k.definition)));
     }

@@ -129,11 +129,11 @@ public class MethCallRes extends Lang
                 .fop(toCast(PhpExpression.class))
                 .fap(val -> ctx.limitResolveDepth(15, val))
                 .fap(valt -> valt.keys)
-                .btw(k -> isAssoc.set(It(k.keyType.getTypes.get())
+                .btw(k -> isAssoc.set(It(k.keyType.getTypes())
                     .fst().any(kt -> !kt.isNumber())))
                 .fap(k -> {
                     It<DeepType> keyTypes = isAssoc.get()
-                        ? It(k.keyType.getTypes.get())
+                        ? It(k.keyType.getTypes())
                         : k.getTypes();
                     return keyTypes.fap(t -> opt(t.stringValue).map(str -> T2(str, t.definition)));
                 })

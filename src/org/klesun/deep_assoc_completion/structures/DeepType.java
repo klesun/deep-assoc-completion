@@ -105,14 +105,14 @@ public class DeepType extends Lang
     {
         // TODO: get rid of this function, we should not iterate through all types during resolution
         return keys
-            .flt(k -> k.typeGetters.has() && k.keyType.getTypes.get().any(kt -> kt.isNumber() || kt.stringValue == null))
+            .flt(k -> k.typeGetters.has() && k.keyType.getTypes().any(kt -> kt.isNumber() || kt.stringValue == null))
             .fap(k -> k.typeGetters.fap(mtg -> mtg.get().types));
     }
 
     public Key addKey(String name, PsiElement definition)
     {
         DeepType kt = new DeepType(definition, PhpType.STRING, name);
-        KeyType keyType = KeyType.mt(Granted(It(som(kt))), definition);
+        KeyType keyType = KeyType.mt(som(kt), definition);
         Key keyEntry = new Key(keyType, definition);
         keys.add(keyEntry);
         return keyEntry;
@@ -133,7 +133,7 @@ public class DeepType extends Lang
     public Key addProp(String name, PsiElement definition)
     {
         DeepType kt = new DeepType(definition, PhpType.STRING, name);
-        KeyType keyType = KeyType.mt(() -> It(som(kt)), definition);
+        KeyType keyType = KeyType.mt(som(kt), definition);
         Key keyEntry = new Key(keyType, definition);
         props.put(name, keyEntry);
         return keyEntry;
@@ -191,7 +191,7 @@ public class DeepType extends Lang
 
         public Opt<String> getBriefKey()
         {
-            return It(keyType.getTypes.get()).fst()
+            return It(keyType.getTypes()).fst()
                 .fop(t -> opt(t.stringValue))
                 .map(n -> n + ":");
         }
@@ -299,7 +299,7 @@ public class DeepType extends Lang
     public boolean hasNumberIndexes()
     {
         // TODO: get rid of this function, we should not iterate through all types during resolution
-        return It(keys).any(k -> k.keyType.getTypes.get().any(kt -> kt.isNumber()));
+        return It(keys).any(k -> k.keyType.getTypes().any(kt -> kt.isNumber()));
     }
 
     public boolean isNumber()

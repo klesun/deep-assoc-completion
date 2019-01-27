@@ -150,8 +150,7 @@ public class ArgTypeDefs
             Cst.CURLOPT_().fch(t -> t.nme((cstName, getType, descr) -> {
                 Mkt.cst(ctx, som(cstName)).fch(cst -> {
                     Mt valmt = getType.apply(cst.definition);
-                    S<It<DeepType>> ktit = Granted(som(cst).itr());
-                    arrt.addKey(KeyType.mt(ktit, cst.definition))
+                    arrt.addKey(KeyType.mt(som(cst), cst.definition))
                         .addType(Granted(valmt), valmt.getIdeaTypes().fst().def(PhpType.UNSET))
                         .addComments(opt(descr).flt(c -> c.length() > 0));
                 });

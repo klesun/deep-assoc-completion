@@ -12,16 +12,17 @@ import static org.klesun.lang.Lang.It;
 public class MemIt<A> implements IIt<A>
 {
     final private Node head = new Node(null); // first value will be skipped
-    final private Iterator<A> source;
+    final private Lang.S<Iterator<A>> sourceBle;
     private boolean isNexting = false;
 
-    public MemIt(Iterator<A> source)
+    public MemIt(Iterable<A> sourceBle)
     {
-        this.source = source;
+        this.sourceBle = Tls.onDemand(sourceBle::iterator);
     }
 
     public Iterator<A> iterator()
     {
+        Iterator<A> source = sourceBle.get();
         return new Iterator<A>() {
             Node current = head;
             public boolean hasNext() {

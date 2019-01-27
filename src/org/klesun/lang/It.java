@@ -47,13 +47,11 @@ public class It<A> implements IIt<A>
 
     public static <B> It<B> frs(S<Iterable<B>>... args)
     {
-        for (S<Iterable<B>> itb: args) {
-            Iterator<B> itr = itb.get().iterator();
-            if (itr.hasNext()) {
-                return It(() -> itr);
-            }
-        }
-        return non();
+        return It(args)
+            .map(ble -> ble.get().iterator())
+            .flt(tor -> tor.hasNext())
+            .lmt(1)
+            .fap(tor -> () -> tor);
     }
 
     public static <B> It<B> cnc(Iterable<B>... args)
@@ -91,8 +89,7 @@ public class It<A> implements IIt<A>
     // execute on the first hasNext() call that returns false
     public It<A> thn(C<Integer> f)
     {
-        Iterator<A> tator = new ThenIterator<>(dispose(), f);
-        return new It<>(() -> tator);
+        return new It<>(() -> new ThenIterator<>(dispose(), f));
     }
 
     public boolean has()
@@ -107,7 +104,7 @@ public class It<A> implements IIt<A>
 
     public MemIt<A> mem()
     {
-        return new MemIt<>(dispose());
+        return new MemIt<>(() -> dispose());
     }
 
     public L<A> arr()

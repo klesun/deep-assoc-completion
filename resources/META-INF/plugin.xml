@@ -1,15 +1,16 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2018.01.26.001</version>
+    <version>2018.01.27.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
 <ul>
   <li>PHP associative array auto-completion inferred from other functions (in other files).</li>
   <li>Go To key Definition.</li>
-  <li>Specify array keys and reference functions in phpdoc.</li>
+  <li>Specify array keys and reference functions in phpdoc (<a href="https://github.com/klesun/deep-assoc-completion/issues/63">format</a>).</li>
   <li>Infer argument types inside closures from array_map, array_filter, etc...</li>
+  <li>And much more sweet things...</li>
 </ul>
 This plugin greatly extends phpstorm's typing with associative array support<br/>
 

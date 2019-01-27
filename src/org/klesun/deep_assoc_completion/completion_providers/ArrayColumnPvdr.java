@@ -11,19 +11,18 @@ import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
-import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
-
-import static org.klesun.lang.Lang.*;
-
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.klesun.lang.Lang.*;
 
 
 /**
@@ -44,7 +43,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
         Set<String> suggested = new HashSet<>();
         Mutable<Boolean> hadArrt = new Mutable<>(false);
         return tit.fap(type -> type.keys
-            .fap(k -> k.keyType.getTypes.get().fap(kt -> {
+            .fap(k -> k.keyType.getTypes().fap(kt -> {
                 String typeStr = k.getTypes().fst().map(t -> t.briefType.toString()).def("unknown");
                 if (kt.stringValue != null) {
                     if (!suggested.contains(kt.stringValue)) {
@@ -103,7 +102,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
             .fop(toCast(StringLiteralExpressionImpl.class))
             .fap(literal -> resolve(literal, false)
                 .fap(arrayType -> arrayType.keys)
-                .fap(k -> k.keyType.getTypes.get())
+                .fap(k -> k.keyType.getTypes())
                 .flt(kt -> literal.getContents().equals(kt.stringValue)))
             .map(t -> t.definition);
     }

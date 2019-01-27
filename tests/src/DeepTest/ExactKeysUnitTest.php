@@ -1341,15 +1341,11 @@ class ExactKeysUnitTest
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     /** @param $reservation = self::getReservation() */
     public static function transformReservation($reservation)
     {
         $reservation['passengers'] = [];
-        $reservation['passengers'] = array_map('doStuff', $reservation['passengers']);
+        $reservation['passengers'] = array_map(function($a){return ['lastName' => 'Pupkin'];}, $reservation['passengers']);
         return $reservation;
     }
 
@@ -1367,4 +1363,8 @@ class ExactKeysUnitTest
             [$imported['passengers'][0], ['lastName']],
         ];
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 }

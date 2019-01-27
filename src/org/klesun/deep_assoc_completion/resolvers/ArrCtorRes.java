@@ -179,7 +179,7 @@ public class ArrCtorRes extends Lang
         resolveMethodFromArray(orderedParams)
             .map(meth -> MethCallRes.findMethRetType(meth))
             .fch(retTypeGetter -> arrayType.returnTypeGetters
-                .add((ctx) -> new MemIt<>(retTypeGetter.apply(ctx).iterator())));
+                .add((ctx) -> new MemIt<>(retTypeGetter.apply(ctx))));
 
         // indexed elements
         orderedParams
