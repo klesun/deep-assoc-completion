@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.01.27.001</version>
+    <version>2019.01.28.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,8 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#62 Optimize/Refactor/Bugfix: store key type as an iterable rather than a getter of iterable</li>
-        <li>#62 Bugfix: infinite iterator when you _Ctrl+B_ on same doc/key twice (IDE froze)</li>
+        <li>Improve _Transpile to node js_ - fix some php.js functions, add few more of them, fix few conversion mistakes</li>
     </ul>
     ]]>
     </change-notes>
