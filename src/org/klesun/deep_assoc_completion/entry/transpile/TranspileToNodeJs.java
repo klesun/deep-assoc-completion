@@ -133,6 +133,7 @@ public class TranspileToNodeJs extends AnAction
             .map(v -> v.getName())
             .flt(varName -> !argNames.contains(varName))
             .flt(varName -> !closureVars.contains(varName))
+            .flt(varName -> !varName.equals("this"))
             .unq().arr();
 
         String mods = Tls.cast(Method.class, typed)
@@ -215,6 +216,8 @@ public class TranspileToNodeJs extends AnAction
                     leaf.getText().equals("??") ? "||" :
                     leaf.getText().equals("namespace") ? "// namespace" :
                     leaf.getText().equals("elseif") ? "else if" :
+                    leaf.getText().equals("empty") ? "php.empty" :
+                    leaf.getText().equals("isset") ? "php.isset" :
                     leaf.getText())
             , () -> Tls.cast(ClassReferenceImpl.class, psi)
                 .map(ref -> {
