@@ -201,7 +201,6 @@ public class TranspileToNodeJs extends AnAction
             return "";
         }
 
-        // TODO: unset -> delete
         // TODO: process whole directories, not just one file
         // TODO: class constants
         // TODO: put properties in constructor - node does not allow properties directly in class body
@@ -218,6 +217,7 @@ public class TranspileToNodeJs extends AnAction
                     leaf.getText().equals("elseif") ? "else if" :
                     leaf.getText().equals("empty") ? "php.empty" :
                     leaf.getText().equals("isset") ? "php.isset" :
+                    leaf.getText().equals("unset") ? "delete" :
                     leaf.getText())
             , () -> Tls.cast(ClassReferenceImpl.class, psi)
                 .map(ref -> {
