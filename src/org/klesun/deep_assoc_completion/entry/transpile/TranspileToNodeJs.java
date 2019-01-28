@@ -240,9 +240,12 @@ public class TranspileToNodeJs extends AnAction
                     }
                 })
             , () -> Tls.cast(PhpClass.class, psi)
-                .map(cls -> getChildrenWithLeaf(cls))
-                .fap(parts -> removeClsMods(parts)
-                    .map(part -> trans(part)))
+                .fap(cls -> {
+                    It<PsiElement> parts = getChildrenWithLeaf(cls);
+                    return removeClsMods(parts)
+                        .map(part -> trans(part))
+                        .cct(som("\nmodule.exports = " + cls.getName() + ";"));
+                })
             , () -> Tls.cast(PhpUseListImpl.class, psi)
                 .fap(typed -> transpileImport(typed))
             , () -> Tls.cast(PhpModifierList.class, psi)
