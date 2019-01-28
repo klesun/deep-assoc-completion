@@ -255,8 +255,14 @@ public class TranspileToNodeJs extends AnAction
             , () -> Tls.cast(MethodReference.class, psi)
                 .map(typed -> trans(typed.getClassReference()) + "." + typed.getName() + "(" + trans(typed.getParameterList()) + ")")
             , () -> Tls.cast(FunctionReference.class, psi)
-                .fap(typed -> opt(typed.getName()).flt(n -> !"".equals(n))
-                    .map(n -> "php." + n + "(" + trans(typed.getParameterList()) + ")"))
+                .fap(typed -> {
+                    if (typed.getText().equals("func_get_args()")) {
+                        return som("arguments");
+                    } else {
+                        return opt(typed.getName()).flt(n -> !"".equals(n))
+                            .map(n -> "php." + n + "(" + trans(typed.getParameterList()) + ")");
+                    }
+                })
             , () -> Tls.cast(ArrayCreationExpression.class, psi).itr()
                 .fap(typed -> transpileArray(typed))
             , () -> Tls.cast(Catch.class, psi).itr()
