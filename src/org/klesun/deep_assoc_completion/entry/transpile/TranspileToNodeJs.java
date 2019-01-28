@@ -201,11 +201,12 @@ public class TranspileToNodeJs extends AnAction
             return "";
         }
 
-        // TODO: process whole directories, not just one file
         // TODO: class constants
         // TODO: put properties in constructor - node does not allow properties directly in class body
+        // TODO: `$typeToData['privateFare'][0] ?? null` -> `($typeToData['privateFare'] || {})[0] || null`
         // TODO: `if (!$atfqInfo = this.parseAtfqLine($line)) {` -> `if (!($atfqInfo = this.parseAtfqLine($line))) {`
-        // TODO: `[static::class, 'parseFopModifier']` -> `this.parseFopModifier` or `this.prototype.parseFopModifier`
+        // TODO: `[static::class, 'parseFopModifier']` -> `a => this.parseFopModifier(a)` or `a => this.prototype.parseFopModifier(a)`
+        // TODO: process whole directories, not just one file
         Iterable<String> result = It.frs(() -> It.non()
             , () -> Tls.cast(LeafPsiElement.class, psi)
                 .map(leaf ->
@@ -267,8 +268,15 @@ public class TranspileToNodeJs extends AnAction
                     if (typed.getText().equals("func_get_args()")) {
                         return som("arguments");
                     } else if ("preg_match".equals(typed.getName()) && args.length > 2) {
+                        String preArgs = L(args).sub(0, 2).map(arg -> trans(arg)).str(", ");
                         String matchesVar = args[2].getText();
-                        return som(matchesVar + " = php.preg_match(" + It(typed.getParameters()).map(arg -> trans(arg)).str(", ") + ")");
+                        String postArgs = L(args).sub(3).map(arg -> ", " + trans(arg)).str("");
+                        return som(matchesVar + " = php.preg_match(" + preArgs + ", " + matchesVar + " = []" + postArgs + ")");
+                    } else if ("preg_match_all".equals(typed.getName()) && args.length > 2) {
+                        String preArgs = L(args).sub(0, 2).map(arg -> trans(arg)).str(", ");
+                        String matchesVar = args[2].getText();
+                        String postArgs = L(args).sub(3).map(arg -> ", " + trans(arg)).str("");
+                        return som(matchesVar + " = php.preg_match_all(" + preArgs + ", " + matchesVar + " = []" + postArgs + ")");
                     } else {
                         return opt(typed.getName()).flt(n -> !"".equals(n))
                             .map(n -> "php." + n + "(" + trans(typed.getParameterList()) + ")");
