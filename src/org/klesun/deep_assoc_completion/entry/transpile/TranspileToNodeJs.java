@@ -204,7 +204,8 @@ public class TranspileToNodeJs extends AnAction
         // TODO: process whole directories, not just one file
         // TODO: class constants
         // TODO: put properties in constructor - node does not allow properties directly in class body
-        // list($raw, $data) = $matches;
+        // TODO: `if (!$atfqInfo = this.parseAtfqLine($line)) {` -> `if (!($atfqInfo = this.parseAtfqLine($line))) {`
+        // TODO: `[static::class, 'parseFopModifier']` -> `this.parseFopModifier` or `this.prototype.parseFopModifier`
         Iterable<String> result = It.frs(() -> It.non()
             , () -> Tls.cast(LeafPsiElement.class, psi)
                 .map(leaf ->
@@ -262,8 +263,12 @@ public class TranspileToNodeJs extends AnAction
                 .map(typed -> trans(typed.getClassReference()) + "." + typed.getName() + "(" + trans(typed.getParameterList()) + ")")
             , () -> Tls.cast(FunctionReference.class, psi)
                 .fap(typed -> {
+                    PsiElement[] args = typed.getParameters();
                     if (typed.getText().equals("func_get_args()")) {
                         return som("arguments");
+                    } else if ("preg_match".equals(typed.getName()) && args.length > 2) {
+                        String matchesVar = args[2].getText();
+                        return som(matchesVar + " = php.preg_match(" + It(typed.getParameters()).map(arg -> trans(arg)).str(", ") + ")");
                     } else {
                         return opt(typed.getName()).flt(n -> !"".equals(n))
                             .map(n -> "php." + n + "(" + trans(typed.getParameterList()) + ")");
@@ -289,16 +294,6 @@ public class TranspileToNodeJs extends AnAction
                         return Tls.regex("\\/(.+)\\/([a-z]{0,3})", content)
                             .map(m -> "/" + m.get(0) + "/" + m.get(1)) // '/\s*/i' -> /\s*/i
                             .def("'" + StringEscapeUtils.escapeJavaScript(typed.getContents()) + "'");
-                    }
-                })
-            , () -> Tls.cast(FunctionReference.class, psi)
-                .fap(call -> {
-                    PsiElement[] args = call.getParameters();
-                    if ("preg_match".equals(call.getName()) && args.length > 2) {
-                        String matchesVar = args[2].getText();
-                        return som(matchesVar + " = " + call.getName() + "(" + It(call.getParameters()).map(arg -> trans(arg)).str(", ") + ")");
-                    } else {
-                        return non();
                     }
                 })
             , () -> Tls.cast(AssignmentExpression.class, psi)
