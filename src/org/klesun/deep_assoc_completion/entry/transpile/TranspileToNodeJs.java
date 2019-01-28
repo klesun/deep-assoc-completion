@@ -207,6 +207,7 @@ public class TranspileToNodeJs extends AnAction
         // TODO: `if (!$atfqInfo = this.parseAtfqLine($line)) {` -> `if (!($atfqInfo = this.parseAtfqLine($line))) {`
         // TODO: `[static::class, 'parseFopModifier']` -> `a => this.parseFopModifier(a)` or `a => this.prototype.parseFopModifier(a)`
         // TODO: process whole directories, not just one file
+        // TODO: `[1,2,3] === [1,2,3]` -> `php.equals([1,2,3], [1,2,3], true)`
         Iterable<String> result = It.frs(() -> It.non()
             , () -> Tls.cast(LeafPsiElement.class, psi)
                 .map(leaf ->
