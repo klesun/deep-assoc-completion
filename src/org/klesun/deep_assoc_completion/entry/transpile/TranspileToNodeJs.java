@@ -233,6 +233,8 @@ public class TranspileToNodeJs extends AnAction
                         } else {
                             return "this.prototype";
                         }
+                    } else if (ref.getText().equals("\\Exception")) {
+                        return "Error";
                     } else {
                         String clsPath = ref.getText();
                         if (!clsPath.contains("\\")) {
@@ -272,7 +274,7 @@ public class TranspileToNodeJs extends AnAction
                         String preArgs = L(args).sub(0, 2).map(arg -> trans(arg)).str(", ");
                         String matchesVar = args[2].getText();
                         String postArgs = L(args).sub(3).map(arg -> ", " + trans(arg)).str("");
-                        return som(matchesVar + " = php.preg_match(" + preArgs + ", " + matchesVar + " = []" + postArgs + ")");
+                        return som("php.preg_match(" + preArgs + ", " + matchesVar + " = []" + postArgs + ")");
                     } else if ("preg_match_all".equals(typed.getName()) && args.length > 2) {
                         String preArgs = L(args).sub(0, 2).map(arg -> trans(arg)).str(", ");
                         String matchesVar = args[2].getText();
