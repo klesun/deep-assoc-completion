@@ -33,7 +33,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 <p>---------------------------------</p>
 <img style="width: 33%; height: auto;" src="https://user-images.githubusercontent.com/5202330/34743879-3e690ff0-f583-11e7-8dee-dd8c86b78917.png"/>
 <br clear="all"/>
-<p>Infer type from \PDO SQL-s if DB is connected</p>
+<p>Infer type from \PDO or mysqli queries if DB is connected</p>
     ]]></description>
 
     <change-notes><![CDATA[
