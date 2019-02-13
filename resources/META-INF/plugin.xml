@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.01.28.001</version>
+    <version>2019.02.13.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Improve _Transpile to node js_ - fix some php.js functions, add few more of them, fix few conversion mistakes</li>
+        <li>Trigger auto-popup for built-in function constant arg completion</li>
+        <li>Provide property name completion in array_column() (Not just array key completion)</li>
     </ul>
     ]]>
     </change-notes>
