@@ -165,7 +165,10 @@ public class ArgTypeDefs
             }));
             return som(arrt);
         } else if ("file_put_contents".equals(name) && argOrder == 2) {
-            return cst(ctx, list("FILE_APPEND", "FILE_USE_INCLUDE_PATH", "LOCK_EX"));
+            return cst(ctx, list(
+                "FILE_USE_INCLUDE_PATH", "FILE_IGNORE_NEW_LINES",
+                "FILE_SKIP_EMPTY_LINES", "FILE_APPEND", "FILE_NO_DEFAULT_CONTEXT"
+            ));
         } else if ("preg_match".equals(name) && argOrder == 3) {
             return cst(ctx, list("PREG_OFFSET_CAPTURE", "PREG_UNMATCHED_AS_NULL"));
         } else if ("preg_split".equals(name) && argOrder == 3) {

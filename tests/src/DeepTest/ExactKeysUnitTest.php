@@ -1391,6 +1391,34 @@ class ExactKeysUnitTest
 
     }
 
+    private function importAgents()
+    {
+        $rawAgents = [
+            ['id' => 123, 'login' => 'Vasya'],
+            ['id' => 124, 'login' => 'Petya'],
+            ['id' => 125, 'login' => 'Dima'],
+            ['id' => 126, 'login' => 'Gosha'],
+        ];
+        $normAgents = array_map([$this, 'normalizeAgent'], $rawAgents);
+        file_put_contents('agents.json', json_encode($normAgents));
+    }
+
+    private function normalizeAgent($object)
+    {
+        $object['normalized'] = true;
+        return $object;
+    }
+
+    /** @param $agents = [self::normalizeAgent()] */
+    public function provideEmptyArgsDoc($agents)
+    {
+        // even though normalizeAgent() is called without args in the doc, we
+        // should treat it as "unknown args", since that' more convenient
+        return [
+            [$agents[0], ['id', 'login', 'normalized']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

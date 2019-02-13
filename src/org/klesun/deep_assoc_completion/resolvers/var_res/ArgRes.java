@@ -167,8 +167,6 @@ public class ArgRes extends Lang
     private It<DeepType> getPrivateFuncUsageArg(FunctionImpl func, int argOrderInLambda)
     {
         return Tls.cast(MethodImpl.class, func)
-            // if caret is inside this function, when passed args are unknown
-            .flt(a -> !trace.func().areArgsKnown())
             .flt(a -> func.getParameters().length > 0)
             .fap(meth -> {
                 PsiFile file = func.getContainingFile();
@@ -272,8 +270,11 @@ public class ArgRes extends Lang
                     .cst(PhpExpression.class)
                     .fap(xpr -> trace.subCtxEmpty().findExprType(xpr))
             ));
+        // treat empty args as any args in the doc,
+        // since it's a pain to list all args every time
+        boolean isNoArgDoc = !trace.func().hasArgs() && trace.isInComment();
         It<DeepType> genericTit = It();
-        if (!trace.func().areArgsKnown()) {
+        if (!trace.func().areArgsKnown() || isNoArgDoc) {
             // passed args not known - if caret was inside this function
             genericTit = It(peekOutside(param));
         } else {

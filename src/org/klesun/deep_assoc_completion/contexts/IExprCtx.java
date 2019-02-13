@@ -58,4 +58,9 @@ public interface IExprCtx {
             return maybeFake;
         }
     }
+
+    default Boolean isInComment()
+    {
+        return getFakeFileSource().has();
+    }
 }

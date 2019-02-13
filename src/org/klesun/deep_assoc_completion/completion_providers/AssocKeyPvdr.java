@@ -137,7 +137,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         String indent = Tls.range(0, depth).rdc((sum,i) -> sum + " ", "");
         int typeCnt = root.typeCnt.def(0);
         if (search.currentExpr.equals(som(root))) {
-            System.out.println("======================================= current expression =======================================");
+            System.out.println("                                 ====== current expression =======================================");
         }
         if (root.parent.any(p -> p.expr == root.expr)) {
             // a fake expr ctx created for func call resolution
