@@ -10,10 +10,13 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.resolvers.FieldRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
 import org.klesun.lang.Opt;
@@ -58,8 +61,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
             })));
     }
 
-    // array_intersect($cmdTypes, ['redisplayPnr', 'itinerary', 'airItinerary', 'storeKeepPnr', 'changeArea', ''])
-    private static Opt<It<DeepType>> resolveArrayColumn(StringLiteralExpression literal, FuncCtx funcCtx)
+    private static Opt<It<DeepType>> resolveArrayColumn(StringLiteralExpression literal, ExprCtx exprCtx)
     {
         return opt(literal.getParent())
             .map(argList -> argList.getParent())
@@ -67,18 +69,30 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
             .flt(call -> "array_column".equals(call.getName()))
             .fop(call -> L(call.getParameters()).gat(0))
             .fop(toCast(PhpExpression.class))
-            .map(arr -> funcCtx.findExprType(arr)
-            .fap(tit -> Mt.getElSt(tit)));
+            .map(arr -> exprCtx.findExprType(arr)
+                .fap(tit -> Mt.getElSt(tit))
+                .map(baseArrt -> {
+                    DeepType arrt = new DeepType(baseArrt.definition, PhpType.ARRAY);
+                    // array_column supports array keys and object properties (but not magic keys/props AFAIK)
+                    arrt.keys.addAll(It.cnc(
+                        baseArrt.keys,
+                        new FieldRes(exprCtx.subCtxEmpty())
+                            .getPublicProps(baseArrt.mt(), literal.getProject())
+                    ).arr());
+                    return arrt;
+                }));
     }
 
+    /** @return an associative array type with keys being what should be suggested inside lit */
     private static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
         SearchCtx search = new SearchCtx(lit.getProject())
             .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, lit.getProject()));
         FuncCtx funcCtx = new FuncCtx(search);
+        ExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 
         return Opt.fst(
-            () -> resolveArrayColumn(lit, funcCtx)
+            () -> resolveArrayColumn(lit, exprCtx)
         ).fap(a -> a);
     }
 

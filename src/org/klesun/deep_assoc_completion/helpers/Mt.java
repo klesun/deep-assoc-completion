@@ -93,13 +93,18 @@ public class Mt extends Lang
         return getKey(null);
     }
 
-    public static It<DeepType> getPropSt(DeepType type, String keyName)
+    public static It<DeepType> getPropOfName(It<DeepType.Key> allProps, String keyName)
     {
-        return type.props.vls()
+        return allProps
             .flt(k -> keyName == null || k.keyType.getTypes()
                 .any(kt -> keyName.equals(kt.stringValue)
                     || kt.stringValue == null))
             .fap(k -> k.getTypes());
+    }
+
+    public static It<DeepType> getDynaPropSt(DeepType type, String keyName)
+    {
+        return getPropOfName(type.props.vls(), keyName);
     }
 
     public static It<DeepType> getKeySt(DeepType type, String keyName)

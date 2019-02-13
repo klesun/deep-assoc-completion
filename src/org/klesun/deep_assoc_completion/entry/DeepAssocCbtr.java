@@ -23,9 +23,9 @@ import static org.klesun.lang.Lang.toCast;
  * using declaration inside the initial function
  * that created this array
  */
-public class DeepKeysCbtr extends CompletionContributor
+public class DeepAssocCbtr extends CompletionContributor
 {
-    public DeepKeysCbtr()
+    public DeepAssocCbtr()
     {
         // $arr[''];
         this.extend(

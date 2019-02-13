@@ -204,11 +204,15 @@ public class FuncCallRes extends Lang
                     .fap(mt -> mt.types).map(a -> a);
             } else if (name.equals("array_column")) {
                 DeepType type = new DeepType(call);
-                type.addKey(KeyType.integer(call)).addType(Tls.onDemand(() -> {
+                type.addKey(KeyType.integer(call)).addType(() -> {
                     Mt elType = callCtx.getArgMt(0).getEl();
                     String keyName = callCtx.getArgMt(1).getStringValue();
-                    return elType.getKey(keyName);
-                }));
+                    return new Mt(It.cnc(
+                        elType.getKey(keyName).types,
+                        Mt.getPropOfName(new FieldRes(ctx.subCtxEmpty())
+                            .getPublicProps(elType, call.getProject()), keyName)
+                    ));
+                });
                 return list(type);
             } else if (name.equals("array_chunk")) {
                 return callCtx.getArgMt(0).getInArray(call).mt().types;

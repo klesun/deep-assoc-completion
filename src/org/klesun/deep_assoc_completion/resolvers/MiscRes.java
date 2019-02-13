@@ -110,7 +110,7 @@ public class MiscRes extends Lang
         );
     }
 
-    private Opt<DeepType> castToPhpType(DeepType deepType, String phpType)
+    private static Opt<DeepType> castToPhpType(DeepType deepType, String phpType)
     {
         if (phpType.equals("string")) {
             return som(new DeepType(deepType.definition, PhpType.STRING, deepType.stringValue));

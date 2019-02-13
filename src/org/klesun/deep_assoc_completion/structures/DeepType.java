@@ -150,7 +150,7 @@ public class DeepType extends Lang
         final public PsiElement definition;
         public Set<String> comments = new LinkedHashSet<>();
 
-        private Key(KeyType keyType, PsiElement definition)
+        public Key(KeyType keyType, PsiElement definition)
         {
             this.keyType = keyType;
             this.definition = definition;

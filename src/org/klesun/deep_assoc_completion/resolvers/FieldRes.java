@@ -1,10 +1,12 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.elements.impl.FieldImpl;
+import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -12,6 +14,7 @@ import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.Assign;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
 import java.util.Collection;
@@ -88,19 +91,26 @@ public class FieldRes extends Lang
                 .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(assPsi, false)));
     }
 
+    private It<DeepType> declToExplTypes(Field resolved)
+    {
+        IExprCtx implCtx = ctx.subCtxEmpty();
+        It<DeepType> defTs = Tls.cast(FieldImpl.class, resolved).itr()
+            .map(fld -> fld.getDefaultValue())
+            .fop(toCast(PhpExpression.class))
+            .fap(def -> implCtx.findExprType(def));
+
+        It<DeepType> docTs = opt(resolved.getDocComment())
+            .fap(doc -> opt(doc.getVarTag()))
+            .fap(docTag -> new DocParamRes(implCtx).resolve(docTag));
+
+        return It.cnc(defTs, docTs);
+    }
+
     private It<DeepType> declsToTypes(FieldReferenceImpl fieldRef, It<Field> declarations)
     {
         return declarations
             .fap(resolved -> {
-                IExprCtx implCtx = ctx.subCtxEmpty();
-                It<DeepType> defTs = Tls.cast(FieldImpl.class, resolved).itr()
-                    .map(fld -> fld.getDefaultValue())
-                    .fop(toCast(PhpExpression.class))
-                    .fap(def -> implCtx.findExprType(def));
-
-                It<DeepType> docTs = opt(resolved.getDocComment())
-                    .fap(doc -> opt(doc.getVarTag()))
-                    .fap(docTag -> new DocParamRes(implCtx).resolve(docTag));
+                It<DeepType> explTypes = declToExplTypes(resolved);
 
                 It<DeepType> magicPropTs = opt(resolved.getContainingClass())
                     .fap(cls -> opt(cls.getDocComment()))
@@ -111,7 +121,7 @@ public class FieldRes extends Lang
                 It<Assign> asses = getAssignments(resolved, fieldRef);
 
                 return It.cnc(
-                    defTs, magicPropTs, docTs,
+                    explTypes, magicPropTs,
                     AssRes.assignmentsToTypes(asses)
                 );
             });
@@ -122,6 +132,24 @@ public class FieldRes extends Lang
         return It(cls.getMethods())
             .flt(m -> "__get".equals(m.getName()))
             .fap(m -> MethCallRes.findMethRetType(m).apply(exprCtx));
+    }
+
+    /**
+     * includes both dynamic props and props belonging to class
+     * not sure, but probably should use this in resolve() to remove duplicating code
+     */
+    public It<DeepType.Key> getPublicProps(Mt mt, Project proj)
+    {
+        It<DeepType.Key> declared = ArrCtorRes.resolveMtCls(mt, proj)
+            .fap(cls -> cls.getFields())
+            .flt(f -> !f.getModifier().isPrivate())
+            .map(f -> {
+                DeepType kt = new DeepType(f, PhpType.STRING, f.getName());
+                KeyType keyType = KeyType.mt(som(kt), f);
+                return new DeepType.Key(keyType, f)
+                    .addType(() -> new Mt(declToExplTypes(f)), f.getType());
+            });
+        return It.cnc(mt.types.fap(t -> t.props.vls()), declared);
     }
 
     public It<DeepType> resolve(FieldReferenceImpl fieldRef)
@@ -165,7 +193,7 @@ public class FieldRes extends Lang
             }
             String finalName = name;
             dynamicPropTs = getObjMt.get().types
-                .fap(t -> Mt.getPropSt(t, finalName));
+                .fap(t -> Mt.getDynaPropSt(t, finalName));
             IExprCtx magicCtx = ctx.subCtxMagicProp(fieldRef);
             magicPropTs = getCls.get()
                 .fap(cls -> opt(fieldRef.getName())

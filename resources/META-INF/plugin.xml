@@ -47,7 +47,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
     <idea-version since-build="162.2380.11"/>
 
     <extensions defaultExtensionNs="com.intellij">
-        <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DeepKeysCbtr"/>
+        <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DeepAssocCbtr"/>
         <completion.contributor language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.RestoreBuiltinCbtr"/>
         <psi.referenceContributor implementation="org.klesun.deep_assoc_completion.entry.ArrFuncRefCbtr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.MainGoToDecl"/>

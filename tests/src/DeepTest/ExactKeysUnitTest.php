@@ -5,6 +5,7 @@ use Lib\ParamValidation\DictP;
 use Lib\ParamValidation\ListP;
 use Lib\ParamValidation\StringP;
 use Lib\Utils\Fp;
+use NeptuniaNs\Ksha;
 use SomeCls123;
 
 /**
@@ -1362,6 +1363,32 @@ class ExactKeysUnitTest
         return [
             [$imported['passengers'][0], ['lastName']],
         ];
+    }
+
+    public function provideArrayColumnObj()
+    {
+        $arrSups = [
+            ['a' => ['subA1' => 3, 'subA2' => 8], 'b' => 6],
+            ['a' => ['subA1' => 12, 'subA2' => 18], 'b' => 2],
+        ];
+        $arrSubs = array_column($arrSups, 'a');
+        $list[] = [$arrSubs[0], ['subA1', 'subA2']];
+
+        $stdSups = [
+            (object)['a' => ['subA1' => 3, 'subA2' => 8], 'b' => 6],
+            (object)['a' => ['subA1' => 12, 'subA2' => 18], 'b' => 2],
+        ];
+        $stdSubs = array_column($stdSups, 'a');
+        $stdSubs[0][''];
+        $list[] = [$stdSubs[0], ['subA1', 'subA2']];
+
+        $instSups = [new Ksha(), new Ksha(), new Ksha()];
+        $instSubs = array_column($instSups, 'weapons');
+        $instSubs[0][''];
+        $list[] = [$instSubs[0], ['pistols', 'micro-smgs', 'assault-rifles']];
+
+        return $list;
+
     }
 
     //=============================
