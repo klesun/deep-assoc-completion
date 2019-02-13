@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.02.13.001</version>
+    <version>2019.02.14.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,6 +38,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
+        <li>Treat call with no args in a doc as "args unknown" (So that we still got private func usage arg completion)</li>
+        <li>Do not let "=" doc comment get affected by global vars (by implicitly enclosing the expression in a function)</li>
         <li>Trigger auto-popup for built-in function constant arg completion</li>
         <li>Provide property name completion in array_column() (Not just array key completion)</li>
     </ul>
