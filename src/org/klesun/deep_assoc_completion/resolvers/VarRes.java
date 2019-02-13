@@ -265,7 +265,10 @@ public class VarRes
             .fap(refPsi -> {
                 Opt<Function> declScope = Tls.findParent(refPsi, Function.class, a -> true);
                 Opt<PsiFile> declFile = opt(refPsi.getContainingFile());
-                if (declFile.equals(caretFile) && !declScope.equals(caretScope) && ctx.getClosureVars().has()) {
+                Boolean isClosureVar = declFile.equals(caretFile)
+                    && !declScope.equals(caretScope)
+                    && ctx.getClosureVars().has();
+                if (isClosureVar) {
                     return non(); // refPsi is outside the function, a closure, handled manually
                 }
                 return resolveRef(refPsi, ScopeFinder.didSurelyHappen(refPsi, caretVar));

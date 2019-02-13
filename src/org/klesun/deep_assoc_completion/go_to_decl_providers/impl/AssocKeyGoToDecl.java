@@ -68,7 +68,7 @@ public class AssocKeyGoToDecl extends Lang
             .flt(doc -> Tls.regex("^\\s*=\\s*(.+)$", doc.getText()).has() ||
                         doc.getParent() instanceof PhpDocReturnTag)
             .fap(doc -> {
-                String fileText = prefix + doc.getText() + ";";
+                String fileText = DocParamRes.EXPR_PREFIX + doc.getText() + DocParamRes.EXPR_POSTFIX;
                 PsiFile file = PsiFileFactory.getInstance(doc.getProject())
                     .createFileFromText(PhpLanguage.INSTANCE, fileText);
                 int offset = mouseOffset - doc.getTextOffset() + prefix.length();

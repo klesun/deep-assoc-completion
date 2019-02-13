@@ -6,6 +6,7 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.PhpIndex;
@@ -20,6 +21,7 @@ import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.*;
+import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
@@ -35,7 +37,6 @@ import static org.klesun.lang.Lang.*;
  */
 public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
 {
-    final private static String prefix = "<?php\n$arg = ";
     final private static String regex = "^\\s*=\\s*(.+)$";
     final private static String returnRegex = "^\\s*(?:like|=|)\\s*(.+)$";
 
@@ -92,18 +93,23 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
         IExprCtx exprCtx = new ExprCtx(ctx, tagValue, 0);
         return Tls.regex(regex, docValue)
             .fop(match -> match.gat(0))
-            .fap(expr -> It.cnc(
-                // method name completion
-                extractTypedFqnPart(expr, tagValue.getProject(), tagValue)
-                    .fap(options -> options)
-                    .map((lookup) -> LookupElementBuilder.create(lookup)
-                        .withIcon(AssocKeyPvdr.getIcon())),
-                // assoc array completion
-                opt(PsiFileFactory.getInstance(tagValue.getProject()).createFileFromText(PhpLanguage.INSTANCE, prefix + expr + ";"))
-                    .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))
-                    .map(psi -> AssocKeyPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::new))
-                    .fap(mt -> mt.getKeyNames().map(k -> AssocKeyPvdr.makeFullLookup(mt, k, new HashSet<>())))
-            ));
+            .fap(expr -> {
+                String fakeFileText = DocParamRes.EXPR_PREFIX + expr + DocParamRes.EXPR_POSTFIX;
+                Opt<PsiFile> fakeFileOpt = opt(PsiFileFactory.getInstance(tagValue.getProject())
+                    .createFileFromText(PhpLanguage.INSTANCE, fakeFileText));
+                return It.cnc(
+                    // method name completion
+                    extractTypedFqnPart(expr, tagValue.getProject(), tagValue)
+                        .fap(options -> options)
+                        .map((lookup) -> LookupElementBuilder.create(lookup)
+                            .withIcon(AssocKeyPvdr.getIcon())),
+                    // assoc array completion
+                    fakeFileOpt
+                        .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))
+                        .map(psi -> AssocKeyPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::new))
+                        .fap(mt -> mt.getKeyNames().map(k -> AssocKeyPvdr.makeFullLookup(mt, k, new HashSet<>())))
+                );
+            });
     }
 
     private It<LookupElement> parseTagValue(PsiElement tagValue, SearchCtx search)

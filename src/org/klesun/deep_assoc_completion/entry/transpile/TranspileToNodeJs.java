@@ -187,7 +187,7 @@ public class TranspileToNodeJs extends AnAction
                     String arrPart = trans(arr);
                     String content = keyOpt
                         .map(key -> "[" + key.getText() + ", " + valuePart + "] of Object.entries(" + arrPart + ")")
-                        .def(valuePart + " of " + arrPart);
+                        .def(valuePart + " of Object.values(" + arrPart + ")");
                     return "for (" + content + ") {\n"
                         + stats.map(st -> getIndent(st) + trans(st)).str("\n")
                         + "}";
@@ -201,8 +201,8 @@ public class TranspileToNodeJs extends AnAction
             return "";
         }
 
-        // TODO: class constants
-        // TODO: put properties in constructor - node does not allow properties directly in class body
+        // TODO: class constants and static properties
+        // TODO: put instance properties in constructor - node does not allow properties directly in class body
         // TODO: `$typeToData['privateFare'][0] ?? null` -> `($typeToData['privateFare'] || {})[0] || null`
         // TODO: `if (!$atfqInfo = this.parseAtfqLine($line)) {` -> `if (!($atfqInfo = this.parseAtfqLine($line))) {`
         // TODO: `[static::class, 'parseFopModifier']` -> `a => this.parseFopModifier(a)` or `a => this.prototype.parseFopModifier(a)`

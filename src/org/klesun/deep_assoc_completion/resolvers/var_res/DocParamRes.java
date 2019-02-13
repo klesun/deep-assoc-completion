@@ -21,6 +21,11 @@ public class DocParamRes extends Lang
 {
     private IExprCtx ctx;
 
+    // wrapping in a function so that global variables did not affect result (had a global variable
+    // called $i with a definite value, and when I used $i to define _any_ key, I got no completion)
+    final public static String EXPR_PREFIX = "<?php\n(function(){return ";
+    final public static String EXPR_POSTFIX = ";})();";
+
     public DocParamRes(IExprCtx ctx)
     {
         this.ctx = ctx;
@@ -117,7 +122,7 @@ public class DocParamRes extends Lang
     public static Opt<It<DeepType>> parseExpression(String expr, Project project, IExprCtx docCtx)
     {
         // adding "$arg = " so anonymous functions were parsed as expressions
-        expr = "<?php\n$arg = " + expr + ";";
+        expr = EXPR_PREFIX + expr + EXPR_POSTFIX;
         PsiFile psiFile = PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr);
         return opt(psiFile.getFirstChild())
             .fop(toCast(GroupStatement.class))
