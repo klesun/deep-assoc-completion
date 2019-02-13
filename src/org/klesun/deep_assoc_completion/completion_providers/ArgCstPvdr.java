@@ -8,6 +8,7 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.ParameterList;
+import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ConstantReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import org.jetbrains.annotations.NotNull;
@@ -16,8 +17,10 @@ import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.helpers.ScopeFinder;
 import org.klesun.lang.It;
 import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 import static org.klesun.lang.Lang.*;
 
@@ -40,6 +43,8 @@ public class ArgCstPvdr extends CompletionProvider<CompletionParameters>
         return opt(caretLeaf.getParent())
             .cst(ConstantReferenceImpl.class) // IntellijIdeaRulezzz
             .fop(cst -> opt(cst.getParent()))
+            .map(lst -> Tls.cast(BinaryExpressionImpl.class, lst) // doStuff(A | B)
+                .map(bin -> bin.getParent()).def(lst))
             .cst(ParameterList.class)
             .fop(cst -> opt(cst.getParent()))
             .cst(FunctionReferenceImpl.class)
@@ -48,6 +53,7 @@ public class ArgCstPvdr extends CompletionProvider<CompletionParameters>
                 .map(n -> {
                     int argOrder = It(f.getParameters())
                         .flt(p -> p.getTextOffset() < caretLeaf.getTextOffset())
+                        .flt(p -> !ScopeFinder.isPartOf(caretLeaf, p))
                         .arr().size();
                     return T2(n, argOrder);
                 }));
