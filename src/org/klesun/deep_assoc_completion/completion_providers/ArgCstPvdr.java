@@ -44,7 +44,7 @@ public class ArgCstPvdr extends CompletionProvider<CompletionParameters>
             .cst(ConstantReferenceImpl.class) // IntellijIdeaRulezzz
             .fop(cst -> opt(cst.getParent()))
             .map(lst -> Tls.cast(BinaryExpressionImpl.class, lst) // doStuff(A | B)
-                .map(bin -> bin.getParent()).def(lst))
+                .fop(bin -> opt(bin.getParent())).def(lst))
             .cst(ParameterList.class)
             .fop(cst -> opt(cst.getParent()))
             .cst(FunctionReferenceImpl.class)
@@ -83,5 +83,29 @@ public class ArgCstPvdr extends CompletionProvider<CompletionParameters>
                     .withTailText(opt(t.stringValue).map(strVal -> " = " + strVal).def(""), true)));
 
         suggestions.fch(result::addElement);
+    }
+
+    public static boolean invokeAutoPopup(@NotNull PsiElement position, char typeChar)
+    {
+        if (typeChar == ' ') {
+            if (position.getText().equals(",")) {
+                return opt(position.getParent())
+                    .cst(ParameterList.class)
+                    .fop(cst -> opt(cst.getParent()))
+                    .cst(FunctionReferenceImpl.class)
+                    .any(call -> !"".equals(opt(call.getName()).def("")));
+            } else if (position.getText().equals("|")) {
+                return opt(position.getParent())
+                    .fop(lst -> Tls.cast(BinaryExpressionImpl.class, lst))
+                    .fop(cst -> opt(cst.getParent()))
+                    .cst(ParameterList.class)
+                    .fop(cst -> opt(cst.getParent()))
+                    .cst(FunctionReferenceImpl.class)
+                    .any(call -> !"".equals(opt(call.getName()).def("")));
+            }
+        } else if (typeChar == '(') {
+            return position.getParent() instanceof ConstantReferenceImpl;
+        }
+        return false;
     }
 }

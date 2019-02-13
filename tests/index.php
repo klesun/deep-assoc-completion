@@ -1157,7 +1157,7 @@ $brothers[1];
 
 pcntl_signal();
 file_put_contents('text.txt', 'abababa', );
-json_encode(['a' => 5, 'b' => 6], JSON_PRETTY_PRINT | i);
+json_encode(['a' => 5, 'b' => 6], JSON_PRETTY_PRINT | );
 file_put_contents('text.txt', 'abababa', '');
 
 preg_match('/asd/', 'asd', $matches, '');

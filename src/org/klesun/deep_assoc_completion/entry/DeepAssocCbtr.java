@@ -160,8 +160,8 @@ public class DeepAssocCbtr extends CompletionContributor
                 .map(par -> par.getLastChild())
                 .flt(lst -> lst.isEquivalentTo(position))
                 .uni(var -> true, () -> false);
-//        } else if (typeChar == ',' || typeChar == ' ') {
-//            return ArgCstPvdr.assertBuiltInFuncArgFromLeaf(position).has();
+        } else if (ArgCstPvdr.invokeAutoPopup(position, typeChar)) {
+            return true;
         } else {
             return false;
         }
