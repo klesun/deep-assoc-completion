@@ -1155,6 +1155,7 @@ $arr[$lagami->getLame];
 $brothers = ['ololo', 'trololo'];
 $brothers[1];
 
+file_put_contents('text.txt', 'abababa', );
 file_put_contents('text.txt', 'abababa', '');
 
 preg_match('/asd/', 'asd', $matches, '');

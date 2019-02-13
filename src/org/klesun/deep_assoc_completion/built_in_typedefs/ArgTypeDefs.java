@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.built_in_typedefs;
 
+import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.Function;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
@@ -23,7 +24,7 @@ public class ArgTypeDefs
     }
 
     // first arg
-    private static DeepType stream_context_create(Function def)
+    private static DeepType stream_context_create(PsiElement def)
     {
         return assoc(def, list(
             T2("http", assoc(def, list(
@@ -81,18 +82,25 @@ public class ArgTypeDefs
     }
 
     // first arg
-    private It<DeepType> image_type_to_mime_type(Function def)
+    private It<DeepType> image_type_to_mime_type(PsiElement def)
     {
         It<String> cstNames = Cst.IMAGETYPE_.map(t -> t.a);
         return cst(ctx, cstNames);
     }
 
+
     public Iterable<DeepType> getArgType(Function builtInFunc, int argOrder)
     {
         String name = opt(builtInFunc.getName()).def("");
+        return getArgType(name, builtInFunc, argOrder);
+    }
+
+    /** @param builtInFunc reference PSI needed for type instantiation */
+    public Iterable<DeepType> getArgType(String name, PsiElement builtInFunc, int argOrder)
+    {
         if (list("stream_context_create", "stream_context_get_default", "stream_context_set_default").contains(name) && argOrder == 0) {
             return som(stream_context_create(builtInFunc));
-        } else if ("stream_context_set_params".equals(builtInFunc.getName()) && argOrder == 1) {
+        } else if ("stream_context_set_params".equals(name) && argOrder == 1) {
             return som(assoc(builtInFunc, list(
                 T2("notification", callable(builtInFunc).mt()),
                 T2("options", mixed(builtInFunc).mt())

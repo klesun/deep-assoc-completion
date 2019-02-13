@@ -8,9 +8,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocToken;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
-import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
-import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
+import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.completion_providers.*;
 import org.klesun.deep_assoc_completion.completion_providers.ArrayColumnPvdr;
@@ -39,7 +37,7 @@ public class DeepAssocCbtr extends CompletionContributor
         this.extend(
             CompletionType.BASIC,
             PlatformPatterns.psiElement()
-                .withSuperParent(1, ConstantReference.class) // I dunno why
+                .withSuperParent(1, ConstantReference.class) // because IntellijIdeaRulezzz
                 .withSuperParent(2, ArrayIndex.class)
                 ,
             new AssocKeyPvdr()
@@ -132,6 +130,14 @@ public class DeepAssocCbtr extends CompletionContributor
                 ,
             new VarNamePvdr()
         );
+        // json_encode($data, JSON_PRETTY_PRINT | );
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, ConstantReference.class) // because IntellijIdeaRulezzz
+                ,
+            new ArgCstPvdr()
+        );
         // for cases when only Deep Resolve can say what class it is
         this.extend(
             CompletionType.BASIC,
@@ -154,6 +160,8 @@ public class DeepAssocCbtr extends CompletionContributor
                 .map(par -> par.getLastChild())
                 .flt(lst -> lst.isEquivalentTo(position))
                 .uni(var -> true, () -> false);
+//        } else if (typeChar == ',' || typeChar == ' ') {
+//            return ArgCstPvdr.assertBuiltInFuncArgFromLeaf(position).has();
         } else {
             return false;
         }
