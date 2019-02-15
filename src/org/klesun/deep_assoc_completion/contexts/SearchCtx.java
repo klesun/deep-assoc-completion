@@ -182,11 +182,12 @@ public class SearchCtx extends Lang
             }
         }
 
-        /** @debug */
-        //System.out.println("zalupa expr " + expr.getText() + " self is " + result.fap(a -> a).rdc((sum,el) -> sum + "|" +
-        //    el.clsRefType.map(t -> t.toString()).def("(no cls)"), "") + " trace: " + funcCtx.func());
-
         return It(result.def(It.non()))
+            .btw(t -> {
+                if (debug) {
+                    System.out.println(Tls.repeat("  ", exprCtx.depth) + "| " + Tls.singleLine(expr.getText(), 60) + " | " + t);
+                }
+            })
             .thn(cnt -> exprCtx.typeCnt = som(cnt))
             ;
     }

@@ -8,16 +8,19 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
-import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.helpers.*;
+import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
+import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.lang.It;
+import org.klesun.lang.L;
 import org.klesun.lang.*;
 
 import java.util.HashSet;
@@ -97,21 +100,22 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                 .withTypeText("from __get()"));
     }
 
-    private It<? extends LookupElement> resolveObj(PhpExpression ref, FuncCtx funcCtx)
+    private It<? extends LookupElement> resolveObj(PhpExpression ref, FuncCtx funcCtx, boolean isStaticRef)
     {
         Mt mt = funcCtx.findExprType(ref).wap(Mt::new);
         return ArrCtorRes.resolveMtCls(mt, ref.getProject())
-            .fap(cls -> list(
-                It(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
-                It(cls.getFields())
-                ).fap(a -> a)
-                    .flt(fld -> fld.getModifier().isPublic()
-                        || ref.getText().equals("$this"))
-                    .flt(fld -> !fld.getModifier().isStatic())
+            .fap(cls -> {
+                It<? extends PhpClassMember> mems = list(
+                    It(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
+                    It(cls.getFields())
+                ).fap(a -> a);
+                return mems
+                    .flt(fld -> fld.getModifier().isPublic())
+                    .flt(fld -> isStaticRef == fld.getModifier().isStatic())
                     .map(m -> makeLookup(m))
                     .cct(getMagicProps(cls, funcCtx)
-                        .fap(t -> makeMagicLookup(t)))
-            ).cct(getAssignedProps(mt).map(a -> a));
+                        .fap(t -> makeMagicLookup(t)));
+            }).cct(getAssignedProps(mt).map(a -> a));
     }
 
     @Override
@@ -127,13 +131,17 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
 
         Dict<Long> times = new Dict<>(list());
         It<? extends LookupElement> options = It(list());
-        if (builtIns.size() == 0 || !parameters.isAutoPopup()) {
+        Boolean hasBuiltIns = builtIns.any(b -> !"class".equals(b.getLookupString()));
+        if (!hasBuiltIns || !parameters.isAutoPopup()) {
             FuncCtx funcCtx = new FuncCtx(search);
+            // IDEA did not resolve the class on it's own - worth trying Deep resolution
             options = opt(parameters.getPosition().getParent())
                 .fop(toCast(MemberReference.class))
-                .map(mem -> mem.getClassReference())
-                // IDEA did not resolve the class on it's own - worth trying Deep resolution
-                .fap(ref -> resolveObj(ref, funcCtx));
+                .fap(mem -> opt(mem.getClassReference())
+                    // no point in deep resolution if it's an explicit class
+                    .flt(objRef -> !(objRef instanceof ClassReferenceImpl)
+                                || objRef.getText().equals("$this"))
+                    .fap(ref -> resolveObj(ref, funcCtx, mem.isStatic())));
             times.put("iteratorDone", System.nanoTime() - startTime);
         }
         Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()).arr());

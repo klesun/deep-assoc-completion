@@ -120,6 +120,15 @@ public class Lang
     // following methods are supposed to be used after extending
     // this class to be able to use them without `new ` or `ClassName.`
 
+    public static String repeat(String str, int n)
+    {
+        String result = "";
+        for (int i = 0; i < n; ++i) {
+            result += str;
+        }
+        return result;
+    }
+
     public static String substr(String str, int startIndex, int endIndex)
     {
         if (startIndex < 0) {

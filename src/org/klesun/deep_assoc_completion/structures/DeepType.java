@@ -267,14 +267,14 @@ public class DeepType extends Lang
     public Opt<String> getBriefVal()
     {
         String typeInfo = null;
-        if (stringValue != null) {
+        if (clsRefType.has()) {
+            typeInfo = clsRefType.unw() + "::class";
+        } else if (stringValue != null) {
             typeInfo = "'" + stringValue + "'";
         } else if (keys.has()) {
             typeInfo = "[" + keys.fap(k -> k.getBriefKey()).unq().str() + "]";
         } else if (returnTypeGetters.has()) {
             typeInfo = "(...) ==> {...}";
-        } else if (clsRefType.has()) {
-            typeInfo = clsRefType.unw() + "::class";
         } else if (props.size() > 0) {
             typeInfo = "obj(" + props.kys().str() + ")";
         }

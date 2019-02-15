@@ -1166,3 +1166,8 @@ preg_match_all('/asd/', 'asd', $matches, '');
 simplexml_load_string('<root/>', null, '2.9.1');
 simplexml_load_file('<root/>', null, '0');
 preg_last_error() === '';
+// should not suggest: 'hates', 'getAngry'
+Blanc::;
+(new Blanc())->;
+$blancCls = Blanc::class;
+(new $blancCls)->hates;
