@@ -30,10 +30,6 @@ public class Mt extends Lang
 
     public Mt(Iterable<DeepType> types, REASON reason)
     {
-        // there sometimes appear thousands of duplicates
-        // I'm not sure I'm good mathematician enough to find
-        // out the algorithm that would not produce them with
-        // all these recursions, so I'm just removing dupes here
         this.types = new MemIt<>(types);
         this.reason = reason;
     }

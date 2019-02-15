@@ -1170,4 +1170,5 @@ preg_last_error() === '';
 Blanc::;
 (new Blanc())->;
 $blancCls = Blanc::class;
+$blancCls::;
 (new $blancCls)->hates;

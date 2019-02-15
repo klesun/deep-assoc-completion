@@ -150,7 +150,7 @@ public class FuncCallRes extends Lang
     {
         It<PhpClass> clses = callCtx.hasArgs()
             ? callCtx.getArg(0)
-                .fap(mt -> ArrCtorRes.resolveMtCls(mt, call.getProject()))
+                .fap(mt -> ArrCtorRes.resolveMtInstCls(mt, call.getProject()))
             : Tls.findParent(call, PhpClass.class, a -> true).itr();
         DeepType type = new DeepType(call, PhpType.ARRAY);
         clses.fap(cls -> cls.getFields())

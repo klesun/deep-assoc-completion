@@ -42,17 +42,14 @@ public class ArrCtorRes extends Lang
             .fop(rvd -> opt(rvd));
     }
 
-    public static It<PhpClass> resolveMtCls(Mt mtArg, Project project)
+    private static It<PhpClass> resolveIdeaTypeClsRelaxed(It<PhpType> ideaTypeTit, Project project)
     {
-        It<PhpClass> resolved = opt(mtArg)
-            .fap(mt -> mt.getIdeaTypes())
-            .cct(mtArg.types.fap(t -> t.clsRefType))
-            .fap(tpe -> resolveIdeaTypeCls(tpe, project))
-            ;
+        MemIt<PhpType> ideaTypes = ideaTypeTit.mem();
+        It<PhpClass> resolved = ideaTypes.fap(tpe -> resolveIdeaTypeCls(tpe, project));
         if (!resolved.has()) {
             // allow to omit namespace in php doc class references
             PhpIndex idx = PhpIndex.getInstance(project);
-            return mtArg.getIdeaTypes()
+            return ideaTypes
                 .fap(it -> ideaTypeToFqn(it))
                 .flt(fqn -> !fqn.isEmpty())
                 .fap(clsName -> {
@@ -67,21 +64,42 @@ public class ArrCtorRes extends Lang
         return resolved;
     }
 
-    public It<PhpClass> resolveObjCls(PhpExpression expr)
+    public static It<PhpClass> resolveMtInstCls(Mt mtArg, Project project)
     {
-        Mt mt = new Mt(ctx.findExprType(expr));
-        return resolveMtCls(mt, expr.getProject());
+        It<PhpType> instTypes = opt(mtArg).fap(mt -> mt.getIdeaTypes());
+        return resolveIdeaTypeClsRelaxed(instTypes, project);
     }
 
-    public It<PhpClass> resolveInstance(PsiElement instExpr)
+    public static It<PhpClass> resolveMtClsRefCls(Mt mtArg, Project project)
+    {
+        It<PhpType> clsRefTypes = mtArg.types.fap(t -> t.clsRefType);
+        return resolveIdeaTypeClsRelaxed(clsRefTypes, project);
+    }
+
+    /** resolves class of both class instance types and class reference types */
+    public static It<PhpClass> resolveMtCls(Mt mtArg, Project project)
+    {
+        return It.cnc(
+            resolveMtInstCls(mtArg, project),
+            resolveMtClsRefCls(mtArg, project)
+        );
+    }
+
+    public It<PhpClass> resolveInstEpxrCls(PhpExpression expr)
+    {
+        Mt mt = new Mt(ctx.findExprType(expr));
+        return resolveMtInstCls(mt, expr.getProject());
+    }
+
+    public It<PhpClass> resolveInstPsiCls(PsiElement instExpr)
     {
         return opt(instExpr.getFirstChild())
             .fop(toCast(PhpExpression.class))
-            .fap(xpr -> resolveObjCls(xpr))
+            .fap(xpr -> resolveInstEpxrCls(xpr))
             ;
     }
 
-    public static Opt<PhpClass> resolveClass(PsiElement clsPsi)
+    public static Opt<PhpClass> resolveClsRefPsiCls(PsiElement clsPsi)
     {
         return opt(clsPsi.getFirstChild())
             .fop(expr -> Opt.fst(
@@ -112,8 +130,8 @@ public class ArrCtorRes extends Lang
             .map(lit -> lit.getContents())
             .fap(met -> refParts.gat(0)
                 .fap(clsPsi -> It.cnc(
-                    resolveClass(clsPsi),
-                    resolveInstance(clsPsi)
+                    resolveClsRefPsiCls(clsPsi),
+                    resolveInstPsiCls(clsPsi)
                 ))
                 .fop(cls -> opt(cls.findMethodByName(met))));
     }

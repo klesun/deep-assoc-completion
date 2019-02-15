@@ -140,7 +140,7 @@ public class FieldRes extends Lang
      */
     public It<DeepType.Key> getPublicProps(Mt mt, Project proj)
     {
-        It<DeepType.Key> declared = ArrCtorRes.resolveMtCls(mt, proj)
+        It<DeepType.Key> declared = ArrCtorRes.resolveMtInstCls(mt, proj)
             .fap(cls -> cls.getFields())
             .flt(f -> !f.getModifier().isPrivate())
             .map(f -> {

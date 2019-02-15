@@ -8,7 +8,6 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
@@ -44,13 +43,17 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         };
     }
 
-    private static LookupElement makeLookup(PhpClassMember member)
+    private static LookupElementBuilder makeBase(String name, PhpType psType)
     {
-        LookupElementBuilder base = LookupElementBuilder.create(member.getName())
+        return LookupElementBuilder.create(name)
             .bold()
             .withIcon(AssocKeyPvdr.getIcon())
-            .withTypeText(member.getType().filterUnknown().toString());
+            .withTypeText(psType.filterUnknown().toString());
+    }
 
+    private static LookupElement makeLookup(PhpClassMember member, boolean isStatic)
+    {
+        LookupElementBuilder base = makeBase(member.getName(), member.getType());
         return Opt.fst(
             () -> Tls.cast(Method.class, member)
                 .map(m -> base
@@ -60,7 +63,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                     ")", true))
             ,
             () -> Tls.cast(Field.class, member)
-                .map(f -> base
+                .map(f -> makeBase((isStatic ? "$" : "") + member.getName(), member.getType())
                     .withTailText(opt(f.getDefaultValue())
                         .map(def -> " = " + Tls.singleLine(def.getText(), 50)).def(""), true))
         ).def(base);
@@ -100,22 +103,32 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                 .withTypeText("from __get()"));
     }
 
-    private It<? extends LookupElement> resolveObj(PhpExpression ref, FuncCtx funcCtx, boolean isStaticRef)
+    private It<LookupElement> getPubKups(PhpClass cls, FuncCtx funcCtx, boolean isStatic)
+    {
+        It<? extends PhpClassMember> mems = list(
+            It(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
+            It(cls.getFields())
+        ).fap(a -> a);
+        return mems
+            .flt(fld -> fld.getModifier().isPublic())
+            .flt(fld -> isStatic == fld.getModifier().isStatic())
+            .map(m -> makeLookup(m, isStatic))
+            .cct(getMagicProps(cls, funcCtx)
+                .fap(t -> makeMagicLookup(t)));
+    }
+
+    private It<? extends LookupElement> resolveObj(PhpExpression ref, FuncCtx funcCtx)
     {
         Mt mt = funcCtx.findExprType(ref).wap(Mt::new);
-        return ArrCtorRes.resolveMtCls(mt, ref.getProject())
-            .fap(cls -> {
-                It<? extends PhpClassMember> mems = list(
-                    It(cls.getMethods()).flt(m -> !m.getName().startsWith("__")),
-                    It(cls.getFields())
-                ).fap(a -> a);
-                return mems
-                    .flt(fld -> fld.getModifier().isPublic())
-                    .flt(fld -> isStaticRef == fld.getModifier().isStatic())
-                    .map(m -> makeLookup(m))
-                    .cct(getMagicProps(cls, funcCtx)
-                        .fap(t -> makeMagicLookup(t)));
-            }).cct(getAssignedProps(mt).map(a -> a));
+        return It.cnc(
+            ArrCtorRes.resolveMtInstCls(mt, ref.getProject())
+                .fap(cls -> getPubKups(cls, funcCtx, false))
+            ,
+            ArrCtorRes.resolveMtClsRefCls(mt, ref.getProject())
+                .fap(cls -> getPubKups(cls, funcCtx, true))
+            ,
+            getAssignedProps(mt).map(a -> a)
+        );
     }
 
     @Override
@@ -139,9 +152,8 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                 .fop(toCast(MemberReference.class))
                 .fap(mem -> opt(mem.getClassReference())
                     // no point in deep resolution if it's an explicit class
-                    .flt(objRef -> !(objRef instanceof ClassReferenceImpl)
-                                || objRef.getText().equals("$this"))
-                    .fap(ref -> resolveObj(ref, funcCtx, mem.isStatic())));
+                    .flt(objRef -> !objRef.getText().equals("$this"))
+                    .fap(ref -> resolveObj(ref, funcCtx)));
             times.put("iteratorDone", System.nanoTime() - startTime);
         }
         Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()).arr());

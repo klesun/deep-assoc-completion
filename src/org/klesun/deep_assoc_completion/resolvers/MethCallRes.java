@@ -256,10 +256,13 @@ public class MethCallRes extends Lang
                     // same as self::, either does not resolve it at all
                     .flt(typ -> obj.getText().equals("static"))
                     .fap(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, obj.getProject())),
-                () -> It.cnc(
-                    ArrCtorRes.resolveIdeaTypeCls(obj.getType(), obj.getProject()),
-                    new ArrCtorRes(ctx).resolveObjCls(obj)
-                )
+                () -> {
+                    Mt mt = new Mt(ctx.findExprType(obj));
+                    Project proj = fieldRef.getProject();
+                    return fieldRef.isStatic()
+                            ? ArrCtorRes.resolveMtClsRefCls(mt, proj)
+                            : ArrCtorRes.resolveMtInstCls(mt, proj);
+                }
             ))
             .unq()
             .fap(cls -> cls.getMethods())

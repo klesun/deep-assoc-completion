@@ -24,8 +24,6 @@ import static org.klesun.lang.Lang.*;
  * IDEA already provides such functionality, but only when you pass
  * such array somewhere where it is explicitly said to be `callable`
  * this provider, on the other hand, resolves method  _always_
- *
- * not sure hat it is still relevant now, that there is ArrFuncRefCbtr.java...
  */
 public class ArrFuncRefNamePvdr extends CompletionProvider<CompletionParameters>
 {
@@ -51,11 +49,11 @@ public class ArrFuncRefNamePvdr extends CompletionProvider<CompletionParameters>
             .flt(params -> literal.isEquivalentTo(params.get(1).getFirstChild()))
             .fop(params -> params.gat(0))
             .fap(clsPsi -> It.cnc(
-                ArrCtorRes.resolveClass(clsPsi)
+                ArrCtorRes.resolveClsRefPsiCls(clsPsi)
                     .fap(cls -> It(cls.getMethods()))
                     .flt(meth -> meth.isStatic()),
                 new ArrCtorRes(new ExprCtx(funcCtx, clsPsi, 0))
-                    .resolveInstance(clsPsi)
+                    .resolveInstPsiCls(clsPsi)
                     .fap(cls -> It(cls.getMethods()))
                     .flt(meth -> meth.getMethodType(false) != Method.MethodType.CONSTRUCTOR)
                     .flt(meth -> !meth.isStatic()))
