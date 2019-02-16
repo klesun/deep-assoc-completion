@@ -5,6 +5,7 @@ import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.ui.JBColor;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
@@ -17,6 +18,7 @@ import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.It;
 
+import static com.intellij.codeInsight.completion.PrioritizedLookupElement.withPriority;
 import static org.klesun.lang.Lang.*;
 
 /**
@@ -27,16 +29,26 @@ import static org.klesun.lang.Lang.*;
  */
 public class ArrFuncRefNamePvdr extends CompletionProvider<CompletionParameters>
 {
-    private static LookupElement makeLookup(Method method)
+    private static LookupElement makeLookup(Method method, boolean isExact)
     {
-        return LookupElementBuilder.create(method.getName())
-            .bold()
+        LookupElementBuilder looks = LookupElementBuilder.create(method.getName())
+            .withBoldness(isExact)
+            .withItemTextItalic(!isExact)
+            .withTailText(isExact ? "" : " static", true)
             .withIcon(AssocKeyPvdr.getIcon())
             .withTypeText(method.getLocalType(false).filterUnknown().toString());
+        if (!isExact) {
+            looks = looks
+                .withItemTextForeground(JBColor.GRAY);
+        }
+        return looks;
     }
 
-    /** @return type of an associative array with vars to suggest as keys */
-    public static It<Method> resolve(StringLiteralExpression literal, boolean isAutoPopup)
+    /**
+     * @return tuples (method, isExact) - when isExact = false, option should be greyed out, such
+     * options will include static method call on an instance, but not instance method on a class
+     */
+    public static It<T2<Method, Boolean>> resolve(StringLiteralExpression literal, boolean isAutoPopup)
     {
         SearchCtx search = new SearchCtx(literal.getProject())
             .setDepth(AssocKeyPvdr.getMaxDepth(isAutoPopup, literal.getProject()));
@@ -51,22 +63,29 @@ public class ArrFuncRefNamePvdr extends CompletionProvider<CompletionParameters>
             .fap(clsPsi -> It.cnc(
                 ArrCtorRes.resolveClsRefPsiCls(clsPsi)
                     .fap(cls -> It(cls.getMethods()))
-                    .flt(meth -> meth.isStatic()),
+                    .flt(meth -> meth.isStatic())
+                    .map(meth -> T2(meth, true)),
                 new ArrCtorRes(new ExprCtx(funcCtx, clsPsi, 0))
                     .resolveInstPsiCls(clsPsi)
                     .fap(cls -> It(cls.getMethods()))
                     .flt(meth -> meth.getMethodType(false) != Method.MethodType.CONSTRUCTOR)
-                    .flt(meth -> !meth.isStatic()))
+                    .map(meth -> T2(meth, !meth.isStatic())))
             );
     }
 
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        It<Method> methods = opt(parameters.getPosition().getParent())
+        It<T2<Method, Boolean>> methods = opt(parameters.getPosition().getParent())
             .cst(StringLiteralExpressionImpl.class)
             .fap(literal -> resolve(literal, parameters.isAutoPopup()));
 
-        methods.map(m -> makeLookup(m)).fch(result::addElement);
+        methods
+            .map((t, i) -> {
+                int priority = t.b ? 200 - i : 100 - i;
+                LookupElement looks = makeLookup(t.a, t.b);
+                return withPriority(looks, priority);
+            })
+            .fch(result::addElement);
     }
 }

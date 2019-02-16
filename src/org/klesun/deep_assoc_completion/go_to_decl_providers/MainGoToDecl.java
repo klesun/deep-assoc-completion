@@ -41,6 +41,7 @@ public class MainGoToDecl implements GotoDeclarationHandler {
                 .cst(StringLiteralExpressionImpl.class)
                 .fap(lit -> It.cnc(It.non()
                     , ArrFuncRefNamePvdr.resolve(lit, false)
+                        .map(t -> t.a)
                         .flt(meth -> meth.getName().equals(lit.getContents()))
                         .map(a -> a)
                     , StrValsPvdr.resolve(lit, false)
