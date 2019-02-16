@@ -1172,3 +1172,5 @@ Blanc::;
 $blancCls = Blanc::class;
 $blancCls::;
 (new $blancCls)->hates;
+
+method_exists(new Blanc, '');

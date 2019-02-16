@@ -41,6 +41,16 @@ public class UsageResolver extends Lang
             .fap(exp -> fakeCtx.findExprType(exp));
     }
 
+    private It<DeepType> resolveObjMethNames(PsiElement objPsi)
+    {
+        It<DeepType> objTit = Tls.cast(PhpExpression.class, objPsi)
+            .fap(expr -> fakeCtx.findExprType(expr));
+        Mt mt = new Mt(objTit);
+        It<PhpClass> clses = ArrCtorRes.resolveMtCls(mt, objPsi.getProject());
+        return clses.fap(cls -> cls.getMethods())
+            .map(m -> new DeepType(m, PhpType.STRING, m.getName()));
+    }
+
     private static It<ArrayIndex> findUsedIndexes(Function meth, String varName)
     {
         return Tls.findChildren(
@@ -223,6 +233,10 @@ public class UsageResolver extends Lang
                 opt(builtInFunc.getName())
                     .flt(n -> n.equals("array_merge") || n.equals("array_replace"))
                     .fap(n -> resolveReplaceKeys(argList, argOrder)),
+                opt(builtInFunc.getName())
+                    .flt(n -> n.equals("method_exists"))
+                    .flt(n -> argOrder == 1)
+                    .fap(n -> resolveObjMethNames(argList.getParameters()[0])),
                 new ArgTypeDefs(fakeCtx.subCtxEmpty()).getArgType(builtInFunc, argOrder),
                 findKeysUsedInArrayMap(builtInFunc, argList, argOrder)
             ));
