@@ -123,4 +123,9 @@ public class ExprCtx implements IExprCtx {
         children.add(nextCtx);
         return It(nextCtx.findExprType(expr));
     }
+
+    public int getDepth()
+    {
+        return depth;
+    }
 }

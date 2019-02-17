@@ -8,10 +8,11 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocToken;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
+import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
+import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.completion_providers.*;
-import org.klesun.deep_assoc_completion.completion_providers.ArrayColumnPvdr;
 
 import static org.klesun.lang.Lang.opt;
 import static org.klesun.lang.Lang.toCast;

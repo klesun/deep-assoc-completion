@@ -12,6 +12,7 @@ import com.jetbrains.php.lang.psi.elements.GroupStatement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.Statement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.resolvers.other_plugin_integration.DeepAssocApi;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -119,7 +120,7 @@ public class DocParamRes extends Lang
         }
     }
 
-    public static Opt<It<DeepType>> parseExpression(String expr, Project project, IExprCtx docCtx)
+    public static It<DeepType> parseExpression(String expr, Project project, IExprCtx docCtx)
     {
         // adding "$arg = " so anonymous functions were parsed as expressions
         expr = EXPR_PREFIX + expr + EXPR_POSTFIX;
@@ -130,30 +131,29 @@ public class DocParamRes extends Lang
             .fop(toCast(Statement.class))
             .map(st -> st.getFirstChild())
             .fop(toCast(PhpExpression.class))
-            .map(ex -> docCtx.findExprType(ex));
+            .fap(ex -> docCtx.findExprType(ex));
     }
 
-    private Opt<It<DeepType>> parseDoc(PhpDocTag doc, Project project)
+    private It<DeepType> parseDoc(PhpDocTag doc, Project project)
     {
         String tagValue = doc.getTagValue();
         IExprCtx docCtx = ctx.subCtxEmpty(doc);
-        return Opt.fst(
-            () -> Tls.regex("^\\s*=\\s*(.+)$", tagValue)
+        return It.cnc(
+            Tls.regex("^\\s*=\\s*(.+)$", tagValue)
                 .fop(matches -> matches.gat(0))
-                .fop(expr -> parseExpression(expr, project, docCtx)),
-            () -> opt(doc.getParent())
+                .fap(expr -> parseExpression(expr, project, docCtx)),
+            DeepAssocApi.inst().parseDoc(tagValue, doc),
+            opt(doc.getParent())
                 .fop(toCast(PhpDocComment.class))
                 .fop(full -> getDocCommentText(full))
                 .fap(clean -> parseMiraObjPropertyDoc(clean))
                 .flt(prop -> nameMatches(prop, doc))
                 .fop(prop -> propDescToType(prop.desc, doc))
-                .wap(types -> opt(types))
-                .flt(types -> types.has())
         );
     }
 
     public It<DeepType> resolve(PhpDocTag doc)
     {
-        return parseDoc(doc, doc.getProject()).fap(a -> a);
+        return parseDoc(doc, doc.getProject());
     }
 }
