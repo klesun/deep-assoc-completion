@@ -1419,6 +1419,17 @@ class ExactKeysUnitTest
         ];
     }
 
+    /** @param $jsData = at('index.js').makeCustomer() */
+    public function provideJsVarInDoc($jsData)
+    {
+        $jsData[''];
+        $list[] = [$jsData, ['name', 'money', 'loyalty', 'friends', 'sales']];
+        $list[] = [$jsData['friends'][0], ['name', 'money', 'loyalty', 'friends', 'sales']];
+        $jsData['sales'][0][''];
+        $list[] = [$jsData['sales'][0], ['dt', 'product', 'price']];
+        return $list;
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
