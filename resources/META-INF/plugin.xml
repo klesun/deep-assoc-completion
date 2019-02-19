@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.02.16.001</version>
+    <version>2019.02.19.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,9 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Provide meth name completion in method_exists($obj, "methName") (and all calls leading to it)</li>
-        <li>Suggest static methods as well in `[$this, "doStuff"] (greyed out)`</li>
-        <li>Fix: do not suggest instance methods on a class reference</li>
+        <li>Add ability to register custom doc type info provider from a different plugin (for deep-js-completion)</li>
     </ul>
     ]]>
     </change-notes>
