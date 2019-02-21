@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.02.19.001</version>
+    <version>2019.02.21.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Add ability to register custom doc type info provider from a different plugin (for deep-js-completion)</li>
+        <li>#50 Provide string enum value completion in an array key as well (Not just when you pass this string directly to a function)</li>
     </ul>
     ]]>
     </change-notes>
