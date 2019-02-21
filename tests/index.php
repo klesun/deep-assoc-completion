@@ -1174,3 +1174,28 @@ $blancCls::;
 (new $blancCls)->hates;
 
 method_exists(new Blanc, '');
+
+
+class SomeClass1337
+{
+    /**
+     *
+     * @param string $directory
+     *
+     * @param array  $options  = [
+     *                         "sort_by" => ["name","type","modified_time","accessed_tim","changed_type"][$i]
+     *                         ]
+     * @return array
+     */
+    public static function directories($directory = "", $options = [])
+    {
+        if ($options['sort_by'] === '') {
+
+        }
+    }
+
+    public static function main()
+    {
+        self::directories('/var/www', ['sort_by' => 'accessed_tim']);
+    }
+}
