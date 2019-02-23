@@ -82,26 +82,26 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
     <actions>
 
 
-        <group id="DeepAssocCompletionGroup" popup="true" text="deep-assoc-completion">
+        <group id="DeepCompletionGroup" popup="true" text="deep-completion">
 
-            <action id="ShowDeepType" text="Show Deep Type"
+            <action id="ShowDeepType" text="Show deep-assoc Type"
                     class="org.klesun.deep_assoc_completion.entry.ShowDocs"
                     description="A shame, looks like lang.documentationProvider does not work for PHP, so i have to implement new action to print var info"
             >
                 <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt Q"/>
             </action>
 
-            <action id="RunDeepKeyTest" text="Run Deep Keys Test"
+            <action id="RunDeepAssocTest" text="Run deep-assoc Test"
                     class="org.klesun.deep_assoc_completion.entry.RunTest"
                     description="Try to interpret current file as test suite and TESTTESTTEST"
             />
 
-            <action id="GoToNthTest" text="To N-th Test"
+            <action id="GoToNthPhpTest" text="To N-th phpunit Test"
                     class="org.klesun.deep_assoc_completion.entry.GoToNthTest"
                     description="Go to PHPUnit test case by number (place caret inside @dataProvider function before usage)"
             />
 
-            <action id="TranspileToNodeJs" text="Transpile to JS code"
+            <action id="TranspilePhpToNodeJs" text="Transpile PHP to JS code"
                     class="org.klesun.deep_assoc_completion.entry.transpile.TranspileToNodeJs"
                     description="Convert stuff like `['a' => 5]` to `{'a': 5}`, keep unsupported constructs unchanged"
             />
