@@ -8,8 +8,10 @@ class Plutia
     const TOY_ROBO = 'toyRobo';
     const TOY_FROG = 'toyFrog';
 
-    public function pierceStuffAnimal()
+    /** @param $a = 'asdasd' */
+    public function pierceStuffAnimal($a)
     {
+        $a === '';
         return 'squeek!';
     }
 }

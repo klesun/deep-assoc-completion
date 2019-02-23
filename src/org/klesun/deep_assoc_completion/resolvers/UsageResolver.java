@@ -246,7 +246,12 @@ public class UsageResolver extends Lang
     // if arg is string - will return type of values it can take
     public It<DeepType> findExprTypeFromUsage(PhpExpression arrCtor)
     {
-        return opt(arrCtor.getParent())
+        // assoc array in an assoc array
+        It<DeepType> asAssocKey = opt(arrCtor.getParent())
+            .fop(toCast(PhpPsiElementImpl.class))
+            .fap(val -> resolveOuterArray(val).types);
+
+        It<DeepType> asFuncArg = opt(arrCtor.getParent())
             .fop(toCast(ParameterList.class))
             .fap(argList -> {
                 int order = L(argList.getParameters()).indexOf(arrCtor);
@@ -266,6 +271,8 @@ public class UsageResolver extends Lang
                         findBuiltInArgType(meth, order, argList)
                     ));
             });
+
+        return It.cnc(asAssocKey, asFuncArg);
     }
 
     private It<DeepType> findVarTypeFromUsage(PhpNamedElement caretVar)
@@ -330,7 +337,7 @@ public class UsageResolver extends Lang
         FuncCtx funcCtx = new FuncCtx(fakeSearch);
         IExprCtx fakeCtx = new ExprCtx(funcCtx, arrCtor, 0);
 
-        return list(
+        return It.cnc(
             findExprTypeFromUsage(arrCtor),
             opt(arrCtor.getParent())
                 .fop(toCast(BinaryExpression.class))
@@ -346,11 +353,7 @@ public class UsageResolver extends Lang
                 .fap(var -> It.cnc(
                     new VarRes(fakeCtx).getDocType(var),
                     findVarTypeFromUsage(var)
-                )),
-            // assoc array in an assoc array
-            opt(arrCtor.getParent())
-                .fop(toCast(PhpPsiElementImpl.class))
-                .fap(val -> resolveOuterArray(val).types)
-        ).fap(a -> a).wap(Mt::new);
+                ))
+        ).wap(Mt::new);
     }
 }
