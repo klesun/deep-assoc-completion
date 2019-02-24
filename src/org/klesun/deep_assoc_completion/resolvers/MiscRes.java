@@ -84,7 +84,7 @@ public class MiscRes extends Lang
             .cst(PhpExpression.class)
             .fap(expr -> ctx.findExprType(expr))
             .fap(t -> opt(t.stringValue))
-            .map(path -> LocalFileSystem.getInstance().findFileByPath(path))
+            .fap(path -> opt(LocalFileSystem.getInstance().findFileByPath(path)))
             .fap(f -> opt(PsiManager.getInstance(casted.getProject()).findFile(f)))
             .fap(f -> Tls.findChildren(f, GroupStatement.class).fst())
             .fap(block -> ClosRes.findFunctionReturns(block))
