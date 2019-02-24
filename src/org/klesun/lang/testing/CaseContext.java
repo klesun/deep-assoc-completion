@@ -10,7 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.klesun.lang.Lang.list;
+import static org.klesun.lang.Lang.*;
 
 public class CaseContext
 {
@@ -38,10 +38,10 @@ public class CaseContext
                 .flt(k -> k.keyType.getNames().any(n -> n.equals(subKey)));
 
             if (!havingKey.has()) {
-                logger.logErrShort();
+                logger.logErrShort(som(subKey));
                 errors.add(new Error(this, "No such key: " + subKey));
             } else {
-                logger.logSucShort();
+                logger.logSucShort(som(subKey));
             }
         }));
 
@@ -57,18 +57,18 @@ public class CaseContext
             if (expectedAll.contains(actualKey)) {
                 if (absentKeys.contains(actualKey)) {
                     absentKeys.remove(actualKey);
-                    logger.logSucShort();
+                    logger.logSucShort(som(actualKey));
                 }
             } else {
                 if (!unexpectedKeys.contains(actualKey)) {
                     unexpectedKeys.add(actualKey);
-                    logger.logErrShort();
+                    logger.logErrShort(som(actualKey));
                 }
             }
         }
         if (!absentKeys.isEmpty()) {
             errors.add(new Error(this, "Result does not have expected keys: " + Tls.implode(", ", Lang.L(absentKeys))));
-            logger.logErrShort();
+            logger.logErrShort(som(It(absentKeys).str(", ")));
         }
         if (!unexpectedKeys.isEmpty()) {
             errors.add(new Error(this, "Result has unexpected keys: " + Tls.implode(", ", Lang.L(unexpectedKeys))));

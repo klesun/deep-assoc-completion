@@ -1430,6 +1430,16 @@ class ExactKeysUnitTest
         return $list;
     }
 
+    /** @param $data = require('someNonExistingFile.php') */
+    public function provideRequireNotExisting($data)
+    {
+        $data[''];
+        // should not cause IllegalArgumentException
+        return [
+            [$data + ['a' => 1], ['a']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

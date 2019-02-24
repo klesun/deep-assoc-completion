@@ -79,7 +79,7 @@ public class RunTest extends AnAction
                         .getKey(null).getStringValues().arr();
                     It<String> actualKeys = tuple.b.getTypes().fap(t -> t.keys).fap(k -> k.keyType.getNames());
                     if (expectedKeys.size() == 0) {
-                        logger.logErrShort();
+                        logger.logErrShort(non());
                         return list(new Error(tuple.a, "Expected keys are empty"));
                     }
                     try {

@@ -30,6 +30,7 @@ public class Logger
     private float balloonUpdatedAt = 0.000f;
     private Balloon currentBalloon;
     private Opt<CaseContext> caseContext = non();
+    private Opt<String> currentKey = non();
 
     public Logger()
     {
@@ -48,7 +49,7 @@ public class Logger
             String summary = "ERRs: " + this.errCnt + "; OKs: " + this.sucCnt + " in " + seconds + " s. \n";
             if (caseContext.has()) {
                 CaseContext ctx = caseContext.unw();
-                summary += ctx.dataProviderName + "#" + ctx.testNumber + "\n";
+                summary += ctx.dataProviderName + "#" + ctx.testNumber + (currentKey.map(k -> " " + k).def("")) + "\n";
             }
             currentBalloon = JBPopupFactory.getInstance()
                 .createHtmlTextBalloonBuilder("<pre>" + summary + this.wholeText + "</pre>", MessageType.INFO, null)
@@ -101,14 +102,16 @@ public class Logger
         logMsg(msg);
     }
 
-    public void logErrShort()
+    public void logErrShort(Opt<String> key)
     {
+        this.currentKey = key;
         printWrapped("E");
         ++errCnt;
     }
 
-    public void logSucShort()
+    public void logSucShort(Opt<String> key)
     {
+        this.currentKey = key;
         printWrapped(".");
         ++sucCnt;
     }
@@ -119,8 +122,7 @@ public class Logger
         this.flushed = true;
         this.logMsg("");
         msgs.fch(this::logErr);
-        double seconds = (System.nanoTime() - startTime) / 1000000000.0;
-        this.logMsg("Done testing with " + this.errCnt + " errors and " + this.sucCnt + " OK-s in " + seconds + " s. \n");
+        this.logMsg("Done\n");
         updateBalloon();
     }
 
@@ -134,7 +136,8 @@ public class Logger
                 ind.stop();
             }
             public void onCanceled(@NotNull ProgressIndicator progressIndicator) {
-                logMsg("Process cancelled");
+                logMsg("\nProcess cancelled");
+                updateBalloon();
             }
         });
     }
