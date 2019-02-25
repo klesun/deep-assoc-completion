@@ -205,13 +205,12 @@ public class TranspileToNodeJs extends AnAction
         // TODO: put instance properties in constructor - node does not allow properties directly in class body
         // TODO: `$typeToData['privateFare'][0] ?? null` -> `($typeToData['privateFare'] || {})[0] || null`
         // TODO: `if (!$atfqInfo = this.parseAtfqLine($line)) {` -> `if (!($atfqInfo = this.parseAtfqLine($line))) {`
-        // TODO: `[static::class, 'parseFopModifier']` -> `a => this.parseFopModifier(a)` or `a => this.prototype.parseFopModifier(a)`
-        // TODO: process whole directories, not just one file
         // TODO: `[1,2,3] === [1,2,3]` -> `php.equals([1,2,3], [1,2,3], true)`
         // TODO: `if ($value)` -> `if (!php.empty($value))` because arrays:
         //         if ()
         //         ?:
         //         $value && $value2
+        // TODO: `[static::class, 'parseFopModifier']` -> `a => this.parseFopModifier(a)` or `a => this.prototype.parseFopModifier(a)`
         Iterable<String> result = It.frs(() -> It.non()
             , () -> Tls.cast(LeafPsiElement.class, psi)
                 .map(leaf ->
@@ -306,7 +305,7 @@ public class TranspileToNodeJs extends AnAction
                         return typed.getText();
                     } else {
                         String content = typed.getContents();
-                        return Tls.regex("\\/(.+)\\/([a-z]{0,3})", content)
+                        return Tls.regex("\\/(.*[^\\\\])\\/([a-z]{0,3})", content)
                             .map(m -> "/" + m.get(0) + "/" + m.get(1)) // '/\s*/i' -> /\s*/i
                             .def("'" + StringEscapeUtils.escapeJavaScript(typed.getContents()) + "'");
                     }
