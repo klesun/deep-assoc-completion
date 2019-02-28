@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.02.24.001</version>
+    <version>2019.02.28.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,9 +38,9 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Fix null-pointer exception when require() in a phpdoc references not existing file</li>
-        <li>Refactor and improve tests UI (Make it show status in real time instead of waiting 9+ seconds till popup appears. Also make core classes public so that other plugins could reuse them)</li>
-        <li>Rename _Tools -> deep-assoc-completion_ to _Tools -> deep-completion_ (So that deep-js could use it instead of creating more useless entries in the menu)</li>
+        <li>#63 Allow specifying magic @method doc return type (<a href="https://github.com/klesun/deep-assoc-completion/issues/63#issuecomment-468389649">format</a>)</li>
+        <li>#64 Make sure DeepSettings.inst() never returns null</li>
+        <li>(sorry, #65, it's less than a week, but I needed this prod...)</li>
     </ul>
     ]]>
     </change-notes>
