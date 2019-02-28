@@ -259,8 +259,8 @@ public class MethCallRes extends Lang
                     Mt mt = new Mt(ctx.findExprType(obj));
                     Project proj = fieldRef.getProject();
                     return fieldRef.isStatic()
-                            ? ArrCtorRes.resolveMtClsRefCls(mt, proj)
-                            : ArrCtorRes.resolveMtInstCls(mt, proj);
+                        ? ArrCtorRes.resolveMtClsRefCls(mt, proj)
+                        : ArrCtorRes.resolveMtInstCls(mt, proj);
                 }
             ))
             .unq()
@@ -272,16 +272,14 @@ public class MethCallRes extends Lang
         return mit;
     }
 
-    private Opt<It<Method>> resolveMethodFromCall(MethodReferenceImpl call)
+    private It<Method> resolveMethodFromCall(MethodReferenceImpl call)
     {
-        return Opt.fst(() -> opt(null)
-            , () -> opt(findReferenced(call)).flt(found -> found.has())
-            , () -> opt(It(call.multiResolve(false)))
-                .map(l -> l.map(v -> v.getElement()))
-                .map(l -> l.fop(toCast(Method.class)))
-                .flt(l -> l.has())
-            , () -> opt(resolveMethodsNoNs(call, ctx))
-                .flt(l -> l.has())
+        return It.frs(
+            () -> findReferenced(call),
+            () -> It(call.multiResolve(false))
+                .fap(v -> opt(v.getElement()))
+                .cst(Method.class),
+            () -> resolveMethodsNoNs(call, ctx)
         );
     }
 
@@ -289,7 +287,6 @@ public class MethCallRes extends Lang
     {
         IExprCtx funcCtx = ctx.subCtxDirect(funcCall);
         return resolveMethodFromCall(funcCall)
-            .fap(funcs -> funcs)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
                 findBuiltInRetType(func, funcCtx, funcCall)
