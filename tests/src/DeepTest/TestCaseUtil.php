@@ -3,7 +3,11 @@ namespace DeepTest;
 
 /**
  * @property $reimuResult = Result::makeOk(new ReimuHakurei())
- * @property string $asdasdasd asdassd
+ * @method array flush(int $limit) = ['status' => 'OK', 'affected_rows' => 284]
+ * @method info() = [
+ *     'connections' => 27,
+ *     'uptime_seconds' => '3675',
+ * ]
  */
 class PersonStorage
 {

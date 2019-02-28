@@ -134,14 +134,19 @@ public class DocParamRes extends Lang
             .fap(ex -> docCtx.findExprType(ex));
     }
 
-    private It<DeepType> parseDoc(PhpDocTag doc, Project project)
+    public It<DeepType> parseEqExpression(String eqExpr, PsiElement sourcePsi)
+    {
+        IExprCtx docCtx = ctx.subCtxEmpty(sourcePsi);
+        return Tls.regex("^\\s*=\\s*(.+)$", eqExpr)
+            .fop(matches -> matches.gat(0))
+            .fap(expr -> parseExpression(expr, sourcePsi.getProject(), docCtx));
+    }
+
+    private It<DeepType> parseDoc(PhpDocTag doc)
     {
         String tagValue = doc.getTagValue();
-        IExprCtx docCtx = ctx.subCtxEmpty(doc);
         return It.cnc(
-            Tls.regex("^\\s*=\\s*(.+)$", tagValue)
-                .fop(matches -> matches.gat(0))
-                .fap(expr -> parseExpression(expr, project, docCtx)),
+            parseEqExpression(tagValue, doc),
             DeepAssocApi.inst().parseDoc(tagValue, doc),
             opt(doc.getParent())
                 .fop(toCast(PhpDocComment.class))
@@ -154,6 +159,6 @@ public class DocParamRes extends Lang
 
     public It<DeepType> resolve(PhpDocTag doc)
     {
-        return parseDoc(doc, doc.getProject());
+        return parseDoc(doc);
     }
 }

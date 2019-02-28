@@ -1210,13 +1210,24 @@ class ExactKeysUnitTest
     public function providePropDocComment()
     {
         $storage = new PersonStorage();
+
+        // from @method doc tag
+        $flushed = $storage->flush(20000);
+        $flushed['affected_rows'];
+        $info = $storage->info();
+        $info[''];
+
+        // from @property doc tag
         $reimu = $storage->reimuResult;
         $storage->pnrData[''];
         $reimu->unwrap()->demandDonuts()[''];
+
         return [
             [$storage->pnrData, ['reservation', 'currentPricing']],
             [$storage->pnrData['currentPricing'], ['pricingList']],
             [$reimu->unwrap()->demandDonuts(), ['patience', 'amount', 'consequences']],
+            [$flushed, ['status', 'affected_rows']],
+            [$info, ['connections', 'uptime_seconds']],
         ];
     }
 

@@ -240,6 +240,11 @@ public class Tls extends Lang
         return Tls.substr(Tls.implode(" ", lines), 0, length);
     }
 
+    public static String singleLine(String text)
+    {
+        return singleLine(text, 60);
+    }
+
     public static boolean isNum(String str)
     {
         return regex("^\\d+$", str).has();

@@ -6,9 +6,12 @@ import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.PhpIndex;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
+import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.structures.DeepType;
@@ -213,6 +216,20 @@ public class MethCallRes extends Lang
             return impls.fap(m -> It.cnc(
                 opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
                     .fap(tag -> parseReturnDoc(tag, finalCtx)),
+                Tls.cast(PhpDocMethod.class, meth)
+                    .fap(doc -> opt(doc.getParent())
+                        .cst(PhpDocMethodTag.class)
+                        .fap(tag -> {
+                            // text after signature _on same line_
+                            String descrPart = It(tag.getChildren())
+                                .flt(psi -> (psi + "").equals("DOC_METHOD_DESCR"))
+                                .map(psi -> psi.getText()).str("");
+                            // text on following lines
+                            String valuePart = tag.getTagValue();
+                            String fullDescr = descrPart + "\n" + valuePart;
+                            return new DocParamRes(finalCtx)
+                                .parseEqExpression(fullDescr, doc);
+                        })),
                 opt(m.getReturnType()).fap(rt -> list(new DeepType(rt, rt.getType()))),
                 ClosRes.getReturnedValue(m, finalCtx)
             ));
