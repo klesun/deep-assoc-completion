@@ -1,7 +1,10 @@
 <?php
 namespace DeepTest;
 
-/** @property  $reimuResult = Result::makeOk(new ReimuHakurei()) */
+/**
+ * @property $reimuResult = Result::makeOk(new ReimuHakurei())
+ * @property string $asdasdasd asdassd
+ */
 class PersonStorage
 {
     /** @var $pnrData = ['reservation' => [], 'currentPricing' => ['pricingList' => []]] */

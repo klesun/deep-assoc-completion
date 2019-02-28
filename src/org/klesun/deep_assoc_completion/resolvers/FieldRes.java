@@ -4,6 +4,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocProperty;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocPropertyTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.FieldImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
@@ -103,7 +105,12 @@ public class FieldRes extends Lang
             .fap(doc -> opt(doc.getVarTag()))
             .fap(docTag -> new DocParamRes(implCtx).resolve(docTag));
 
-        return It.cnc(defTs, docTs);
+        It<DeepType> magicTs = Tls.cast(PhpDocProperty.class, resolved)
+            .fap(prop -> opt(prop.getParent()))
+            .cst(PhpDocPropertyTag.class)
+            .fap(tag -> new DocParamRes(ctx).resolve(tag));
+
+        return It.cnc(defTs, docTs, magicTs);
     }
 
     private It<DeepType> declsToTypes(FieldReferenceImpl fieldRef, It<Field> declarations)
@@ -111,17 +118,9 @@ public class FieldRes extends Lang
         return declarations
             .fap(resolved -> {
                 It<DeepType> explTypes = declToExplTypes(resolved);
-
-                It<DeepType> magicPropTs = opt(resolved.getContainingClass())
-                    .fap(cls -> opt(cls.getDocComment()))
-                    .fap(doc -> doc.getPropertyTags())
-                    .flt(tag -> opt(tag.getProperty()).flt(pro -> pro.getName().equals(fieldRef.getName())).has())
-                    .fap(tag -> new DocParamRes(ctx).resolve(tag));
-
                 It<Assign> asses = getAssignments(resolved, fieldRef);
-
                 return It.cnc(
-                    explTypes, magicPropTs,
+                    explTypes,
                     AssRes.assignmentsToTypes(asses)
                 );
             });
