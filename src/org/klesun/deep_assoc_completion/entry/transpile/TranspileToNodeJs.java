@@ -130,7 +130,8 @@ public class TranspileToNodeJs extends AnAction
     private String transpileFunction(Function typed)
     {
         It<PsiElement> stats = Tls.findChildren(typed, GroupStatement.class)
-            .fst().fap(gr -> It(gr.getStatements()));
+            .fst().fap(gr -> getChildrenWithLeaf(gr))
+            .flt(leaf -> !leaf.getText().equals("{"));
         L<PsiElement> args = L(typed.getParameters());
         String name = typed.getName();
         name = "__construct".equals(name) ? "constructor" : name;
@@ -151,12 +152,11 @@ public class TranspileToNodeJs extends AnAction
             .map(meth -> meth.isStatic() ? "static " : "").def("");
         Boolean isMeth = Tls.cast(Method.class, typed).has();
         return mods + name + "("
-            + args.map(st -> trans(st)).str(", ")
+            + args.map(arg -> trans(arg)).str(", ")
             + ") " + (isMeth ? "" : "=>") + " {\n"
             + (usedVars.size() == 0 ? "" :
                 getStIndent(typed) + "    let " + Tls.implode(", ", usedVars.map(v -> "$" + v)) + ";\n")
-            + stats.map(st -> getIndent(st) + trans(st)).str("\n")
-            + "\n" + getStIndent(typed) + "}";
+            + stats.map(st -> trans(st)).str("");
     }
 
     private Opt<String> transpileArray(ArrayCreationExpression typed)
@@ -230,7 +230,6 @@ public class TranspileToNodeJs extends AnAction
 
         // TODO: class constants and static properties
         // TODO: put instance properties in constructor - node does not allow properties directly in class body
-        // TODO: `$typeToData['privateFare'][0] ?? null` -> `($typeToData['privateFare'] || {})[0] || null`
         // TODO: `if (!$atfqInfo = this.parseAtfqLine($line)) {` -> `if (!($atfqInfo = this.parseAtfqLine($line))) {`
         // TODO: `[1,2,3] === [1,2,3]` -> `php.equals([1,2,3], [1,2,3], true)`
         // TODO: `if ($value)` -> `if (!php.empty($value))` because arrays:
