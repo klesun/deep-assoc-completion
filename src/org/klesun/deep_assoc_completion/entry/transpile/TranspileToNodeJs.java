@@ -206,6 +206,22 @@ public class TranspileToNodeJs extends AnAction
             }));
     }
 
+    /**
+     * @param nullableExpr = $arr['optKey1']['optKey2']['optKey3']
+     * @return = (($arr['optKey1'] || {})['optKey2'] || {})['optKey3']
+     */
+    private String safeKeys(PsiElement nullableExpr)
+    {
+        return opt(nullableExpr)
+            .cst(ArrayAccessExpression.class)
+            // variable supposedly should have been null-checked before being accessed
+            .flt(acc -> !opt(acc.getValue()).any(v -> v instanceof Variable))
+            .fop(acc -> opt(acc.getIndex()).map(idx -> {
+                return "(" + safeKeys(acc.getValue()) + " || {})[" + idx.getText() + "]";
+            }))
+            .def(trans(nullableExpr));
+    }
+
     private String trans(PsiElement psi)
     {
         if (psi == null) {
@@ -356,6 +372,13 @@ public class TranspileToNodeJs extends AnAction
                 .flt(tern -> tern.isShort())
                 .map(tern -> trans(tern.getCondition()) +
                     " || " + trans(tern.getFalseVariant()))
+            , () -> Tls.cast(BinaryExpression.class, psi)
+                .flt(bin -> som("??").equals(opt(bin.getOperation()).map(o -> o.getText())))
+                .map(coal -> {
+                    String fallback = trans(coal.getRightOperand());
+                    return safeKeys(coal.getLeftOperand()) +
+                        (fallback.equals("null") ? "" : " || " + fallback);
+                })
         );
         return It(result).def(getChildrenWithLeaf(psi)
             .map(c -> trans(c))).str("");
