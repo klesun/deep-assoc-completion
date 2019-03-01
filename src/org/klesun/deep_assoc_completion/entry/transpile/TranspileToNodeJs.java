@@ -8,12 +8,16 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.fileTypes.PlainTextLanguage;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.ProjectScope;
 import com.jetbrains.php.lang.psi.PhpElementType;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
@@ -29,13 +33,15 @@ import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 
 import static org.klesun.lang.Lang.*;
 
 public class TranspileToNodeJs extends AnAction
 {
-    private static It<PsiElement> removeClsMods(It<PsiElement> clsParts)
+    private It<PsiElement> removeClsMods(It<PsiElement> clsParts)
     {
         //for (PsiElement psi: clsParts) {
             //System.out.println("zhopa type " + psi.getNode().getElementType().getClass() + " " + psi.getNode().getElementType());
@@ -50,7 +56,7 @@ public class TranspileToNodeJs extends AnAction
                 ;
     }
 
-    private static It<PsiElement> getChildrenWithLeaf(PsiElement psi)
+    private It<PsiElement> getChildrenWithLeaf(PsiElement psi)
     {
         PsiElement next = psi.getFirstChild();
         return It(() -> new Iterator<PsiElement>() {
@@ -66,15 +72,20 @@ public class TranspileToNodeJs extends AnAction
         });
     }
 
-    private static String makeImport(PhpReference pathPsi, Boolean fromRoot)
+    private String getRootPath(PsiElement pathPsi)
     {
-        String path = pathPsi.getText().replace("\\", "/");
-        String root = Tls.findParent(pathPsi, PhpNamespace.class, a -> true)
+        return Tls.findParent(pathPsi, PhpNamespace.class, a -> true)
             .map(ns -> L(ns.getChildren()).cst(PhpNamespaceReference.class)
                 .map(nsref -> L(nsref.getText().split("\\\\"))
                     .map(dirname -> "..").str("/")).fst().def(""))
             .map(ns -> ns + "/..") // current dir is a separate PSI
             .def("");
+    }
+
+    private String makeImport(PhpReference pathPsi, Boolean fromRoot)
+    {
+        String path = pathPsi.getText().replace("\\", "/");
+        String root = getRootPath(pathPsi);
         if (fromRoot && !path.startsWith("/")) {
             path = "/" + path;
         }
@@ -85,7 +96,7 @@ public class TranspileToNodeJs extends AnAction
         }
     }
 
-    private static Opt<String> transpileImport(PhpUseListImpl lst)
+    private Opt<String> transpileImport(PhpUseListImpl lst)
     {
         return It(lst.getDeclarations())
             .fal(usePsi -> opt(usePsi.getTargetReference())
@@ -97,7 +108,7 @@ public class TranspileToNodeJs extends AnAction
             .map(vals -> vals.itr().str("\n"));
     }
 
-    private static String getIndent(PsiElement psi)
+    private String getIndent(PsiElement psi)
     {
         return opt(psi.getPrevSibling())
             .cst(PsiWhiteSpaceImpl.class)
@@ -106,7 +117,7 @@ public class TranspileToNodeJs extends AnAction
             .def("");
     }
 
-    private static String getStIndent(PsiElement psi)
+    private String getStIndent(PsiElement psi)
     {
         return It.cnc(som(psi), Tls.getParents(psi))
             .fap(par -> opt(par.getPrevSibling())
@@ -116,7 +127,7 @@ public class TranspileToNodeJs extends AnAction
             .fst().def("");
     }
 
-    private static String transpileFunction(Function typed)
+    private String transpileFunction(Function typed)
     {
         It<PsiElement> stats = Tls.findChildren(typed, GroupStatement.class)
             .fst().fap(gr -> It(gr.getStatements()));
@@ -148,7 +159,7 @@ public class TranspileToNodeJs extends AnAction
             + "\n" + getStIndent(typed) + "}";
     }
 
-    private static Opt<String> transpileArray(ArrayCreationExpression typed)
+    private Opt<String> transpileArray(ArrayCreationExpression typed)
     {
         L<ArrayHashElement> hashes = L(typed.getHashElements());
         if (hashes.size() > 0) {
@@ -160,7 +171,7 @@ public class TranspileToNodeJs extends AnAction
         }
     }
 
-    private static String transpileCatch(Catch typed)
+    private String transpileCatch(Catch typed)
     {
         Opt<Catch> prevCatch = Tls.findPrevSibling(typed, Catch.class);
         if (prevCatch.has()) {
@@ -173,7 +184,7 @@ public class TranspileToNodeJs extends AnAction
             + "}";
     }
 
-    private static Opt<String> transpileForeach(ForeachImpl typed)
+    private Opt<String> transpileForeach(ForeachImpl typed)
     {
         It<PsiElement> stats = Tls.findChildren(typed, GroupStatement.class)
             .fst().fap(gr -> It(gr.getStatements()));
@@ -195,7 +206,7 @@ public class TranspileToNodeJs extends AnAction
             }));
     }
 
-    private static String trans(PsiElement psi)
+    private String trans(PsiElement psi)
     {
         if (psi == null) {
             return "";
@@ -250,9 +261,11 @@ public class TranspileToNodeJs extends AnAction
             , () -> Tls.cast(PhpClass.class, psi)
                 .fap(cls -> {
                     It<PsiElement> parts = getChildrenWithLeaf(cls);
-                    return removeClsMods(parts)
+                    It<String> builtins = som("const php = require('" + getRootPath(cls) + "/php.js');\n").itr();
+                    It<String> strParts = removeClsMods(parts)
                         .map(part -> trans(part))
                         .cct(som("\nmodule.exports = " + cls.getName() + ";"));
+                    return It.cnc(builtins, strParts);
                 })
             , () -> Tls.cast(PhpUseListImpl.class, psi)
                 .fap(typed -> transpileImport(typed))
