@@ -316,7 +316,7 @@ public class TranspileToNodeJs extends AnAction
                         String preArgs = L(args).sub(0, 2).map(arg -> trans(arg)).str(", ");
                         String matchesVar = args[2].getText();
                         String postArgs = L(args).sub(3).map(arg -> ", " + trans(arg)).str("");
-                        return som(matchesVar + " = php.preg_match_all(" + preArgs + ", " + matchesVar + " = []" + postArgs + ")");
+                        return som("php.preg_match_all(" + preArgs + ", " + matchesVar + " = []" + postArgs + ")");
                     } else {
                         return opt(typed.getName()).flt(n -> !"".equals(n))
                             .map(n -> "php." + n + "(" + trans(typed.getParameterList()) + ")");
