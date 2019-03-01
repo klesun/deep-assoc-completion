@@ -18,12 +18,10 @@ import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
+import com.jetbrains.php.lang.parser.parsing.classes.ClassConstant;
 import com.jetbrains.php.lang.psi.PhpElementType;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
-import com.jetbrains.php.lang.psi.elements.impl.ConstantReferenceImpl;
-import com.jetbrains.php.lang.psi.elements.impl.ForeachImpl;
-import com.jetbrains.php.lang.psi.elements.impl.PhpUseListImpl;
+import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.FuncCallRes;
@@ -276,12 +274,20 @@ public class TranspileToNodeJs extends AnAction
             , () -> Tls.cast(PhpClass.class, psi)
                 .fap(cls -> {
                     It<PsiElement> parts = getChildrenWithLeaf(cls);
-                    It<String> builtins = som("const php = require('" + getRootPath(cls) + "/php.js');\n").itr();
-                    It<String> strParts = removeClsMods(parts)
-                        .map(part -> trans(part))
-                        .cct(som("\nmodule.exports = " + cls.getName() + ";"));
-                    return It.cnc(builtins, strParts);
+                    return It.cnc(
+                        som("const php = require('" + getRootPath(cls) + "/php.js');\n"),
+                        removeClsMods(parts)
+                            .map(part -> trans(part)),
+                        It(cls.getFields())
+                            .flt(fld -> fld.isConstant() || fld.getModifier().isStatic())
+                            .map(fld -> "\n" + cls.getName() + "." + fld.getName() + " = " +
+                                opt(fld.getDefaultValue()).map(v -> trans(v)).def(null) + ";"),
+                        som("\nmodule.exports = " + cls.getName() + ";")
+                    );
                 })
+            , () -> Tls.cast(PhpPsiElementImpl.class, psi)
+                .flt(miscPsi -> miscPsi.getText().startsWith("const "))
+                .map(a -> "") // should have been handled by PhpClass
             , () -> Tls.cast(PhpUseListImpl.class, psi)
                 .fap(typed -> transpileImport(typed))
             , () -> Tls.cast(PhpModifierList.class, psi)
