@@ -10,11 +10,15 @@
  */
 
 let util = require('util');
+let {safe} = require('../Utils/Misc.js');
 
 let php = {};
 
-let empty = (value) => !value || +value === 0 ||
-	(typeof value === 'object') && Object.keys(value).length === 0;
+let empty = (value) =>
+	!value || (
+	(typeof value === 'object')
+		? Object.keys(value).length === 0
+		: +value === 0);
 
 let strval = (value) => value === null || value === false || value === undefined ? '' : value + '';
 
@@ -24,15 +28,67 @@ php.PREG_PATTERN_ORDER = 1;
 php.PREG_SET_ORDER = 2;
 
 php.empty = empty;
+php.get_class = (value) => value ? (value.constructor || {}).name || null : null;
 php.is_null = (value) => value === null || value === undefined;
+php.is_string = (value) => typeof value === 'string';
 php.intval = (value) => +value;
 php.boolval = (value) => empty(value) ? true : false;
+php.abs = (value) => Math.abs(value);
 php.isset = (value) => value !== null && value !== undefined;
 php.is_array = val => Array.isArray(val) || isPlainObject(val);
 php.is_integer = str => {
 	let n = Math.floor(Number(str));
 	return n !== Infinity && String(n) === str;
-} ;
+};
+// partial implementation
+let equals = (a, b, strict) => {
+	let occurrences = new Set();
+	let equalsImpl = (a, b) => {
+		if (strict && a === b) {
+			return true;
+		} else if (!strict && a == b) {
+			// there are probably some discrepancies
+			// between js == and php == - should check one day
+			return true;
+		} else if (occurrences.has(a) || occurrences.has(b)) {
+			// circular reference, it probably could happen in js
+			return false;
+		} else if (Array.isArray(a) && Array.isArray(b)) {
+			if (a.length !== b.length) {
+				return false;
+			} else {
+				occurrences.add(a);
+				occurrences.add(b);
+				for (let i = 0; i < a.length; ++i) {
+					if (!equalsImpl(a[i], b[i])) {
+						return false;
+					}
+				}
+				return true;
+			}
+		} else {
+			return false;
+		}
+	};
+	return equalsImpl(a, b);
+};
+php.equals = equals;
+php.is_numeric = str => +str + '' === str;
+php.floor = (num) => Math.floor(num);
+php.max = (...args) => {
+	if (args.length === 1 && Array.isArray(args[0])) {
+		return Math.max(...args[0]);
+	} else {
+		return Math.max(...args);
+	}
+};
+php.min = (...args) => {
+	if (args.length === 1 && Array.isArray(args[0])) {
+		return Math.min(...args[0]);
+	} else {
+		return Math.min(...args);
+	}
+};
 
 php.call_user_func = (func, arg) => normFunc(func)(arg);
 php.json_encode = (str) => JSON.stringify(str);
@@ -45,20 +101,14 @@ php.json_decode = (str) => str ? JSON.parse(str) : null;
 php.strtotime = (dtStr) => {
 	if (dtStr === 'now') {
 		return Date.now() / 1000;
-	} else if (dtStr.match(/^\d{4}-\d{2}-\d{2}(\d{2}:\d{2}:\d{2})?$/)) {
+	} else if (dtStr.match(/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}:\d{2})?$/)) {
 		return Date.parse(dtStr + ' Z') / 1000;
+	} else if (dtStr.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d*|)Z$/)) {
+		return Date.parse(dtStr) / 1000;
 	} else if (dtStr.match(/^\d{2}:\d{2} [AP]M$/)) {
 		return Date.parse('2016-01-01 ' + dtStr + ' Z') / 1000;
 	} else {
-		throw new Error('Unsupported date str format - ' + dtStr);
-	}
-};
-let safe = f => {
-	try {
-		return f();
-	} catch (exc) {
-		//throw exc;
-		return null;
+		throw new Error('Unsupported date str format - ' + JSON.stringify(dtStr));
 	}
 };
 php.date = (format, epoch) => {
@@ -76,6 +126,18 @@ php.date = (format, epoch) => {
 		return safe(() => dtObj.toISOString().slice('2018-'.length, '2018-12-05'.length));
 	} else if (format === 'H:i') {
 		return safe(() => dtObj.toISOString().slice('2018-12-05T'.length, '2018-12-05T22:13'.length));
+	} else if (format === 'y') {
+		return safe(() => dtObj.toISOString().slice('20'.length, '2018'.length));
+	} else if (format === 'my') {
+		return safe(() => dtObj.toISOString().slice('2018-'.length, '2018-12'.length)
+						+ dtObj.toISOString().slice('20'.length, '2018'.length));
+	} else if (format === 'Y') {
+		return safe(() => dtObj.toISOString().slice(0, '2018'.length));
+	} else if (format === 'dM') {
+		return safe(() => {
+        let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+		return ('00' + dtObj.getUTCDate()).slice(-2) + months[dtObj.getUTCMonth()];
+		});
 	} else {
 		throw new Error('Unsupported date format - ' + format);
 	}
@@ -113,8 +175,10 @@ php.rtrim = (str, chars = ' \n\t') => {
 };
 php.trim = (value, chars = ' \n\t') => php.ltrim(php.rtrim(value, chars), chars);
 php.strval = strval;
+php.floatval = num => +num;
 php.strtoupper = (value) => strval(value).toUpperCase();
-php.substr = (str, from, length) => str.slice(from, length !== undefined ? from + length : undefined);
+php.strtolower = (value) => strval(value).toLowerCase();
+php.substr = (str, from, length) => strval(str).slice(from, length !== undefined ? from + length : undefined);
 php.mb_substr = php.substr; // simple substr() behaves a bit differently with unicode, but nah
 php.str_pad = ($input, $pad_length, $pad_string = " ", $pad_type = php.STR_PAD_RIGHT) => {
 	if ($pad_type == php.STR_PAD_RIGHT) {
@@ -125,9 +189,10 @@ php.str_pad = ($input, $pad_length, $pad_string = " ", $pad_type = php.STR_PAD_R
 		throw new Error('Unsupported padding type - ' + $pad_type);
 	}
 };
+php.str_repeat = (str, n) => strval(str).repeat(n);
 
 php.implode = (delim, values) => values.join(delim);
-php.explode = (delim, str) => str.split(delim);
+php.explode = (delim, str) => strval(str).split(delim);
 
 php.ucfirst = str => str.slice(0, 1).toUpperCase() + str.slice(1);
 php.strlen = str => (str + "").length;
@@ -145,12 +210,14 @@ php.strcasecmp = (a, b) =>
 	a.toLowerCase() > b.toLowerCase() ? 1 :
 	a.toLowerCase() < b.toLowerCase() ? -1 : 0;
 
+/** be careful, it does not support '%.02f' format */
 php.sprintf = (template, ...values) => util.format(template, ...values);
 php.strpos = (str, substr) => {
 	let index = str.indexOf(substr);
 	return index > -1 ? index : false;
 };
-php.str_replace = (search, replace, str) => str.replace(search, replace);
+let escapeRegex = (str) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+php.str_replace = (search, replace, str) => str.replace(new RegExp(escapeRegex(search), 'g'), replace);
 php.str_split = (str, size = 1) => {
 	if (size < 1) {
 		throw new Error('Invalid chunk size - ' + size + ', it must be >= 1');
@@ -192,7 +259,7 @@ php.preg_split = (regex, str, limit = -1, flags = 0) => {
 	return str.split(regex);
 };
 php.preg_replace = (pattern, replace, str) => {
-	let reg = new RegExp(pattern);
+	let reg = normReg(pattern);
 	if (!reg.flags.includes('g')) {
 		reg = new RegExp(reg.source, reg.flags + 'g');
 	}
@@ -218,6 +285,7 @@ let normMatch = match => {
 };
 php.preg_match = (pattern, str, dest = [], phpFlags = null) => {
 	pattern = normReg(pattern);
+	str = strval(str);
 	if (phpFlags) {
 		throw new Error('Fourth preg_match argument, php flags, is not supported - ' + phpFlags);
 	} else {
@@ -225,6 +293,7 @@ php.preg_match = (pattern, str, dest = [], phpFlags = null) => {
 		if (matches) {
 			Object.assign(dest, matches);
 		}
+		delete(dest.groups);
 		return matches;
 	}
 };
@@ -265,6 +334,7 @@ php.array_values = (obj) => Object.values(obj);
 php.in_array = (value, arr) => Object.values(arr).indexOf(value) > -1;
 /** @param {Array} arr */
 php.array_shift = (arr) => arr.shift();
+php.array_push = (arr, el) => arr.push(el);
 /** @param {Array} arr */
 php.array_pop = (arr) => arr.pop();
 /** @param {Array} arr */
@@ -276,7 +346,8 @@ php.array_merge = (...arrays) => {
 	let result = arrays.every(arr => Array.isArray(arr)) ? [] : {};
 	for (let arr of arrays) {
 		if (Array.isArray(result)) {
-			result.push(...arr);
+			// php drops numeric indexes on array_merge()
+			result.push(...arr.filter(a => a !== undefined));
 		} else {
 			for (let [k,v] of Object.entries(arr)) {
 				result[k] = v;
@@ -293,6 +364,25 @@ php.array_intersect_key = (source, whitelist) => {
 		}
 	}
 	return newObj;
+};
+php.array_intersect = (arr1, arr2) => {
+	let set2 = new Set(arr2);
+	return Object.values(arr1)
+		.filter(el => set2.has(el));
+};
+php.array_diff = (arr1, arr2) => {
+	let set2 = new Set(arr2);
+	return Object.values(arr1)
+		.filter(el => !set2.has(el));
+};
+php.array_diff_key = (minuend, subtrahend) => {
+	let difference = {};
+	for (let k in minuend) {
+		if (!(k in subtrahend)) {
+			difference[k] = minuend[k];
+		}
+	}
+	return difference;
 };
 php.array_flip = (obj) => {
 	let newObj = {};
@@ -344,7 +434,7 @@ php.array_reverse = (arr) => Object.values(arr).reverse();
 php.array_pad = (array, size, value) => {
 	array = Object.values(array);
 	let absLen = Math.abs(size);
-	let restVals = Array(absLen).fill(value + '');
+	let restVals = Array(absLen).fill(value);
 	if (size > 0) {
 		return array.concat(restVals).slice(0, absLen);
 	} else if (size < 0) {
@@ -353,10 +443,25 @@ php.array_pad = (array, size, value) => {
 		throw new Error('Invalid size value for array_pad - ' + size);
 	}
 };
+php.array_splice = (arr, start, length = undefined) => {
+	if (Array.isArray(arr)) {
+		throw new Error('Tried to splice a non-array - ' + arr);
+	}
+	arr = Object.values(arr);
+	length = length === undefined ? arr.length : length;
+	return arr.splice(start, start + length);
+};
 php.array_slice = (arr, start, length = undefined) => {
 	arr = Object.values(arr);
 	length = length === undefined ? arr.length : length;
 	return arr.slice(start, start + length);
+};
+php.array_sum = (arr) => {
+	let result = 0;
+	for (let value of Object.values(arr)) {
+		result += +value;
+	}
+	return result;
 };
 php.array_column = (arr, key) => {
 	return Object.values(arr).map(el => el[key]);
