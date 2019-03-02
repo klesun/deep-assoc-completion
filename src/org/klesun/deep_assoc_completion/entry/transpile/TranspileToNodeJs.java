@@ -174,7 +174,7 @@ public class TranspileToNodeJs extends AnAction
                 .flt(methName -> els.size() == 2)
                 .fop(methName -> {
                     PhpExpression obj = els.get(0);
-                    if (list("self::class", "static::class", "$this").contains(obj.getText())) {
+                    if (obj.getText().equals("$this") || obj.getText().endsWith("::class")) {
                         obj = Tls.cast(ClassConstantReference.class, obj)
                             .map(ref -> ref.getClassReference()).def(obj);
                         return som("(...args) => " + trans(obj) + "." + methName + "(...args)");
