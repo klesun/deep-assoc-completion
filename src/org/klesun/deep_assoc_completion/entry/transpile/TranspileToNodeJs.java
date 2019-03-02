@@ -165,7 +165,23 @@ public class TranspileToNodeJs extends AnAction
                 .arr().sub(1, -1).map(c -> trans(c)).arr();
             return som("{" + subTokens.str("") +  "}");
         } else {
-            return non();
+            L<PhpExpression> els = It(typed.getChildren())
+                .fap(valuePsi -> opt(valuePsi.getFirstChild()))
+                .cst(PhpExpression.class).arr();
+            return els.gat(1)
+                .cst(StringLiteralExpression.class)
+                .map(lit -> lit.getContents())
+                .flt(methName -> els.size() == 2)
+                .fop(methName -> {
+                    PhpExpression obj = els.get(0);
+                    if (list("self::class", "static::class", "$this").contains(obj.getText())) {
+                        obj = Tls.cast(ClassConstantReference.class, obj)
+                            .map(ref -> ref.getClassReference()).def(obj);
+                        return som("(...args) => " + trans(obj) + "." + methName + "(...args)");
+                    } else {
+                        return non();
+                    }
+                });
         }
     }
 
