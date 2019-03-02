@@ -191,7 +191,13 @@ php.str_pad = ($input, $pad_length, $pad_string = " ", $pad_type = php.STR_PAD_R
 };
 php.str_repeat = (str, n) => strval(str).repeat(n);
 
-php.implode = (delim, values) => values.join(delim);
+php.implode = (delim, values) => {
+	if (values === undefined) {
+		values = delim;
+		delim = '';
+	}
+	return values.join(delim);
+};
 php.explode = (delim, str) => strval(str).split(delim);
 
 php.ucfirst = str => str.slice(0, 1).toUpperCase() + str.slice(1);
@@ -251,12 +257,16 @@ php.PREG_SPLIT_OFFSET_CAPTURE = 2;
 php.preg_split = (regex, str, limit = -1, flags = 0) => {
 	if (limit !== -1) {
 		throw new Error('Unsupported preg_split parameter - limit ' + limit);
-	} else if (flags != php.PREG_SPLIT_DELIM_CAPTURE) {
+	} else if (!(flags & php.PREG_SPLIT_DELIM_CAPTURE)) {
 		// Because in js str.split(...) always includes captures. I guess I could implement a
 		// workaround here, but I'm too lazy, - it's easier to just change (...) to (?:...) everywhere
 		throw new Error('preg_split is only supported with PREG_SPLIT_DELIM_CAPTURE flag');
 	}
-	return str.split(regex);
+	let result = str.split(regex);
+	if (flags & php.PREG_SPLIT_NO_EMPTY) {
+		result = result.filter(a => a);
+	}
+	return result;
 };
 php.preg_replace = (pattern, replace, str) => {
 	let reg = normReg(pattern);
@@ -280,6 +290,8 @@ php.preg_replace_callback = (pattern, callback, str) => {
 let normMatch = match => {
 	if (match) {
 		Object.assign(match, match.groups);
+		delete(match.groups);
+		delete(match.index);
 	}
 	return match;
 };
@@ -431,6 +443,13 @@ php.array_unique = (arr) => {
 	return arr;
 };
 php.array_reverse = (arr) => Object.values(arr).reverse();
+php.array_chunk = (arr, size) => {
+	let chunks = [];
+	for (let i = 0; i < arr.length; i += size) {
+		chunks.push(arr.slice(i, i + size));
+	}
+	return chunks;
+};
 php.array_pad = (array, size, value) => {
 	array = Object.values(array);
 	let absLen = Math.abs(size);
@@ -444,10 +463,9 @@ php.array_pad = (array, size, value) => {
 	}
 };
 php.array_splice = (arr, start, length = undefined) => {
-	if (Array.isArray(arr)) {
+	if (!Array.isArray(arr)) {
 		throw new Error('Tried to splice a non-array - ' + arr);
 	}
-	arr = Object.values(arr);
 	length = length === undefined ? arr.length : length;
 	return arr.splice(start, start + length);
 };
