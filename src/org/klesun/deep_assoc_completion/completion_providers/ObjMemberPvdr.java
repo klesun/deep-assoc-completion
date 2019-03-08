@@ -8,6 +8,7 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.ClassConstImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
@@ -54,6 +55,8 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     private static LookupElement makeLookup(PhpClassMember member, boolean isStatic)
     {
         LookupElementBuilder base = makeBase(member.getName(), member.getType());
+        Boolean isConst = member instanceof ClassConstImpl;
+        String prefix = (isStatic && !isConst ? "$" : "");
         return Opt.fst(
             () -> Tls.cast(Method.class, member)
                 .map(m -> base
@@ -63,7 +66,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                     ")", true))
             ,
             () -> Tls.cast(Field.class, member)
-                .map(f -> makeBase((isStatic ? "$" : "") + member.getName(), member.getType())
+                .map(f -> makeBase(prefix + member.getName(), member.getType())
                     .withTailText(opt(f.getDefaultValue())
                         .map(def -> " = " + Tls.singleLine(def.getText(), 50)).def(""), true))
         ).def(base);

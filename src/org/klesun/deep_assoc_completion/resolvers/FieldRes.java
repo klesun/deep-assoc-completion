@@ -177,6 +177,11 @@ public class FieldRes extends Lang
             () -> getCls.get()
                 .fap(cls -> cls.getFields())
                 .flt(f -> f.getName().equals(fieldRef.getName()))
+                .flt(f -> {
+                    Boolean isDeclConst = f.isConstant();
+                    Boolean isRefConst = fieldRef.isConstant() && fieldRef.isStatic();
+                    return isDeclConst == isRefConst;
+                })
         );
         It<DeepType> dynamicPropTs = It(list());
         It<DeepType> magicPropTs = It(list());

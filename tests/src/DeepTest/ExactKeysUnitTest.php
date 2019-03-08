@@ -1454,4 +1454,42 @@ class ExactKeysUnitTest
     //=============================
     // following are not implemented yet
     //=============================
+
+    public function provideCorrectConstCompletion()
+    {
+        $cls = FooBar::class;
+        ($cls::KEY_2)[''];
+        ($cls::$KEY_2)[''];
+        ($cls::prop)[''];
+        ($cls::$prop)[''];
+        return [
+            // non-existing props, should not be defined by plugin
+            [$cls::$KEY_1, []],
+            [$cls::$KEY_2, []],
+            [$cls::$KEY_3, []],
+            // yes-existing consts, _should_ be defined by plugin
+            [$cls::KEY_1, ['a']],
+            [$cls::KEY_2, ['b']],
+            [$cls::KEY_3, ['c']],
+            // yes-existing prop, _should_ be defined by plugin
+            [$cls::$prop, ['p']],
+            // non-existing const, should not be defined by plugin
+            [$cls::prop, []],
+        ];
+    }
+}
+
+
+class FooBar
+{
+    const KEY_1 = ['a' => 123];
+    const KEY_2 = ['b' => 123];
+    const KEY_3 = ['c' => 123];
+    public static $prop = ['p' => 123];
+
+    public function getFoo(): string
+    {
+        $cls = self::class;
+        return $cls::$KEY_1;
+    }
 }
