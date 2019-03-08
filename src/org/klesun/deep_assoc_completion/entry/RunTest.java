@@ -74,24 +74,25 @@ public class RunTest extends AnAction
                 .fop(file -> findExactKeysTestDataPvdrFuncs(file))
                 .els(() -> System.out.println("Failed to find data-providing functions"))
                 .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
-                .fap(tuple -> {
-                    L<String> expectedKeys = new Mt(tuple.c.getTypes())
+                .fap(tu -> tu.nme((ctx, actual, expected) -> {
+                    L<String> expectedKeys = new Mt(expected.getTypes())
                         .getKey(null).getStringValues().arr();
-                    It<String> actualKeys = tuple.b.getTypes().fap(t -> t.keys).fap(k -> k.keyType.getNames());
-                    if (expectedKeys.size() == 0) {
+                    It<String> actualKeys = actual.getTypes()
+                        .fap(t -> t.keys).fap(k -> k.keyType.getNames());
+                    if (expectedKeys.size() == 0 && !expected.definition.getText().equals("[]")) {
                         logger.logErrShort(non());
-                        return list(new Error(tuple.a, "Expected keys are empty"));
+                        return list(new Error(ctx, "Expected keys are empty"));
                     }
                     try {
                         //logger.logMsg("doing " + tuple.a.dataProviderName + " #" + tuple.a.testNumber);
-                        return tuple.a.testCaseExact(actualKeys, expectedKeys);
+                        return ctx.testCaseExact(actualKeys, expectedKeys);
                     } catch (Throwable exc) {
                         String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
                             + "\n" + Tls.getStackTrace(exc)
                             ;
-                        return list(new Error(tuple.a, msg));
+                        return list(new Error(ctx, msg));
                     }
-                });
+                }));
             It<Error> errors = opt(e.getData(LangDataKeys.PSI_FILE))
                 .fop(file -> findTestDataPvdrFuncs(file))
                 .els(() -> System.out.println("Failed to find data-providing functions"))
