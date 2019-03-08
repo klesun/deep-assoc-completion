@@ -19,6 +19,7 @@ class StringP extends AbstractParamType
     /** @var string - overrides all error messages if defined */
     private $errMsg;
 
+    /** @param $flags = ['optional'] */
     public function __construct(array $flags, array $options)
     {
         parent::__construct($flags);

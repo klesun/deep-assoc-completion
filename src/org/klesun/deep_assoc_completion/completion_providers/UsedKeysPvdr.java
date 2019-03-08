@@ -45,7 +45,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
             .withTypeText(type);
     }
 
-    private static It<LookupElement> makeLookup(DeepType.Key keyEntry)
+    private static It<LookupElement> makeLookup(DeepType.Key keyEntry, Set<String> alreadyDeclared)
     {
         Opt<String> briefVal = keyEntry.getBriefVal();
         String type = keyEntry.getTypes().fst()
@@ -58,6 +58,8 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         }
         final String briefValueF = briefValue;
         return It(keyEntry.keyType.getTypes())
+            .flt(t -> !t.isNumber())
+            .flt(t -> !alreadyDeclared.contains(t.stringValue))
             .unq(t -> t.stringValue)
             .fap((t, i) -> It.cnc(
                 opt(t.stringValue)
@@ -101,18 +103,21 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         long startTime = System.nanoTime();
-        It<DeepType.Key> usedKeys = assertArrCtorKey(parameters.getPosition())
-            .fap(arrCtor -> {
-                Set<String> alreadyDeclared = It(arrCtor.getHashElements())
-                    .fop(el -> opt(el.getKey()))
-                    .fop(toCast(StringLiteralExpressionImpl.class))
-                    .map(lit -> lit.getContents()).wap(tit -> new HashSet<>(tit.arr()));
-                return resolve(arrCtor, parameters.isAutoPopup())
+        Opt<ArrayCreationExpression> arrCtorOpt = assertArrCtorKey(parameters.getPosition());
 
-                    .types.fap(t -> t.keys.flt(k -> k.keyType.getNames().any(n -> !alreadyDeclared.contains(n))));
-            });
+        Set<String> alreadyDeclared = arrCtorOpt
+            .fap(arrCtor -> arrCtor.getHashElements())
+            .fop(el -> opt(el.getKey()))
+            .fop(toCast(StringLiteralExpressionImpl.class))
+            .map(lit -> lit.getContents())
+            .wap(tit -> new HashSet<>(tit.arr()));
 
-        usedKeys.fap(k -> makeLookup(k))
+        It<DeepType.Key> usedKeys = arrCtorOpt
+            .fap(arrCtor -> resolve(arrCtor, parameters.isAutoPopup())
+                .types.fap(t -> t.keys));
+
+        usedKeys
+            .fap(k -> makeLookup(k, alreadyDeclared))
             // to preserve order
             .unq(l -> l.getLookupString())
             .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, 3000 - i))
