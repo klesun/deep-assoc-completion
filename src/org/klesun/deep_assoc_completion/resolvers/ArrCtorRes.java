@@ -46,14 +46,13 @@ public class ArrCtorRes extends Lang
     private static It<PhpClass> resolveIdeaTypeClsRelaxed(It<PhpType> ideaTypeTit, Project project)
     {
         MemIt<PhpType> ideaTypes = ideaTypeTit.mem();
-        It<PhpClass> resolved = ideaTypes.fap(tpe -> resolveIdeaTypeCls(tpe, project));
-        if (!resolved.has()) {
+        return It.frs(
+            () -> ideaTypes.fap(tpe -> resolveIdeaTypeCls(tpe, project)),
             // allow to omit namespace in php doc class references
-            return ideaTypes
+            () -> ideaTypes
                 .fap(it -> ideaTypeToFqn(it))
-                .fap(fqn -> MemRes.findClsByFqnPart(fqn, project));
-        }
-        return resolved;
+                .fap(fqn -> MemRes.findClsByFqnPart(fqn, project))
+        );
     }
 
     public static It<PhpClass> resolveMtInstCls(Mt mtArg, Project project)

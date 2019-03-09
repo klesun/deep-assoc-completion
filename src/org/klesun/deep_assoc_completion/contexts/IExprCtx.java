@@ -38,6 +38,7 @@ public interface IExprCtx {
     Opt<PsiElement> getFakeFileSource();
     Map<PsiFile, Collection<FieldReferenceImpl>> getFieldRefCache();
     Opt<Project> getProject();
+    SearchCtx getSearch();
     int getDepth();
 
     It<DeepType> findExprType(PhpExpression expr);

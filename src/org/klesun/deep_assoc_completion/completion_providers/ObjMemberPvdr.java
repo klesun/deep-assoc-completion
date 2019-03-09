@@ -145,7 +145,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         SearchCtx search = new SearchCtx(parameters)
             .setDepth(AssocKeyPvdr.getMaxDepth(parameters));
 
-        Dict<Long> times = new Dict<>(list());
+        Dict<String> times = new Dict<>(list());
         It<? extends LookupElement> options = It(list());
         Boolean hasBuiltIns = builtIns.any(b -> !"class".equals(b.getLookupString()));
         if (!hasBuiltIns || !parameters.isAutoPopup()) {
@@ -157,20 +157,20 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                     // no point in deep resolution if it's an explicit class
                     .flt(objRef -> !objRef.getText().equals("$this"))
                     .fap(ref -> resolveObj(ref, funcCtx)));
-            times.put("iteratorDone", System.nanoTime() - startTime);
+            times.put("iteratorDone", (System.nanoTime() - startTime) / 1000000000.0 + " " + search.getExpressionsResolved() + " ex.");
         }
         Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()).arr());
         options
             .flt(l -> !suggested.contains(l.getLookupString()))
             .fch((el, i) -> {
                 if (i == 0) {
-                    times.put("firstSuggested", System.nanoTime() - startTime);
+                    times.put("firstSuggested", (System.nanoTime() - startTime) / 1000000000.0 + " " + search.getExpressionsResolved() + " ex.");
                 }
                 result.addElement(el);
             });
-        times.put("allSuggested", System.nanoTime() - startTime);
+        times.put("allSuggested", (System.nanoTime() - startTime) / 1000000000.0 + " " + search.getExpressionsResolved() + " ex.");
         result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions: " +
-            Tls.implode(", ", L(times.entrySet()).map(e -> e.getKey() + " in " + e.getValue() / 1000000000.0 + " sec")));
+            Tls.implode(", ", L(times.entrySet()).map(e -> e.getKey() + " in " + e.getValue())));
         result.addAllElements(builtIns); // add built-in after ours, this is important
     }
 }

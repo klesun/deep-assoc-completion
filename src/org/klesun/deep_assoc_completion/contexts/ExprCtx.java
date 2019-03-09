@@ -95,6 +95,9 @@ public class ExprCtx implements IExprCtx {
     public Opt<Project> getProject() {
         return funcCtx.getSearch().project;
     }
+    public SearchCtx getSearch() {
+        return funcCtx.getSearch();
+    }
 
     public Map<PsiFile, Collection<FieldReferenceImpl>> getFieldRefCache() {
         return funcCtx.getSearch().fileToFieldRefs;
