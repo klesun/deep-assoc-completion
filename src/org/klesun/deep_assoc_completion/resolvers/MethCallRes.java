@@ -5,21 +5,19 @@ import com.intellij.database.model.ObjectKind;
 import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiWhiteSpace;
 import com.jetbrains.php.PhpIndex;
-import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.MethodReference;
-import com.jetbrains.php.lang.psi.elements.PhpClass;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.resolvers.mem_res.MemRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
@@ -244,60 +242,21 @@ public class MethCallRes extends Lang
     {
         String cls = opt(call.getClassReference()).map(c -> c.getText()).def("");
         String mth = opt(call.getName()).def("");
-        if (cls.equals("self") || cls.equals("static") || cls.equals("$this")) {
-            Opt<PsiElement> contextPsi = ctx.getFakeFileSource()
-                .fap(tag -> Tls.getParents(tag).cct(som(tag)))
-                .cst(PhpDocComment.class)
-                .fap(doc -> Tls.getNextSiblings(doc))
-                .flt(sib -> !(sib instanceof PsiWhiteSpace))
-                .fst()
-                .elf(() -> ctx.getFakeFileSource());
-            cls = contextPsi
-                .fap(doc -> Tls.getParents(doc).cct(som(doc)))
-                .cst(PhpClass.class)
-                .map(clsPsi -> clsPsi.getFQN())
-                .fst().def(cls);
-        }
         return MethCallRes.resolveMethodsNoNs(cls, mth, call.getProject());
     }
 
     private static It<Method> resolveMethodsNoNs(String partialFqn, String func, Project proj)
     {
-        PhpIndex idx = PhpIndex.getInstance(proj);
-        String justName = L(partialFqn.split("\\\\")).lst().unw();
-        return It.cnc(
-            idx.getClassesByName(justName),
-            idx.getInterfacesByName(justName),
-            idx.getTraitsByName(justName)
-        ).flt(cls -> cls.getFQN().endsWith(partialFqn))
+        return MemRes.findClsByFqnPart(partialFqn, proj)
             .fap(cls -> cls.getMethods())
             .flt(m -> Objects.equals(m.getName(), func));
     }
 
     private It<Method> findReferenced(MethodReferenceImpl fieldRef)
     {
-        long startTime = System.nanoTime();
-        It<Method> mit = opt(fieldRef.getClassReference())
-            .fap(obj -> It.frs(
-                () -> ctx.getSelfType()
-                    // IDEA resolves static:: incorrectly, it either treats it
-                    // same as self::, either does not resolve it at all
-                    .flt(typ -> obj.getText().equals("static"))
-                    .fap(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, obj.getProject())),
-                () -> {
-                    Mt mt = new Mt(ctx.findExprType(obj));
-                    Project proj = fieldRef.getProject();
-                    return fieldRef.isStatic()
-                        ? ArrCtorRes.resolveMtClsRefCls(mt, proj)
-                        : ArrCtorRes.resolveMtInstCls(mt, proj);
-                }
-            ))
-            .unq()
+        It<Method> mit = new MemRes(ctx).resolveCls(fieldRef)
             .fap(cls -> cls.getMethods())
             .flt(f -> f.getName().equals(fieldRef.getName()));
-        //mit = mit.arr().itr();
-        double elapsed = (System.nanoTime() - startTime) / 1000000000.0;
-        //System.out.println("found referenceds in " + fieldRef.getName() + " over " + elapsed + " seconds " + fieldRef.getText() + " " + fieldRef.getContainingFile().getName());
         return mit;
     }
 

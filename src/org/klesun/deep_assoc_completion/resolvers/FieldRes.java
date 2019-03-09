@@ -12,6 +12,7 @@ import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.resolvers.mem_res.MemRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.Assign;
@@ -153,6 +154,7 @@ public class FieldRes extends Lang
 
     public It<DeepType> resolve(FieldReferenceImpl fieldRef)
     {
+        MemRes memRes = new MemRes(ctx);
         Tls.OnDemand<Mt> getObjMt = Tls.onDemand(() -> opt(fieldRef.getClassReference())
             .fop(ref -> Opt.fst(
                 () -> ctx.getSelfType()
@@ -163,9 +165,6 @@ public class FieldRes extends Lang
             ))
             .def(Mt.INVALID_PSI));
 
-        Tls.OnDemand<MemIt<PhpClass>> getCls = Tls.onDemand(() -> opt(getObjMt.get())
-            .fap(mt -> ArrCtorRes.resolveMtCls(mt, fieldRef.getProject())).mem());
-
         // declarations taken from IDEA type, without deep resolution,
         // since it would be very long in a laravel project otherwise
         It<Field> briefDecls = It.frs(
@@ -174,7 +173,7 @@ public class FieldRes extends Lang
                 .fap(ref -> It(ref.multiResolve(false)))
                 .map(res -> res.getElement())
                 .fop(toCast(Field.class)),
-            () -> getCls.get()
+            () -> memRes.resolveCls(fieldRef)
                 .fap(cls -> cls.getFields())
                 .flt(f -> f.getName().equals(fieldRef.getName()))
                 .flt(f -> {
@@ -199,7 +198,7 @@ public class FieldRes extends Lang
             dynamicPropTs = getObjMt.get().types
                 .fap(t -> Mt.getDynaPropSt(t, finalName));
             IExprCtx magicCtx = ctx.subCtxMagicProp(fieldRef);
-            magicPropTs = getCls.get()
+            magicPropTs = memRes.resolveCls(fieldRef)
                 .fap(cls -> opt(fieldRef.getName())
                     .fap(nme -> resolveMagicProp(cls, magicCtx)));
         }

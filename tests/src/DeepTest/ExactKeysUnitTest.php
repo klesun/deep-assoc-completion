@@ -1451,10 +1451,6 @@ class ExactKeysUnitTest
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function provideCorrectConstCompletion()
     {
         $cls = FooBar::class;
@@ -1477,8 +1473,61 @@ class ExactKeysUnitTest
             [$cls::prop, []],
         ];
     }
+
+    public function provideThisInMethDoc()
+    {
+        $user = new users_table();
+        $user->getById(123)[''];
+        $user->getAll()[0][''];
+        $user->jsonSerialize()['nameRecord'][''];
+        $user->paxTypes[0][''];
+        return [
+            [$user->getAll()[0], ['id', 'username']],
+            [$user->jsonSerialize()['nameRecord'], ['lastName', 'firstName', 'number']],
+            [$user->paxTypes[0], ['age', 'ptc', 'fareGroup', 'ageGroup']],
+        ];
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 }
 
+/**
+ * @method getById(int $id) = [
+ *     'id' => 1,
+ *     'username' => 'user_name'
+ * ]
+ * @method getAll() = [
+ *     0 => self::getById(1)
+ * ]
+ * @method jsonSerialize() = [
+ *     'nameRecord' => $this->nameRecord,
+ *     'posts' => ['today is sunny', 'walking my dog', 'eating an icecream'],
+ * ]
+ * @property $paxTypes = [$this->normalizePassengerType()]
+ */
+class users_table {
+    private $nameRecord = [
+        'lastName' => 'Pupkin',
+        'firstName' => 'Vasya',
+        'number' => '4',
+    ];
+
+    private $base = [
+        'age' => 19,
+        'ptc' => 'JCB',
+        'fareGroup' => 'inclusiveBulk',
+    ];
+
+    /** @param $base = $this->base */
+    public function normalizePassengerType($base)
+    {
+        $base[''];
+        $base['ageGroup'] = $base['ptc'] === 'CNN' ? 'child' : 'adult';
+        return $base;
+    }
+}
 
 class FooBar
 {

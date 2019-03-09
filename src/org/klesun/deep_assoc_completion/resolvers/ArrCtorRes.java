@@ -10,10 +10,11 @@ import com.jetbrains.php.lang.psi.elements.impl.ArrayCreationExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassConstantReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
-import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.resolvers.mem_res.MemRes;
+import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
 import java.util.HashSet;
@@ -48,18 +49,9 @@ public class ArrCtorRes extends Lang
         It<PhpClass> resolved = ideaTypes.fap(tpe -> resolveIdeaTypeCls(tpe, project));
         if (!resolved.has()) {
             // allow to omit namespace in php doc class references
-            PhpIndex idx = PhpIndex.getInstance(project);
             return ideaTypes
                 .fap(it -> ideaTypeToFqn(it))
-                .flt(fqn -> !fqn.isEmpty())
-                .fap(clsName -> {
-                    clsName = clsName.replaceAll("^\\\\", "");
-                    return It.cnc(
-                        idx.getClassesByName(clsName),
-                        idx.getInterfacesByName(clsName),
-                        idx.getInterfacesByName(clsName)
-                    );
-                });
+                .fap(fqn -> MemRes.findClsByFqnPart(fqn, project));
         }
         return resolved;
     }
