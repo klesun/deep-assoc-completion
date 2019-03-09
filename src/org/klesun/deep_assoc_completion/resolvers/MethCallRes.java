@@ -5,19 +5,23 @@ import com.intellij.database.model.ObjectKind;
 import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiWhiteSpace;
 import com.jetbrains.php.PhpIndex;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
-import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.Method;
+import com.jetbrains.php.lang.psi.elements.MethodReference;
+import com.jetbrains.php.lang.psi.elements.PhpClass;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
-import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.entry.DeepSettings;
-import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
 
 import java.util.Iterator;
@@ -240,11 +244,19 @@ public class MethCallRes extends Lang
     {
         String cls = opt(call.getClassReference()).map(c -> c.getText()).def("");
         String mth = opt(call.getName()).def("");
-        if (cls.equals("self") || cls.equals("static")) {
-            cls = ctx.getFakeFileSource()
-                .fop(doc -> Tls.findParent(doc, PhpClass.class, a -> true))
+        if (cls.equals("self") || cls.equals("static") || cls.equals("$this")) {
+            Opt<PsiElement> contextPsi = ctx.getFakeFileSource()
+                .fap(tag -> Tls.getParents(tag).cct(som(tag)))
+                .cst(PhpDocComment.class)
+                .fap(doc -> Tls.getNextSiblings(doc))
+                .flt(sib -> !(sib instanceof PsiWhiteSpace))
+                .fst()
+                .elf(() -> ctx.getFakeFileSource());
+            cls = contextPsi
+                .fap(doc -> Tls.getParents(doc).cct(som(doc)))
+                .cst(PhpClass.class)
                 .map(clsPsi -> clsPsi.getFQN())
-                .def(cls);
+                .fst().def(cls);
         }
         return MethCallRes.resolveMethodsNoNs(cls, mth, call.getProject());
     }

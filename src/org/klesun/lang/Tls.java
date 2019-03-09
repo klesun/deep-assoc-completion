@@ -49,6 +49,22 @@ public class Tls extends Lang
         return getStackTrace(new Exception());
     }
 
+    public static It<PsiElement> getNextSiblings(PsiElement psi)
+    {
+        PsiElement next = psi.getNextSibling();
+        return It(() -> new Iterator<PsiElement>() {
+            private PsiElement current = next;
+            public boolean hasNext() {
+                return current != null;
+            }
+            public PsiElement next() {
+                PsiElement prev = current;
+                current = current.getNextSibling();
+                return prev;
+            }
+        });
+    }
+
     public static It<PsiElement> getParents(PsiElement psi)
     {
         PsiElement parent = psi.getParent();
@@ -79,6 +95,13 @@ public class Tls extends Lang
             }
         }
         return opt(null);
+    }
+
+    public static <T extends PsiElement> Opt<T> findParent(
+        PsiElement psi,
+        Class<T> cls
+    ) {
+        return findParent(psi, cls, a -> true);
     }
 
     public static <T extends PsiElement> Opt<T> findPrevSibling(PsiElement psi, Class<T> cls)
