@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.02.28.001</version>
+    <version>2019.03.09.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,9 +38,9 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#63 Allow specifying magic @method doc return type (<a href="https://github.com/klesun/deep-assoc-completion/issues/63#issuecomment-468389649">format</a>)</li>
-        <li>#64 Make sure DeepSettings.inst() never returns null</li>
-        <li>(sorry, #65, it's less than a week, but I needed this prod...)</li>
+        <li>#63 Allow to use self:: and $this-> in @method/@property phpdocs</li>
+        <li>#66 Fix: do not suggest class constants as static fields</li>
+        <li>Optimize: use It.frs() instead of It.has(). Since It.has() caused iteration over first value on every iterator which resulted in Laravel project completion being suggested only after 4 seconds (now first option appears after 200 ms)</li>
     </ul>
     ]]>
     </change-notes>
