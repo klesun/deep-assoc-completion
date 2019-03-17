@@ -47,6 +47,10 @@ public class DeepSettingsForm implements Configurable
 
     @Override
     public boolean isModified() {
+        if (bgTypePvdrEnabled == null) {
+            // will be null if "UI Designer" plugin is disabled during compilation
+            return false;
+        }
         return !getSettings().bgTypePvdrEnabled == bgTypePvdrEnabled.isSelected()
             || !getSettings().removeUnusedImportsOnSaveEnabled == removeUnusedImportsOnSaveEnabled.isSelected()
             || !getSettings().passArgsToImplementations == passArgsToImplementations.isSelected()
