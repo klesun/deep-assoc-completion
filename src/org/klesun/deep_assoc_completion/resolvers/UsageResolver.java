@@ -270,7 +270,7 @@ public class UsageResolver
             .fap(argList -> {
                 int order = L(argList.getParameters()).indexOf(arrCtor);
                 Opt<PsiElement> callOpt = opt(argList.getParent());
-                return resolveFunc(argList)
+                It<DeepType> asRealFuncArg = resolveFunc(argList)
                     .fap(meth -> It.cnc(
                         getImplementations(meth).fap(ipl -> {
                             IExprCtx nextCtx = callOpt.fop(call -> Opt.fst(
@@ -279,11 +279,14 @@ public class UsageResolver
                             )).def(fakeCtx.subCtxEmpty());
                             return findArgTypeFromUsage(ipl, order, nextCtx);
                         }),
-                        opt(argList.getParent())
-                            .fop(toCast(NewExpressionImpl.class))
-                            .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types),
                         findBuiltInArgType(meth, order, argList)
                     ));
+
+                It<DeepType> asMagicCtorArg = opt(argList.getParent())
+                    .fop(toCast(NewExpressionImpl.class))
+                    .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types);
+
+                return It.cnc(asRealFuncArg, asMagicCtorArg);
             });
 
         return It.cnc(asAssocKey, asPlusArr, asFuncArg);

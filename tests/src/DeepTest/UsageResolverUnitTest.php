@@ -482,6 +482,25 @@ class UsageResolverUnitTest
         ];
     }
 
+    private static function provideLaravelModelCtorParams($params)
+    {
+        $competitor = new \App\Orm\Competitor($params);
+        $competitor = new \App\Orm\Competitor([
+            // should suggest: id, created_at, updated_at, spice_left
+            '' => 123,
+        ]);
+        return [
+            'params' => [
+                'id' => [],
+                'created_at' => [],
+                'updated_at' => [],
+                'spice_left' => [],
+                'spice_stolen' => [],
+                'rounds_won' => [],
+            ],
+        ];
+    }
+
     /**
      * @param $field = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][-100]
      */
@@ -726,14 +745,5 @@ class UsageResolverUnitTest
         simplexml_load_string('<root/>', null, '2.9.1');
         simplexml_load_file('<root/>', null, '0');
         preg_last_error() === '';
-    }
-
-    private static function testLaravelModelCtorParams()
-    {
-        // TODO: deos not work anymore, should fix!
-        $competitor = new \App\Orm\Competitor([
-            // should suggest: id, created_at, updated_at, spice_left
-            '' => 123,
-        ]);
     }
 }
