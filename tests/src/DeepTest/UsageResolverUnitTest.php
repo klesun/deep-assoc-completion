@@ -464,6 +464,24 @@ class UsageResolverUnitTest
         ];
     }
 
+    private static function providePdoUsedColonParamsThruLib($params)
+    {
+        $sql = implode(PHP_EOL, [
+            'SELECT * FROM delete_me WHERE name = :name AND price < :price;',
+        ]);
+        \Lib\Db::inst()->exec($sql, $params);
+        \Lib\Db::inst()->exec($sql, [
+            // should suggest: name, price
+            '' => '123',
+        ]);
+        return [
+            'params' => [
+                'name' => [],
+                'price' => [],
+            ],
+        ];
+    }
+
     /**
      * @param $field = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][-100]
      */
@@ -708,17 +726,6 @@ class UsageResolverUnitTest
         simplexml_load_string('<root/>', null, '2.9.1');
         simplexml_load_file('<root/>', null, '0');
         preg_last_error() === '';
-    }
-
-    private static function testPdoUsedColonParamsThruLib()
-    {
-        \Lib\Db::inst()->exec(implode(PHP_EOL, [
-            'SELECT * FROM delete_me WHERE name = :name AND price < :price;',
-        ]), [
-            // TODO: does not work because multiple declarations, should fix!
-            // should suggest: name, price
-            '' => '123',
-        ]);
     }
 
     private static function testLaravelModelCtorParams()

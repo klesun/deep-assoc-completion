@@ -121,7 +121,8 @@ public class UsageResolver
                 () -> Tls.cast(FunctionReference.class, par)
                     .map(call -> call.resolve()),
                 () -> Tls.cast(MethodReferenceImpl.class, par)
-                    .map(call -> call.resolve()),
+                    .fop(call -> It(call.multiResolve(false))
+                        .fap(res -> opt(res.getElement())).fst()),
                 () -> Tls.cast(NewExpressionImpl.class, par)
                     .map(newEx -> newEx.getClassReference())
                     .map(ref -> ref.resolve())
