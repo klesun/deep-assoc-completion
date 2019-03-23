@@ -3,15 +3,19 @@ package org.klesun.deep_assoc_completion.entry;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
+import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
+import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
@@ -43,18 +47,36 @@ public class RunTest extends AnAction
         return meths.has() ? opt(meths) : opt(null);
     }
 
-    private static It<T3<CaseContext, DeepType.Key, DeepType.Key>> parseReturnedTestCase(Method func, Logger logger)
+    private static Opt<It<Method>> findUsageTestDataPvdrFuncs(PsiFile psiFile)
+    {
+        It<Method> meths = It(PhpIndex.getInstance(psiFile.getProject()).getClassesByName("UsageResolverUnitTest"))
+            .fap(cls -> cls.getMethods())
+            .flt(m -> m.getName().startsWith("provide"));
+
+        return meths.has() ? opt(meths) : opt(null);
+    }
+
+    private static IExprCtx makeNewExprCtx(PsiElement psi)
+    {
+        SearchCtx search = new SearchCtx(psi.getProject())
+            .setDepth(AssocKeyPvdr.getMaxDepth(false, psi.getProject()));
+        FuncCtx funcCtx = new FuncCtx(search);
+        ExprCtx exprCtx = new ExprCtx(funcCtx, psi, 0);
+        return exprCtx;
+    }
+
+    private static It<DeepType> getReturnType(Method func)
     {
         return ClosRes.findFunctionReturns(func)
             .map(ret -> ret.getArgument())
             .fop(toCast(PhpExpression.class))
-            .fap(retVal -> {
-                SearchCtx search = new SearchCtx(retVal.getProject())
-                    .setDepth(AssocKeyPvdr.getMaxDepth(false, retVal.getProject()));
-                FuncCtx funcCtx = new FuncCtx(search);
-                return funcCtx.findExprType(retVal);
-            })
-            .fap(t -> Mt.getKeySt(t, null)).arr()
+            .fap(retVal -> makeNewExprCtx(retVal).findExprType(retVal));
+    }
+
+    private static It<T3<CaseContext, DeepType.Key, DeepType.Key>> parseReturnedTestCase(Method func, Logger logger)
+    {
+        return getReturnType(func)
+            .fap(t -> Mt.getKeySt(t, null))
             .fap((rett, i) -> {
                 CaseContext ctx = new CaseContext(logger);
                 ctx.dataProviderName = func.getName();
@@ -63,6 +85,28 @@ public class RunTest extends AnAction
                     .fap(actual -> rett.keys.flt(k -> k.keyType.getNames().any(n -> n.equals("1")))
                         .map(expected -> T3(ctx, actual, expected)));
             });
+    }
+
+    private static It<T3<CaseContext, Mt, Mt>> parseArgTestCase(Method func, Logger logger)
+    {
+        It<DeepType> retit = getReturnType(func);
+        L<String> funcArgNames = It(func.getParameters())
+            .map(par -> par.getName()).arr();
+        return retit.fap(rett -> {
+            It<String> testArgNames = rett.keys.fap(k -> k.keyType.getNames()).unq();
+            return testArgNames.map((argName, i) -> {
+                int argOrder = funcArgNames.indexOf(argName);
+                IExprCtx exprCtx = makeNewExprCtx(func);
+                Mt actual = new UsageResolver(exprCtx, 10)
+                    .findArgTypeFromUsage(func, argOrder, exprCtx.subCtxEmpty())
+                    .wap(Mt::new);
+                Mt expected = Mt.getKeySt(rett, argName).wap(Mt::new);
+                CaseContext caseCtx = new CaseContext(logger);
+                caseCtx.dataProviderName = func.getName();
+                caseCtx.testNumber = i;
+                return T3(caseCtx, actual, expected);
+            });
+        });
     }
 
     @Override
@@ -108,8 +152,32 @@ public class RunTest extends AnAction
                         return list(new Error(tuple.a, msg));
                     }
                 });
+            It<Error> usageErrors = opt(e.getData(LangDataKeys.PSI_FILE))
+                .fop(file -> findUsageTestDataPvdrFuncs(file))
+                .els(() -> System.out.println("Failed to find usage data-providing functions"))
+                .fap(funcs -> funcs.fap(f -> {
+                    It<T3<CaseContext, Mt, Mt>> tests = parseArgTestCase(f, logger);
+                    if (!tests.has()) {
+                        CaseContext ctx = new CaseContext(logger);
+                        String msg = "No tests in provide* function " + f.getName();
+                        logger.logErrShort(som(f.getName()));
+                        return list(new Error(ctx, msg));
+                    } else {
+                        return tests.fap(tuple -> tuple.nme((ctx, actual, expected)-> {
+                            try {
+                                //logger.logMsg("doing " + tuple.a.dataProviderName + " #" + tuple.a.testNumber);
+                                return ctx.testCaseExactFull(actual, expected);
+                            } catch (Throwable exc) {
+                                String msg = "Exception was thrown: " + exc.getClass() + " " + exc.getMessage()
+                                    + "\n" + Tls.getStackTrace(exc)
+                                    ;
+                                return list(new Error(ctx, msg));
+                            }
+                        }));
+                    }
+                }));
 
-            return It.cnc(errors, exactKeyErrors);
+            return It.cnc(usageErrors, errors, exactKeyErrors);
         });
     }
 }
