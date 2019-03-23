@@ -256,6 +256,14 @@ public class UsageResolver
             .fop(toCast(PhpPsiElementImpl.class))
             .fap(val -> resolveOuterArray(val).types);
 
+        It<DeepType> asPlusArr = opt(arrCtor.getParent())
+            .fop(toCast(BinaryExpression.class))
+            .flt(bin -> opt(bin.getOperation()).any(op -> op.getText().equals("+")))
+            .flt(sum -> arrCtor.isEquivalentTo(sum.getRightOperand()))
+            .map(sum -> sum.getLeftOperand())
+            .fop(toCast(PhpExpression.class))
+            .fap(exp -> fakeCtx.findExprType(exp));
+
         It<DeepType> asFuncArg = opt(arrCtor.getParent())
             .fop(toCast(ParameterList.class))
             .fap(argList -> {
@@ -277,7 +285,7 @@ public class UsageResolver
                     ));
             });
 
-        return It.cnc(asAssocKey, asFuncArg);
+        return It.cnc(asAssocKey, asPlusArr, asFuncArg);
     }
 
     private It<DeepType> findVarTypeFromUsage(PhpNamedElement caretVar)
@@ -344,12 +352,6 @@ public class UsageResolver
 
         return It.cnc(
             findExprTypeFromUsage(arrCtor),
-            opt(arrCtor.getParent())
-                .fop(toCast(BinaryExpression.class))
-                .flt(sum -> arrCtor.isEquivalentTo(sum.getRightOperand()))
-                .map(sum -> sum.getLeftOperand())
-                .fop(toCast(PhpExpression.class))
-                .fap(exp -> fakeCtx.findExprType(exp)),
             opt(arrCtor.getParent())
                 .fop(toCast(AssignmentExpression.class))
                 .flt(ass -> arrCtor.isEquivalentTo(ass.getValue()))
