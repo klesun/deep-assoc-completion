@@ -13,16 +13,21 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
-import org.klesun.lang.*;
+import org.klesun.lang.It;
+import org.klesun.lang.L;
+import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.klesun.lang.Lang.*;
 
 /**
  * takes associative array that caret points at and returns
  * all key names that will be accessed on this array later
  */
-public class UsageResolver extends Lang
+public class UsageResolver
 {
     final private IExprCtx fakeCtx;
     final private int depthLeft;
@@ -319,7 +324,7 @@ public class UsageResolver extends Lang
                 } else {
                     int order = It(par.getChildren())
                         .fop(toCast(PhpPsiElementImpl.class))
-                        .arr().indexOf(par);
+                        .arr().indexOf(val);
                     key = order > -1 ? opt(order + "") : opt(null);
                 }
                 Opt<String> keyf = key;
