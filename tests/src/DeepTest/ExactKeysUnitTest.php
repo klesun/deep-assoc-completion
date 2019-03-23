@@ -1488,6 +1488,102 @@ class ExactKeysUnitTest
         ];
     }
 
+    private static function testIndexedArrayCreation()
+    {
+        $records = [
+            ['result' => -100],
+            ['error' => 'lox'],
+        ];
+        // should suggest result
+        $records[0][''];
+        // should suggest error
+        $records[1][''];
+        return [
+            [$records[0], ['result']],
+            [$records[1], ['error']],
+        ];
+    }
+
+    private static function testClosureInference()
+    {
+        $func = function($i) {
+            return [
+                'asdad' => 'asda',
+                'qweq' => $i * 2,
+            ];
+        };
+        $record = $func(123);
+        // should suggest asdad, qweq
+        $record[''];
+        return [
+            [$record, ['asdad', 'qweq']],
+        ];
+    }
+
+    private static function testTupleAccess()
+    {
+        $recordA = ['aField1' => 13, 'aField2' => 234.42];
+        $recordB = ['bField1' => [1,2,3], 'bField2' => 'asdasdd'];
+        $tuple = [$recordA, $recordB];
+        // should suggest aField1, aField2
+        $tuple[0][''];
+        // should suggest bField1, bField2
+        $tuple[1][''];
+        list($restoredA, $restoredB) = $tuple;
+        // should suggest aField1, aField2
+        $restoredA[''];
+        // should suggest bField1, bField2
+        $restoredB[''];
+        return [
+            [$tuple[0], ['aField1', 'aField2']],
+            [$tuple[1], ['bField1', 'bField2']],
+            [$restoredA, ['aField1', 'aFie;d2']],
+            [$restoredB, ['bField1', 'bFie;d2']],
+        ];
+    }
+
+    private static function testLambdaAccess()
+    {
+        $mapped = array_map(function($subject) {
+            return [
+                // should suggest name, priority
+                'name2' => $subject[''].'_2',
+                'priority2' => $subject[''] + 4,
+            ];
+        }, $subjects);
+        // should suggest name2, priority2
+        $mapped[2][''];
+        return [
+            [$mapped[2], ['name2', 'priority']],
+        ];
+    }
+
+    private static function testBasisListAccess()
+    {
+        $makeTax = function($i) {
+            return [
+                'currency' => -'USD',
+                'amount' => 199 + $i,
+            ];
+        };
+        return \array_map($makeTax, [1,2,3]);
+    }
+
+    private static function testListAccess()
+    {
+        $mapped = self::testBasisListAccess();
+        $addTaxCode = function(array $taxRecord) {
+            $taxRecord['taxCode'] = 'YQ';
+            return $taxRecord;
+        };
+        $withTaxCode = array_map($addTaxCode, $mapped);
+        // should suggest currency, amount, taxCode
+        $withTaxCode[0][''];
+        return [
+            [$withTaxCode[0], ['currency', 'amount', 'taxCode']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
