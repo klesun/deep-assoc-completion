@@ -370,20 +370,20 @@ class UsageResolverUnitTest
             ],
             'validationParams' => [
                 'recordLocator' => [
-                    'units' => 'sample',
-                    'value' => 'sample',
+                    'units' => 'qwe_any',
+                    'value' => 'qwe_any',
                 ],
                 'passengers' => [
-                    'units' => 'sample',
-                    'value' => 'sample',
+                    'units' => 'qwe_any',
+                    'value' => 'qwe_any',
                 ],
                 'itinerary' => [
-                    'units' => 'sample',
-                    'value' => 'sample',
+                    'units' => 'qwe_any',
+                    'value' => 'qwe_any',
                 ],
                 'commission' => [
-                    'units' => 'sample',
-                    'value' => 'sample',
+                    'units' => 'qwe_any',
+                    'value' => 'qwe_any',
                 ],
                 null => 'sample',
             ] ?: 'sample',
@@ -707,6 +707,59 @@ class UsageResolverUnitTest
             'params' => [
                 'sort_by' => ["name","type","modified_time","accessed_tim","changed_type"][rand()],
             ],
+        ];
+    }
+
+    /** @param $params = self::normalizeXmlNode() */
+    private static function normalizeXmlNode($params)
+    {
+        return [
+            'asAssocKey' => $params[$params],
+            'tagName' => $params['tagName'] ? $params['tagName'] : '(TextNode)',
+            'attributes' => (array)$params['attributes'],
+            // let's assume it's a code mistake here - plugin still should not fail
+            'children' => self::normalizeXmlNode($params)['children'],
+            'hiddenChildren' => array_map(function($ch){return self::normalizeXmlNode($ch) + [
+                'hiddenStatus' => $ch['hiddenStatus'],
+                'hiddenReason' => $ch['hiddenReason'],
+            ];}, $params['hiddenChildren']),
+        ];
+    }
+
+    public static function provideRandomRecursion($params)
+    {
+        self::normalizeXmlNode($params);
+        self::normalizeXmlNode([
+            ''
+        ]);
+
+        return [
+            'params' => [
+                'asAssocKey' => '(TextNode)' ?: '',
+                'tagName' => null ?: '(TextNode)',
+                'attributes' => [],
+                'children' => [],
+                'hiddenChildren' => [],
+            ] ?: 'asAssocKey' ?: 'tagName' ?: 'attributes' ?: 'children' ?: 'hiddenChildren',
+        ];
+    }
+
+    public function provideUsageCircularReferences($param)
+    {
+        (new \UsageCircularReferencesGetExample())->;
+        (new \UsageCircularReferencesGetExample())->__get('');
+        (new \UsageCircularReferencesGetExample())->__get($param);
+        return [
+            'param' => [
+                0 => 'qwe_any',
+                2 => 'qwe_any',
+                'value' => 'qwe_any',
+                'hujalue' => 'qwe_any',
+                'asdasd' => 'qwe_any',
+                'ololo' => 'qwe_any',
+                'lalala' => 'qwe_any',
+                'asdqwe' => 'qwe_any',
+            ] ?: 0 ?: '' ?: 123,
         ];
     }
 

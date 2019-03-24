@@ -83,6 +83,15 @@ public class CaseContext
     }
 
     public L<Error> testCaseExactFull(Mt actual, Mt expected) {
+        It<String> actualStrVals = actual.types.fap(t -> opt(t.stringValue));
+        L<String> expectedStrVals = expected.types.fap(t -> opt(t.stringValue)).arr();
+
+        if (expectedStrVals.equals(list("qwe_any"))) {
+            // a hack to tell the test that it does not matter what resulting type is
+            // needed for tests where result is a recursive tree structure
+            return list();
+        }
+
         logger.setCaseContext(this);
         L<Error> errors = list();
 
@@ -90,9 +99,6 @@ public class CaseContext
         L<String> expectedKeys = expected.types.fap(t -> t.keys).fap(k -> k.keyType.getNames()).arr();
 
         errors.addAll(testCaseExact(actualKeys, expectedKeys));
-
-        It<String> actualStrVals = actual.types.fap(t -> opt(t.stringValue));
-        L<String> expectedStrVals = expected.types.fap(t -> opt(t.stringValue)).arr();
 
         errors.addAll(testSameStringList(actualStrVals, expectedStrVals, "string values"));
 
