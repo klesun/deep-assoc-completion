@@ -6,6 +6,7 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.ui.JBColor;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ClassConstImpl;
@@ -33,6 +34,8 @@ import static org.klesun.lang.Lang.*;
  */
 public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
 {
+    private boolean hadBuiltIns = false;
+
     private static InsertHandler<LookupElement> makeMethInsertHandler()
     {
         return (ctx, lookup) -> {
@@ -44,15 +47,24 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         };
     }
 
-    private static LookupElementBuilder makeBase(String name, PhpType psType)
+    private LookupElementBuilder makeBase(String name, String psTypeStr)
     {
-        return LookupElementBuilder.create(name)
-            .bold()
+        LookupElementBuilder kup = LookupElementBuilder.create(name)
             .withIcon(AssocKeyPvdr.getIcon())
-            .withTypeText(psType.filterUnknown().toString());
+            .withTypeText(psTypeStr);
+        return hadBuiltIns
+            ? kup
+                .withItemTextForeground(JBColor.GRAY)
+                .withItemTextItalic(true)
+            : kup.bold();
     }
 
-    private static LookupElement makeLookup(PhpClassMember member, boolean isStatic)
+    private LookupElementBuilder makeBase(String name, PhpType psType)
+    {
+        return makeBase(name, psType.filterUnknown().toString());
+    }
+
+    private LookupElement makeLookup(PhpClassMember member, boolean isStatic)
     {
         LookupElementBuilder base = makeBase(member.getName(), member.getType());
         Boolean isConst = member instanceof ClassConstImpl;
@@ -77,7 +89,6 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         return mt.getAssignedProps()
             .fap(prop -> prop.keyType.getNames()
                 .map(name -> LookupElementBuilder.create(name)
-                    .bold()
                     .withIcon(AssocKeyPvdr.getIcon())
                     .withTypeText(prop.getBriefTypes().wap(its -> {
                         PhpType ideaType = new PhpType();
@@ -97,13 +108,10 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                 .findArgTypeFromUsage(__get, 0, ctx));
     }
 
-    private static Opt<LookupElement> makeMagicLookup(DeepType t)
+    private Opt<LookupElement> makeMagicLookup(DeepType t)
     {
         return opt(t.stringValue)
-            .map(propName -> LookupElementBuilder.create(propName)
-                .bold()
-                .withIcon(AssocKeyPvdr.getIcon())
-                .withTypeText("from __get()"));
+            .map(propName -> makeBase(propName, "from __get()"));
     }
 
     private It<LookupElement> getPubKups(PhpClass cls, FuncCtx funcCtx, boolean isStatic)
@@ -140,7 +148,9 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         long startTime = System.nanoTime();
         L<LookupElement> builtIns = list();
         result.runRemainingContributors(parameters, otherSourceResult -> {
-            builtIns.add(otherSourceResult.getLookupElement());
+            LookupElement kup = otherSourceResult.getLookupElement();
+            builtIns.add(kup);
+            result.addElement(kup);
         });
         SearchCtx search = new SearchCtx(parameters)
             .setDepth(AssocKeyPvdr.getMaxDepth(parameters));
@@ -150,6 +160,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         Boolean hasBuiltIns = builtIns.any(b -> !"class".equals(b.getLookupString()));
         if (!hasBuiltIns || !parameters.isAutoPopup()) {
             FuncCtx funcCtx = new FuncCtx(search);
+            hadBuiltIns = hasBuiltIns;
             // IDEA did not resolve the class on it's own - worth trying Deep resolution
             options = opt(parameters.getPosition().getParent())
                 .fop(toCast(MemberReference.class))
@@ -171,6 +182,5 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         times.put("allSuggested", (System.nanoTime() - startTime) / 1000000000.0 + " " + search.getExpressionsResolved() + " ex.");
         result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions: " +
             Tls.implode(", ", L(times.entrySet()).map(e -> e.getKey() + " in " + e.getValue())));
-        result.addAllElements(builtIns); // add built-in after ours, this is important
     }
 }
