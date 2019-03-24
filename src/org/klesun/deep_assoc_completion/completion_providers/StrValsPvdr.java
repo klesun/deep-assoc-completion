@@ -19,6 +19,9 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
+import org.klesun.lang.Opt;
+
+import java.util.Objects;
 
 import static org.klesun.lang.Lang.*;
 
@@ -53,8 +56,8 @@ public class StrValsPvdr extends CompletionProvider<CompletionParameters>
         ));
     }
 
-    /** $type === '' */
-    private static It<DeepType> resolveEqExpr(StringLiteralExpression lit, IExprCtx funcCtx)
+    /** @return - the other operand */
+    public static Opt<PhpExpression> assertEqOperand(PhpExpression lit)
     {
         return opt(lit)
             .map(literal -> literal.getParent()) // BinaryExpressionImpl
@@ -62,10 +65,16 @@ public class StrValsPvdr extends CompletionProvider<CompletionParameters>
             .fap(bin -> opt(bin.getOperation())
                 .flt(op -> op.getText().equals("==") || op.getText().equals("===")
                         || op.getText().equals("!=") || op.getText().equals("!=="))
-                .map(op -> bin.getLeftOperand())
-                .fop(toCast(PhpExpression.class))
-                .fap(exp -> funcCtx.findExprType(exp)))
-            ;
+                .fap(op -> list(bin.getLeftOperand(), bin.getRightOperand())))
+            .cst(PhpExpression.class)
+            .flt(op -> !Objects.equals(op, lit))
+            .fst();
+    }
+
+    /** $type === '' */
+    private static It<DeepType> resolveEqExpr(StringLiteralExpression lit, IExprCtx funcCtx)
+    {
+        return assertEqOperand(lit).fap(exp -> funcCtx.findExprType(exp));
     }
 
     private static It<DeepType> resolveUsedValues(StringLiteralExpression lit, IExprCtx funcCtx)

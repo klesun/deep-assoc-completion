@@ -5,6 +5,7 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.built_in_typedefs.ArgTypeDefs;
+import org.klesun.deep_assoc_completion.completion_providers.StrValsPvdr;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
@@ -267,31 +268,35 @@ public class UsageResolver
 
     // if arg is assoc array - will return type with keys accessed on it
     // if arg is string - will return type of values it can take
-    public It<DeepType> findExprTypeFromUsage(PhpExpression arrCtor)
+    public It<DeepType> findExprTypeFromUsage(PhpExpression caretExpr)
     {
-        Opt<MemIt<DeepType>> fromCache = takeFromCache(arrCtor);
+        Opt<MemIt<DeepType>> fromCache = takeFromCache(caretExpr);
         if (fromCache.has()) {
             return fromCache.unw().itr();
         }
-        putToCache(arrCtor, new MemIt<>(It.non()));
+        putToCache(caretExpr, new MemIt<>(It.non()));
 
         // assoc array in an assoc array
-        It<DeepType> asAssocKey = opt(arrCtor.getParent())
+        It<DeepType> asAssocKey = opt(caretExpr.getParent())
             .fop(toCast(PhpPsiElementImpl.class))
             .fap(val -> resolveOuterArray(val).types);
 
-        It<DeepType> asPlusArr = opt(arrCtor.getParent())
+        It<DeepType> asPlusArr = opt(caretExpr.getParent())
             .fop(toCast(BinaryExpression.class))
             .flt(bin -> opt(bin.getOperation()).any(op -> op.getText().equals("+")))
-            .flt(sum -> arrCtor.isEquivalentTo(sum.getRightOperand()))
+            .flt(sum -> caretExpr.isEquivalentTo(sum.getRightOperand()))
             .map(sum -> sum.getLeftOperand())
             .fop(toCast(PhpExpression.class))
             .fap(exp -> fakeCtx.findExprType(exp));
 
-        It<DeepType> asFuncArg = opt(arrCtor.getParent())
+        Opt<DeepType> asEqStrVal = StrValsPvdr.assertEqOperand(caretExpr)
+            .cst(StringLiteralExpression.class)
+            .map(lit -> new DeepType(lit, PhpType.STRING, lit.getContents()));
+
+        It<DeepType> asFuncArg = opt(caretExpr.getParent())
             .fop(toCast(ParameterList.class))
             .fap(argList -> {
-                int order = L(argList.getParameters()).indexOf(arrCtor);
+                int order = L(argList.getParameters()).indexOf(caretExpr);
                 Opt<PsiElement> callOpt = opt(argList.getParent());
                 It<DeepType> asRealFuncArg = resolveFunc(argList)
                     .fap(meth -> It.cnc(
@@ -312,8 +317,8 @@ public class UsageResolver
                 return It.cnc(asRealFuncArg, asMagicCtorArg);
             });
 
-        MemIt<DeepType> result = It.cnc(asAssocKey, asPlusArr, asFuncArg).mem();
-        putToCache(arrCtor, result);
+        MemIt<DeepType> result = It.cnc(asAssocKey, asEqStrVal, asPlusArr, asFuncArg).mem();
+        putToCache(caretExpr, result);
         return result.itr();
     }
 

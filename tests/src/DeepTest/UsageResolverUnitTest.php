@@ -694,7 +694,7 @@ class UsageResolverUnitTest
      */
     public static function directories($directory = "", $options = [])
     {
-        if ($options['sort_by'] === '') {
+        if ($options['sort_by'] === 'custom') {
 
         }
     }
@@ -705,7 +705,7 @@ class UsageResolverUnitTest
         self::directories('/var/www', ['sort_by' => 'accessed_tim']);
         return [
             'params' => [
-                'sort_by' => ["name","type","modified_time","accessed_tim","changed_type"][rand()],
+                'sort_by' => ["name","type","modified_time","accessed_tim","changed_type","custom"][rand()],
             ],
         ];
     }
@@ -760,6 +760,26 @@ class UsageResolverUnitTest
                 'lalala' => 'qwe_any',
                 'asdqwe' => 'qwe_any',
             ] ?: 0 ?: '' ?: 123,
+        ];
+    }
+
+    private function openFile($path, $operation)
+    {
+        if ($operation === 'read') {
+            // ...
+        } elseif ($operation === 'write') {
+            // ...
+        } elseif ($operation === 'append') {
+            // ...
+        }
+    }
+
+    public function provideEqStrVal($param)
+    {
+        $this->openFile('/var/www/html/index.html', '');
+        $this->openFile('/var/www/html/index.html', $param);
+        return [
+            'param' => 'read' ?: 'write' ?: 'append',
         ];
     }
 
