@@ -51,7 +51,7 @@ public class ShowDocs extends AnAction
                         .fop(toCast(Function.class))
                         .fap(func -> {
                             DeepType arrt = new DeepType(par, PhpType.ARRAY);
-                            It<String> keys = new UsageResolver(exprCtx.subCtxEmpty(), 3)
+                            It<String> keys = new UsageResolver(exprCtx.subCtxEmpty())
                                 .findArgTypeFromUsage(func, order, exprCtx).fap(t -> t.keys).fap(k -> k.keyType.getNames()).unq();
                             keys.fch(k -> arrt.addKey(k, psi));
                             return list(arrt);

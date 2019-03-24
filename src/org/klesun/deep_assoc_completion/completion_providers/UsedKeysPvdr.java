@@ -96,7 +96,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 
-        return new UsageResolver(exprCtx, 3).resolve(lit);
+        return new UsageResolver(exprCtx).resolve(lit);
     }
 
     @Override

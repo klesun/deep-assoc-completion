@@ -9,6 +9,7 @@ import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
@@ -36,6 +37,12 @@ public class UsageResolver
     {
         this.fakeCtx = fakeCtx;
         this.depthLeft = depthLeft;
+    }
+
+    public UsageResolver(IExprCtx fakeCtx)
+    {
+        this(fakeCtx, fakeCtx.getSearch().project.map(proj ->
+            DeepSettings.inst(proj).usageBasedCompletionDepthLimit).def(3));
     }
 
     private It<DeepType> resolveReplaceKeys(ParameterList argList, int order)

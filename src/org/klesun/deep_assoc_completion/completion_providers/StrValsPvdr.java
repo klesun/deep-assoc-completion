@@ -70,7 +70,7 @@ public class StrValsPvdr extends CompletionProvider<CompletionParameters>
 
     private static It<DeepType> resolveUsedValues(StringLiteralExpression lit, IExprCtx funcCtx)
     {
-        return new UsageResolver(funcCtx, 3).findExprTypeFromUsage(lit);
+        return new UsageResolver(funcCtx).findExprTypeFromUsage(lit);
     }
 
     /** in_array($type, ['']) */

@@ -129,7 +129,7 @@ public class ArgRes extends Lang
                                 , () -> It(call.multiResolve(false))
                                     .fop(res -> opt(res.getElement()))
                                     .fop(toCast(Function.class))
-                                    .fap(func -> new UsageResolver(subCtx, 3)
+                                    .fap(func -> new UsageResolver(subCtx, 0)
                                         .resolveArgCallArrKeys(func, funcVarOrder, caretArgOrder))
                             );
                         }))

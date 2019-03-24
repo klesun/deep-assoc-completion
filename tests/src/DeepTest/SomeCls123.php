@@ -36,4 +36,9 @@ class SomeCls123
 }
 
 
-(new SomeCls123())->database->e;
+function asdasd($arg)
+{
+    (new SomeCls123())->database->e;
+}
+
+asdasd('qwe');

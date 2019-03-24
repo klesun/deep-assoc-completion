@@ -93,7 +93,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         IExprCtx ctx = new ExprCtx(funcCtx, cls, 0);
         return It(cls.getMethods())
             .flt(m -> m.getName().equals("__get"))
-            .fap(__get -> new UsageResolver(ctx.subCtxEmpty(), 10)
+            .fap(__get -> new UsageResolver(ctx.subCtxEmpty())
                 .findArgTypeFromUsage(__get, 0, ctx));
     }
 
