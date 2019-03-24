@@ -184,6 +184,7 @@ public class UsageResolver
     {
         return It.cnc(
             Tls.cast(Method.class, meth)
+                .flt(m -> m.isAbstract())
                 .fap(m -> MethCallRes.findOverridingMethods(m)).map(a -> a),
             list(meth)
         );
