@@ -16,8 +16,7 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -255,10 +254,27 @@ public class UsageResolver
             ));
     }
 
+    private void putToCache(PhpExpression expr, MemIt<DeepType> result)
+    {
+        fakeCtx.getSearch().exprToUsageResult.remove(expr);
+        fakeCtx.getSearch().exprToUsageResult.put(expr, result);
+    }
+
+    private Opt<MemIt<DeepType>> takeFromCache(PhpExpression expr)
+    {
+        return opt(fakeCtx.getSearch().exprToUsageResult.get(expr));
+    }
+
     // if arg is assoc array - will return type with keys accessed on it
     // if arg is string - will return type of values it can take
     public It<DeepType> findExprTypeFromUsage(PhpExpression arrCtor)
     {
+        Opt<MemIt<DeepType>> fromCache = takeFromCache(arrCtor);
+        if (fromCache.has()) {
+            return fromCache.unw().itr();
+        }
+        putToCache(arrCtor, new MemIt<>(It.non()));
+
         // assoc array in an assoc array
         It<DeepType> asAssocKey = opt(arrCtor.getParent())
             .fop(toCast(PhpPsiElementImpl.class))
@@ -296,7 +312,9 @@ public class UsageResolver
                 return It.cnc(asRealFuncArg, asMagicCtorArg);
             });
 
-        return It.cnc(asAssocKey, asPlusArr, asFuncArg);
+        MemIt<DeepType> result = It.cnc(asAssocKey, asPlusArr, asFuncArg).mem();
+        putToCache(arrCtor, result);
+        return result.itr();
     }
 
     private It<DeepType> findVarTypeFromUsage(PhpNamedElement caretVar)

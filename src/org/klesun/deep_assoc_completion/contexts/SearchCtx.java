@@ -28,7 +28,10 @@ public class SearchCtx extends Lang
     final public Opt<Project> project;
     // for performance measurement
     private int expressionsResolved = 0;
+    // direct type cache
     final private Map<PsiSig, Iterable<DeepType>> ctxToExprToResult = new HashMap<>();
+    // usage type cache
+    final public Map<PhpExpression, MemIt<DeepType>> exprToUsageResult = new HashMap<>();
     public Opt<Integer> overrideMaxExpr = non();
     final public Map<PsiFile, Collection<FieldReferenceImpl>> fileToFieldRefs = new HashMap<>();
     public boolean isMain = false;
