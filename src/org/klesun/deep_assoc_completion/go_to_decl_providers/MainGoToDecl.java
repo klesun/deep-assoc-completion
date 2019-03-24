@@ -4,19 +4,23 @@ import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.completion_providers.*;
-import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.AssocKeyGoToDecl;
-import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepObjMemberGoToDecl;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.AssocKeyGoToDecl;
+import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepObjMemberGoToDecl;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 
-import static org.klesun.lang.Lang.*;
+import java.util.Objects;
+
+import static org.klesun.lang.Lang.non;
+import static org.klesun.lang.Lang.opt;
 
 /**
  * encapsulates the logic of iterable options interactivity and formatting
@@ -27,6 +31,20 @@ import static org.klesun.lang.Lang.*;
 public class MainGoToDecl implements GotoDeclarationHandler {
     private Opt<PsiElement> lastCaretPsi = non();
     private boolean lastFinished = true;
+
+    private static boolean areSamePsi(PsiElement declPsi, PsiElement caretPsi)
+    {
+        if (Objects.equals(declPsi, caretPsi)) {
+            return true;
+        } else if (!Objects.equals(declPsi.getContainingFile(), caretPsi.getContainingFile())) {
+            return false;
+        } else {
+            PsiFile file = declPsi.getContainingFile();
+            int declLine = file.getText().substring(0, declPsi.getTextOffset()).split("\n").length;
+            int caretLine = file.getText().substring(0, caretPsi.getTextOffset()).split("\n").length;
+            return declLine == caretLine;
+        }
+    }
 
     private It<? extends PsiElement> resolveDeclPsis(@NotNull PsiElement psiElement, int mouseOffset, FuncCtx funcCtx)
     {
@@ -48,7 +66,7 @@ public class MainGoToDecl implements GotoDeclarationHandler {
                         .flt(t -> lit.getContents().equals(t.stringValue))
                         .map(t -> t.definition)
                 ))
-        );
+        ).flt(declPsi -> !areSamePsi(declPsi, psiElement));
     }
 
     private static PsiElement truncateOnLineBreak(PsiElement psi)

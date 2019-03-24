@@ -8,8 +8,6 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocToken;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
-import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.completion_providers.*;
@@ -22,9 +20,9 @@ import static org.klesun.lang.Lang.toCast;
  * using declaration inside the initial function
  * that created this array
  */
-public class DeepAssocCbtr extends CompletionContributor
+public class DeepAssocFirstCbtr extends CompletionContributor
 {
-    public DeepAssocCbtr()
+    public DeepAssocFirstCbtr()
     {
         // $arr[''];
         this.extend(
@@ -65,62 +63,6 @@ public class DeepAssocCbtr extends CompletionContributor
                     new DocFqnPvdr().addCompletionsMultiline(completionParameters, processingContext, completionResultSet);
                 }
             }
-        );
-        // array_column($arr, '')
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                .withSuperParent(2, ParameterList.class)
-                ,
-            new ArrayColumnPvdr()
-        );
-        // array_key_exists('', $arr)
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                .withSuperParent(2, ParameterList.class)
-                ,
-            new ArrayKeyExistsPvdr()
-        );
-        // [Something::class, '']
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                .withSuperParent(3, ArrayCreationExpression.class)
-                ,
-            new ArrFuncRefNamePvdr()
-        );
-        // associative key
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                .withSuperParent(3, ArrayHashElementImpl.class)
-                ,
-            new UsedKeysPvdr()
-        );
-        // indexed value (that may become associative key as user continues typing)
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                .withSuperParent(2, PhpPsiElementImpl.class)
-                .withSuperParent(3, ArrayCreationExpression.class)
-                ,
-            new UsedKeysPvdr()
-        );
-        // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
-        // or in_array('', $types) or in_array($type, ['AIR', ''])
-        // should suggest possible values of 'type'
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                ,
-            new StrValsPvdr()
         );
         // $GLOBALS['myVar'] = 123;
         // $myV;

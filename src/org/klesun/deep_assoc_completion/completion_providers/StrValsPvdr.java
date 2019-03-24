@@ -47,12 +47,12 @@ public class StrValsPvdr extends CompletionProvider<CompletionParameters>
             opt(t.stringValue)
                 .flt(strVal -> !t.cstName.has() || !t.isNumber)
                 .map(strVal -> makeLookupBase(strVal, t.briefType + ""))
-                .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 2000 - i)),
+                .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 100 - i)),
             t.cstName
                 .map(cstName -> makeLookupBase(cstName, t.briefType + "")
                     .withTailText(opt(t.stringValue).map(strVal -> " = " + strVal).def(""), true)
                     .withInsertHandler(GuiUtil.toAlwaysRemoveQuotes()))
-                .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 2000 - i + 50))
+                .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 100 - i + 50))
         ));
     }
 
@@ -159,6 +159,13 @@ public class StrValsPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        // Symfony string completion options are usually more
+        // relevant, so should make sure they are shown instantly
+        result.runRemainingContributors(parameters, otherSourceResult -> {
+            result.passResult(otherSourceResult);
+        });
+
+
         long startTime = System.nanoTime();
         It<DeepType> tit = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
             .fop(toCast(StringLiteralExpression.class))
