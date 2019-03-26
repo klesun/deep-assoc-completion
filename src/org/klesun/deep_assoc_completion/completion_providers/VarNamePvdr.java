@@ -81,11 +81,12 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
             .wap(asses -> AssRes.assignmentsToTypes(asses));
     }
 
-    private static It<FunctionReference> getCalsBefore(Variable caretVar)
+    private static It<FunctionReference> getCallsBefore(Variable caretVar)
     {
         return Tls.findParent(caretVar, Function.class, a -> true)
-            .fap(meth -> Tls.findChildren(
-                meth.getLastChild(),
+            .fap(meth -> opt(meth.getLastChild()))
+            .fap(chd -> Tls.findChildren(
+                chd,
                 FunctionReference.class,
                 subPsi -> !(subPsi instanceof Function) &&
                             subPsi.getTextOffset() < caretVar.getTextOffset()
@@ -94,7 +95,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
 
     private static It<DeepType> resolveExtract(IExprCtx exprCtx, Variable caretVar)
     {
-        return getCalsBefore(caretVar)
+        return getCallsBefore(caretVar)
             .lmt(75)
             .flt(call -> "extract".equals(call.getName()))
             .fap(call -> {

@@ -65,11 +65,12 @@ public class UsageResolver
 
     private static It<ArrayIndex> findUsedIndexes(Function meth, String varName)
     {
-        return Tls.findChildren(
-            meth.getLastChild(),
-            ArrayAccessExpressionImpl.class,
-            subPsi -> !(subPsi instanceof FunctionImpl)
-        )
+        return opt(meth.getLastChild())
+            .fap(chd -> Tls.findChildren(
+                chd,
+                ArrayAccessExpressionImpl.class,
+                subPsi -> !(subPsi instanceof FunctionImpl)
+            ))
             .fop(acc -> opt(acc.getValue())
                 .fop(toCast(VariableImpl.class))
                 .flt(varUsage -> varName.equals(varUsage.getName()))
@@ -139,7 +140,8 @@ public class UsageResolver
     private static It<Variable> findVarReferences(PhpNamedElement caretVar)
     {
         return Tls.findParent(caretVar, Function.class, a -> true)
-            .fap(meth -> FuncCallRes.findUsedVars(meth.getLastChild()))
+            .fap(meth -> opt(meth.getLastChild()))
+            .fap(chd -> FuncCallRes.findUsedVars(chd))
             .flt(varUsage -> caretVar.getName().equals(varUsage.getName()));
     }
 
