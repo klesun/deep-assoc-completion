@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.03.24.002</version>
+    <version>2019.03.26.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,13 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Provide string arg value completion based on `$arg === "something"` checks inside the function</li>
-        <li>#68 Fix freezes and out of memory errors on usage-based property completion with recursive calls in __get() magic method - check for circular references from now on</li>
-        <li>#67 Fix compatibility with Symfony plugin - grey out my method completion options if there are options from other plugins</li>
-        <li>#64 Fix settings page - recompile plugin with "UI Designer" enabled</li>
-        <li>Fix few small usage-based completion bugs found after adding unit tests</li>
-        <li>Do not quit method resolution if there are two classes with same FQN in the project. Take first in such case</li>
-        <li>Fix: do not suggest assoc value from usage as indexed value in array creation</li>
+        <li>#69 Fix: null-pointer caused by unchecked .getFirstChild()</li>
     </ul>
     ]]>
     </change-notes>
