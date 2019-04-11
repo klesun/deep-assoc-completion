@@ -204,6 +204,15 @@ class ExactKeysUnitTest
         return $list;
     }
 
+    public function provide_debug_backtrace()
+    {
+        $nodes = debug_backtrace();
+        $nodes[0][''];
+        return [
+            [$nodes[4], ['file', 'line', 'function', 'class', 'type', 'args']]
+        ];
+    }
+
     public static function provideBuiltInStringArrFuncs()
     {
         $modTypes = ['passengers', 'segments', 'fareBasis', 'validatingCarrier'];
@@ -1487,6 +1496,8 @@ class ExactKeysUnitTest
             [$user->paxTypes[0], ['age', 'ptc', 'fareGroup', 'ageGroup']],
         ];
     }
+
+    // TODO: testify following
 
     private static function testIndexedArrayCreation()
     {

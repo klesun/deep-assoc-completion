@@ -265,6 +265,21 @@ public class ReturnTypeDefs
             .map(strVal -> str(call, strVal));
     }
 
+    private It<DeepType> debug_backtrace(FunctionReferenceImpl call)
+    {
+        DeepType arrt = arr(call);
+        arrt.addKey(KeyType.integer(call))
+            .addType(() -> new Mt(list(assoc(call, list(
+                T2("file", str(call, "/var/www/vendor/something/Model.php").mt()),
+                T2("line", inte(call, 465).mt()),
+                T2("function", str(call, "getParams").mt()),
+                T2("class", str(call, "Something\\Model").mt()),
+                T2("type", new Mt(list(str(call, "::"), str(call, "->")))),
+                T2("args", arr(call).mt())
+            )))));
+        return It(som(arrt));
+    }
+
     public Iterable<DeepType> getReturnType(FunctionReferenceImpl call, IFuncCtx callCtx)
     {
         String name = opt(call.getName()).def("");
@@ -294,6 +309,8 @@ public class ReturnTypeDefs
             return list(parse_url(call));
         } else if (name.equals("image_type_to_mime_type")) {
             return image_type_to_mime_type(call);
+        } else if (name.equals("debug_backtrace")) {
+            return debug_backtrace(call);
         } else if (name.equals("preg_last_error")) {
             return cst(ctx, list(
                 "PREG_NO_ERROR",

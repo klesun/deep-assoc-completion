@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.03.26.001</version>
+    <version>2019.04.11.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#69 Fix: null-pointer caused by unchecked .getFirstChild()</li>
+        <li>#8 Add completion from debug_backtrace()</li>
     </ul>
     ]]>
     </change-notes>
