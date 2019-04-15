@@ -111,7 +111,9 @@ public class FieldRes extends Lang
             .cst(PhpDocPropertyTag.class)
             .fap(tag -> new DocParamRes(ctx).resolve(tag));
 
-        return It.cnc(defTs, docTs, magicTs);
+        DeepType builtInTs = new DeepType(resolved, resolved.getType());
+
+        return It.cnc(som(builtInTs), defTs, docTs, magicTs);
     }
 
     private It<DeepType> declsToTypes(FieldReferenceImpl fieldRef, It<Field> declarations)

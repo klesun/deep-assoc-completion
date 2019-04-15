@@ -1497,7 +1497,30 @@ class ExactKeysUnitTest
         ];
     }
 
+    public function provideRepeatingFqn()
+    {
+        $period = [
+            'period' => new \DatePeriod(
+                new \DateTimeImmutable('now'),
+                new \DateInterval('P0Y'),
+                new \DateTimeImmutable('P3DAY')
+            ),
+            'epicBattle' => new \Dmc\EpicBattle(),
+        ];
+        // should suggest \Datetime methods
+        $period['period']->end->;
+        // should suggest "getWeapons"
+        $period['epicBattle']->protag->;
+        $weapons = $period['epicBattle']->participants[0]->getWeapons();
+        return [
+            [$period['epicBattle']->protag->getWeapons(), ['beowulf', 'yamato', 'rebellion']],
+            [$weapons, ['beowulf', 'yamato', 'rebellion']],
+        ];
+    }
+
+    //===============================
     // TODO: testify following
+    //===============================
 
     private static function testIndexedArrayCreation()
     {
