@@ -713,6 +713,9 @@ class get{
 $get = new get;
 $get->random(array('myVar'), 'strArgKey');
 
+$ololo1223_tanya_the_evil[''];
+$ololo1223_date->
+
 $ololoNoMagic = [
     'base_url' => 'https://myawesomebestsiteevar.com',
     'db_password' => 'qwerty1223',

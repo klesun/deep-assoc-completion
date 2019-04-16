@@ -304,6 +304,8 @@ public class VarRes
                 ? list(typeFromIdea) : list(),
             thisType, closureType,
             AssRes.assignmentsToTypes(asses)
-        ).def(list(typeFromIdea));
+        )   .def(() -> assertDeclFromGlobal(caretVar)
+                .fap(f -> f.get()).iterator())
+            .def(list(typeFromIdea));
     }
 }
