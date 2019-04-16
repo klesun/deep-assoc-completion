@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.Variable;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.resolvers.MainRes;
@@ -34,6 +35,7 @@ public class SearchCtx extends Lang
     final public Map<PhpExpression, MemIt<DeepType>> exprToUsageResult = new HashMap<>();
     public Opt<Integer> overrideMaxExpr = non();
     final public Map<PsiFile, Collection<FieldReferenceImpl>> fileToFieldRefs = new HashMap<>();
+    public Opt<MemIt<DeepType>> globalsVarType = non();
     public boolean isMain = false;
 
     public Opt<ExprCtx> currentExpr = non();

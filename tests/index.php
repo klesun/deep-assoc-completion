@@ -696,6 +696,12 @@ class get{
         foreach($array as $var){
             $GLOBALS['insideFunc'] = 345;
             $GLOBALS[$var] = rand(1,100);
+            $GLOBALS['ololo1223_date'] = new DateTime('now');
+            $GLOBALS['ololo1223_tanya_the_evil'] = [
+                'age' => 30,
+                'gender' => 'male',
+                'abilities' => ['magic', 'smart', 'evil'],
+            ];
         }
     }
     private static function doHast()
@@ -707,6 +713,12 @@ class get{
 $get = new get;
 $get->random(array('myVar'), 'strArgKey');
 
+$ololoNoMagic = [
+    'base_url' => 'https://myawesomebestsiteevar.com',
+    'db_password' => 'qwerty1223',
+    'redis_password' => 'qwerty4321',
+];
+echo $myVar2;
 echo $my;
 
 class someSubclass

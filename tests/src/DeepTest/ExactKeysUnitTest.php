@@ -1518,6 +1518,23 @@ class ExactKeysUnitTest
         ];
     }
 
+    public function provideTypeFromGLOBALS()
+    {
+        global $ololo1223_tanya_the_evil, $ololo1223_date, $ololoNoMagic;
+        // should suggest: age, gender, abilities
+        $ololo1223_tanya_the_evil[''];
+        // should suggest \DateTime methods
+        $ololo1223_date->;
+        return [
+            [$ololo1223_tanya_the_evil, ['age', 'gender', 'abilities']],
+            [$ololoNoMagic, ['base_url', 'db_password', 'redis_password']],
+        ];
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
+
     //===============================
     // TODO: testify following
     //===============================
@@ -1617,10 +1634,6 @@ class ExactKeysUnitTest
             [$withTaxCode[0], ['currency', 'amount', 'taxCode']],
         ];
     }
-
-    //=============================
-    // following are not implemented yet
-    //=============================
 }
 
 /**

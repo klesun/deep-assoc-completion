@@ -9,6 +9,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.completion_providers.VarNamePvdr;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.resolvers.var_res.ArgRes;
@@ -141,6 +142,15 @@ public class VarRes
             }));
     }
 
+    private Opt<S<It<DeepType>>> assertDeclFromGlobal(PsiElement varRef)
+    {
+        return Tls.cast(Variable.class, varRef)
+            .flt(varPsi -> VarNamePvdr.isGlobalContext(varPsi))
+            .flt(varPsi -> !"".equals(varPsi.getName()))
+            .map(varPsi -> () -> VarNamePvdr.resolveGlobalsMagicVar(ctx, varPsi)
+                .fap(globt -> Mt.getKeySt(globt, varPsi.getName())));
+    }
+
     private Opt<S<It<DeepType>>> assertTupleAssignment(PsiElement varRef)
     {
         return opt(varRef.getParent())
@@ -225,6 +235,8 @@ public class VarRes
                 .fop(vari -> opt(vari.getParent()))
                 .cst(UnaryExpression.class) // ++$i
                 .map(una -> new Assign(list(), () -> It(som(DeepType.makeInt(una, null))), true, una, una.getType()))
+            , () -> assertDeclFromGlobal(refPsi)
+                .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
         );
     }
 
