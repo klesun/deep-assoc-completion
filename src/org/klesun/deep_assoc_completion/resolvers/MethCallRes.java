@@ -21,6 +21,7 @@ import org.klesun.deep_assoc_completion.resolvers.mem_res.MemRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
+import org.klesun.lang.iterators.RegexIterator;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -99,20 +100,10 @@ public class MethCallRes extends Lang
 
     private static It<String> getBindVars(DeepType sqlStrT)
     {
-        Matcher matcher = Pattern.compile(":([A-Za-z_][A-Za-z0-9_]*)")
-            .matcher(opt(sqlStrT.stringValue).def(""));
-        boolean hasFirst = matcher.find();
-        return It(() -> new Iterator<String>() {
-            boolean hasNext = hasFirst;
-            public boolean hasNext() {
-                return hasNext;
-            }
-            public String next() {
-                String var = matcher.group(1);
-                hasNext = matcher.find();
-                return var;
-            }
-        });
+        String pattern = ":([A-Za-z_][A-Za-z0-9_]*)";
+        String text = opt(sqlStrT.stringValue).def("");
+        return It(() -> new RegexIterator(pattern, text))
+            .map(groups -> groups.get(1));
     }
 
     public It<DeepType> getModelRowType(MethodReference methCall, Method meth)

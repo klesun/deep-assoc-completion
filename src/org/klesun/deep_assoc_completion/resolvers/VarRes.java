@@ -18,6 +18,7 @@ import org.klesun.deep_assoc_completion.structures.Assign;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
+import org.klesun.lang.iterators.RegexIterator;
 
 import java.util.Iterator;
 import java.util.regex.Matcher;
@@ -35,20 +36,9 @@ public class VarRes
 
     private static It<String> parseRegexNameCaptures(String regexText)
     {
-        Pattern pattern = Pattern.compile("\\(\\?P<([a-zA-Z_0-9]+)>");
-        Matcher matcher = pattern.matcher(regexText);
-        boolean hasFirst = matcher.find();
-        return It(() -> new Iterator<String>() {
-            boolean hasNext = hasFirst;
-            public boolean hasNext() {
-                return hasNext;
-            }
-            public String next() {
-                String value = matcher.group(1);
-                hasNext = matcher.find();
-                return value;
-            }
-        });
+        String pattern = "\\(\\?P<([a-zA-Z_0-9]+)>";
+        return It(() -> new RegexIterator(pattern, regexText))
+            .map(groups -> groups.get(1));
     }
 
     private static It<DeepType> makeRegexNameCaptureTypes(It<DeepType> regexTypes)
