@@ -9,6 +9,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.completion_providers.VarNamePvdr;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.ScopeFinder;
@@ -18,10 +19,8 @@ import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.Assign;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
-import org.klesun.lang.It;
-import org.klesun.lang.L;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
+import org.klesun.lang.iterators.RegexIterator;
 
 import java.util.Iterator;
 import java.util.regex.Matcher;
@@ -41,20 +40,9 @@ public class VarRes
 
     private static It<String> parseRegexNameCaptures(String regexText)
     {
-        Pattern pattern = Pattern.compile("\\(\\?P<([a-zA-Z_0-9]+)>");
-        Matcher matcher = pattern.matcher(regexText);
-        boolean hasFirst = matcher.find();
-        return It(() -> new Iterator<String>() {
-            boolean hasNext = hasFirst;
-            public boolean hasNext() {
-                return hasNext;
-            }
-            public String next() {
-                String value = matcher.group(1);
-                hasNext = matcher.find();
-                return value;
-            }
-        });
+        String pattern = "\\(\\?P<([a-zA-Z_0-9]+)>";
+        return It(() -> new RegexIterator(pattern, regexText))
+            .map(groups -> groups.get(1));
     }
 
     private static It<DeepType> makeRegexNameCaptureTypes(It<DeepType> regexTypes)
@@ -157,6 +145,15 @@ public class VarRes
             }));
     }
 
+    private Opt<S<It<DeepType>>> assertDeclFromGlobal(PsiElement varRef)
+    {
+        return Tls.cast(Variable.class, varRef)
+            .flt(varPsi -> VarNamePvdr.isGlobalContext(varPsi))
+            .flt(varPsi -> !"".equals(varPsi.getName()))
+            .map(varPsi -> () -> VarNamePvdr.resolveGlobalsMagicVar(ctx, varPsi)
+                .fap(globt -> Mt.getKeySt(globt, varPsi.getName())));
+    }
+
     private Opt<S<It<DeepType>>> assertTupleAssignment(PsiElement varRef)
     {
         return opt(varRef.getParent())
@@ -241,6 +238,8 @@ public class VarRes
                 .fop(vari -> opt(vari.getParent()))
                 .cst(UnaryExpression.class) // ++$i
                 .map(una -> new Assign(list(), () -> It(som(DeepType.makeInt(una, null))), true, una, una.getType()))
+            , () -> assertDeclFromGlobal(refPsi)
+                .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
         );
     }
 
@@ -358,6 +357,8 @@ public class VarRes
                 ? list(typeFromIdea) : list(),
             thisType, closureType,
             AssRes.assignmentsToTypes(asses)
-        ).def(list(typeFromIdea));
+        )   .def(() -> assertDeclFromGlobal(caretVar)
+                .fap(f -> f.get()).iterator())
+            .def(list(typeFromIdea));
     }
 }

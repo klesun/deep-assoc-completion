@@ -1497,7 +1497,47 @@ class ExactKeysUnitTest
         ];
     }
 
+    public function provideRepeatingFqn()
+    {
+        $period = [
+            'period' => new \DatePeriod(
+                new \DateTimeImmutable('now'),
+                new \DateInterval('P0Y'),
+                new \DateTimeImmutable('P3DAY')
+            ),
+            'epicBattle' => new \Dmc\EpicBattle(),
+        ];
+        // should suggest \Datetime methods
+        $period['period']->end->;
+        // should suggest "getWeapons"
+        $period['epicBattle']->protag->;
+        $weapons = $period['epicBattle']->participants[0]->getWeapons();
+        return [
+            [$period['epicBattle']->protag->getWeapons(), ['beowulf', 'yamato', 'rebellion']],
+            [$weapons, ['beowulf', 'yamato', 'rebellion']],
+        ];
+    }
+
+    public function provideTypeFromGLOBALS()
+    {
+        global $ololo1223_tanya_the_evil, $ololo1223_date, $ololoNoMagic;
+        // should suggest: age, gender, abilities
+        $ololo1223_tanya_the_evil[''];
+        // should suggest \DateTime methods
+        $ololo1223_date->;
+        return [
+            [$ololo1223_tanya_the_evil, ['age', 'gender', 'abilities']],
+            [$ololoNoMagic, ['base_url', 'db_password', 'redis_password']],
+        ];
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
+
+    //===============================
     // TODO: testify following
+    //===============================
 
     private static function testIndexedArrayCreation()
     {
@@ -1594,10 +1634,6 @@ class ExactKeysUnitTest
             [$withTaxCode[0], ['currency', 'amount', 'taxCode']],
         ];
     }
-
-    //=============================
-    // following are not implemented yet
-    //=============================
 }
 
 /**

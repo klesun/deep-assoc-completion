@@ -28,6 +28,7 @@ import org.klesun.deep_assoc_completion.resolvers.VarRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
+import org.klesun.lang.MemIt;
 import org.klesun.lang.Tls;
 
 import static org.klesun.lang.Lang.*;
@@ -53,7 +54,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
             .unq(l -> l.getLookupString());
     }
 
-    private static boolean isGlobalContext(Variable caretVar)
+    public static boolean isGlobalContext(Variable caretVar)
     {
         return caretVar.getParent() instanceof Global || !Tls.findParent(caretVar, Function.class, a -> true).has();
     }
@@ -72,13 +73,20 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    private static It<DeepType> resolveGlobalsMagicVar(IExprCtx funcCtx, Variable caretVar)
+    public static It<DeepType> resolveGlobalsMagicVar(IExprCtx funcCtx, Variable caretVar)
     {
         return funcCtx.getProject()
             .flt(proj -> isGlobalContext(caretVar))
-            .fap(proj -> getGlobalsMagicVarUsages(proj))
-            .fap(glob -> new VarRes(funcCtx.subCtxEmpty()).resolveRef(glob, false))
-            .wap(asses -> AssRes.assignmentsToTypes(asses));
+            .fap(proj -> {
+                if (!funcCtx.getSearch().globalsVarType.has()) {
+                    funcCtx.getSearch().globalsVarType = som(new MemIt<>(It.non()));
+                    It<DeepType> tit = getGlobalsMagicVarUsages(proj)
+                        .fap(glob -> new VarRes(funcCtx.subCtxEmpty()).resolveRef(glob, false))
+                        .wap(asses -> AssRes.assignmentsToTypes(asses));
+                    funcCtx.getSearch().globalsVarType = som(tit.mem());
+                }
+                return funcCtx.getSearch().globalsVarType.unw();
+            });
     }
 
     private static It<FunctionReference> getCallsBefore(Variable caretVar)
