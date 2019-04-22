@@ -714,7 +714,7 @@ $get = new get;
 $get->random(array('myVar'), 'strArgKey');
 
 $ololo1223_tanya_the_evil[''];
-$ololo1223_date->
+$ololo1223_date->;
 
 $ololoNoMagic = [
     'base_url' => 'https://myawesomebestsiteevar.com',
