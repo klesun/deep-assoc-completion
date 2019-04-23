@@ -1531,6 +1531,14 @@ class ExactKeysUnitTest
         ];
     }
 
+    public function provideMetaDef()
+    {
+        $struct = (new \Library\Book())->getStruct();
+        return [
+            [$struct, ['title', 'author', 'chapters']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
