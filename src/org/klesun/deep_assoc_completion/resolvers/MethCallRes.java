@@ -5,15 +5,21 @@ import com.intellij.database.model.ObjectKind;
 import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.util.indexing.FileBasedIndex;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
+import com.jetbrains.php.lang.psi.elements.Function;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionArgument;
+import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionScalarArgument;
+import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedReturnValuesIndex;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -23,9 +29,9 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
 import org.klesun.lang.iterators.RegexIterator;
 
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MethCallRes extends Lang
@@ -139,6 +145,19 @@ public class MethCallRes extends Lang
                 fieldNames.map(nme -> UsageResolver.makeAssoc(nme.b, som(nme)))
             );
         });
+    }
+
+    private It<DeepType> findMetaDefRetType(Function func)
+    {
+        String fqn = func.getFQN();
+        FileBasedIndex index = FileBasedIndex.getInstance();
+        GlobalSearchScope scope = GlobalSearchScope.allScope(func.getProject());
+        List<Collection<PhpExpectedFunctionArgument>> values = index.getValues(PhpExpectedReturnValuesIndex.KEY, fqn, scope);
+        return It(values).fap(col -> col)
+            .cst(PhpExpectedFunctionScalarArgument.class)
+            .unq().fap(exp -> DocParamRes.parseExpression(
+                exp.getValue(), func.getProject(), ctx.subCtxEmpty()
+            ));
     }
 
     private It<DeepType> findBuiltInRetType(Method meth, IExprCtx argCtx, MethodReference methCall)
@@ -268,6 +287,7 @@ public class MethCallRes extends Lang
         return resolveMethodFromCall(funcCall)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
+                findMetaDefRetType(func),
                 findBuiltInRetType(func, funcCtx, funcCall)
             ));
     }
