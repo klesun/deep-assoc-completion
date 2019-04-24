@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#75 Support associative arrays in .phpstorm.meta.php</li>
+        <li>#75 Support associative arrays in <a href="https://blog.jetbrains.com/phpstorm/2019/02/new-phpstorm-meta-php-features/">.phpstorm.meta.php</a></li>
     </ul>
     ]]>
     </change-notes>
