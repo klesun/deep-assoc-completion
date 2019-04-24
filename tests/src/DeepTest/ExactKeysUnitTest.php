@@ -1552,6 +1552,14 @@ class ExactKeysUnitTest
         ];
     }
 
+    public function provideArgTypeFromMetaInsideFunc($juice)
+    {
+        $juice[''];
+        return [
+            [$juice, ['fruit', 'fruitPercentage', 'pricePerLitre']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

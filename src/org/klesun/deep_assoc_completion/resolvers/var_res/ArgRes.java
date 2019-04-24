@@ -6,10 +6,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
-import com.jetbrains.php.lang.psi.elements.Function;
-import com.jetbrains.php.lang.psi.elements.FunctionReference;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.built_in_typedefs.Cst;
@@ -266,6 +263,9 @@ public class ArgRes extends Lang
                 opt(arg.getDocComment())
                     .fop(doc -> opt(doc.getParamTagByName(param.getName())))
                     .fap(doc -> new DocParamRes(trace).resolve(doc)),
+                opt(arg.getParent()).fap(lst -> opt(lst.getParent()))
+                    .cst(Function.class)
+                    .fap(func -> UsageResolver.findMetaArgType(func, order, trace)),
                 opt(arg.getDefaultValue()).itr()
                     .cst(PhpExpression.class)
                     .fap(xpr -> trace.subCtxEmpty().findExprType(xpr))

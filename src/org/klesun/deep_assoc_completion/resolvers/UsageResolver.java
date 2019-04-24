@@ -265,7 +265,7 @@ public class UsageResolver
             ));
     }
 
-    private It<DeepType> findMetaArgType(Function func, int argOrder)
+    public static It<DeepType> findMetaArgType(Function func, int argOrder, IExprCtx ctx)
     {
         String fqn = func.getFQN();
         FileBasedIndex index = FileBasedIndex.getInstance();
@@ -275,15 +275,15 @@ public class UsageResolver
             .cst(PhpExpectedFunctionScalarArgument.class)
             .flt(arg -> arg.getArgumentIndex() == argOrder)
             .unq().fap(exp -> DocParamRes.parseExpression(
-                exp.getValue(), func.getProject(), fakeCtx.subCtxEmpty()
+                exp.getValue(), func.getProject(), ctx.subCtxEmpty()
             ));
     }
 
     private It<DeepType> findCallableMetaArgType(Function func, int argOrder)
     {
         return Tls.cast(Method.class, func).uni(
-            meth -> MethCallRes.findOverriddenMethods(meth).fap(m -> findMetaArgType(m, argOrder)),
-            () -> findMetaArgType(func, argOrder)
+            meth -> MethCallRes.findOverriddenMethods(meth).fap(m -> findMetaArgType(m, argOrder, fakeCtx)),
+            () -> findMetaArgType(func, argOrder, fakeCtx)
         );
     }
 

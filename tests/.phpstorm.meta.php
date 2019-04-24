@@ -1,5 +1,8 @@
 <?php
 namespace PHPSTORM_META {
+
+    use DeepTest\ExactKeysUnitTest;
+
     expectedReturnValues(\Library\Book::getStruct(), [
         'title' => 'The C Language',
         'author' => 'Kernigan & Ritchie',
@@ -45,6 +48,12 @@ namespace PHPSTORM_META {
         'connection' => 0x9235256,
         'bytesChunk' => [123, 76,37, 256, 747],
         'bytesLeft' => 59198584,
+    ]);
+
+    expectedArguments(\DeepTest\ExactKeysUnitTest::provideArgTypeFromMetaInsideFunc(), 0, [
+        'fruit' => 'orange',
+        'fruitPercentage' => 0.57,
+        'pricePerLitre' => '1.12',
     ]);
 }
 
