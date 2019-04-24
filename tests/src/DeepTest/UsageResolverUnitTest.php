@@ -783,6 +783,20 @@ class UsageResolverUnitTest
         ];
     }
 
+    public function provideMetaDef($param)
+    {
+        $results = \Library\Book::search('goodreads.com', $param);
+        return [
+            'param' => [
+                'id' => 1234,
+                'minWords' => 100,
+                'maxWords' => 900,
+                'pattern' => 'arnia',
+                'genres' => ['fantasy', 'science fiction'],
+            ],
+        ];
+    }
+
     //============================
     // TODO: testify following
     //============================

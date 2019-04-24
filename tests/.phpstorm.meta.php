@@ -5,6 +5,14 @@ namespace PHPSTORM_META {
         'author' => 'Kernigan & Ritchie',
         'chapters' => [['name' => 'Abstract', 'content' => 'Abababababa hello world abababababa']],
     ]);
+    expectedArguments(\Library\Book::search(), 1, [
+        'id' => 1234,
+        'minWords' => 100,
+        'maxWords' => 900,
+    ], [
+        'pattern' => 'arnia',
+        'genres' => ['fantasy', 'science fiction'],
+    ]);
 }
 
 
