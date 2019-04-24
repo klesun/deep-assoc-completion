@@ -283,7 +283,12 @@ public class FuncCallRes extends Lang
                 .fap(t -> t.getReturnTypes(funcCtx)),
             opt(funcCall.resolve())
                 .fop(Tls.toCast(FunctionImpl.class))
-                .fap(func -> new ClosRes(ctx).resolve(func).getReturnTypes(funcCtx))
+                .fap(func -> {
+                    It<DeepType> customFuncTit = new ClosRes(ctx)
+                        .resolve(func).getReturnTypes(funcCtx);
+                    It<DeepType> metaDefTit = MethCallRes.findMetaDefRetType(func, ctx);
+                    return It.cnc(customFuncTit, metaDefTit);
+                })
         );
     }
 }

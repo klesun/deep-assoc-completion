@@ -13,6 +13,17 @@ namespace PHPSTORM_META {
         'pattern' => 'arnia',
         'genres' => ['fantasy', 'science fiction'],
     ]);
+    expectedReturnValues(\gzip_by_dict(), [
+        'bytes' => [2, 53, 80, 125, 18, 84, 36],
+        'newDict' => ['&%hgfe#' => 'The London is the captial of Great Britain'],
+    ]);
+    expectedArguments(\gzip_by_dict(), 0, [
+        'text' => 'OLOO The London is the captial of Great Britain OLOLO',
+        'oldDict' => ['&%hgfe#$SA' => 'The London is the captial of Great Britain'],
+    ]);
 }
 
 
+function gzip_by_dict($params)
+{
+}

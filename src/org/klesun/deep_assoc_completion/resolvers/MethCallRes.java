@@ -147,7 +147,7 @@ public class MethCallRes extends Lang
         });
     }
 
-    private It<DeepType> findMetaDefRetType(Function func)
+    public static It<DeepType> findMetaDefRetType(Function func, IExprCtx ctx)
     {
         String fqn = func.getFQN();
         FileBasedIndex index = FileBasedIndex.getInstance();
@@ -287,7 +287,7 @@ public class MethCallRes extends Lang
         return resolveMethodFromCall(funcCall)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
-                findMetaDefRetType(func),
+                findMetaDefRetType(func, ctx),
                 findBuiltInRetType(func, funcCtx, funcCall)
             ));
     }

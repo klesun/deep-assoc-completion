@@ -783,7 +783,7 @@ class UsageResolverUnitTest
         ];
     }
 
-    public function provideMetaDef($param)
+    public function provideMetaDefMeth($param)
     {
         $results = \Library\Book::search('goodreads.com', $param);
         return [
@@ -793,6 +793,20 @@ class UsageResolverUnitTest
                 'maxWords' => 900,
                 'pattern' => 'arnia',
                 'genres' => ['fantasy', 'science fiction'],
+            ],
+        ];
+    }
+
+    public function provideMetaDefFunc($param)
+    {
+        $results = \gzip_by_dict([
+            'text' => 'Hi, how are you?',
+        ]);
+        $results = \gzip_by_dict($param);
+        return [
+            'param' => [
+                'text' => 'OLOO The London is the captial of Great Britain OLOLO',
+                'oldDict' => ['&%hgfe#$SA' => 'The London is the captial of Great Britain'],
             ],
         ];
     }

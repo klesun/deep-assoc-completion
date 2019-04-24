@@ -1531,11 +1531,20 @@ class ExactKeysUnitTest
         ];
     }
 
-    public function provideMetaDef()
+    public function provideMetaDefMeth()
     {
         $struct = (new \Library\Book())->getStruct();
         return [
             [$struct, ['title', 'author', 'chapters']],
+        ];
+    }
+
+    public function provideMetaDefFunc()
+    {
+        $gzipped = \gzip_by_dict([]);
+        $gzipped[''];
+        return [
+            [$gzipped, ['bytes', 'newDict']],
         ];
     }
 
