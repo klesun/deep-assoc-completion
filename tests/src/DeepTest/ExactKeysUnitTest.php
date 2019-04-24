@@ -1534,8 +1534,12 @@ class ExactKeysUnitTest
     public function provideMetaDefMeth()
     {
         $struct = (new \Library\Book())->getStruct();
+        $purchased = (new \Library\Book())->purchase([]); // from interface
+        $read = (new \Library\Book())->read([]); // from extended class
         return [
             [$struct, ['title', 'author', 'chapters']],
+            [$purchased, ['status', 'confirmationCode', 'transactionDt', 'serialKey']],
+            [$read, ['connection', 'bytesChunk', 'bytesLeft']],
         ];
     }
 

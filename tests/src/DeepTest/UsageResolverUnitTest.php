@@ -1,6 +1,8 @@
 <?php
 namespace DeepTest;
 
+use Library\Book;
+
 /**
  * calls UsageResolver on the argument of each provide* function and
  * tests that it's return value matches the inferred argument type
@@ -810,6 +812,41 @@ class UsageResolverUnitTest
             ],
         ];
     }
+
+    public function provideMetaDefMethImpl($param)
+    {
+        (new Book())->purchase($param);
+        (new Book())->purchase([
+            ''
+        ]);
+        return [
+            'param' => [
+                'ccVendor' => 'visa',
+                'ccNumber' => '411111111111111',
+                'expirationMonth' => 12,
+                'expirationYear' => 2021,
+            ],
+        ];
+    }
+
+    public function provideMetaDefMethOverride($param)
+    {
+        (new Book())->read([
+            ''
+        ]);
+        (new Book())->read($param);
+        return [
+            'param' => [
+                'chunkSize' => 20,
+                'timeoutMs' => 20 * 1000, // 20 seconds
+                'errorHandler' => function($code, $msg){},
+            ],
+        ];
+    }
+
+    //=========================
+    // following not implemented yet
+    //========================
 
     //============================
     // TODO: testify following

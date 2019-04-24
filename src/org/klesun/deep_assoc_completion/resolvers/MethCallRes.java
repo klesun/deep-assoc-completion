@@ -11,10 +11,7 @@ import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
-import com.jetbrains.php.lang.psi.elements.Function;
-import com.jetbrains.php.lang.psi.elements.Method;
-import com.jetbrains.php.lang.psi.elements.MethodReference;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionArgument;
@@ -29,9 +26,7 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
 import org.klesun.lang.iterators.RegexIterator;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class MethCallRes extends Lang
@@ -59,6 +54,15 @@ public class MethCallRes extends Lang
                 .map(cls -> idx.getAllSubclasses(cls.getFQN())))
             .fap(clses -> clses)
             .fop(cls -> opt(cls.findMethodByName(meth.getName())));
+    }
+
+    public static It<Method> findOverriddenMethods(Method meth)
+    {
+        It<Method> overridden = opt(meth.getContainingClass())
+            .fap(cls -> It(cls.getSupers()))
+            .fap(clsArg -> clsArg.getMethods())
+            .flt(m -> m.getName().equals(meth.getName()));
+        return It.cnc(som(meth), overridden);
     }
 
     private static It<DasObject> getDasChildren(DasObject parent, ObjectKind kind)
@@ -158,6 +162,12 @@ public class MethCallRes extends Lang
             .unq().fap(exp -> DocParamRes.parseExpression(
                 exp.getValue(), func.getProject(), ctx.subCtxEmpty()
             ));
+    }
+
+    public It<DeepType> findMetaDefMethRetType(Method meth)
+    {
+        return findOverriddenMethods(meth)
+            .fap(m -> findMetaDefRetType(m, ctx));
     }
 
     private It<DeepType> findBuiltInRetType(Method meth, IExprCtx argCtx, MethodReference methCall)
@@ -287,7 +297,7 @@ public class MethCallRes extends Lang
         return resolveMethodFromCall(funcCall)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
-                findMetaDefRetType(func, ctx),
+                findMetaDefMethRetType(func),
                 findBuiltInRetType(func, funcCtx, funcCall)
             ));
     }

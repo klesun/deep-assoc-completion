@@ -279,6 +279,14 @@ public class UsageResolver
             ));
     }
 
+    private It<DeepType> findCallableMetaArgType(Function func, int argOrder)
+    {
+        return Tls.cast(Method.class, func).uni(
+            meth -> MethCallRes.findOverriddenMethods(meth).fap(m -> findMetaArgType(m, argOrder)),
+            () -> findMetaArgType(func, argOrder)
+        );
+    }
+
     private void putToCache(PhpExpression expr, MemIt<DeepType> result)
     {
         fakeCtx.getSearch().exprToUsageResult.remove(expr);
@@ -332,7 +340,7 @@ public class UsageResolver
                             return findArgTypeFromUsage(ipl, order, nextCtx);
                         }),
                         findBuiltInArgType(meth, order, argList),
-                        findMetaArgType(meth, order)
+                        findCallableMetaArgType(meth, order)
                     ));
 
                 It<DeepType> asMagicCtorArg = opt(argList.getParent())
