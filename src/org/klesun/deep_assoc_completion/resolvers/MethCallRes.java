@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.indexing.FileBasedIndex;
+import com.intellij.util.indexing.ID;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
@@ -27,6 +28,7 @@ import org.klesun.lang.*;
 import org.klesun.lang.iterators.RegexIterator;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class MethCallRes extends Lang
@@ -151,20 +153,27 @@ public class MethCallRes extends Lang
         });
     }
 
-    public static It<DeepType> findFqnMetaDefRetType(String fqn, IExprCtx ctx)
-    {
+    public static It<DeepType> findFqnMetaType(
+        String fqn, IExprCtx ctx, ID<String, Collection<PhpExpectedFunctionArgument>> idxKey,
+        Predicate<PhpExpectedFunctionArgument> argCond
+    ) {
         return ctx.getProject().fap(proj -> {
             FileBasedIndex index = FileBasedIndex.getInstance();
             GlobalSearchScope scope = GlobalSearchScope.allScope(proj);
-            It<PhpExpectedFunctionArgument> metas = list(fqn, fqn.replaceAll("^\\\\", ""))
-                .fap(fullFqn -> It(index.getValues(PhpExpectedReturnValuesIndex.KEY, fullFqn, scope)))
-                .fap(col -> col);
-            return metas
+            return list(fqn, fqn.replaceAll("^\\\\", ""))
+                .fap(fullFqn -> It(index.getValues(idxKey, fullFqn, scope)))
+                .fap(col -> col)
+                .flt(argCond)
                 .cst(PhpExpectedFunctionScalarArgument.class)
                 .unq().fap(exp -> DocParamRes.parseExpression(
-                    exp.getValue(), proj, ctx.subCtxEmpty()
+                    exp.getValue(), ctx.getProject().unw(), ctx.subCtxEmpty()
                 ));
         });
+    }
+
+    public static It<DeepType> findFqnMetaDefRetType(String fqn, IExprCtx ctx)
+    {
+        return findFqnMetaType(fqn, ctx, PhpExpectedReturnValuesIndex.KEY, arg -> true);
     }
 
     private It<DeepType> findMetaDefMethRetType(Method meth)

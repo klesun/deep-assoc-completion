@@ -1,14 +1,10 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.util.indexing.FileBasedIndex;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionArgument;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionArgumentsIndex;
-import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionScalarArgument;
 import org.klesun.deep_assoc_completion.built_in_typedefs.ArgTypeDefs;
 import org.klesun.deep_assoc_completion.completion_providers.StrValsPvdr;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
@@ -24,9 +20,7 @@ import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.*;
 
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static org.klesun.lang.Lang.*;
@@ -267,17 +261,10 @@ public class UsageResolver
 
     private static It<DeepType> findFqnMetaArgType(String fqn, int argOrder, IExprCtx ctx)
     {
-        return ctx.getProject().fap(proj -> {
-            FileBasedIndex index = FileBasedIndex.getInstance();
-            GlobalSearchScope scope = GlobalSearchScope.allScope(proj);
-            List<Collection<PhpExpectedFunctionArgument>> values = index.getValues(PhpExpectedFunctionArgumentsIndex.KEY, fqn, scope);
-            return It(values).fap(col -> col)
-                .cst(PhpExpectedFunctionScalarArgument.class)
-                .flt(arg -> arg.getArgumentIndex() == argOrder)
-                .unq().fap(exp -> DocParamRes.parseExpression(
-                    exp.getValue(), proj, ctx.subCtxEmpty()
-                ));
-        });
+        return MethCallRes.findFqnMetaType(fqn, ctx,
+            PhpExpectedFunctionArgumentsIndex.KEY,
+            arg -> arg.getArgumentIndex() == argOrder
+        );
     }
 
     public static It<DeepType> findMetaArgType(Function func, int argOrder, IExprCtx ctx)
