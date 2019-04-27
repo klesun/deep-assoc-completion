@@ -1574,6 +1574,13 @@ class ExactKeysUnitTest
     // following are not implemented yet
     //=============================
 
+    public function provideMetaArgSet()
+    {
+        $result = myGetOptions();
+        $result[''];
+
+    }
+
     //===============================
     // TODO: testify following
     //===============================

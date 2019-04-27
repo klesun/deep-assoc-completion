@@ -58,8 +58,23 @@ namespace PHPSTORM_META {
 
     expectedArguments(\App\Models\City::first(), 1, ['city_id' => 1, 'city' => 'world', 'country_id' => 1]);
     expectedReturnValues(\App\Models\City::first(), ['retrieval_time' => 0.024, 'id' => 432526, 'name' => 'Tokyo']);
-}
 
+    // by King2500
+    // key value arrays
+    registerArgumentsSet('my_options', array(
+        'foo' => -1, // default value = -1 / type = int
+        'bar' => '', // default value = '' / type = string
+        'name' => argumentType('string'), // just type info, no default  // FUN FACT: we could provide expectedArguments for argumentType itself in...
+        'list' => array(), // default value = [] / type = array
+        'types' => array(MY_FOO, MY_BAR), // array of elements with possible values
+        'object' => new \DateTime() | new \DateInterval() | null, // one or more object types
+        'mode' => argumentsSet('my_modes'),
+        'flags' => FLAG_a | FLAG_B, // bitwise flags
+    ));
+    expectedArguments(mySetOptions(), 0, argumentSet('my_options'));
+    expectedReturnValues(myGetOptions(), argumentSet('my_options'));
+    expectedReturnValues(myGetOptions(), ['asd' => 'dsa']);
+}
 
 function gzip_by_dict($params)
 {

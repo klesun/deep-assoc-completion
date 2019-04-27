@@ -156,8 +156,10 @@ public class MethCallRes extends Lang
         return ctx.getProject().fap(proj -> {
             FileBasedIndex index = FileBasedIndex.getInstance();
             GlobalSearchScope scope = GlobalSearchScope.allScope(proj);
-            List<Collection<PhpExpectedFunctionArgument>> values = index.getValues(PhpExpectedReturnValuesIndex.KEY, fqn, scope);
-            return It(values).fap(col -> col)
+            It<PhpExpectedFunctionArgument> metas = list(fqn, fqn.replaceAll("^\\\\", ""))
+                .fap(fullFqn -> It(index.getValues(PhpExpectedReturnValuesIndex.KEY, fullFqn, scope)))
+                .fap(col -> col);
+            return metas
                 .cst(PhpExpectedFunctionScalarArgument.class)
                 .unq().fap(exp -> DocParamRes.parseExpression(
                     exp.getValue(), proj, ctx.subCtxEmpty()
