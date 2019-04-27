@@ -272,14 +272,18 @@ public class FuncCallRes extends Lang
         }).def(list());
     }
 
+    public static It<String> getCallFqn(FunctionReferenceImpl funcCall)
+    {
+        return opt(funcCall.getFQN()).itr()
+            .cct(opt(funcCall.getFirstChild()).map(i -> i.getText()));
+    }
+
     public It<DeepType> resolve(FunctionReferenceImpl funcCall)
     {
         IExprCtx funcCtx = ctx.subCtxDirect(funcCall);
         return It.cnc(
             findBuiltInFuncCallType(funcCall),
-            opt(funcCall.getFQN()).itr()
-                .cct(opt(funcCall.getFirstChild()).map(i -> i.getText()))
-                .fap(fqn -> MethCallRes.findFqnMetaDefRetType(fqn, ctx)),
+            getCallFqn(funcCall).fap(fqn -> MethCallRes.findFqnMetaDefRetType(fqn, ctx)),
             opt(funcCall.getFirstChild())
                 .fop(toCast(PhpExpression.class))
                 .fap(funcVar -> ctx.findExprType(funcVar))

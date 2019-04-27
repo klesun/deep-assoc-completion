@@ -154,7 +154,8 @@ public class MethCallRes extends Lang
     }
 
     public static It<DeepType> findFqnMetaType(
-        String fqn, IExprCtx ctx, ID<String, Collection<PhpExpectedFunctionArgument>> idxKey,
+        String fqn, IExprCtx ctx,
+        ID<String, Collection<PhpExpectedFunctionArgument>> idxKey,
         Predicate<PhpExpectedFunctionArgument> argCond
     ) {
         return ctx.getProject().fap(proj -> {

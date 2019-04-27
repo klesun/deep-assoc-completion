@@ -71,9 +71,8 @@ namespace PHPSTORM_META {
         'mode' => argumentsSet('my_modes'),
         'flags' => FLAG_A | FLAG_B, // bitwise flags
     ));
-    expectedArguments(mySetOptions(), 0, argumentSet('my_options'));
-    expectedReturnValues(myGetOptions(), argumentSet('my_options'));
-    expectedReturnValues(myGetOptions(), ['asd' => 'dsa']);
+    expectedArguments(mySetOptions(), 0, argumentsSet('my_options'));
+    expectedReturnValues(myGetOptions(), argumentsSet('my_options'));
 }
 
 function gzip_by_dict($params)

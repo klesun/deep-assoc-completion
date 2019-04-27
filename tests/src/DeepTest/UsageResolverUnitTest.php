@@ -3,6 +3,7 @@ namespace DeepTest;
 
 use App\Models\City;
 use Library\Book;
+use function PHPSTORM_META\argumentsSet;
 
 /**
  * calls UsageResolver on the argument of each provide* function and
@@ -853,6 +854,26 @@ class UsageResolverUnitTest
         ]);
         return [
             'param' => ['city_id' => 1, 'city' => 'world', 'country_id' => 1],
+        ];
+    }
+
+    public function provideMetaArgSet($param)
+    {
+        mySetOptions([
+            '' => '',
+        ]);
+        mySetOptions($param);
+        return [
+            'param' => [
+                'foo' => -1,
+                'bar' => '',
+                'name' => argumentType('string'),
+                'list' => array(),
+                'types' => array(MY_FOO, MY_BAR),
+                'object' => new \DateTime() | new \DateInterval() | null,
+                'mode' => 'qwe_any',
+                'flags' => FLAG_A | FLAG_B,
+            ],
         ];
     }
 

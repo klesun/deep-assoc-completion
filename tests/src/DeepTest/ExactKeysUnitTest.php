@@ -1570,16 +1570,18 @@ class ExactKeysUnitTest
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function provideMetaArgSet()
     {
         $result = myGetOptions();
         $result[''];
-
+        return [
+            [$result, ['foo', 'bar', 'name', 'list', 'types', 'object', 'mode', 'flags']]
+        ];
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     //===============================
     // TODO: testify following

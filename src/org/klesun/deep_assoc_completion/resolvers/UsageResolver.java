@@ -309,7 +309,7 @@ public class UsageResolver
                 .fap(casted -> opt(casted.getClassReference())
                     .fap(clsRef -> makeMethFqns(clsRef, "__construct"))),
             Tls.cast(FunctionReferenceImpl.class, call)
-                .fop(casted -> opt(casted.getFQN()))
+                .fap(casted -> FuncCallRes.getCallFqn(casted))
         );
     }
 
