@@ -265,18 +265,25 @@ public class UsageResolver
             ));
     }
 
+    private static It<DeepType> findFqnMetaArgType(String fqn, int argOrder, IExprCtx ctx)
+    {
+        return ctx.getProject().fap(proj -> {
+            FileBasedIndex index = FileBasedIndex.getInstance();
+            GlobalSearchScope scope = GlobalSearchScope.allScope(proj);
+            List<Collection<PhpExpectedFunctionArgument>> values = index.getValues(PhpExpectedFunctionArgumentsIndex.KEY, fqn, scope);
+            return It(values).fap(col -> col)
+                .cst(PhpExpectedFunctionScalarArgument.class)
+                .flt(arg -> arg.getArgumentIndex() == argOrder)
+                .unq().fap(exp -> DocParamRes.parseExpression(
+                    exp.getValue(), proj, ctx.subCtxEmpty()
+                ));
+        });
+    }
+
     public static It<DeepType> findMetaArgType(Function func, int argOrder, IExprCtx ctx)
     {
         String fqn = func.getFQN();
-        FileBasedIndex index = FileBasedIndex.getInstance();
-        GlobalSearchScope scope = GlobalSearchScope.allScope(func.getProject());
-        List<Collection<PhpExpectedFunctionArgument>> values = index.getValues(PhpExpectedFunctionArgumentsIndex.KEY, fqn, scope);
-        return It(values).fap(col -> col)
-            .cst(PhpExpectedFunctionScalarArgument.class)
-            .flt(arg -> arg.getArgumentIndex() == argOrder)
-            .unq().fap(exp -> DocParamRes.parseExpression(
-                exp.getValue(), func.getProject(), ctx.subCtxEmpty()
-            ));
+        return findFqnMetaArgType(fqn, argOrder, ctx);
     }
 
     private It<DeepType> findCallableMetaArgType(Function func, int argOrder)
@@ -296,6 +303,27 @@ public class UsageResolver
     private Opt<MemIt<DeepType>> takeFromCache(PhpExpression expr)
     {
         return opt(fakeCtx.getSearch().exprToUsageResult.get(expr));
+    }
+
+    private static It<String> makeMethFqns(PhpExpression clsRef, String name)
+    {
+        return It(ArrCtorRes.ideaTypeToFqn(clsRef.getType()))
+            .map(clsFqn -> clsFqn + "." + name);
+    }
+
+    private static It<String> getCallFqn(PsiElement call)
+    {
+        return It.cnc(
+            Tls.cast(MethodReference.class, call)
+                .fap(casted -> opt(casted.getName())
+                    .fap(name -> opt(casted.getClassReference())
+                        .fap(clsRef -> makeMethFqns(clsRef, name)))),
+            Tls.cast(NewExpression.class, call)
+                .fap(casted -> opt(casted.getClassReference())
+                    .fap(clsRef -> makeMethFqns(clsRef, "__construct"))),
+            Tls.cast(FunctionReferenceImpl.class, call)
+                .fop(casted -> opt(casted.getFQN()))
+        );
     }
 
     // if arg is assoc array - will return type with keys accessed on it
@@ -340,14 +368,19 @@ public class UsageResolver
                             return findArgTypeFromUsage(ipl, order, nextCtx);
                         }),
                         findBuiltInArgType(meth, order, argList),
-                        findCallableMetaArgType(meth, order)
+                        findCallableMetaArgType(meth, order) // for meta info on methods in parent classes
                     ));
 
                 It<DeepType> asMagicCtorArg = opt(argList.getParent())
                     .fop(toCast(NewExpressionImpl.class))
                     .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types);
 
-                return It.cnc(asRealFuncArg, asMagicCtorArg);
+                // for meta info on methods of this particular class, including magic and inherited ones
+                It<DeepType> asFqnMeta = callOpt
+                    .fap(psi -> getCallFqn(psi))
+                    .fap(fqn -> findFqnMetaArgType(fqn, order, fakeCtx));
+
+                return It.cnc(asFqnMeta, asRealFuncArg, asMagicCtorArg);
             });
 
         MemIt<DeepType> result = It.cnc(asAssocKey, asEqStrVal, asPlusArr, asFuncArg).mem();

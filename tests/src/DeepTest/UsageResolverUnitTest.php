@@ -1,6 +1,7 @@
 <?php
 namespace DeepTest;
 
+use App\Models\City;
 use Library\Book;
 
 /**
@@ -841,6 +842,17 @@ class UsageResolverUnitTest
                 'timeoutMs' => 20 * 1000, // 20 seconds
                 'errorHandler' => function($code, $msg){},
             ],
+        ];
+    }
+
+    public function provideInheritedFuncMetaFqn($param)
+    {
+        (new City())->first('cities', $param);
+        (new City())->first('cities', [
+            '' => 1,
+        ]);
+        return [
+            'param' => ['city_id' => 1, 'city' => 'world', 'country_id' => 1],
         ];
     }
 

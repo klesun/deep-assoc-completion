@@ -4,6 +4,7 @@ namespace Library {
     abstract class InfoHolder {
         public $capacity;
         public abstract function read($params);
+        public function getFirst($params) {}
     }
 
     interface IProduct {

@@ -55,6 +55,8 @@ namespace PHPSTORM_META {
         'fruitPercentage' => 0.57,
         'pricePerLitre' => '1.12',
     ]);
+
+    expectedArguments(\App\Models\City::first(), 1, ['city_id' => 1, 'city' => 'world', 'country_id' => 1]);
 }
 
 
