@@ -3,6 +3,7 @@ namespace DeepTest;
 
 use App\Models\City;
 use Library\Book;
+use Library\Child;
 use function PHPSTORM_META\argumentsSet;
 
 /**
@@ -859,9 +860,7 @@ class UsageResolverUnitTest
 
     public function provideMetaArgSet($param)
     {
-        mySetOptions([
-            '' => '',
-        ]);
+        mySetOptions(['' => '']);
         mySetOptions($param);
         return [
             'param' => [
@@ -874,6 +873,15 @@ class UsageResolverUnitTest
                 'mode' => 'qwe_any',
                 'flags' => FLAG_A | FLAG_B,
             ],
+        ];
+    }
+
+    public function provideStaticInDoc($param)
+    {
+        Child::find([], ['' => '']);
+        Child::find([], $param);
+        return [
+            'param' => ['stub_id' => 1, 'user_id' => 1, 'user_name' => 'mark'],
         ];
     }
 

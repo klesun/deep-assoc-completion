@@ -136,7 +136,7 @@ public class DocParamRes extends Lang
 
     public It<DeepType> parseEqExpression(String eqExpr, PsiElement sourcePsi)
     {
-        IExprCtx docCtx = ctx.subCtxEmpty(sourcePsi);
+        IExprCtx docCtx = ctx.subCtxDoc(sourcePsi);
         return Tls.regex("^\\s*=\\s*(.+)$", eqExpr)
             .fop(matches -> matches.gat(0))
             .fap(expr -> parseExpression(expr, sourcePsi.getProject(), docCtx));

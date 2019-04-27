@@ -11,7 +11,9 @@ import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
-import org.klesun.lang.*;
+import org.klesun.lang.L;
+import org.klesun.lang.MemIt;
+import org.klesun.lang.Opt;
 
 import java.util.Collection;
 import java.util.Map;
@@ -58,9 +60,11 @@ public class ExprCtx implements IExprCtx {
         return subExpr(expr, funcCtx.subCtxEmpty());
     }
 
-    public ExprCtx subCtxEmpty(PsiElement fakeFileSource) {
+    public ExprCtx subCtxDoc(PsiElement fakeFileSource) {
         FuncCtx funcSubCtx = funcCtx.subCtxEmpty();
         funcSubCtx.fakeFileSource = som(fakeFileSource);
+        funcSubCtx.clsIdeaType = getSelfType();
+        funcSubCtx.instGetter = funcCtx.instGetter;
         return subExpr(expr, funcSubCtx);
     }
 
@@ -84,8 +88,8 @@ public class ExprCtx implements IExprCtx {
         return subExpr(expr, funcCtx.subCtxMagicProp(fieldRef, this::findExprType));
     }
 
-    public ExprCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars) {
-        return subExpr(expr, funcCtx.withClosure(closureVars));
+    public ExprCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars, IExprCtx outsideCtx) {
+        return subExpr(expr, funcCtx.withClosure(closureVars, outsideCtx.func()));
     }
 
     public Opt<PsiElement> getFakeFileSource() {

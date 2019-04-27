@@ -35,7 +35,6 @@ public class FlatMapIterator<A, B> implements Iterator<B> {
             return som(() -> current.next());
         } else {
             while (iterators.hasNext()) {
-                //System.out.println("zhopa hasNext " + i);
                 current = iterators.next();
                 if (current.hasNext()) {
                     return som(() -> current.next());

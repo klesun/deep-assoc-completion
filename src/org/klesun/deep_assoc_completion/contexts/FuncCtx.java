@@ -213,13 +213,13 @@ public class FuncCtx extends Lang implements IFuncCtx
         return new FuncCtx(this, list(), null, EArgPsiType.NONE);
     }
 
-    public FuncCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars)
+    public FuncCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars, IFuncCtx outsideCtx)
     {
         FuncCtx closCtx = new FuncCtx(parent.def(this), argGetters, uniqueRef.def(null), EArgPsiType.INDIRECT);
         closCtx.closureVars = closureVars; // probably should add to caching criteria...
         closCtx.fakeFileSource = this.fakeFileSource;
-        closCtx.clsIdeaType = this.clsIdeaType;
-        closCtx.instGetter = this.instGetter;
+        closCtx.clsIdeaType = outsideCtx.getSelfType();
+        closCtx.instGetter = outsideCtx.getInstGetter();
         closCtx.variadicOrders = this.variadicOrders;
         closCtx.cachedArgs = this.cachedArgs;
         return closCtx;
@@ -241,6 +241,16 @@ public class FuncCtx extends Lang implements IFuncCtx
     public SearchCtx getSearch()
     {
         return search;
+    }
+
+    public Opt<PhpType> getSelfType()
+    {
+        return clsIdeaType;
+    }
+
+    public Opt<S<Mt>> getInstGetter()
+    {
+        return instGetter;
     }
 
     private L<Object> getHashValues()

@@ -41,9 +41,6 @@ public class TranspileToNodeJs extends AnAction
 {
     private It<PsiElement> removeClsMods(It<PsiElement> clsParts)
     {
-        //for (PsiElement psi: clsParts) {
-            //System.out.println("zhopa type " + psi.getNode().getElementType().getClass() + " " + psi.getNode().getElementType());
-        //}
         return clsParts
             .flt(part -> opt(part.getNode().getElementType())
                 .cst(PhpElementType.class)

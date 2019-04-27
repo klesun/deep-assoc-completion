@@ -25,13 +25,13 @@ import static org.klesun.lang.Lang.*;
 public interface IExprCtx {
     IFuncCtx func();
     IExprCtx subCtxEmpty();
-    IExprCtx subCtxEmpty(PsiElement fakeFileSource);
+    IExprCtx subCtxDoc(PsiElement fakeFileSource);
     IExprCtx subCtxDirect(FunctionReference funcCall);
     IExprCtx subCtxDirect(NewExpression funcCall);
     IExprCtx subCtxSingleArgArr(PhpExpression argArr);
     IExprCtx subCtxIndirect(PhpExpression args);
     IExprCtx subCtxMagicProp(FieldReference fieldRef);
-    IExprCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars);
+    IExprCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars, IExprCtx outsideCtx);
     It<DeepType> getThisType();
     Opt<PhpType> getSelfType();
     L<T2<String, S<MemIt<DeepType>>>> getClosureVars();
