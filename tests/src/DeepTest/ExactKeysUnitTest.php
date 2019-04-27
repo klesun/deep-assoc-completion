@@ -1,6 +1,7 @@
 <?php
 namespace DeepTest;
 
+use App\Models\City;
 use Lib\ParamValidation\DictP;
 use Lib\ParamValidation\ListP;
 use Lib\ParamValidation\StringP;
@@ -1557,6 +1558,15 @@ class ExactKeysUnitTest
         $juice[''];
         return [
             [$juice, ['fruit', 'fruitPercentage', 'pricePerLitre']],
+        ];
+    }
+
+    public function provideInheritedFuncMetaFqn($param)
+    {
+        $result = (new City())->first('cities', $param);
+        $result[''];
+        return [
+            [$result, ['retrieval_time', 'id', 'name']],
         ];
     }
 

@@ -311,7 +311,7 @@ public class UsageResolver
             .map(clsFqn -> clsFqn + "." + name);
     }
 
-    private static It<String> getCallFqn(PsiElement call)
+    public static It<String> getCallFqn(PsiElement call)
     {
         return It.cnc(
             Tls.cast(MethodReference.class, call)

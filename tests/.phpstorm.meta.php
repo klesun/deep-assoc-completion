@@ -57,6 +57,7 @@ namespace PHPSTORM_META {
     ]);
 
     expectedArguments(\App\Models\City::first(), 1, ['city_id' => 1, 'city' => 'world', 'country_id' => 1]);
+    expectedReturnValues(\App\Models\City::first(), ['retrieval_time' => 0.024, 'id' => 432526, 'name' => 'Tokyo']);
 }
 
 

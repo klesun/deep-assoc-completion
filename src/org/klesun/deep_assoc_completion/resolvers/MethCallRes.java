@@ -151,17 +151,24 @@ public class MethCallRes extends Lang
         });
     }
 
+    private static It<DeepType> findFqnMetaDefRetType(String fqn, IExprCtx ctx)
+    {
+        return ctx.getProject().fap(proj -> {
+            FileBasedIndex index = FileBasedIndex.getInstance();
+            GlobalSearchScope scope = GlobalSearchScope.allScope(proj);
+            List<Collection<PhpExpectedFunctionArgument>> values = index.getValues(PhpExpectedReturnValuesIndex.KEY, fqn, scope);
+            return It(values).fap(col -> col)
+                .cst(PhpExpectedFunctionScalarArgument.class)
+                .unq().fap(exp -> DocParamRes.parseExpression(
+                    exp.getValue(), proj, ctx.subCtxEmpty()
+                ));
+        });
+    }
+
     public static It<DeepType> findMetaDefRetType(Function func, IExprCtx ctx)
     {
         String fqn = func.getFQN();
-        FileBasedIndex index = FileBasedIndex.getInstance();
-        GlobalSearchScope scope = GlobalSearchScope.allScope(func.getProject());
-        List<Collection<PhpExpectedFunctionArgument>> values = index.getValues(PhpExpectedReturnValuesIndex.KEY, fqn, scope);
-        return It(values).fap(col -> col)
-            .cst(PhpExpectedFunctionScalarArgument.class)
-            .unq().fap(exp -> DocParamRes.parseExpression(
-                exp.getValue(), func.getProject(), ctx.subCtxEmpty()
-            ));
+        return findFqnMetaDefRetType(fqn, ctx);
     }
 
     public It<DeepType> findMetaDefMethRetType(Method meth)
@@ -294,11 +301,16 @@ public class MethCallRes extends Lang
     public It<DeepType> resolveCall(MethodReferenceImpl funcCall)
     {
         IExprCtx funcCtx = ctx.subCtxDirect(funcCall);
-        return resolveMethodFromCall(funcCall)
+        It<DeepType> declTit = resolveMethodFromCall(funcCall)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
-                findMetaDefMethRetType(func),
+                findMetaDefMethRetType(func), // for parent class methods
                 findBuiltInRetType(func, funcCtx, funcCall)
             ));
+
+        It<DeepType> noDeclTit = UsageResolver.getCallFqn(funcCall)
+            .fap(fqn -> findFqnMetaDefRetType(fqn, ctx));
+
+        return It.cnc(noDeclTit, declTit);
     }
 }
