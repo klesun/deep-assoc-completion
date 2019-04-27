@@ -151,7 +151,7 @@ public class MethCallRes extends Lang
         });
     }
 
-    private static It<DeepType> findFqnMetaDefRetType(String fqn, IExprCtx ctx)
+    public static It<DeepType> findFqnMetaDefRetType(String fqn, IExprCtx ctx)
     {
         return ctx.getProject().fap(proj -> {
             FileBasedIndex index = FileBasedIndex.getInstance();
@@ -167,16 +167,10 @@ public class MethCallRes extends Lang
         });
     }
 
-    public static It<DeepType> findMetaDefRetType(Function func, IExprCtx ctx)
-    {
-        String fqn = func.getFQN();
-        return findFqnMetaDefRetType(fqn, ctx);
-    }
-
-    public It<DeepType> findMetaDefMethRetType(Method meth)
+    private It<DeepType> findMetaDefMethRetType(Method meth)
     {
         return findOverriddenMethods(meth)
-            .fap(m -> findMetaDefRetType(m, ctx));
+            .fap(m -> findFqnMetaDefRetType(m.getFQN(), ctx));
     }
 
     private It<DeepType> findBuiltInRetType(Method meth, IExprCtx argCtx, MethodReference methCall)

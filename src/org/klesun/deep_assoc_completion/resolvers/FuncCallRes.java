@@ -277,18 +277,17 @@ public class FuncCallRes extends Lang
         IExprCtx funcCtx = ctx.subCtxDirect(funcCall);
         return It.cnc(
             findBuiltInFuncCallType(funcCall),
+            opt(funcCall.getFQN()).itr()
+                .cct(opt(funcCall.getFirstChild()).map(i -> i.getText()))
+                .fap(fqn -> MethCallRes.findFqnMetaDefRetType(fqn, ctx)),
             opt(funcCall.getFirstChild())
                 .fop(toCast(PhpExpression.class))
                 .fap(funcVar -> ctx.findExprType(funcVar))
                 .fap(t -> t.getReturnTypes(funcCtx)),
             opt(funcCall.resolve())
                 .fop(Tls.toCast(FunctionImpl.class))
-                .fap(func -> {
-                    It<DeepType> customFuncTit = new ClosRes(ctx)
-                        .resolve(func).getReturnTypes(funcCtx);
-                    It<DeepType> metaDefTit = MethCallRes.findMetaDefRetType(func, ctx);
-                    return It.cnc(customFuncTit, metaDefTit);
-                })
+                .fap(func -> new ClosRes(ctx)
+                    .resolve(func).getReturnTypes(funcCtx))
         );
     }
 }

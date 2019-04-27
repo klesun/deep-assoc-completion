@@ -69,7 +69,7 @@ namespace PHPSTORM_META {
         'types' => array(MY_FOO, MY_BAR), // array of elements with possible values
         'object' => new \DateTime() | new \DateInterval() | null, // one or more object types
         'mode' => argumentsSet('my_modes'),
-        'flags' => FLAG_a | FLAG_B, // bitwise flags
+        'flags' => FLAG_A | FLAG_B, // bitwise flags
     ));
     expectedArguments(mySetOptions(), 0, argumentSet('my_options'));
     expectedReturnValues(myGetOptions(), argumentSet('my_options'));
