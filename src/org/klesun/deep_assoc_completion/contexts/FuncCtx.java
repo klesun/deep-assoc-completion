@@ -128,9 +128,8 @@ public class FuncCtx extends Lang implements IFuncCtx
     {
         opt(memRef.getClassReference())
             .thn(clsRef -> {
-                if (clsRef instanceof ClassReference && !isWhitelistedStaticThis(memRef)) {
-                    this.clsIdeaType = opt(clsRef.getType());
-                } else {
+                this.clsIdeaType = opt(clsRef.getType());
+                if (!(clsRef instanceof ClassReference) || isWhitelistedStaticThis(memRef)) {
                     this.instGetter = opt(() -> new Mt(findExprType.apply(clsRef)));
                 }
             });

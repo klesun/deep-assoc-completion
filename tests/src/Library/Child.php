@@ -22,6 +22,15 @@ class Base
     {
         return [];
     }
+
+    /**
+     * @param string $field =array_keys(static::sample())[$i]
+     *
+     * @return bool
+     */
+    public function hasField($field)
+    {
+    }
 }
 
 class Child extends Base
@@ -31,3 +40,6 @@ class Child extends Base
         return ['user_id' => 1, 'user_name' => 'mark'];
     }
 }
+
+Child::find([], ['']);
+(new Child)->hasField('');

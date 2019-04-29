@@ -3,7 +3,7 @@ namespace App\Models;
 
 class Model
 {
-    public function first($table, $params)
+    public static function first($table, $params)
     {
     }
 }
@@ -18,5 +18,14 @@ class City extends Model
     public function getDisplayField()
     {
         return 'city';
+    }
+}
+
+
+class TimeController
+{
+    public function currentAction()
+    {
+        return City::first([],['']); //caret
     }
 }

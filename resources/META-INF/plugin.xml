@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.04.27.001</version>
+    <version>2019.04.29.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,8 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#73 Add static:: support in doc comments - provide completio from the overriden method, not the version of method declared in same parent class as the documented method</li>
-        <li>#75 Do not require function to be explicitly defined in project for .meta completion</li>
+        <li>#73 Allow using `static::` in php doc on instance methods as well</li>
     </ul>
     ]]>
     </change-notes>
