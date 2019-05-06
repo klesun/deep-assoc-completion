@@ -1547,7 +1547,7 @@ class ExactKeysUnitTest
     public function provideMetaDefFunc()
     {
         $gzipped = \gzip_by_dict([]);
-        $gzipped[''];
+        $gzipped['bytes'];
         return [
             [$gzipped, ['bytes', 'newDict']],
         ];
@@ -1556,6 +1556,7 @@ class ExactKeysUnitTest
     public function provideArgTypeFromMetaInsideFunc($juice)
     {
         $juice[''];
+        $juice['fruit'];
         return [
             [$juice, ['fruit', 'fruitPercentage', 'pricePerLitre']],
         ];
@@ -1564,7 +1565,7 @@ class ExactKeysUnitTest
     public function provideInheritedFuncMetaFqn($param)
     {
         $result = (new City())->first('cities', $param);
-        $result[''];
+        $result['retrieval_time'];
         return [
             [$result, ['retrieval_time', 'id', 'name']],
         ];

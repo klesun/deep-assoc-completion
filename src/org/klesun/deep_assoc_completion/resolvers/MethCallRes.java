@@ -12,7 +12,10 @@ import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
-import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.Function;
+import com.jetbrains.php.lang.psi.elements.Method;
+import com.jetbrains.php.lang.psi.elements.MethodReference;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionArgument;
@@ -27,7 +30,8 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
 import org.klesun.lang.iterators.RegexIterator;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -153,6 +157,22 @@ public class MethCallRes extends Lang
         });
     }
 
+    private static It<? extends Function> getFuncByFqn(String fullFqn, PhpIndex phpIdx)
+    {
+        String[] parts = fullFqn.split("\\.");
+        if (parts.length == 2) {
+            // a method
+            String cls = parts[0];
+            String meth = parts[1];
+            return It(phpIdx.getAnyByFQN(cls))
+                .fap(clsPsi -> clsPsi.getMethods())
+                .flt(methPsi -> meth.equals(methPsi.getName()));
+        } else {
+            // plain function in global scope
+            return It(phpIdx.getFunctionsByFQN(fullFqn));
+        }
+    }
+
     public static It<DeepType> findFqnMetaType(
         String fqn, IExprCtx ctx,
         ID<String, Collection<PhpExpectedFunctionArgument>> idxKey,
@@ -160,15 +180,23 @@ public class MethCallRes extends Lang
     ) {
         return ctx.getProject().fap(proj -> {
             FileBasedIndex index = FileBasedIndex.getInstance();
+            PhpIndex phpIdx = PhpIndex.getInstance(proj);
             GlobalSearchScope scope = GlobalSearchScope.allScope(proj);
             return list(fqn, fqn.replaceAll("^\\\\", ""))
-                .fap(fullFqn -> It(index.getValues(idxKey, fullFqn, scope)))
-                .fap(col -> col)
-                .flt(argCond)
-                .cst(PhpExpectedFunctionScalarArgument.class)
-                .unq().fap(exp -> DocParamRes.parseExpression(
-                    exp.getValue(), ctx.getProject().unw(), ctx.subCtxEmpty()
-                ));
+                .fap(fullFqn -> It(index.getValues(idxKey, fullFqn, scope))
+                    .fap(col -> col)
+                    .flt(argCond)
+                    .cst(PhpExpectedFunctionScalarArgument.class)
+                    .unq().fap(exp -> {
+                        Opt<? extends PsiElement> declOpt = Opt.fst(
+                            () -> opt(exp.getNamedElement(proj)),
+                            () -> getFuncByFqn(fqn, phpIdx).fst().map(a -> a)
+                        );
+                        IExprCtx docCtx = declOpt
+                            .map(decl -> ctx.subCtxDoc(decl))
+                            .def(ctx.subCtxEmpty());
+                        return DocParamRes.parseExpression(exp.getValue(), ctx.getProject().unw(), docCtx);
+                    }));
         });
     }
 
