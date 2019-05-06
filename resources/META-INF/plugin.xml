@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.04.29.001</version>
+    <version>2019.05.06.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#73 Allow using `static::` in php doc on instance methods as well</li>
+        <li>#76 GoTo the actual func from meta def keys, not foo.bar</li>
     </ul>
     ]]>
     </change-notes>
