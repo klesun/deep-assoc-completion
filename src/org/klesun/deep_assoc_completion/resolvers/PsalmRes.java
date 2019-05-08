@@ -9,6 +9,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.deep_assoc_completion.structures.Mkt;
 import org.klesun.deep_assoc_completion.structures.psalm.IType;
 import org.klesun.deep_assoc_completion.structures.psalm.PsalmParser;
@@ -50,6 +51,37 @@ public class PsalmRes {
                         .map(psalm -> psalmToDeep(psalm, goToPsi))
                         .map(tit -> new Mt(tit))
                         .arr();
+                    // see https://psalm.dev/docs/templated_annotations/#builtin-templated-classes-and-interfaces
+                    Boolean isArrayLike = false
+                        || cls.fqn.equals("array") || cls.fqn.equals("\\array")
+                        || cls.fqn.equals("iterable") || cls.fqn.equals("\\iterable")
+                        || cls.fqn.equals("Traversable") || cls.fqn.equals("\\Traversable")
+                        || cls.fqn.equals("ArrayAccess") || cls.fqn.equals("\\ArrayAccess")
+                        || cls.fqn.equals("IteratorAggregate") || cls.fqn.equals("\\IteratorAggregate")
+                        || cls.fqn.equals("Iterator") || cls.fqn.equals("\\Iterator")
+                        || cls.fqn.equals("SeekableIterator") || cls.fqn.equals("\\SeekableIterator")
+                        || cls.fqn.equals("Generator") || cls.fqn.equals("\\Generator")
+                        || cls.fqn.equals("ArrayObject") || cls.fqn.equals("\\ArrayObject")
+                        || cls.fqn.equals("ArrayIterator") || cls.fqn.equals("\\ArrayIterator")
+                        || cls.fqn.equals("SplDoublyLinkedList") || cls.fqn.equals("\\SplDoublyLinkedList")
+                        // these two probably should not be allowed to have 2 generics...
+                        || cls.fqn.equals("DOMNodeList") || cls.fqn.equals("\\DOMNodeList")
+                        || cls.fqn.equals("SplQueue") || cls.fqn.equals("\\SplQueue")
+                        ;
+                    if (isArrayLike) {
+                        if (cls.generics.size() == 1) {
+                            deep.addKey(KeyType.integer(goToPsi)).addType(() -> {
+                                It<DeepType> tit = psalmToDeep(cls.generics.get(0), goToPsi);
+                                return new Mt(tit);
+                            });
+                        } else if (cls.generics.size() == 2) {
+                            It<DeepType> kit = psalmToDeep(cls.generics.get(1), goToPsi);
+                            deep.addKey(KeyType.mt(kit, goToPsi)).addType(() -> {
+                                It<DeepType> tit = psalmToDeep(cls.generics.get(1), goToPsi);
+                                return new Mt(tit);
+                            });
+                        }
+                    }
                     return deep;
                 })
         );

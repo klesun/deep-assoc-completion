@@ -1618,18 +1618,51 @@ class ExactKeysUnitTest
         ];
     }
 
-    /** @param array{foo: string, bar: int} $arg */
-    public function providePsalmArrayArg($arg)
+    /**
+     * @param array{foo: string, bar: int} $arg
+     * @param array<array{foo: string, bar: int}> $moreArgs
+     */
+    public function providePsalmArrayArg($arg, $moreArgs)
     {
         $arg[''];
+        $moreArgs[0][''];
         return [
             [$arg, ['bar', 'foo']],
+            [$moreArgs[0], ['bar', 'foo']],
         ];
     }
 
     //=============================
     // following are not implemented yet
     //=============================
+
+    public function providePsalmGenerator()
+    {
+        /** @var \Generator<array{
+         *                      itemNo:string,
+         *                      variants:array<array{
+         *                          Code:string,
+         *                          stock:array<array{
+         *                                     serialNo:string,
+         *                                     locationCode:string,
+         *                                     differentialTaxation:bool
+         *                                      }>
+         *                           }>
+         *                      }>
+         * $products
+         */
+        $products = iterateOverProducts();
+        $first = null;
+        foreach ($products as $product) {
+            $first = $product;
+            break;
+        }
+        return [
+            [$first, ['item', 'variants']],
+            [$first['variants'][0], ['Code', 'stock']],
+            [$first['variants'][0]['stock'][0], ['serialNo', 'locationCode', 'differentialTaxation']],
+        ];
+    }
 
     //===============================
     // TODO: testify following
