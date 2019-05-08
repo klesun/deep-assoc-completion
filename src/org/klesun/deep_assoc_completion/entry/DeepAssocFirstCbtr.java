@@ -89,6 +89,16 @@ public class DeepAssocFirstCbtr extends CompletionContributor
                 ,
             new ObjMemberPvdr()
         );
+        // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
+        // or in_array('', $types) or in_array($type, ['AIR', ''])
+        // should suggest possible values of 'type'
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, StringLiteralExpression.class)
+                ,
+            new StrValsPvdr()
+        );
     }
 
     /**

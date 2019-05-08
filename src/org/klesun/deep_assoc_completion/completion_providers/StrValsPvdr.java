@@ -21,7 +21,9 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
 import org.klesun.lang.Opt;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import static org.klesun.lang.Lang.*;
 
@@ -159,10 +161,12 @@ public class StrValsPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        Set<String> alreadySuggested = new HashSet<>();
         // Symfony string completion options are usually more
         // relevant, so should make sure they are shown instantly
         result.runRemainingContributors(parameters, otherSourceResult -> {
             result.passResult(otherSourceResult);
+            alreadySuggested.add(otherSourceResult.getLookupElement().getLookupString());
         });
 
 
@@ -171,7 +175,9 @@ public class StrValsPvdr extends CompletionProvider<CompletionParameters>
             .fop(toCast(StringLiteralExpression.class))
             .fap(lit -> resolve(lit, parameters.isAutoPopup()));
 
-        makeOptions(tit).fch(result::addElement);
+        makeOptions(tit)
+            .flt(our -> !alreadySuggested.contains(our.getLookupString()))
+            .fch(result::addElement);
         long elapsed = System.nanoTime() - startTime;
         double seconds = elapsed / 1000000000.0;
         if (seconds > 0.1) {

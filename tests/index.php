@@ -787,3 +787,23 @@ $blancCls::;
 
 method_exists(new Blanc, '');
 
+class A
+{
+    public function getFoo($key) {
+        if ($key === 'qwrqwrqwr') {
+
+        }
+        return false;
+    }
+    /** @param $key = JSON_PRETTY_PRINT */
+    public function getBar($key) {
+        if ($key === JSON_UNESCAPED_SLASHES) {
+
+        }
+        return false;
+    }
+}
+
+$a = new A();
+$a->getFoo('');
+$a->getBar(JSON_PRETTY_PRINT);

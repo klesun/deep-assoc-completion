@@ -73,6 +73,9 @@ namespace PHPSTORM_META {
     ));
     expectedArguments(mySetOptions(), 0, argumentsSet('my_options'));
     expectedReturnValues(myGetOptions(), argumentsSet('my_options'));
+
+    expectedArguments(\A::getFoo(), 0, 'test', 'val');
+//    expectedArguments(\A::getBar(), 0, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 }
 
 function gzip_by_dict($params)
