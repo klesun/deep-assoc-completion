@@ -1537,6 +1537,7 @@ class ExactKeysUnitTest
         $struct = (new \Library\Book())->getStruct();
         $purchased = (new \Library\Book())->purchase([]); // from interface
         $read = (new \Library\Book())->read([]); // from extended class
+        $read['bytesChunk'];
         return [
             [$struct, ['title', 'author', 'chapters']],
             [$purchased, ['status', 'confirmationCode', 'transactionDt', 'serialKey']],
@@ -1577,6 +1578,52 @@ class ExactKeysUnitTest
         $result[''];
         return [
             [$result, ['foo', 'bar', 'name', 'list', 'types', 'object', 'mode', 'flags']]
+        ];
+    }
+
+    /** @return array{foo: string, bar: int} */
+    private function getPsalmArray()
+    {
+        return json_decode(file_get_contents('asdsad.json'), true);
+    }
+
+    /**
+     * @return array{
+     *     foo: string,
+     *     bar: int,
+     *     subArr: array{
+     *         subValue1: \DateTime,
+     *         subValue2: array<int>,
+     *         subValue3: array<string, int>,
+     *         subValue4: \Lib\Option<\Lib\Collection<\App\Model\Customer>>,
+     *     }
+     * }
+     */
+    private function getPsalmComplexArray()
+    {
+        return json_decode(file_get_contents('asdsad.json'), true);
+    }
+
+    public function providePsalmArrayReturn()
+    {
+        $arr = $this->getPsalmArray();
+        $arr[''];
+        $complexArr = $this->getPsalmComplexArray();
+        $complexArr[''];
+        $complexArr['subArr'][''];
+        return [
+            [$arr, ['bar', 'foo']],
+            [$complexArr, ['bar', 'foo', 'subArr']],
+            [$complexArr['subArr'], ['subValue1', 'subValue2', 'subValue3', 'subValue4']],
+        ];
+    }
+
+    /** @param array{foo: string, bar: int} $arg */
+    public function providePsalmArrayArg($arg)
+    {
+        $arg[''];
+        return [
+            [$arg, ['bar', 'foo']],
         ];
     }
 

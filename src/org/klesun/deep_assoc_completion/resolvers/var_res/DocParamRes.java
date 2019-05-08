@@ -45,12 +45,12 @@ public class DocParamRes extends Lang
         }
     }
 
-    private static Opt<String> getDocCommentText(PhpDocComment docComment)
+    public static Opt<String> getDocCommentText(PhpDocComment docComment)
     {
         return Tls.regex("\\s*\\/\\*{2}\\s*(.*?)\\s*\\*\\/", docComment.getText())
             .fop(matches -> matches.gat(0))
             .fap(starred -> It(starred.split("\n")))
-            .fop(line -> Tls.regex("\\s*\\*(.*)", line))
+            .fop(line -> Tls.regex("\\s*\\*?(.*)", line))
             .fop(matches -> matches.gat(0))
             .wap(cleanLines -> opt(Tls.implode("\n", cleanLines)));
     }

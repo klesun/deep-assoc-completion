@@ -14,6 +14,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
+import org.klesun.deep_assoc_completion.resolvers.PsalmRes;
 import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
 import org.klesun.deep_assoc_completion.structures.ArgOrder;
 import org.klesun.deep_assoc_completion.structures.DeepType;
@@ -265,7 +266,10 @@ public class ArgRes extends Lang
                     .fap(doc -> new DocParamRes(trace).resolve(doc)),
                 opt(arg.getParent()).fap(lst -> opt(lst.getParent()))
                     .cst(Function.class)
-                    .fap(func -> UsageResolver.findMetaArgType(func, order, trace)),
+                    .fap(func -> It.cnc(
+                        UsageResolver.findMetaArgType(func, order, trace),
+                        PsalmRes.resolveParam(func, param.getName())
+                    )),
                 opt(arg.getDefaultValue()).itr()
                     .cst(PhpExpression.class)
                     .fap(xpr -> trace.subCtxEmpty().findExprType(xpr))
