@@ -19,12 +19,11 @@ import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.Assign;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
-import org.klesun.lang.*;
+import org.klesun.lang.It;
+import org.klesun.lang.L;
+import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 import org.klesun.lang.iterators.RegexIterator;
-
-import java.util.Iterator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.klesun.deep_assoc_completion.structures.Mkt.*;
 import static org.klesun.lang.Lang.*;
@@ -212,10 +211,17 @@ public class VarRes
     {
         return findDeclarations(variable)
             .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, variable))
-            .fop(toCast(PhpDocVarImpl.class))
-            .fop(varDoc -> opt(varDoc.getParent()))
-            .fop(toCast(PhpDocTag.class))
-            .fap(docTag -> new DocParamRes(ctx).resolve(docTag));
+            .fap(refPsi -> It.cnc(non()
+                , Tls.cast(PhpDocVarImpl.class, refPsi)
+                    .fop(varDoc -> opt(varDoc.getParent()))
+                    .fop(toCast(PhpDocTag.class))
+                    .fap(docTag -> new DocParamRes(ctx).resolve(docTag))
+                , Tls.cast(Variable.class, refPsi)
+                    .fop(decl -> opt(decl.getDocComment()))
+                    .fap(docComment -> PsalmRes.resolveVar(
+                        docComment, variable.getName(), "var")
+                    )
+            ));
     }
 
     public Opt<Assign> resolveRef(PsiElement refPsi, boolean didSurelyHappen)

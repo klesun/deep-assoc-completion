@@ -135,15 +135,19 @@ public class PsalmRes {
             .fap(psalmTag -> psalmTag.tit);
     }
 
+    public static It<DeepType> resolveVar(PhpDocComment docComment, String varName, String tagName)
+    {
+        return parseDocTags(docComment)
+            .flt(psalmTag ->
+                psalmTag.tagName.equals(tagName) &&
+                psalmTag.textLeft.trim()
+                    .startsWith("$" + varName))
+            .fap(psalmTag -> psalmTag.tit);
+    }
+
     public static It<DeepType> resolveParam(Function func, String argName)
     {
-        return opt(func.getDocComment())
-            .fap(docComment -> parseDocTags(docComment))
-            .flt(psalmTag ->
-                psalmTag.tagName.equals("param") &&
-                psalmTag.textLeft.trim()
-                    .startsWith("$" + argName))
-            .fap(psalmTag -> psalmTag.tit);
+        return opt(func.getDocComment()).fap(docComment -> resolveVar(docComment, argName, "param"));
     }
 
     private static class PsalmDocTag {

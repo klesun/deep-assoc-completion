@@ -1632,10 +1632,6 @@ class ExactKeysUnitTest
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function providePsalmGenerator()
     {
         /** @var \Generator<array{
@@ -1652,17 +1648,23 @@ class ExactKeysUnitTest
          * $products
          */
         $products = iterateOverProducts();
+        $products[''];
         $first = null;
         foreach ($products as $product) {
             $first = $product;
             break;
         }
+        $first['variants'][0]['stock'][0][''];
         return [
-            [$first, ['item', 'variants']],
+            [$first, ['itemNo', 'variants']],
             [$first['variants'][0], ['Code', 'stock']],
             [$first['variants'][0]['stock'][0], ['serialNo', 'locationCode', 'differentialTaxation']],
         ];
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     //===============================
     // TODO: testify following
