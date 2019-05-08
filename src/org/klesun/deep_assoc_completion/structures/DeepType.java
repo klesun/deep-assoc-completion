@@ -30,6 +30,8 @@ public class DeepType extends Lang
     public final L<DeepType> pdoFetchTypes = L();
     public final LinkedHashSet<String> pdoBindVars = new LinkedHashSet<>();
     public Opt<IExprCtx> ctorArgs = opt(null);
+    // TODO: use them in function return/argument typing (through @template phpdoc tag)
+    public L<Mt> generics = L();
     public Opt<PhpType> clsRefType = non();
     // constant name
     public Opt<String> cstName = non();

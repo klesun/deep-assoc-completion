@@ -140,23 +140,33 @@ public class Tls extends Lang
         return findChildren(parent, cls, (a) -> true);
     }
 
-    /**
-     * be careful, java's regex implementation matches WHOLE string, in other
-     * words, it implicitly adds "^" and "$" at beginning and end of your regex
-     */
-    public static Opt<L<String>> regex(String patternText, String subjectText, int flags)
+    // TODO: rename this one to "regex" and the other one to "regexNoFull"
+    public static Opt<L<String>> regexWithFull(String patternText, String subjectText, int flags)
     {
         List<String> result = list();
         Pattern pattern = Pattern.compile(patternText, flags);
         Matcher matcher = pattern.matcher(subjectText);
         if (matcher.matches()) {
-            for (int i = 1; i < matcher.groupCount() + 1; ++i) {
+            for (int i = 0; i < matcher.groupCount() + 1; ++i) {
                 result.add(matcher.group(i));
             }
             return opt(L(result));
         } else {
             return opt(null);
         }
+    }
+
+    /**
+     * be careful, java's regex implementation matches WHOLE string, in other
+     * words, it implicitly adds "^" and "$" at beginning and end of your regex
+     *
+     * be careful, this function does not return _whole_ match, so 0-th returned group will contain the
+     * first () group from your regex (which is usually the 1-th returned group in return in php/js/python/etc...)
+     */
+    public static Opt<L<String>> regex(String patternText, String subjectText, int flags)
+    {
+        return regexWithFull(patternText, subjectText, flags)
+            .map(matches -> matches.sub(1));
     }
 
     public static Opt<L<String>> regex(String patternText, String subjectText)
