@@ -205,12 +205,6 @@ public class MethCallRes extends Lang
         return findFqnMetaType(fqn, ctx, PhpExpectedReturnValuesIndex.KEY, arg -> true);
     }
 
-    private It<DeepType> findMetaDefMethRetType(Method meth)
-    {
-        return findOverriddenMethods(meth)
-            .fap(m -> findFqnMetaDefRetType(m.getFQN(), ctx));
-    }
-
     private It<DeepType> findBuiltInRetType(Method meth, IExprCtx argCtx, MethodReference methCall)
     {
         It<DeepType> types = It(list());
@@ -283,6 +277,21 @@ public class MethCallRes extends Lang
             });
     }
 
+    public static It<DeepType> findFuncDocRetType(Function func, IExprCtx ctx)
+    {
+        It<Function> redecls = Tls.cast(Method.class, func)
+            .fap(m -> findOverriddenMethods(m))
+            .map(m -> (Function)m)
+            .def(som(func));
+        return redecls
+            .fap(m -> It.cnc(
+                opt(m.getDocComment())
+                    .map(doc -> doc.getReturnTag())
+                    .fap(tag -> parseReturnDoc(tag, ctx).mem()),
+                findFqnMetaDefRetType(m.getFQN(), ctx)
+            ));
+    }
+
     public static F<IExprCtx, It<DeepType>> findMethRetType(Method meth)
     {
         return (IExprCtx funcCtx) -> {
@@ -297,12 +306,8 @@ public class MethCallRes extends Lang
                     funcCtx = funcCtx.subCtxEmpty();
                 }
             }
-            L<Method> redecls = It.cnc(impls, findOverriddenMethods(meth)).unq().arr();
             IExprCtx finalCtx = funcCtx;
-            It<DeepType> docTit = redecls
-                .fap(m -> opt(m.getDocComment())
-                    .map(doc -> doc.getReturnTag())
-                    .fap(tag -> parseReturnDoc(tag, finalCtx).mem()));
+            It<DeepType> docTit = findFuncDocRetType(meth, finalCtx);
             It<DeepType> magicDocTit = Tls.cast(PhpDocMethod.class, meth)
                 .fap(doc -> parseMethDoc(doc, finalCtx));
             It<DeepType> implTit = impls.fap(m -> It.cnc(
@@ -352,7 +357,6 @@ public class MethCallRes extends Lang
         It<DeepType> declTit = resolveMethodFromCall(funcCall)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
-                findMetaDefMethRetType(func), // for parent class methods
                 findBuiltInRetType(func, funcCtx, funcCall)
             ));
 

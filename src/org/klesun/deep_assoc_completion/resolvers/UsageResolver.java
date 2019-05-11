@@ -369,11 +369,16 @@ public class UsageResolver
             .cst(StringLiteralExpression.class)
             .map(lit -> new DeepType(lit, PhpType.STRING, lit.getContents()));
 
+        It<DeepType> asRetVal = opt(caretExpr.getParent())
+            .fop(toCast(PhpReturn.class))
+            .fap(ret -> Tls.findParent(ret, Function.class))
+            .fap(func -> MethCallRes.findFuncDocRetType(func, fakeCtx));
+
         It<DeepType> asFuncArg = opt(caretExpr.getParent())
             .fop(toCast(ParameterList.class))
             .fap(argList -> findArgExprTypeFromUsage(caretExpr, argList));
 
-        MemIt<DeepType> result = It.cnc(asAssocKey, asEqStrVal, asPlusArr, asFuncArg).mem();
+        MemIt<DeepType> result = It.cnc(asAssocKey, asEqStrVal, asPlusArr, asFuncArg, asRetVal).mem();
         putToCache(caretExpr, result);
         return result.itr();
     }

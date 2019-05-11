@@ -885,10 +885,6 @@ class UsageResolverUnitTest
         ];
     }
 
-    //=========================
-    // following not implemented yet
-    //========================
-
     /**
      * @return array = ['key1' => '', 'key2' => 0]
      */
@@ -905,6 +901,10 @@ class UsageResolverUnitTest
             'param' => ['key1' => '', 'key2' => 0],
         ];
     }
+
+    //=========================
+    // following not implemented yet
+    //========================
 
     //============================
     // TODO: testify following
