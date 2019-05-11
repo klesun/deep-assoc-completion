@@ -902,6 +902,15 @@ class UsageResolverUnitTest
         ];
     }
 
+    public function provideFromReturnDoc($param)
+    {
+        (new \MyClass())->getMetaData(['' => '']);
+        (new \MyClass())->getMetaData($param);
+        return [
+            'param' => ['key1' => '', 'key2' => 0],
+        ];
+    }
+
     //=========================
     // following not implemented yet
     //========================

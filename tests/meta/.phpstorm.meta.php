@@ -76,6 +76,13 @@ namespace PHPSTORM_META {
 
     expectedArguments(\A::getFoo(), 0, 'test', 'val');
 //    expectedArguments(\A::getBar(), 0, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+    registerArgumentsSet('my_array', array(
+        'key1' => '',
+        'key2' => 0,
+    ));
+    expectedReturnValues(\MyInterface::getMetaData(), argumentsSet('my_array'));
+
 }
 
 function gzip_by_dict($params)
