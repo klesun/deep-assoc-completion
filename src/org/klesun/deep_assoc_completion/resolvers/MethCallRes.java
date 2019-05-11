@@ -266,6 +266,23 @@ public class MethCallRes extends Lang
         return It.cnc(asEq, asPsalm);
     }
 
+    private static It<DeepType> parseMethDoc(PhpDocMethod doc, IExprCtx ctx)
+    {
+        return opt(doc.getParent())
+            .cst(PhpDocMethodTag.class)
+            .fap(tag -> {
+                // text after signature _on same line_
+                String descrPart = It(tag.getChildren())
+                    .flt(psi -> (psi + "").equals("DOC_METHOD_DESCR"))
+                    .map(psi -> psi.getText()).str("");
+                // text on following lines
+                String valuePart = tag.getTagValue();
+                String fullDescr = descrPart + "\n" + valuePart;
+                return new DocParamRes(ctx)
+                    .parseEqExpression(fullDescr, doc);
+            });
+    }
+
     public static F<IExprCtx, It<DeepType>> findMethRetType(Method meth)
     {
         return (IExprCtx funcCtx) -> {
@@ -274,31 +291,25 @@ public class MethCallRes extends Lang
                 impls = It.cnc(list(meth), findOverridingMethods(meth)).arr();
                 // ignore $this and args in implementations
                 // since there may be dozens of them (Laravel)
+                // ... maybe should not look for implementations if return
+                // type is explicitly stated to be a class, not array?
                 if (!DeepSettings.inst(meth.getProject()).passArgsToImplementations) {
                     funcCtx = funcCtx.subCtxEmpty();
                 }
             }
+            L<Method> redecls = It.cnc(impls, findOverriddenMethods(meth)).unq().arr();
             IExprCtx finalCtx = funcCtx;
-            return impls.fap(m -> It.cnc(
-                opt(meth.getDocComment()).map(doc -> doc.getReturnTag())
-                    .fap(tag -> parseReturnDoc(tag, finalCtx)),
-                Tls.cast(PhpDocMethod.class, meth)
-                    .fap(doc -> opt(doc.getParent())
-                        .cst(PhpDocMethodTag.class)
-                        .fap(tag -> {
-                            // text after signature _on same line_
-                            String descrPart = It(tag.getChildren())
-                                .flt(psi -> (psi + "").equals("DOC_METHOD_DESCR"))
-                                .map(psi -> psi.getText()).str("");
-                            // text on following lines
-                            String valuePart = tag.getTagValue();
-                            String fullDescr = descrPart + "\n" + valuePart;
-                            return new DocParamRes(finalCtx)
-                                .parseEqExpression(fullDescr, doc);
-                        })),
+            It<DeepType> docTit = redecls
+                .fap(m -> opt(m.getDocComment())
+                    .map(doc -> doc.getReturnTag())
+                    .fap(tag -> parseReturnDoc(tag, finalCtx).mem()));
+            It<DeepType> magicDocTit = Tls.cast(PhpDocMethod.class, meth)
+                .fap(doc -> parseMethDoc(doc, finalCtx));
+            It<DeepType> implTit = impls.fap(m -> It.cnc(
                 opt(m.getReturnType()).fap(rt -> list(new DeepType(rt, rt.getType()))),
                 ClosRes.getReturnedValue(m, finalCtx)
             ));
+            return It.cnc(docTit, magicDocTit, implTit);
         };
     }
 

@@ -1662,6 +1662,15 @@ class ExactKeysUnitTest
         ];
     }
 
+    public function provideInterfaceReturnDoc()
+    {
+        $data = (new \MyClass())->getData();
+        $data[''];
+        return [
+            [$data, ['key1', 'key2']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
