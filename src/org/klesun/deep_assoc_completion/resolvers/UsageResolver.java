@@ -313,6 +313,35 @@ public class UsageResolver
         );
     }
 
+    private It<DeepType> findArgExprTypeFromUsage(PhpExpression caretExpr, ParameterList argList)
+    {
+        int order = L(argList.getParameters()).indexOf(caretExpr);
+        Opt<PsiElement> callOpt = opt(argList.getParent());
+        It<DeepType> asRealFuncArg = resolveFunc(argList)
+            .fap(meth -> It.cnc(
+                getImplementations(meth).fap(ipl -> {
+                    IExprCtx nextCtx = callOpt.fop(call -> Opt.fst(
+                        () -> Tls.cast(MethodReference.class, call).map(casted -> fakeCtx.subCtxDirect(casted)),
+                        () -> Tls.cast(NewExpression.class, call).map(casted -> fakeCtx.subCtxDirect(casted))
+                    )).def(fakeCtx.subCtxEmpty());
+                    return findArgTypeFromUsage(ipl, order, nextCtx);
+                }),
+                findBuiltInArgType(meth, order, argList),
+                findCallableMetaArgType(meth, order) // for meta info on methods in parent classes
+            ));
+
+        It<DeepType> asMagicCtorArg = opt(argList.getParent())
+            .fop(toCast(NewExpressionImpl.class))
+            .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types);
+
+        // for meta info on methods of this particular class, including magic and inherited ones
+        It<DeepType> asFqnMeta = callOpt
+            .fap(psi -> getCallFqn(psi))
+            .fap(fqn -> findFqnMetaArgType(fqn, order, fakeCtx));
+
+        return It.cnc(asFqnMeta, asRealFuncArg, asMagicCtorArg);
+    }
+
     // if arg is assoc array - will return type with keys accessed on it
     // if arg is string - will return type of values it can take
     public It<DeepType> findExprTypeFromUsage(PhpExpression caretExpr)
@@ -342,33 +371,7 @@ public class UsageResolver
 
         It<DeepType> asFuncArg = opt(caretExpr.getParent())
             .fop(toCast(ParameterList.class))
-            .fap(argList -> {
-                int order = L(argList.getParameters()).indexOf(caretExpr);
-                Opt<PsiElement> callOpt = opt(argList.getParent());
-                It<DeepType> asRealFuncArg = resolveFunc(argList)
-                    .fap(meth -> It.cnc(
-                        getImplementations(meth).fap(ipl -> {
-                            IExprCtx nextCtx = callOpt.fop(call -> Opt.fst(
-                                () -> Tls.cast(MethodReference.class, call).map(casted -> fakeCtx.subCtxDirect(casted)),
-                                () -> Tls.cast(NewExpression.class, call).map(casted -> fakeCtx.subCtxDirect(casted))
-                            )).def(fakeCtx.subCtxEmpty());
-                            return findArgTypeFromUsage(ipl, order, nextCtx);
-                        }),
-                        findBuiltInArgType(meth, order, argList),
-                        findCallableMetaArgType(meth, order) // for meta info on methods in parent classes
-                    ));
-
-                It<DeepType> asMagicCtorArg = opt(argList.getParent())
-                    .fop(toCast(NewExpressionImpl.class))
-                    .fap(newEx -> findClsMagicCtorUsedKeys(newEx, order).types);
-
-                // for meta info on methods of this particular class, including magic and inherited ones
-                It<DeepType> asFqnMeta = callOpt
-                    .fap(psi -> getCallFqn(psi))
-                    .fap(fqn -> findFqnMetaArgType(fqn, order, fakeCtx));
-
-                return It.cnc(asFqnMeta, asRealFuncArg, asMagicCtorArg);
-            });
+            .fap(argList -> findArgExprTypeFromUsage(caretExpr, argList));
 
         MemIt<DeepType> result = It.cnc(asAssocKey, asEqStrVal, asPlusArr, asFuncArg).mem();
         putToCache(caretExpr, result);

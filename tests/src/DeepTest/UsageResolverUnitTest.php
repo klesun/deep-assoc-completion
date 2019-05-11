@@ -889,6 +889,23 @@ class UsageResolverUnitTest
     // following not implemented yet
     //========================
 
+    /**
+     * @return array = ['key1' => '', 'key2' => 0]
+     */
+    private function normDocData($data)
+    {
+        return $data;
+    }
+
+    public function provideFromReturnDoc($param)
+    {
+        $this->normDocData(['' => '']);
+        $this->normDocData($param);
+        return [
+            'param' => ['key1' => '', 'key2' => 0],
+        ];
+    }
+
     //============================
     // TODO: testify following
     //============================
