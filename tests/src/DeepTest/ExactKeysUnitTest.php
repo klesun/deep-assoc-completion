@@ -1693,10 +1693,6 @@ class ExactKeysUnitTest
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     /**
      * @template T_EL
      * @template T_KEY as array-key
@@ -1722,6 +1718,10 @@ class ExactKeysUnitTest
             [$grouped[1][0], ['num', 'to', 'date']],
         ];
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     //===============================
     // TODO: testify following

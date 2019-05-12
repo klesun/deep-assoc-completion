@@ -122,8 +122,29 @@ public class PsalmRes {
         return It.cnc(
             non()
             , Tls.cast(TClass.class, psalmt).fap(cls -> {
+                PhpType phpType = new PhpType().add(cls.fqn);
                 if (cls.fqn.equals(generic)) {
                     return deept.types;
+                } else if (isArrayLike(cls)) {
+                    if (cls.generics.size() == 1) {
+                        Mt elMt = deept.getEl();
+                        IType elPsalmt = cls.generics.get(0);
+                        return getGenericTypeFromArg(elPsalmt, elMt, generic, psi);
+                    } else if (cls.generics.size() == 2) {
+                        Mt keyMt = deept.types.fap(t -> t.keys).fap(k -> k.keyType.getTypes).wap(Mt::new);
+                        IType keyPsalmt = cls.generics.get(1);
+                        It<DeepType> genKeyTit = getGenericTypeFromArg(keyPsalmt, keyMt, generic, psi);
+
+                        DeepType art = new DeepType(psi, phpType, true);
+                        art.addKey(KeyType.mt(genKeyTit, psi)).addType(() -> {
+                            Mt valMt = deept.getEl();
+                            IType valPsalmt = cls.generics.get(1);
+                            return getGenericTypeFromArg(valPsalmt, valMt, generic, psi).wap(Mt::new);
+                        });
+                        return It(som(art));
+                    } else {
+                        return It(som(new DeepType(psi, phpType, false)));
+                    }
                 } else {
                     // TODO: support keyed arrays, array-likes with generics,
                     //  function types with generics and classes with generics
