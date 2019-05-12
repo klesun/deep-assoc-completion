@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.structures.psalm;
 
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.psi.elements.Function;
+import com.jetbrains.php.lang.psi.elements.Parameter;
 import com.jetbrains.php.lang.psi.elements.PhpClass;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.lang.It;
@@ -14,17 +15,20 @@ import java.util.*;
 import static org.klesun.lang.Lang.*;
 
 public class PsalmFuncInfo {
+    final public PhpDocComment psi;
     final public L<GenericDef> classGenerics;
     final public L<GenericDef> funcGenerics;
-    final public Map<String, IType> params;
+    final public L<ArgDef> params;
     final public Opt<IType> returnType;
 
     private PsalmFuncInfo(
+        PhpDocComment psi,
         L<GenericDef> classGenerics,
         L<GenericDef> funcGenerics,
-        Map<String, IType> params,
+        L<ArgDef> params,
         Opt<IType> returnType
     ) {
+        this.psi = psi;
         this.classGenerics = classGenerics;
         this.funcGenerics = funcGenerics;
         this.params = params;
@@ -89,7 +93,7 @@ public class PsalmFuncInfo {
 
     public static PsalmFuncInfo parse(PhpDocComment docComment)
     {
-        Opt<Function> funcOpt = opt(docComment.getNextSibling()).cst(Function.class);
+        Opt<Function> funcOpt = opt(docComment.getNextPsiSibling()).cst(Function.class);
         Opt<PhpClass> clsOpt = funcOpt.fop(f -> opt(f.getParent())).cst(PhpClass.class);
 
         L<GenericDef> classGenerics = clsOpt
@@ -99,20 +103,36 @@ public class PsalmFuncInfo {
         L<PsalmDocTag> psalmTags = getPsalmTags(docComment);
         L<GenericDef> funcGenerics = getGenerics(docComment);
 
-        Map<String, IType> params = new HashMap<>();
-        psalmTags
+        L<Parameter> argPsis = funcOpt.fap(f -> It(f.getParameters())).arr();
+        L<ArgDef> params = psalmTags
             .flt(t -> t.tagName.equals("param")
                     || t.tagName.equals("psalm-param")
                     || t.tagName.equals("var"))
-            .fch(t -> Tls.regex("\\s*\\$(\\w+).*", t.textLeft)
-                .map(m -> m.get(0))
-                .thn(varName -> params.put(varName, t.psalmType)));
+            .map(t -> {
+                String varName = Tls.regex("\\s*\\$(\\w+).*", t.textLeft)
+                    .map(m -> m.get(0)).def("");
+                Opt<Integer> order = argPsis.fap((psi, i) -> {
+                    return psi.getName().equals(varName) ? som(i) : non();
+                }).fst();
+                return new ArgDef(varName, order, som(t.psalmType));
+            }).arr();
 
         Opt<IType> returnType = psalmTags
             .flt(t -> t.tagName.equals("return"))
             .map(t -> t.psalmType).fst();
 
-        return new PsalmFuncInfo(classGenerics, funcGenerics, params, returnType);
+        return new PsalmFuncInfo(docComment, classGenerics, funcGenerics, params, returnType);
+    }
+
+    public static class ArgDef {
+        final public String name;
+        final public Opt<Integer> order;
+        final public Opt<IType> psalmType;
+        public ArgDef(String name, Opt<Integer> order, Opt<IType> psalmType) {
+            this.name = name;
+            this.order = order;
+            this.psalmType = psalmType;
+        }
     }
 
     public static class GenericDef {

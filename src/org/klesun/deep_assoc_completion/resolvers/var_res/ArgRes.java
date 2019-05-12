@@ -269,7 +269,7 @@ public class ArgRes extends Lang
                     .fap(func -> It.cnc(
                         UsageResolver.findMetaArgType(func, order, trace),
                         opt(func.getDocComment())
-                            .fap(doc -> PsalmRes.resolveVar(doc, param.getName()))
+                            .fap(doc -> PsalmRes.resolveVar(doc, param.getName(), trace))
 
                     )),
                 opt(arg.getDefaultValue()).itr()

@@ -1672,10 +1672,6 @@ class ExactKeysUnitTest
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     /**
      * @template T
      * @psalm-param T $t
@@ -1696,6 +1692,10 @@ class ExactKeysUnitTest
             [$copied->demandDonuts(), ['patience', 'amount', 'consequences']],
         ];
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     //===============================
     // TODO: testify following

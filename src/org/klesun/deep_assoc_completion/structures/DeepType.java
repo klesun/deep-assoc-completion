@@ -132,6 +132,12 @@ public class DeepType extends Lang
         return addKey(keyType, keyType.definition);
     }
 
+    public Key addKey(Key key)
+    {
+        keys.add(key);
+        return key;
+    }
+
     public Key addProp(String name, PsiElement definition)
     {
         DeepType kt = new DeepType(definition, PhpType.STRING, name);
