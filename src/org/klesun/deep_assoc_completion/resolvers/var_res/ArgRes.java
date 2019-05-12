@@ -268,7 +268,9 @@ public class ArgRes extends Lang
                     .cst(Function.class)
                     .fap(func -> It.cnc(
                         UsageResolver.findMetaArgType(func, order, trace),
-                        PsalmRes.resolveParam(func, param.getName())
+                        opt(func.getDocComment())
+                            .fap(doc -> PsalmRes.resolveVar(doc, param.getName()))
+
                     )),
                 opt(arg.getDefaultValue()).itr()
                     .cst(PhpExpression.class)

@@ -29,13 +29,13 @@ import static org.klesun.lang.Lang.*;
  *     }>
  * $products
  */
-public class PsalmParser
+public class PsalmTypeExprParser
 {
     final private String text;
     private int offset = 0;
     private L<String> lastMatch = new L<>();
 
-    private PsalmParser(String text)
+    private PsalmTypeExprParser(String text)
     {
         this.text = text;
     }
@@ -130,7 +130,7 @@ public class PsalmParser
     {
         // TODO: would be nice to return what we managed to parse so far at least,
         //  that would help user to understand where is the mistake in his definition
-        PsalmParser self = new PsalmParser(typeText);
+        PsalmTypeExprParser self = new PsalmTypeExprParser(typeText);
         return self.parseValue()
             .map(t -> T2(t, self.getTextLeft()));
     }

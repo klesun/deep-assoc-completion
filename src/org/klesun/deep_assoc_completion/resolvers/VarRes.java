@@ -219,7 +219,7 @@ public class VarRes
                 , Tls.cast(Variable.class, refPsi)
                     .fop(decl -> opt(decl.getDocComment()))
                     .fap(docComment -> PsalmRes.resolveVar(
-                        docComment, variable.getName(), "var")
+                        docComment, variable.getName())
                     )
             ));
     }

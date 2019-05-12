@@ -8,6 +8,7 @@ use Lib\ParamValidation\StringP;
 use Lib\Utils\Fp;
 use NeptuniaNs\Ksha;
 use SomeCls123;
+use TouhouNs\ReimuHakurei;
 
 /**
  * unlike UnitTest.php, this test not just checks that actual result  has _at least_
@@ -1674,6 +1675,27 @@ class ExactKeysUnitTest
     //=============================
     // following are not implemented yet
     //=============================
+
+    /**
+     * @template T
+     * @psalm-param T $t
+     * @return T
+     */
+    function deepCopy($t) {
+        $serialized = var_export($t, true);
+        return \SomeLiv\VarExportParser::parse($serialized);
+    }
+
+    public function providePsalmGeneric()
+    {
+        $reimu = new ReimuHakurei();
+        $reimu->demandDonuts()[''];
+        $copied = $this->deepCopy($reimu);
+        $copied->demandDonuts()[''];
+        return [
+            [$copied->demandDonuts(), ['patience', 'amount', 'consequences']],
+        ];
+    }
 
     //===============================
     // TODO: testify following

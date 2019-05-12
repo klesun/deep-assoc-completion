@@ -256,7 +256,7 @@ public class MethCallRes extends Lang
         It<DeepType> asEq = Tls.regex(regex, returnDoc.getTagValue())
             .fop(match -> match.gat(1))
             .fap(expr -> DocParamRes.parseExpression(expr, returnDoc.getProject(), docCtx));
-        It<DeepType> asPsalm = PsalmRes.resolveReturn(returnDoc);
+        It<DeepType> asPsalm = PsalmRes.resolveReturn(returnDoc, funcCtx);
         return It.cnc(asEq, asPsalm);
     }
 
