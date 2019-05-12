@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.05.11.001</version>
+    <version>2019.05.13.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#79, #80 Provide keys completion when you return an array based on interface method @return doc</li>
+        <li>#77 Add basic support for PSALM @template generics in classes and functions (use them in type inference)</li>
     </ul>
     ]]>
     </change-notes>
