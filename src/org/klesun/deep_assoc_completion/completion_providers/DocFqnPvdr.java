@@ -128,7 +128,6 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                     .wap(parts -> Tls.implode("", parts));
                 docValue = typePart + docValue;
             } else if (docTypes.size() == 0 || tagValue instanceof PhpDocType) {
-                System.out.println("zalupa do not suggest strt class name");
                 // do not suggest class in @return start, since IDEA already does that
                 regex = "^\\b$"; // regex that will match nothing
             }

@@ -74,7 +74,7 @@ public class PsalmFuncInfo {
     {
         return opt(tag)
             .flt(t -> t.tagName.equals("template"))
-            .fop(t -> Tls.regex("\\s*(\\w+?)\\s*(?:(?:of|as)\\s+(\\w+))?\\s*", t.textLeft))
+            .fop(t -> Tls.regex("\\s*(\\w+)(?:\\s+(?:of|as)\\s+(\\w+))?[\\s\\S]*", t.textLeft))
             .map(match -> {
                 String name = match.get(0);
                 Opt<IType> ofType = match.gat(1)

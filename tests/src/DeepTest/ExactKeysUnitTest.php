@@ -5,9 +5,11 @@ use App\Models\City;
 use Lib\ParamValidation\DictP;
 use Lib\ParamValidation\ListP;
 use Lib\ParamValidation\StringP;
+use Lib\Result;
 use Lib\Utils\Fp;
 use NeptuniaNs\Ksha;
 use SomeCls123;
+use TouhouNs\MarisaKirisame;
 use TouhouNs\ReimuHakurei;
 
 /**
@@ -1722,6 +1724,23 @@ class ExactKeysUnitTest
     //=============================
     // following are not implemented yet
     //=============================
+
+    /**
+     * @param \Lib\Result<\TouhouNs\ReimuHakurei> $result
+     */
+    public function providePsalmClsGeneric($result)
+    {
+        $fromField = $result->result;
+        $unwrapped = $result->unwrap();
+        $unwrapped->d;
+        $mapped = $result->map(function($reimu){return new MarisaKirisame();});
+        $mapped->unwrap()->m;
+        return [
+            [$fromField->demandDonuts(), ['patience', 'amount', 'consequences']],
+            [$unwrapped->demandDonuts(), ['patience', 'amount', 'consequences']],
+            [$mapped->unwrap()->masterSpark(), ['deadFoes']],
+        ];
+    }
 
     //===============================
     // TODO: testify following

@@ -83,8 +83,8 @@ public class MemIt<A> implements IIt<A>
     }
 
     /** probably should comment after debug cuz if it gets somewhere accidentally, it would be disaster for performance.... */
-//    @Override
-//    public String toString() {
-//        return "MemIt" + arr();
-//    }
+    @Override
+    public String toString() {
+        return "MemIt" + arr();
+    }
 }

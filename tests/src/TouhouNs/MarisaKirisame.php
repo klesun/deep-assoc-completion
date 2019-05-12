@@ -10,4 +10,9 @@ class MarisaKirisame
         $this->livesLeft = $params['livesLeft'];
         $this->power = $params['power'];
     }
+
+    public function masterSpark()
+    {
+        return ['deadFoes' => 99999];
+    }
 }

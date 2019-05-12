@@ -135,21 +135,24 @@ public class PsalmRes {
                         IType keyPsalmt = cls.generics.get(1);
                         It<DeepType> genKeyTit = getGenericTypeFromArg(keyPsalmt, keyMt, generic, psi);
 
-                        DeepType art = new DeepType(psi, phpType, true);
-                        art.addKey(KeyType.mt(genKeyTit, psi)).addType(() -> {
-                            Mt valMt = deept.getEl();
-                            IType valPsalmt = cls.generics.get(1);
-                            return getGenericTypeFromArg(valPsalmt, valMt, generic, psi).wap(Mt::new);
-                        });
-                        return It(som(art));
-                    } else {
-                        return It(som(new DeepType(psi, phpType, false)));
+                        Mt valMt = deept.getEl();
+                        IType valPsalmt = cls.generics.get(1);
+                        It<DeepType> getValTit = getGenericTypeFromArg(valPsalmt, valMt, generic, psi);
+
+                        return It.cnc(genKeyTit, getValTit);
                     }
                 } else {
-                    // TODO: support keyed arrays, array-likes with generics,
-                    //  function types with generics and classes with generics
-                    return non();
+                    // TODO: support keyed arrays, fields, generics from
+                    //  class constructor, function types with generics
                 }
+                DeepType asParamCls = new DeepType(psi, phpType, false);
+                asParamCls.generics = It(cls.generics)
+                    .map(psalmgt -> deept.types
+                        .fap(t -> t.generics)
+                        .fap(gmt -> getGenericTypeFromArg(psalmgt, gmt, generic, psi))
+                        .wap(Mt::new))
+                    .arr();
+                return It(som(asParamCls));
             })
         );
     }
@@ -164,6 +167,9 @@ public class PsalmRes {
                         psalmt, mt, g.name, psalmInfo.psi
                     ))))
             .mem()));
+        psalmInfo.classGenerics.fch((g, i) -> result.put(g.name, ctx.getThisType()
+            .fap(t -> t.generics.gat(i))
+            .fap(mt -> mt.types).mem()));
         return result;
     }
 
