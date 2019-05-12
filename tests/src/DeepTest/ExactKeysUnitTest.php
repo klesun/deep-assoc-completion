@@ -1697,6 +1697,32 @@ class ExactKeysUnitTest
     // following are not implemented yet
     //=============================
 
+    /**
+     * @template T_EL
+     * @template T_KEY as array-key
+     * @param callable<T_EL, string> $getKey
+     * @param array<T_EL> $arr
+     * @return array<T_KEY, array<T_EL>>
+     */
+    function groupBy(callable $getKey, array $arr) {
+        // should not use implementation for completion - jut the generics in the doc
+    }
+
+    public function providePsalmGenericArr()
+    {
+        $segments = [
+            ['num' => 1, 'to' => 'RIX', 'date' => '2019-09-15'],
+            ['num' => 2, 'to' => 'LON', 'date' => '2019-09-18'],
+            ['num' => 3, 'to' => 'MOW', 'date' => '2019-09-21'],
+        ];
+        $getKey = function($seg) {return $seg['num'];};
+        $grouped = $this->groupBy($getKey, $segments);
+        $grouped[1][0][''];
+        return [
+            [$grouped[1][0], ['num', 'to', 'date']],
+        ];
+    }
+
     //===============================
     // TODO: testify following
     //===============================
