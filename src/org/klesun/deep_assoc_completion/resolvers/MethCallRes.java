@@ -202,7 +202,12 @@ public class MethCallRes extends Lang
 
     public static It<DeepType> findFqnMetaDefRetType(String fqn, IExprCtx ctx)
     {
-        return findFqnMetaType(fqn, ctx, PhpExpectedReturnValuesIndex.KEY, arg -> true);
+        try {
+            return findFqnMetaType(fqn, ctx, PhpExpectedReturnValuesIndex.KEY, arg -> true);
+        } catch (NoClassDefFoundError exc) {
+            // can happen due to wrong phpstorm version in my plugin.xml
+            return It.non();
+        }
     }
 
     private It<DeepType> findBuiltInRetType(Method meth, IExprCtx argCtx, MethodReference methCall)

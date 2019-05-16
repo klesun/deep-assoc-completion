@@ -261,10 +261,15 @@ public class UsageResolver
 
     private static It<DeepType> findFqnMetaArgType(String fqn, int argOrder, IExprCtx ctx)
     {
-        return MethCallRes.findFqnMetaType(fqn, ctx,
-            PhpExpectedFunctionArgumentsIndex.KEY,
-            arg -> arg.getArgumentIndex() == argOrder
-        );
+        try {
+            return MethCallRes.findFqnMetaType(fqn, ctx,
+                PhpExpectedFunctionArgumentsIndex.KEY,
+                arg -> arg.getArgumentIndex() == argOrder
+            );
+        } catch (NoClassDefFoundError exc) {
+            // can happen due to wrong phpstorm version in my plugin.xml
+            return It.non();
+        }
     }
 
     public static It<DeepType> findMetaArgType(Function func, int argOrder, IExprCtx ctx)
