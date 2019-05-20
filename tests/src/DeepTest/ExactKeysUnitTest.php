@@ -12,12 +12,48 @@ use SomeCls123;
 use TouhouNs\MarisaKirisame;
 use TouhouNs\ReimuHakurei;
 
+interface IExactKeysUnitTest
+{
+    /** @param $params = ['age' => 18, 'price' => '240.00'] */
+    function provideInheritDocInterface($params);
+}
+
+abstract class AbstractExactKeysUnitTest
+{
+    public function createSale()
+    {
+        return ['bytes' => 123, 'timeoutMs' => 30 * 1000];
+    }
+
+    /**
+     * @param $sale = self::createSale()
+     * @param $pax = ['age' => 18, 'price' => '240.00']
+     */
+    abstract function provideInheritDocAbstract($sale, $pax);
+}
+
 /**
  * unlike UnitTest.php, this test not just checks that actual result  has _at least_
  * such keys, but it tests that it has _exactly_ such keys, without extras
  */
-class ExactKeysUnitTest
+class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysUnitTest
 {
+    public function provideInheritDocInterface($params)
+    {
+        $params[''];
+        return [[$params, ['age', 'price']]];
+    }
+
+    public function provideInheritDocAbstract($sale, $pax)
+    {
+        $sale[''];
+        $pax[''];
+        return [
+            [$sale, ['bytes', 'timeoutMs']],
+            [$pax, ['age', 'price']],
+        ];
+    }
+
     public function provideAssocBuiltIns($handle)
     {
         $handle = curl_init('google.com');

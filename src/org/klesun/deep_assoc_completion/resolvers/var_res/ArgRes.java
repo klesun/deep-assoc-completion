@@ -250,7 +250,7 @@ public class ArgRes extends Lang
                 .map(lst -> lst.getParent())
                 .fop(Tls.toCast(MethodImpl.class))
                 .fap(meth -> opt(meth.getContainingClass())
-                    .fap(cls -> It(cls.getImplementedInterfaces())
+                    .fap(cls -> It(cls.getSupers())
                         .fap(ifc -> ifc.getMethods())
                         .flt(ifcMeth -> meth.getName().equals(ifcMeth.getName()))))
                 .fop(meth -> L(meth.getParameters()).gat(order))
