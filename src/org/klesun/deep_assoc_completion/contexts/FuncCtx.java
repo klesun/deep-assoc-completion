@@ -161,6 +161,13 @@ public class FuncCtx extends Lang implements IFuncCtx
         return subCtx;
     }
 
+    public FuncCtx subCtxMem(MemberReference fieldRef, F<PhpExpression, It<DeepType>> findExprType)
+    {
+        FuncCtx subCtx = new FuncCtx(this, L(), fieldRef, EArgPsiType.DIRECT);
+        subCtx.setThisType(fieldRef, findExprType);
+        return subCtx;
+    }
+
     public FuncCtx subCtxDirect(NewExpression funcCall, F<PhpExpression, It<DeepType>> findExprType)
     {
         FuncCtx self = subCtxDirectGeneric(funcCall, findExprType);

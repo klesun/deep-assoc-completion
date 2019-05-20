@@ -3,10 +3,7 @@ package org.klesun.deep_assoc_completion.contexts;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.jetbrains.php.lang.psi.elements.FieldReference;
-import com.jetbrains.php.lang.psi.elements.FunctionReference;
-import com.jetbrains.php.lang.psi.elements.NewExpression;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.structures.DeepType;
@@ -86,6 +83,10 @@ public class ExprCtx implements IExprCtx {
 
     public ExprCtx subCtxMagicProp(FieldReference fieldRef) {
         return subExpr(expr, funcCtx.subCtxMagicProp(fieldRef, this::findExprType));
+    }
+
+    public IExprCtx subCtxMem(MemberReference fieldRef) {
+        return subExpr(expr, funcCtx.subCtxMem(fieldRef, this::findExprType));
     }
 
     public ExprCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars, IExprCtx outsideCtx) {

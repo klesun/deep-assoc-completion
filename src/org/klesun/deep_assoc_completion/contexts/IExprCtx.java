@@ -31,6 +31,7 @@ public interface IExprCtx {
     IExprCtx subCtxSingleArgArr(PhpExpression argArr);
     IExprCtx subCtxIndirect(PhpExpression args);
     IExprCtx subCtxMagicProp(FieldReference fieldRef);
+    IExprCtx subCtxMem(MemberReference fieldRef);
     IExprCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars, IExprCtx outsideCtx);
     It<DeepType> getThisType();
     Opt<PhpType> getSelfType();

@@ -1726,11 +1726,12 @@ class ExactKeysUnitTest
     //=============================
 
     /**
-     * @param \Lib\Result<\TouhouNs\ReimuHakurei> $result
+     * @param \Lib\ResultGen<\TouhouNs\ReimuHakurei> $result
      */
     public function providePsalmClsGeneric($result)
     {
         $fromField = $result->result;
+        $fromField->d;
         $unwrapped = $result->unwrap();
         $unwrapped->d;
         $mapped = $result->map(function($reimu){return new MarisaKirisame();});

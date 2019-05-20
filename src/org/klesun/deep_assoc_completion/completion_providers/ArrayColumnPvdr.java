@@ -76,8 +76,8 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
                     // array_column supports array keys and object properties (but not magic keys/props AFAIK)
                     arrt.keys.addAll(It.cnc(
                         baseArrt.keys,
-                        new FieldRes(exprCtx.subCtxEmpty())
-                            .getPublicProps(baseArrt.mt(), literal.getProject())
+                        FieldRes.getPublicProps(baseArrt.mt(),
+                            literal.getProject(), exprCtx.subCtxEmpty())
                     ).arr());
                     return arrt;
                 }));

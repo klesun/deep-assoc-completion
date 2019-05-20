@@ -207,10 +207,12 @@ public class FuncCallRes extends Lang
                 type.addKey(KeyType.integer(call)).addType(() -> {
                     Mt elType = callCtx.getArgMt(0).getEl();
                     String keyName = callCtx.getArgMt(1).getStringValue();
+                    It<DeepType.Key> allProps = FieldRes.getPublicProps(
+                        elType, call.getProject(), ctx.subCtxEmpty()
+                    );
                     return new Mt(It.cnc(
                         elType.getKey(keyName).types,
-                        Mt.getPropOfName(new FieldRes(ctx.subCtxEmpty())
-                            .getPublicProps(elType, call.getProject()), keyName)
+                        Mt.getPropOfName(allProps, keyName)
                     ));
                 });
                 return list(type);

@@ -95,9 +95,9 @@ class Result
      */
     public function map(\Closure $mapper)
     {
-//        return $this->isOk()
-//            ? Result::makeOk($mapper($this->unwrap()))
-//            : Result::makeError($this->error);
+        return $this->isOk()
+            ? Result::makeOk($mapper($this->unwrap()))
+            : Result::makeError($this->error);
     }
 
     /**

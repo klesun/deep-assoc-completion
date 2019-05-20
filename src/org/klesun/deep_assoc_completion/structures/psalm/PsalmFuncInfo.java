@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.structures.psalm;
 
+import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.psi.elements.Function;
 import com.jetbrains.php.lang.psi.elements.Parameter;
@@ -10,7 +11,8 @@ import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.klesun.lang.Lang.*;
 
@@ -93,8 +95,9 @@ public class PsalmFuncInfo {
 
     public static PsalmFuncInfo parse(PhpDocComment docComment)
     {
-        Opt<Function> funcOpt = opt(docComment.getNextPsiSibling()).cst(Function.class);
-        Opt<PhpClass> clsOpt = funcOpt.fop(f -> opt(f.getParent())).cst(PhpClass.class);
+        Opt<PsiElement> clsMemOpt = opt(docComment.getNextPsiSibling());
+        Opt<Function> funcOpt = clsMemOpt.cst(Function.class);
+        Opt<PhpClass> clsOpt = clsMemOpt.fop(f -> opt(f.getParent())).cst(PhpClass.class);
 
         L<GenericDef> classGenerics = clsOpt
             .fop(clsPsi -> opt(clsPsi.getDocComment()))

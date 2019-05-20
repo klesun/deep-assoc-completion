@@ -94,22 +94,25 @@ public class FieldRes extends Lang
                 .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(assPsi, false)));
     }
 
-    private It<DeepType> declToExplTypes(Field resolved)
+    private static It<DeepType> declToExplTypes(Field resolved, IExprCtx memCtx)
     {
-        IExprCtx implCtx = ctx.subCtxEmpty();
+        IExprCtx implCtx = memCtx.subCtxEmpty();
         It<DeepType> defTs = Tls.cast(FieldImpl.class, resolved).itr()
             .map(fld -> fld.getDefaultValue())
             .fop(toCast(PhpExpression.class))
             .fap(def -> implCtx.findExprType(def));
 
         It<DeepType> docTs = opt(resolved.getDocComment())
-            .fap(doc -> opt(doc.getVarTag()))
-            .fap(docTag -> new DocParamRes(implCtx).resolve(docTag));
+            .fap(doc -> It.cnc(
+                opt(doc.getVarTag())
+                    .fap(docTag -> new DocParamRes(implCtx).resolve(docTag)),
+                PsalmRes.resolveVar(doc, resolved.getName(), memCtx)
+            ));
 
         It<DeepType> magicTs = Tls.cast(PhpDocProperty.class, resolved)
             .fap(prop -> opt(prop.getParent()))
             .cst(PhpDocPropertyTag.class)
-            .fap(tag -> new DocParamRes(ctx).resolve(tag));
+            .fap(tag -> new DocParamRes(memCtx).resolve(tag));
 
         DeepType builtInTs = new DeepType(resolved, resolved.getType());
 
@@ -118,9 +121,10 @@ public class FieldRes extends Lang
 
     private It<DeepType> declsToTypes(FieldReferenceImpl fieldRef, It<Field> declarations)
     {
+        IExprCtx memCtx = ctx.subCtxMem(fieldRef);
         return declarations
             .fap(resolved -> {
-                It<DeepType> explTypes = declToExplTypes(resolved);
+                It<DeepType> explTypes = declToExplTypes(resolved, memCtx);
                 It<Assign> asses = getAssignments(resolved, fieldRef);
                 return It.cnc(
                     explTypes,
@@ -140,7 +144,7 @@ public class FieldRes extends Lang
      * includes both dynamic props and props belonging to class
      * not sure, but probably should use this in resolve() to remove duplicating code
      */
-    public It<DeepType.Key> getPublicProps(Mt mt, Project proj)
+    public static It<DeepType.Key> getPublicProps(Mt mt, Project proj, IExprCtx memCtx)
     {
         It<DeepType.Key> declared = ArrCtorRes.resolveMtInstCls(mt, proj)
             .fap(cls -> cls.getFields())
@@ -149,7 +153,7 @@ public class FieldRes extends Lang
                 DeepType kt = new DeepType(f, PhpType.STRING, f.getName());
                 KeyType keyType = KeyType.mt(som(kt), f);
                 return new DeepType.Key(keyType, f)
-                    .addType(() -> new Mt(declToExplTypes(f)), f.getType());
+                    .addType(() -> new Mt(declToExplTypes(f, memCtx)), f.getType());
             });
         return It.cnc(mt.types.fap(t -> t.props.vls()), declared);
     }
