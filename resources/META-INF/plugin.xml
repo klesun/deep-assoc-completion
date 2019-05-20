@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.05.16.001</version>
+    <version>2019.05.20.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#81 Fix: add try-catch on accessing /expectedArguments/ namespace, as it does not exist on older phpstorm installations</li>
+        <li>#85 Inherit arg doc type from extended classes as well, not just interfaces</li>
+        <li>#77 Support psalm generics in class field @var phpdoc</li>
     </ul>
     ]]>
     </change-notes>
