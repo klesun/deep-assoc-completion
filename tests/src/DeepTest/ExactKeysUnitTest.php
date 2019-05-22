@@ -1828,6 +1828,22 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    public function provideArrayColumnThirdArg()
+    {
+        $items = [
+            ['type' => 'airport', 'value' => 'JFK'],
+            ['type' => 'airport', 'value' => 'KBP'],
+            ['type' => 'city', 'value' => 'NYC'],
+            ['type' => 'city', 'value' => 'LON'],
+        ];
+        $codeToRow = array_column($items, null, 'value');
+        $codeToRow[''];
+        return [
+            [$codeToRow, ['JFK', 'KBP', 'NYC', 'LON']],
+            [$codeToRow['NYC'], ['type', 'value']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

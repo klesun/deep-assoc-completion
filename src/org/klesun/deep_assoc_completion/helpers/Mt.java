@@ -86,7 +86,8 @@ public class Mt extends Lang
 
     public Mt getEl()
     {
-        return getKey(null);
+        String nullKey = null;
+        return getKey(nullKey);
     }
 
     public static It<DeepType> getPropOfName(It<DeepType.Key> allProps, String keyName)
@@ -129,6 +130,12 @@ public class Mt extends Lang
 
         isGettingKey = false;
         return new Mt(keyTsIt);
+    }
+
+    public Mt getKey(KeyType kt)
+    {
+        String key = Mt.getStringValueSt(kt.getTypes);
+        return getKey(key);
     }
 
     public static PhpType getKeyBriefTypeSt(Iterable<PhpType> ideaTypes)

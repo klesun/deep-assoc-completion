@@ -120,7 +120,7 @@ public class RunTest extends AnAction
                 .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
                 .fap(tu -> tu.nme((ctx, actual, expected) -> {
                     L<String> expectedKeys = new Mt(expected.getTypes())
-                        .getKey(null).getStringValues().arr();
+                        .getEl().getStringValues().arr();
                     It<String> actualKeys = actual.getTypes()
                         .fap(t -> t.keys).fap(k -> k.keyType.getNames());
                     if (expectedKeys.size() == 0 && !expected.definition.getText().equals("[]")) {

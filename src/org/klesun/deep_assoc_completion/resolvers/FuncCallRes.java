@@ -85,6 +85,35 @@ public class FuncCallRes extends Lang
         return combine;
     }
 
+    private It<DeepType> array_column(IFuncCtx callCtx, FunctionReferenceImpl call)
+    {
+        DeepType type = new DeepType(call, PhpType.ARRAY);
+        Mt srcArrMt = callCtx.getArgMt(0);
+        KeyType kt = callCtx.getArg(2)
+            .map(groupKmt -> KeyType.mt(groupKmt.types, call))
+            .map(groupKt -> srcArrMt.getEl().getKey(groupKt))
+            .map(kmt -> KeyType.mt(kmt.types, call))
+            .def(KeyType.integer(call));
+        DeepType.Key keyRec = type.addKey(kt);
+        S<Mt> getElMt = () -> callCtx.getArgMt(0).getEl();
+        if (L(call.getParameters()).any(p -> p.getText().equals("null"))) {
+            keyRec.addType(getElMt);
+        } else {
+            keyRec.addType(() -> {
+                Mt elType = getElMt.get();
+                String keyName = callCtx.getArgMt(1).getStringValue();
+                It<DeepType.Key> allProps = FieldRes.getPublicProps(
+                    elType, call.getProject(), ctx.subCtxEmpty()
+                );
+                return new Mt(It.cnc(
+                    elType.getKey(keyName).types,
+                    Mt.getPropOfName(allProps, keyName)
+                ));
+            });
+        }
+        return list(type).itr();
+    }
+
     private DeepType array_fill_keys(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
         return makeAssoc(call, callCtx.getArg(0)
@@ -203,19 +232,7 @@ public class FuncCallRes extends Lang
                     .fop(i -> callCtx.getArg(i))
                     .fap(mt -> mt.types).map(a -> a);
             } else if (name.equals("array_column")) {
-                DeepType type = new DeepType(call);
-                type.addKey(KeyType.integer(call)).addType(() -> {
-                    Mt elType = callCtx.getArgMt(0).getEl();
-                    String keyName = callCtx.getArgMt(1).getStringValue();
-                    It<DeepType.Key> allProps = FieldRes.getPublicProps(
-                        elType, call.getProject(), ctx.subCtxEmpty()
-                    );
-                    return new Mt(It.cnc(
-                        elType.getKey(keyName).types,
-                        Mt.getPropOfName(allProps, keyName)
-                    ));
-                });
-                return list(type);
+                return array_column(callCtx, call);
             } else if (name.equals("array_chunk")) {
                 return callCtx.getArgMt(0).getInArray(call).mt().types;
             } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")
