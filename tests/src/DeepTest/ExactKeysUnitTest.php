@@ -6,6 +6,7 @@ use Lib\ParamValidation\DictP;
 use Lib\ParamValidation\ListP;
 use Lib\ParamValidation\StringP;
 use Lib\Result;
+use Lib\ResultGen;
 use Lib\Utils\Fp;
 use NeptuniaNs\Ksha;
 use SomeCls123;
@@ -1377,11 +1378,40 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    private function getMysqli()
+    {
+        return new \mysqli("10.128.128.150", "stasadm", "G0a4wa&", "rbstools");
+    }
+
+    private function queryMysqli()
+    {
+        $mysqli = $this->getMysqli();
+        return $mysqli->query("SELECT id, iata_code, name FROM airports limit 20;");
+    }
+
+    private function queryMysqliProcedural()
+    {
+        $mysqli = $this->getMysqli();
+        return mysqli_query($mysqli, "SELECT id, iata_code, name FROM airports limit 20;");
+    }
+
     public function provideMysqliIterator()
     {
         $rows = [];
-        $mysqli = new \mysqli("10.128.128.150", "stasadm", "G0a4wa&", "rbstools");
-        $result = $mysqli->query("SELECT id, iata_code, name FROM airports limit 20;");
+        $result = $this->queryMysqli();
+        foreach ($result as $row) {
+            $rows[] = $row;
+        }
+        $rows[0][''];
+        return [
+            [$rows[0], ['id', 'iata_code', 'name']],
+        ];
+    }
+
+    public function provideMysqliIteratorProcedural()
+    {
+        $rows = [];
+        $result = $this->queryMysqliProcedural();
         foreach ($result as $row) {
             $rows[] = $row;
         }
@@ -1393,11 +1423,44 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
 
     public function provideMysqliFetchAssoc()
     {
-        $mysqli = new \mysqli("10.128.128.150", "stasadm", "G0a4wa&", "rbstools");
-        $result = $mysqli->query("SELECT id, iata_code, name FROM airports limit 20;");
+        $result = $this->queryMysqli();
         $row = $result->fetch_assoc();
         $row[''];
         return [
+            [$row, ['id', 'iata_code', 'name']],
+        ];
+    }
+
+    public function provideMysqliFetchAssocProcedural()
+    {
+        $result = $this->queryMysqliProcedural();
+        $row = mysqli_fetch_assoc($result);
+        $row[''];
+        return [
+            [$row, ['id', 'iata_code', 'name']],
+        ];
+    }
+
+    public function provideMysqliFetchAll()
+    {
+        $result = $this->queryMysqli();
+        $intRows = $result->fetch_all();
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        $rows[0][''];
+        return [
+            [$intRows[0], []],
+            [$rows[0], ['id', 'iata_code', 'name']],
+        ];
+    }
+
+    public function provideMysqliFetchAllProcedural()
+    {
+        $result = $this->queryMysqliProcedural();
+        $intRows = mysqli_fetch_all($result);
+        $row = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        $row[''];
+        return [
+            [$intRows[0], []],
             [$row, ['id', 'iata_code', 'name']],
         ];
     }
@@ -1788,10 +1851,6 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     /**
      * @param \Lib\ResultGen<\TouhouNs\ReimuHakurei> $result
      */
@@ -1801,12 +1860,27 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         $fromField->d;
         $unwrapped = $result->unwrap();
         $unwrapped->d;
-        $mapped = $result->map(function($reimu){return new MarisaKirisame();});
-        $mapped->unwrap()->m;
         return [
             [$fromField->demandDonuts(), ['patience', 'amount', 'consequences']],
             [$unwrapped->demandDonuts(), ['patience', 'amount', 'consequences']],
+        ];
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
+
+    public function provideMorePsalmGenerics()
+    {
+        $fromStaticMeth = ResultGen::makeOk(new KiraYoshikage());
+        $fromStaticMeth->unwrap()->bitesZaDusto()[''];
+        $mapped = $fromStaticMeth->map(function($reimu){return new MarisaKirisame();});
+        $mapped->unwrap()->m;
+        $fromCtor = new ResultGen(true, new KiraYoshikage());
+        return [
+            [$fromStaticMeth->unwrap()->bitesZaDusto(), ['time', 'goes', 'back']],
             [$mapped->unwrap()->masterSpark(), ['deadFoes']],
+            [$fromCtor->unwrap()->bitesZaDusto(), ['time', 'goes', 'back']],
         ];
     }
 

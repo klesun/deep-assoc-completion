@@ -13,6 +13,9 @@ class ResultGen
     public $result;
     public $error;
 
+    /** @param T $result */
+    public function __construct($isOk, $result, \Exception $error = null) {}
+
     /**
      * @param T $result
      * @return ResultGen<T>
@@ -21,9 +24,6 @@ class ResultGen
 
     /** @return ResultGen */
     public static function makeError(\Exception $error) {}
-
-    /** @param T $result */
-    private function __construct($isOk, $result, \Exception $error = null) {}
 
     /** @return bool */
     public function isOk() {}
