@@ -1,8 +1,5 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
-import com.intellij.database.model.DasObject;
-import com.intellij.database.model.ObjectKind;
-import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -17,23 +14,21 @@ import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
-import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionArgument;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionScalarArgument;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedReturnValuesIndex;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.resolvers.builtins.MysqliRes;
 import org.klesun.deep_assoc_completion.resolvers.mem_res.MemRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
-import org.klesun.lang.iterators.RegexIterator;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 public class MethCallRes extends Lang
 {
@@ -71,58 +66,11 @@ public class MethCallRes extends Lang
         return It.cnc(som(meth), overridden);
     }
 
-    private static It<DasObject> getDasChildren(DasObject parent, ObjectKind kind)
-    {
-        // return getDasChildren(ObjectKind.COLUMN);
-        return It(parent.getDbChildren(DasObject.class, kind));
-    }
-
-    private static It<String> getTableColumns(String table, Project project)
-    {
-        return It(DbPsiFacade.getInstance(project).getDataSources())
-            .fap(src -> src.getModel().getModelRoots())
-            .fap(root -> getDasChildren(root, ObjectKind.TABLE))
-            .flt(t -> t.getName().equals(table))
-            .fap(tab -> getDasChildren(tab, ObjectKind.COLUMN))
-            .map(col -> col.getName());
-    }
-
-    private DeepType parseSqlSelect(DeepType strType, Project project)
-    {
-        DeepType parsedType = new DeepType(strType.definition, PhpType.ARRAY);
-        String sql = opt(strType.stringValue).def("");
-        int regexFlags = Pattern.DOTALL | Pattern.CASE_INSENSITIVE;
-        Opt<L<String>> matched = Opt.fst(
-            () -> Tls.regex("\\s*SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql, regexFlags),
-            () -> Tls.regex("\\s*SELECT\\s+(\\S.*)", sql, regexFlags) // partial SQL without FROM
-        );
-        matched.fap(matches -> {
-            It<String> fields = It(matches.gat(0).def("").split(",", -1));
-            String table = matches.gat(1).def("");
-            return fields.map(str -> str.trim())
-                .fap(f -> {
-                    if (f.equals("*")) {
-                        return getTableColumns(table, project);
-                    } else {
-                        return Tls.regex("(\\S+.*?\\.)?(\\S+\\s+AS\\s+)?(\\S+)", f, regexFlags)
-                            .fop(m -> m.gat(2))
-                            .fap(a -> list(a));
-                    }
-                });
-        }).fch(name -> parsedType.addKey(name, ctx.getRealPsi(strType.definition))
-            .addType(() -> new Mt(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
-        return parsedType;
-    }
-
-    private static It<String> getBindVars(DeepType sqlStrT)
-    {
-        String pattern = ":([A-Za-z_][A-Za-z0-9_]*)";
-        String text = opt(sqlStrT.stringValue).def("");
-        return It(() -> new RegexIterator(pattern, text))
-            .map(groups -> groups.get(1));
-    }
-
-    public It<DeepType> getModelRowType(MethodReference methCall, Method meth)
+    /**
+     * specific to the custom ORM framework used at my job...
+     * would be nice to be able to make such stuff configurable on day
+     */
+    public It<DeepType> getCmsModelRowType(MethodReference methCall, Method meth)
     {
         // treating any class named "Model" as a base ORM class for Doctrine/Eloquent/CustomStuff completion
         String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
@@ -212,54 +160,8 @@ public class MethCallRes extends Lang
 
     private It<DeepType> findBuiltInRetType(Method meth, IExprCtx argCtx, MethodReference methCall)
     {
-        It<DeepType> types = It(list());
-        String clsNme = opt(meth.getContainingClass()).map(cls -> cls.getName()).def("");
-        if (clsNme.equals("PDO") && meth.getName().equals("query") ||
-            clsNme.equals("PDO") && meth.getName().equals("prepare")
-        ) {
-            DeepType type = new DeepType(methCall);
-            argCtx.func().getArg(0)
-                .fap(mt -> mt.types)
-                .fch(strType -> {
-                    DeepType fetchType = parseSqlSelect(strType, meth.getProject());
-                    type.pdoFetchTypes.add(fetchType);
-                    getBindVars(strType).fch(type.pdoBindVars::add);
-                });
-            types = It(list(type));
-        } else if (clsNme.equals("PDOStatement") && meth.getName().equals("fetch")
-                || clsNme.equals("mysqli_result") && meth.getName().equals("fetch_assoc")
-        ) {
-            It<DeepType> pdoTypes = opt(methCall.getClassReference())
-                .fop(toCast(PhpExpression.class))
-                .fap(obj -> ctx.findExprType(obj))
-                .fap(t -> t.pdoFetchTypes);
-            types = It(pdoTypes);
-        } else if (
-            clsNme.equals("mysqli_result") &&
-            meth.getName().equals("fetch_all") &&
-            L(methCall.getParameters()).gat(0)
-                .any(p -> p.getText().equals("MYSQLI_ASSOC"))
-        ) {
-            DeepType arrType = opt(methCall.getClassReference())
-                .fop(toCast(PhpExpression.class))
-                .fap(obj -> ctx.findExprType(obj))
-                .fap(t -> t.pdoFetchTypes)
-                .wap(rowTit -> Mt.getInArraySt(rowTit, methCall));
-            types = It(som(arrType));
-        } else if (clsNme.equals("mysqli") && meth.getName().equals("query")) {
-            MemIt<DeepType> rowTypes = argCtx.func().getArg(0).fap(mt -> mt.types)
-                .flt(strType -> !opt(strType.stringValue).def("").equals(""))
-                .map(strType -> parseSqlSelect(strType, meth.getProject())).mem();
-            types = It.cnc(
-                som(new DeepType(methCall).btw(t -> {
-                    // it's not a PDO, but nah
-                    rowTypes.itr().fch((rowt, i) -> t.pdoFetchTypes.add(rowt));
-                })),
-                // since PHP 5.4 mysqli_result can also be iterated
-                som(Mt.getInArraySt(It(rowTypes), methCall))
-            );
-        }
-        It<DeepType> modelRowTypes = getModelRowType(methCall, meth);
+        It<DeepType> types = new MysqliRes(ctx).resolveOopCall(meth, argCtx, methCall);
+        It<DeepType> modelRowTypes = getCmsModelRowType(methCall, meth);
         It<DeepType> modelRowArrTypes = !modelRowTypes.has() ? It.non() :
             It(som(Mt.getInArraySt(modelRowTypes, methCall)));
         types = It.cnc(types, modelRowArrTypes);

@@ -237,7 +237,7 @@ public class UsageResolver
             .flt(m -> caretArgOrder == 0)
             .fap(meth -> opt(argList.getParent())
                 .cst(MethodReference.class)
-                .fap(methCall -> (new MethCallRes(fakeCtx)).getModelRowType(methCall, meth)));
+                .fap(methCall -> (new MethCallRes(fakeCtx)).getCmsModelRowType(methCall, meth)));
     }
 
     private It<DeepType> findBuiltInArgType(Function builtInFunc, int argOrder, ParameterList argList)
