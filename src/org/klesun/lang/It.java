@@ -45,7 +45,7 @@ public class It<A> implements IIt<A>
         return new It<>(list());
     }
 
-    public static <B> It<B> frs(S<Iterable<B>>... args)
+    public static <B> It<B> frs(S<? extends Iterable<B>>... args)
     {
         return It(args)
             .map(ble -> ble.get().iterator())

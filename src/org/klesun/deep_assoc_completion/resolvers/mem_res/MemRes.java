@@ -46,19 +46,32 @@ public class MemRes {
     {
         return opt(mem.getClassReference()).fap(obj -> {
             String cls = obj.getText();
-            Opt<PhpClass> docSelfTit = ctx.getFakeFileSource()
-                .flt(tag -> list("self", "static", "$this").contains(cls))
-                .fap(tag -> Tls.getParents(tag).cct(som(tag)))
-                .cst(PhpDocComment.class)
-                .fap(doc -> Tls.getNextSiblings(doc))
-                .flt(sib -> !(sib instanceof PsiWhiteSpace))
-                .fst()
-                .elf(() -> ctx.getFakeFileSource())
-                .fap(doc -> Tls.getParents(doc).cct(som(doc)))
-                .cst(PhpClass.class)
-                .fst();
+            Project proj = mem.getProject();
+            Opt<PhpClass> docCls = It.cnc(non()
+                , ctx.getFakeFileSource() // phpdoc above class
+                    .fap(tag -> Tls.getParents(tag).cct(som(tag)))
+                    .cst(PhpDocComment.class)
+                    .fap(doc -> Tls.getNextSiblings(doc))
+                    .flt(sib -> !(sib instanceof PsiWhiteSpace))
+                , ctx.getFakeFileSource() // phpdoc inside class
+                    .fap(doc -> Tls.getParents(doc).cct(som(doc)))
+            ).cst(PhpClass.class).fst();
 
-            It<PhpClass> realTit = It.frs(
+            S<It<PhpClass>> docSelfCit = () -> docCls.fap(clsPsi -> {
+                if (list("self", "static").contains(cls)) {
+                    return ctx.getSelfType()
+                        .fap(ideat -> ArrCtorRes.resolveIdeaTypeCls(ideat, proj))
+                        .def(som(clsPsi));
+                } else if ("$this".equals(cls)) {
+                    Mt thisMt = ctx.getThisType().wap(Mt::new);
+                    return ArrCtorRes.resolveMtInstCls(thisMt, proj)
+                        .def(som(clsPsi));
+                } else {
+                    return It.non();
+                }
+            });
+
+            S<It<PhpClass>> realCit = () -> It.frs(
                 () -> ctx.getSelfType()
                     // IDEA resolves static:: incorrectly, it either treats it
                     // same as self::, either does not resolve it at all
@@ -66,13 +79,12 @@ public class MemRes {
                     .fap(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, obj.getProject())),
                 () -> {
                     Mt mt = new Mt(ctx.findExprType(obj));
-                    Project proj = mem.getProject();
                     return mem.isStatic()
                         ? ArrCtorRes.resolveMtClsRefCls(mt, proj)
                         : ArrCtorRes.resolveMtInstCls(mt, proj);
                 }
             );
-            return It.cnc(docSelfTit, realTit);
+            return It.frs(docSelfCit, realCit);
         }).unq();
     }
 }

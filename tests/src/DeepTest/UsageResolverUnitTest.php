@@ -881,7 +881,7 @@ class UsageResolverUnitTest
         Child::find([], ['' => '']);
         Child::find([], $param);
         return [
-            'param' => ['stub_id' => 1, 'user_id' => 1, 'user_name' => 'mark'],
+            'param' => ['user_id' => 1, 'user_name' => 'mark'],
         ];
     }
 
