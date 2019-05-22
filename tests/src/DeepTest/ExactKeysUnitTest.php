@@ -1866,6 +1866,17 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    public function provideCompletionFromUnrelatedClassOfSameIfc($arg)
+    {
+        $row = (new ClassFirstPhpDocInheritKeysUnitTest)->formatOneRow($arg);
+        // should not suggest 'performed', as it is only declared in
+        // ClassSecondPhpDocInheritKeysUnitTest, not ClassFirstPhpDocInheritKeysUnitTest
+        $row[''];
+        return [
+            [$row, ['id', 'cmd_performed']],
+        ];
+    }
+
     //===============================
     // TODO: testify following
     //===============================
