@@ -14,7 +14,7 @@ import java.util.HashMap;
 /** a node in called function stack trace with args */
 public class FuncCtx extends Lang implements IFuncCtx
 {
-    enum EArgPsiType {DIRECT, ARR, NONE, INDIRECT};
+    enum EArgPsiType {DIRECT, ARR, NONE, INDIRECT, SELF_CLS, THIS_CLS};
 
     final private Opt<FuncCtx> parent;
     final public Opt<PsiElement> uniqueRef;
@@ -165,6 +165,22 @@ public class FuncCtx extends Lang implements IFuncCtx
     {
         FuncCtx subCtx = new FuncCtx(this, L(), fieldRef, EArgPsiType.DIRECT);
         subCtx.setThisType(fieldRef, findExprType);
+        return subCtx;
+    }
+
+    public FuncCtx subCtxSelfCls(PhpClass clsPsi)
+    {
+        FuncCtx subCtx = new FuncCtx(this, L(), clsPsi, EArgPsiType.SELF_CLS);
+        subCtx.clsIdeaType = som(clsPsi.getType());
+        return subCtx;
+    }
+
+    public FuncCtx subCtxThisCls(PhpClass clsPsi)
+    {
+        FuncCtx subCtx = new FuncCtx(this, L(), clsPsi, EArgPsiType.THIS_CLS);
+        PhpType pst = clsPsi.getType();
+        subCtx.clsIdeaType = som(pst);
+        subCtx.instGetter = som(() -> new DeepType(clsPsi, pst).mt());
         return subCtx;
     }
 

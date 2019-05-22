@@ -12,77 +12,6 @@ use SomeCls123;
 use TouhouNs\MarisaKirisame;
 use TouhouNs\ReimuHakurei;
 
-abstract class AbstractPhpDocInheritKeysUnitTest
-{
-    /**
-     * @param array $row = $this->getFieldArray()[0]
-     *
-     * @return array
-     */
-    public function formatOneRow(array $row): array
-    {
-        return $row;
-    }
-
-    abstract public function getFieldArray(): array;
-}
-
-class ClassFirstPhpDocInheritKeysUnitTest extends AbstractPhpDocInheritKeysUnitTest
-{
-    /**
-     * {@inheritdoc}
-     */
-    public function formatOneRow(array $row): array
-    {
-        $row['cmd_performed'] = strtoupper($row['cmd_performed']);
-
-        return $row;
-    }
-
-    public function getFieldArray(): array
-    {
-        // this maybe comes from the database
-        return [
-            [
-                'id' => 1,
-                'cmd_performed' => 'apt-get update'
-            ],
-            [
-                'id' => 2,
-                'cmd_performed' => 'apt-get upgrade'
-            ],
-        ];
-    }
-}
-
-class ClassSecondPhpDocInheritKeysUnitTest extends AbstractPhpDocInheritKeysUnitTest
-{
-    /**
-     * {@inheritdoc}
-     */
-    public function formatOneRow(array $row): array
-    {
-        $row['performed'] = strtolower($row['performed']);
-
-        return $row;
-    }
-
-    public function getFieldArray(): array
-    {
-        // this maybe comes from the database
-        return [
-            [
-                'id' => 1,
-                'performed' => 'apt-get update'
-            ],
-            [
-                'id' => 2,
-                'performed' => 'apt-get upgrade'
-            ],
-        ];
-    }
-}
-
 interface IExactKeysUnitTest
 {
     /** @param $params = ['age' => 18, 'price' => '240.00'] */
@@ -1844,6 +1773,21 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    public function provideCompletionFromUnrelatedClassOfSameIfc($arg)
+    {
+        $firstRow = (new Issue087\ClassFirstPhpDocInheritKeys\ExactKeysUnitTest)->formatOneRow($arg);
+        $secondRow = (new Issue087\ClassSecondPhpDocInheritKeys\ExactKeysUnitTest)->formatOneRow($arg);
+        // should not suggest 'performed', as it is only declared in
+        // ClassSecondPhpDocInheritKeysUnitTest, not ClassFirstPhpDocInheritKeysUnitTest
+        $firstRow[''];
+        // should not suggest cmd_performed
+        $secondRow[''];
+        return [
+            [$firstRow, ['id', 'cmd_performed']],
+            [$secondRow, ['id', 'performed']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
@@ -1863,17 +1807,6 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
             [$fromField->demandDonuts(), ['patience', 'amount', 'consequences']],
             [$unwrapped->demandDonuts(), ['patience', 'amount', 'consequences']],
             [$mapped->unwrap()->masterSpark(), ['deadFoes']],
-        ];
-    }
-
-    public function provideCompletionFromUnrelatedClassOfSameIfc($arg)
-    {
-        $row = (new ClassFirstPhpDocInheritKeysUnitTest)->formatOneRow($arg);
-        // should not suggest 'performed', as it is only declared in
-        // ClassSecondPhpDocInheritKeysUnitTest, not ClassFirstPhpDocInheritKeysUnitTest
-        $row[''];
-        return [
-            [$row, ['id', 'cmd_performed']],
         ];
     }
 

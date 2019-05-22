@@ -259,17 +259,28 @@ public class ArgRes extends Lang
             list(param)
         );
 
+        Opt<Method> methOpt = Tls.getParents(param)
+            .cst(Method.class).fst();
+        IExprCtx clsCtx = methOpt
+            .fop(m -> Tls.getParents(m)
+                .cst(PhpClass.class).fst()
+                .flt(clsPsi -> !trace.func().areArgsKnown())
+                .map(clsPsi -> m.isStatic()
+                    ? trace.subCtxSelfCls(clsPsi)
+                    : trace.subCtxThisCls(clsPsi)))
+            .def(trace);
+
         It<DeepType> declTit = decls
             .fap(arg -> It.cnc(
                 opt(arg.getDocComment())
                     .fop(doc -> opt(doc.getParamTagByName(param.getName())))
-                    .fap(doc -> new DocParamRes(trace).resolve(doc)),
+                    .fap(doc -> new DocParamRes(clsCtx).resolve(doc)),
                 opt(arg.getParent()).fap(lst -> opt(lst.getParent()))
                     .cst(Function.class)
                     .fap(func -> It.cnc(
-                        UsageResolver.findMetaArgType(func, order, trace),
+                        UsageResolver.findMetaArgType(func, order, clsCtx),
                         opt(func.getDocComment())
-                            .fap(doc -> PsalmRes.resolveVar(doc, param.getName(), trace))
+                            .fap(doc -> PsalmRes.resolveVar(doc, param.getName(), clsCtx))
 
                     )),
                 opt(arg.getDefaultValue()).itr()

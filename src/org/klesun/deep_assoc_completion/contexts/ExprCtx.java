@@ -66,27 +66,37 @@ public class ExprCtx implements IExprCtx {
     }
 
     public ExprCtx subCtxDirect(FunctionReference funcCall) {
-        return subExpr(expr, funcCtx.subCtxDirect(funcCall, this::findExprType));
+        return subExpr(funcCall, funcCtx.subCtxDirect(funcCall, this::findExprType));
     }
 
     public ExprCtx subCtxDirect(NewExpression funcCall) {
-        return subExpr(expr, funcCtx.subCtxDirect(funcCall, this::findExprType));
+        return subExpr(funcCall, funcCtx.subCtxDirect(funcCall, this::findExprType));
     }
 
     public ExprCtx subCtxSingleArgArr(PhpExpression argArr) {
-        return subExpr(expr, funcCtx.subCtxSingleArgArr(argArr, this::findExprType));
+        return subExpr(argArr, funcCtx.subCtxSingleArgArr(argArr, this::findExprType));
     }
 
     public ExprCtx subCtxIndirect(PhpExpression args) {
-        return subExpr(expr, funcCtx.subCtxIndirect(args, this::findExprType));
+        return subExpr(args, funcCtx.subCtxIndirect(args, this::findExprType));
     }
 
     public ExprCtx subCtxMagicProp(FieldReference fieldRef) {
-        return subExpr(expr, funcCtx.subCtxMagicProp(fieldRef, this::findExprType));
+        return subExpr(fieldRef, funcCtx.subCtxMagicProp(fieldRef, this::findExprType));
     }
 
     public IExprCtx subCtxMem(MemberReference fieldRef) {
-        return subExpr(expr, funcCtx.subCtxMem(fieldRef, this::findExprType));
+        return subExpr(fieldRef, funcCtx.subCtxMem(fieldRef, this::findExprType));
+    }
+
+    @Override
+    public IExprCtx subCtxSelfCls(PhpClass clsPsi) {
+        return subExpr(clsPsi, funcCtx.subCtxSelfCls(clsPsi));
+    }
+
+    @Override
+    public IExprCtx subCtxThisCls(PhpClass clsPsi) {
+        return subExpr(clsPsi, funcCtx.subCtxThisCls(clsPsi));
     }
 
     public ExprCtx withClosure(L<T2<String, S<MemIt<DeepType>>>> closureVars, IExprCtx outsideCtx) {
