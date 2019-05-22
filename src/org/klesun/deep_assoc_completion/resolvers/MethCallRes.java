@@ -234,6 +234,18 @@ public class MethCallRes extends Lang
                 .fap(obj -> ctx.findExprType(obj))
                 .fap(t -> t.pdoFetchTypes);
             types = It(pdoTypes);
+        } else if (
+            clsNme.equals("mysqli_result") &&
+            meth.getName().equals("fetch_all") &&
+            L(methCall.getParameters()).gat(0)
+                .any(p -> p.getText().equals("MYSQLI_ASSOC"))
+        ) {
+            DeepType arrType = opt(methCall.getClassReference())
+                .fop(toCast(PhpExpression.class))
+                .fap(obj -> ctx.findExprType(obj))
+                .fap(t -> t.pdoFetchTypes)
+                .wap(rowTit -> Mt.getInArraySt(rowTit, methCall));
+            types = It(som(arrType));
         } else if (clsNme.equals("mysqli") && meth.getName().equals("query")) {
             MemIt<DeepType> rowTypes = argCtx.func().getArg(0).fap(mt -> mt.types)
                 .flt(strType -> !opt(strType.stringValue).def("").equals(""))
