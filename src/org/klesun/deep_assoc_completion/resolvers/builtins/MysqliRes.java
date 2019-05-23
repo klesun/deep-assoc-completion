@@ -150,4 +150,19 @@ public class MysqliRes
             return It.non();
         }
     }
+
+    public It<DeepType> resolveProceduralCall(String funcName, PsiElement[] args)
+    {
+        Opt<PhpExpression> oopThis = L(args).gat(0).cst(PhpExpression.class);
+        L<PsiElement> oopArgs = L(args).sub(1);
+        if (funcName.equals("mysqli_query")) {
+            return query(L(args).sub(1));
+        } else if (funcName.equals("mysqli_fetch_assoc")) {
+            return fetch_assoc(oopThis.def(null));
+        } else if (funcName.equals("mysqli_fetch_all")) {
+            return fetch_all(oopThis.def(null), oopArgs);
+        } else {
+            return It.non();
+        }
+    }
 }

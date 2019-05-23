@@ -11,6 +11,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.ScopeFinder;
+import org.klesun.deep_assoc_completion.resolvers.builtins.MysqliRes;
 import org.klesun.deep_assoc_completion.structures.ArgOrder;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
@@ -201,94 +202,99 @@ public class FuncCallRes extends Lang
 
     private Iterable<DeepType> findBuiltInFuncCallType(FunctionReferenceImpl call)
     {
-        return opt(call.getName()).map(name -> {
-            IFuncCtx callCtx = ctx.subCtxDirect(call).func();
-            PsiElement[] params = call.getParameters();
-            L<PsiElement> lParams = L(params);
-            if (name.equals("array_map")) {
-                return array_map(callCtx, call);
-            } else if (name.equals("array_filter") || name.equals("array_reverse")
-                    || name.equals("array_splice") || name.equals("array_slice")
-                    || name.equals("array_values") || name.equals("array_pad")
-                    || name.equals("array_unique")
-            ) {
-                // array type unchanged
-                return callCtx.getArgMt(0).types;
-            } else if (name.equals("array_combine")) {
-                return list(array_combine(callCtx, call));
-            } else if (name.equals("array_fill_keys")) {
-                return list(array_fill_keys(callCtx, call));
-            } else if (name.equals("array_flip")) {
-                return list(array_flip(callCtx, call));
-            } else if (name.equals("array_pop") || name.equals("array_shift")
-                    || name.equals("current") || name.equals("end") || name.equals("next")
-                    || name.equals("prev") || name.equals("reset")
-            ) {
-                return callCtx.getArgMt(0).getEl().types;
-            } else if (name.equals("array_merge") || name.equals("array_replace")
-                    || name.equals("array_replace_recursive")
-            ) {
-                return Tls.range(0, params.length)
-                    .fop(i -> callCtx.getArg(i))
-                    .fap(mt -> mt.types).map(a -> a);
-            } else if (name.equals("array_column")) {
-                return array_column(callCtx, call);
-            } else if (name.equals("array_chunk")) {
-                return callCtx.getArgMt(0).getInArray(call).mt().types;
-            } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")
-                    || name.equals("array_intersect_assoc") || name.equals("array_diff_assoc")
-                    || name.equals("array_diff") || name.equals("strval")
-            ) {
-                // do something more clever?
-                return callCtx.getArgMt(0).types;
-            } else if (name.equals("compact")) {
-                return list(compact(callCtx, call));
-            } else if (name.equals("implode")) {
-                return list(implode(callCtx, call));
-            } else if (name.equals("array_keys")) {
-                DeepType arrt = new DeepType(call, PhpType.ARRAY);
-                arrt.addKey(KeyType.integer(call)).addType(Tls.onDemand(() -> callCtx.getArgMt(0).types
-                    .fap(t -> t.keys)
-                    .fap(k -> k.keyType.getTypes())
-                    .fap(kt -> opt(kt.stringValue)
-                        .map(keyName -> new DeepType(kt.definition, PhpType.STRING, keyName)))
-                    .wap(types -> new Mt(types))));
-                return list(arrt);
-            } else if (name.equals("func_get_args")) {
-                return ctx.func().getArg(new ArgOrder(0, true)).itr().fap(a -> a.types);
-            } else if (name.equals("func_get_arg")) {
-                return callCtx.getArg(0).itr()
-                    .fop(mt -> opt(mt.getStringValue()))
-                    .flt(str -> Tls.isNum(str))
-                    .map(str -> Integer.parseInt(str))
-                    .fop(order -> ctx.func().getArg(order))
-                    .fap(mt -> mt.types).map(a -> a);
-            } else if (name.equals("call_user_func_array")) {
-                IExprCtx newCtx = lParams.gat(1)
-                    .fop(toCast(PhpExpression.class))
-                    .map(args -> ctx.subCtxIndirect(args))
-                    .def(ctx.subCtxEmpty());
-                return callCtx.getArgMt(0).types
-                    .fap(t -> t.getReturnTypes(newCtx)).map(a -> a);
-            } else if (name.equals("explode")) {
-                DeepType arrt = new DeepType(call, PhpType.ARRAY);
-                arrt.addKey(KeyType.integer(call))
-                    .addType(() -> new Mt(list(new DeepType(call, PhpType.STRING))), PhpType.STRING);
-                return list(arrt);
-            } else if (name.equals("get_called_class")) {
-                return ctx.getSelfType().map(idea -> DeepType.makeClsRef(call, idea));
-            } else if (name.equals("get_object_vars")) {
-                return list(get_object_vars(callCtx, call));
-            } else {
-                return It.frs(
-                    () -> new ReturnTypeDefs(ctx.subCtxEmpty()).getReturnType(call, callCtx),
-                    () -> opt(call.resolve())
-                        // try to get type info from standard_2.php
-                        .fop(toCast(Function.class))
-                        .map(func -> new DeepType(call, getDocType(func)))
-                );
-            }
-        }).def(list());
+        String name = opt(call.getName()).def("");
+        IFuncCtx callCtx = ctx.subCtxDirect(call).func();
+        PsiElement[] params = call.getParameters();
+        L<PsiElement> lParams = L(params);
+
+        if (name.equals("array_map")) {
+            return array_map(callCtx, call);
+        } else if (name.equals("array_filter") || name.equals("array_reverse")
+                || name.equals("array_splice") || name.equals("array_slice")
+                || name.equals("array_values") || name.equals("array_pad")
+                || name.equals("array_unique")
+        ) {
+            // array type unchanged
+            return callCtx.getArgMt(0).types;
+        } else if (name.equals("array_combine")) {
+            return list(array_combine(callCtx, call));
+        } else if (name.equals("array_fill_keys")) {
+            return list(array_fill_keys(callCtx, call));
+        } else if (name.equals("array_flip")) {
+            return list(array_flip(callCtx, call));
+        } else if (name.equals("array_pop") || name.equals("array_shift")
+                || name.equals("current") || name.equals("end") || name.equals("next")
+                || name.equals("prev") || name.equals("reset")
+        ) {
+            return callCtx.getArgMt(0).getEl().types;
+        } else if (name.equals("array_merge") || name.equals("array_replace")
+                || name.equals("array_replace_recursive")
+        ) {
+            return Tls.range(0, params.length)
+                .fop(i -> callCtx.getArg(i))
+                .fap(mt -> mt.types).map(a -> a);
+        } else if (name.equals("array_column")) {
+            return array_column(callCtx, call);
+        } else if (name.equals("array_chunk")) {
+            return callCtx.getArgMt(0).getInArray(call).mt().types;
+        } else if (name.equals("array_intersect_key") || name.equals("array_diff_key")
+                || name.equals("array_intersect_assoc") || name.equals("array_diff_assoc")
+                || name.equals("array_diff") || name.equals("strval")
+        ) {
+            // do something more clever?
+            return callCtx.getArgMt(0).types;
+        } else if (name.equals("compact")) {
+            return list(compact(callCtx, call));
+        } else if (name.equals("implode")) {
+            return list(implode(callCtx, call));
+        } else if (name.equals("array_keys")) {
+            DeepType arrt = new DeepType(call, PhpType.ARRAY);
+            arrt.addKey(KeyType.integer(call)).addType(Tls.onDemand(() -> callCtx.getArgMt(0).types
+                .fap(t -> t.keys)
+                .fap(k -> k.keyType.getTypes())
+                .fap(kt -> opt(kt.stringValue)
+                    .map(keyName -> new DeepType(kt.definition, PhpType.STRING, keyName)))
+                .wap(types -> new Mt(types))));
+            return list(arrt);
+        } else if (name.equals("func_get_args")) {
+            return ctx.func().getArg(new ArgOrder(0, true)).itr().fap(a -> a.types);
+        } else if (name.equals("func_get_arg")) {
+            return callCtx.getArg(0).itr()
+                .fop(mt -> opt(mt.getStringValue()))
+                .flt(str -> Tls.isNum(str))
+                .map(str -> Integer.parseInt(str))
+                .fop(order -> ctx.func().getArg(order))
+                .fap(mt -> mt.types).map(a -> a);
+        } else if (name.equals("call_user_func_array")) {
+            IExprCtx newCtx = lParams.gat(1)
+                .fop(toCast(PhpExpression.class))
+                .map(args -> ctx.subCtxIndirect(args))
+                .def(ctx.subCtxEmpty());
+            return callCtx.getArgMt(0).types
+                .fap(t -> t.getReturnTypes(newCtx)).map(a -> a);
+        } else if (name.equals("explode")) {
+            DeepType arrt = new DeepType(call, PhpType.ARRAY);
+            arrt.addKey(KeyType.integer(call))
+                .addType(() -> new Mt(list(new DeepType(call, PhpType.STRING))), PhpType.STRING);
+            return list(arrt);
+        } else if (name.equals("get_called_class")) {
+            return ctx.getSelfType().map(idea -> DeepType.makeClsRef(call, idea));
+        } else if (name.equals("get_object_vars")) {
+            return list(get_object_vars(callCtx, call));
+        }
+
+        It<DeepType> generalFuncTit = It.frs(
+            () -> new ReturnTypeDefs(ctx.subCtxEmpty()).getReturnType(call, callCtx),
+            () -> opt(call.resolve())
+                // try to get type info from standard_2.php
+                .fop(toCast(Function.class))
+                .map(func -> new DeepType(call, getDocType(func)))
+        );
+
+        It<DeepType> mysqliTit = new MysqliRes(ctx)
+            .resolveProceduralCall(name, params);
+
+        return It.cnc(generalFuncTit, mysqliTit);
     }
 
     public static It<String> getCallFqn(FunctionReferenceImpl funcCall)

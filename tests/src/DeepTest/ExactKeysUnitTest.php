@@ -1383,6 +1383,11 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         return new \mysqli("10.128.128.150", "stasadm", "G0a4wa&", "rbstools");
     }
 
+    private function getMysqliProcedural()
+    {
+        return mysqli_connect("10.128.128.150", "stasadm", "G0a4wa&", "rbstools");
+    }
+
     private function queryMysqli()
     {
         $mysqli = $this->getMysqli();
@@ -1391,7 +1396,7 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
 
     private function queryMysqliProcedural()
     {
-        $mysqli = $this->getMysqli();
+        $mysqli = $this->getMysqliProcedural();
         return mysqli_query($mysqli, "SELECT id, iata_code, name FROM airports limit 20;");
     }
 
@@ -1457,11 +1462,11 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     {
         $result = $this->queryMysqliProcedural();
         $intRows = mysqli_fetch_all($result);
-        $row = mysqli_fetch_all($result, MYSQLI_ASSOC);
-        $row[''];
+        $rows = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        $rows[''];
         return [
             [$intRows[0], []],
-            [$row, ['id', 'iata_code', 'name']],
+            [$rows[0], ['id', 'iata_code', 'name']],
         ];
     }
 
