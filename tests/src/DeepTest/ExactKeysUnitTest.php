@@ -1871,6 +1871,36 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    public function getCombinations()
+    {
+        while (rand() % 10 !== 0) {
+            $pqId = ['old', 'fresh', 'purged'][rand()];
+
+            $priceQuote = [
+                'pqId' =>  123,
+                'searchKey' => 234,
+                'packageKey' => 456,
+                'pricingOptionOrder' => 4564,
+                'combinationOrder' => 586
+            ];
+
+            yield $pqId => $priceQuote;
+        }
+    }
+
+    public function provideYieldWithKey()
+    {
+        $firstCombo = null;
+        $result = [];
+        foreach ($this->getCombinations() as $key => $combo) {
+            $result[$key] = $combo;
+        }
+        return [
+            [$result, ['old', 'fresh', 'purged']],
+            [$result['old'], ['pqId', 'searchKey', 'packageKey', 'pricingOptionOrder', 'combinationOrder']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

@@ -117,6 +117,22 @@ public class Tls extends Lang
         return non();
     }
 
+    public static It<PsiElement> getChildrenWithLeaf(PsiElement psi)
+    {
+        PsiElement next = psi.getFirstChild();
+        return It(() -> new Iterator<PsiElement>() {
+            private PsiElement nextProp = next;
+            public boolean hasNext() {
+                return nextProp != null;
+            }
+            public PsiElement next() {
+                PsiElement current = nextProp;
+                nextProp = nextProp.getNextSibling();
+                return current;
+            }
+        });
+    }
+
     public static <T extends PsiElement> It<T> findChildren(
         PsiElement parent,
         Class<T> cls,

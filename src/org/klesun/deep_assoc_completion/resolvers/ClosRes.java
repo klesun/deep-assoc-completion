@@ -3,9 +3,11 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
 public class ClosRes extends Lang
@@ -62,6 +64,45 @@ public class ClosRes extends Lang
         return result;
     }
 
+    private static It<DeepType> resolveYieldedIterator(PhpYield yld, IExprCtx ctx)
+    {
+        PhpType pst = PhpType.builder().add("\\Generator").build();
+        // yield $pqId => $priceQuote;
+        Opt<PhpExpression> keyPsi = non();
+        // yield $priceQuote;
+        Opt<PhpExpression> valPsi = non();
+        // yield from $priceQuotes;
+        Boolean gotFrom = false;
+
+        for (PsiElement leaf: Tls.getChildrenWithLeaf(yld)) {
+            Opt<PhpExpression> asExpr = Tls.cast(PhpExpression.class, leaf);
+            if (leaf.getText().equals("from")) {
+                gotFrom = true;
+            } else if (asExpr.has()) {
+                valPsi = asExpr;
+            } else if (valPsi.has() && leaf.getText().equals("=>")) {
+                keyPsi = valPsi;
+                valPsi = non();
+            }
+        }
+        It<DeepType> vit = valPsi.fap(val -> ctx.findExprType(val));
+        if (gotFrom) {
+            // could exclude non-iterable types here and set
+            // \Generator as fqn type one of these not lazy day
+            return vit;
+        } else {
+            Mt valMt = new Mt(vit);
+            KeyType kt = keyPsi
+                .map(key -> ctx.findExprType(key))
+                .map(kit -> KeyType.mt(kit, yld))
+                .def(KeyType.integer(yld));
+            DeepType result = new DeepType(yld, pst);
+            result.addKey(kt, yld)
+                .addType(Tls.onDemand(() -> valMt), PhpType.MIXED);
+            return It(som(result));
+        }
+    }
+
     public static It<DeepType> getReturnedValue(PsiElement funcBody, IExprCtx ctx)
     {
         return It.cnc(
@@ -70,13 +111,7 @@ public class ClosRes extends Lang
                 .fop(toCast(PhpExpression.class))
                 .fap(val -> ctx.findExprType(val)),
             findFunctionYields(funcBody)
-                .fap(yld -> opt(yld.getArgument()).itr()
-                    .fop(toCast(PhpExpression.class))
-                    .map(val -> ctx.findExprType(val))
-                    .fap(tit -> opt(yld.getText())
-                        .fop(txt -> Tls.regex("yield\\s+from[^A-Za-z].*", txt))
-                        .uni(txt -> tit, () -> list(Mt.getInArraySt(tit, funcBody))))
-                )
+                .fap(yld -> resolveYieldedIterator(yld, ctx))
         );
     }
 

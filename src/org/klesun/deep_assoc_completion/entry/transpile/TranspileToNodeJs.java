@@ -36,6 +36,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 
 import static org.klesun.lang.Lang.*;
+import static org.klesun.lang.Tls.getChildrenWithLeaf;
 
 public class TranspileToNodeJs extends AnAction
 {
@@ -49,22 +50,6 @@ public class TranspileToNodeJs extends AnAction
                     return !list("abstract", "final").contains(debugName);
                 }))
                 ;
-    }
-
-    private It<PsiElement> getChildrenWithLeaf(PsiElement psi)
-    {
-        PsiElement next = psi.getFirstChild();
-        return It(() -> new Iterator<PsiElement>() {
-            private PsiElement nextProp = next;
-            public boolean hasNext() {
-                return nextProp != null;
-            }
-            public PsiElement next() {
-                PsiElement current = nextProp;
-                nextProp = nextProp.getNextSibling();
-                return current;
-            }
-        });
     }
 
     private String getRootPath(PsiElement pathPsi)
