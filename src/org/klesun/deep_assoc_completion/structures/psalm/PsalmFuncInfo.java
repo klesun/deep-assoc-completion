@@ -66,10 +66,12 @@ public class PsalmFuncInfo {
     {
         return DocParamRes.getDocCommentText(docComment)
             .fap(txt -> getRawTags(txt))
-            .fap(rawTag -> PsalmTypeExprParser.parse(rawTag.textLeft)
-                .map(t -> t.nme((psalmType, textLeft) ->
+            .fap(rawTag -> {
+                Opt<T2<IType, String>> parsed = PsalmTypeExprParser.parse(rawTag.textLeft);
+                return parsed.map(t -> t.nme((psalmType, textLeft) ->
                     new PsalmDocTag(rawTag.tagName, psalmType, textLeft)
-                ))).arr();
+                ));
+            }).arr();
     }
 
     private static Opt<GenericDef> assertTplTag(RawDocTag tag)

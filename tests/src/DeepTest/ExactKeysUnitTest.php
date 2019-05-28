@@ -1905,6 +1905,27 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     // following are not implemented yet
     //=============================
 
+    /**
+     * @param array{a:int}|array{b:int} $simple
+     * @param array<
+     *     array{user: array{id: 123, name: 'Joe'}} |
+     *     array{order: array{id: 21, offer_id: 212}} |
+     *     array{offer: array{id: 212, name: 'Toys'}}
+     * > $records
+     */
+    public function providePsalmOr($simple, $records)
+    {
+        $simple[''];
+        $records[''];
+        return [
+            [$simple, ['a', 'b']],
+            [$records[0], ['user', 'order', 'offer']],
+            [$records[0]['user'], ['id', 'name']],
+            [$records[0]['order'], ['id', 'offer_id']],
+            [$records[0]['offer'], ['id', 'name']],
+        ];
+    }
+
     public function provideMorePsalmGenerics()
     {
         $fromStaticMeth = ResultGen::makeOk(new KiraYoshikage());

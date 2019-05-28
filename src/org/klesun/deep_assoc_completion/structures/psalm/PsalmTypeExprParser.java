@@ -72,7 +72,7 @@ public class PsalmTypeExprParser
     {
         ArrayList<IType> types = new ArrayList<>();
         do {
-            Opt<? extends IType> typeOpt = parseValue();
+            Opt<? extends IType> typeOpt = parseMultiValue();
             if (typeOpt.has()) {
                 types.add(typeOpt.unw());
             } else {
@@ -87,7 +87,7 @@ public class PsalmTypeExprParser
         LinkedHashMap<String, IType> keys = new LinkedHashMap<>();
         while (this.unprefix("\\s*,?\\s*(\\w+)\\s*:\\s*")) {
             String keyName = this.lastMatch.get(1);
-            Opt<? extends IType> typeOpt = parseValue();
+            Opt<? extends IType> typeOpt = parseMultiValue();
             if (typeOpt.has()) {
                 keys.put(keyName, typeOpt.unw());
             } else {
@@ -97,7 +97,7 @@ public class PsalmTypeExprParser
         return som(keys);
     }
 
-    private Opt<? extends IType> parseValue()
+    private Opt<? extends IType> parseSingleValue()
     {
         this.unprefix("\\s+");
         Opt<? extends IType> parsed = non();
@@ -126,12 +126,33 @@ public class PsalmTypeExprParser
         return parsed;
     }
 
+    private Opt<? extends IType> parseMultiValue()
+    {
+        return parseSingleValue().map(first -> {
+            ArrayList<IType> following = new ArrayList<>();
+            while (this.unprefix("\\s*\\|\\s*")) {
+                Opt<? extends IType> next = parseSingleValue();
+                if (next.has()) {
+                    following.add(next.unw());
+                } else {
+                    break;
+                }
+            }
+            if (following.size() > 0) {
+                following.add(0, first);
+                return new TMulti(following);
+            } else {
+                return first;
+            }
+        });
+    }
+
     public static Opt<T2<IType, String>> parse(String typeText)
     {
         // TODO: would be nice to return what we managed to parse so far at least,
         //  that would help user to understand where is the mistake in his definition
         PsalmTypeExprParser self = new PsalmTypeExprParser(typeText);
-        return self.parseValue()
+        return self.parseMultiValue()
             .map(t -> T2(t, self.getTextLeft()));
     }
 }

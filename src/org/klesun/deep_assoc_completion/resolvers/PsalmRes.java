@@ -9,10 +9,7 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.deep_assoc_completion.structures.Mkt;
-import org.klesun.deep_assoc_completion.structures.psalm.IType;
-import org.klesun.deep_assoc_completion.structures.psalm.PsalmFuncInfo;
-import org.klesun.deep_assoc_completion.structures.psalm.TAssoc;
-import org.klesun.deep_assoc_completion.structures.psalm.TClass;
+import org.klesun.deep_assoc_completion.structures.psalm.*;
 import org.klesun.lang.It;
 import org.klesun.lang.*;
 
@@ -110,6 +107,9 @@ public class PsalmRes {
                 })))
             , Tls.cast(TClass.class, psalmType)
                 .fap(cls -> psalmClsToDeep(cls, goToPsi, generics))
+            , Tls.cast(TMulti.class, psalmType)
+                .fap(multi -> It(multi.types)
+                    .fap(t -> psalmToDeep(t, goToPsi, generics)))
         );
     }
 
