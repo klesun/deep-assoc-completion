@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.structures.psalm;
 
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -97,6 +98,27 @@ public class PsalmTypeExprParser
         return som(keys);
     }
 
+    private Opt<String> parseString(char quote)
+    {
+        boolean escape = false;
+        StringBuilder result = new StringBuilder();
+        for (; this.offset < this.text.length(); ++this.offset) {
+            char ch = this.text.charAt(this.offset);
+            if (escape) {
+                result.append(ch);
+                escape = false;
+            } else if (ch == '\\') {
+                escape = true;
+            } else if (ch == quote) {
+                ++this.offset;
+                return som(result.toString());
+            } else {
+                result.append(ch);
+            }
+        }
+        return non();
+    }
+
     private Opt<? extends IType> parseSingleValue()
     {
         this.unprefix("\\s+");
@@ -110,13 +132,27 @@ public class PsalmTypeExprParser
             parsed = parseKeys()
                 .map(keys -> new TAssoc(keys))
                 .flt(t -> {
-                    unprefix("\\s*,\\s*"); // optional trailing coma
+                    unprefix(",\\s*"); // optional trailing coma
                     return unprefix("\\s*}\\s*");
                 });
-        } else if (this.unprefix("\\s*([a-zA-Z\\\\_][a-zA-Z\\\\_0-9]*)\\s*")) {
+        } else if (this.unprefix("([a-zA-Z\\\\_][a-zA-Z\\\\_0-9]*)\\s*")) {
             // should be put after SomeClass::class check when it is implemented
             String fqn = this.lastMatch.get(1);
             parsed = som(new TClass(fqn, new ArrayList<>()));
+        } else if (this.unprefix("(\\d+\\.\\+d+)")) {
+            String value = this.lastMatch.get(1);
+            parsed = som(new TPrimitive(PhpType.FLOAT, value));
+        } else if (this.unprefix("(\\d+)")) {
+            String value = this.lastMatch.get(1);
+            parsed = som(new TPrimitive(PhpType.INT, value));
+        } else if (this.unprefix("true\\b")) {
+            parsed = som(new TPrimitive(PhpType.TRUE, "1"));
+        } else if (this.unprefix("false\\b")) {
+            parsed = som(new TPrimitive(PhpType.FALSE, ""));
+        } else if (this.unprefix("['\"]")) {
+            char quote = this.lastMatch.get(0).charAt(0);
+            parsed = parseString(quote).map(value ->
+                new TPrimitive(PhpType.STRING, value));
         } else {
             // TODO: support value types and union types like "Something::class", "'priceItinerary'", "3.14|null", etc...
         }

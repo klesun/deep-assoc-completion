@@ -1901,10 +1901,6 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     /**
      * @param array{a:int}|array{b:int} $simple
      * @param array<
@@ -1917,6 +1913,7 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     {
         $simple[''];
         $records[''];
+        $records[0]['user'][''];
         return [
             [$simple, ['a', 'b']],
             [$records[0], ['user', 'order', 'offer']],
@@ -1925,6 +1922,10 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
             [$records[0]['offer'], ['id', 'name']],
         ];
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     public function provideMorePsalmGenerics()
     {

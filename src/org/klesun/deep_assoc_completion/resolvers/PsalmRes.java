@@ -107,9 +107,12 @@ public class PsalmRes {
                 })))
             , Tls.cast(TClass.class, psalmType)
                 .fap(cls -> psalmClsToDeep(cls, goToPsi, generics))
+            // if we ever support references, should add check for infinite recursion here...
             , Tls.cast(TMulti.class, psalmType)
                 .fap(multi -> It(multi.types)
                     .fap(t -> psalmToDeep(t, goToPsi, generics)))
+            , Tls.cast(TPrimitive.class, psalmType)
+                .map(prim -> new DeepType(goToPsi, prim.kind, prim.stringValue))
         );
     }
 
