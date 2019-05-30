@@ -13,6 +13,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.structures.psalm.PsalmFuncInfo;
 import org.klesun.lang.*;
 
 /**
@@ -74,7 +75,22 @@ public class MiscRes extends Lang
             .fap(cls -> resolveClassReference(cls, cls))
             .map(ideaType -> {
                 IExprCtx ctorArgs = ctx.subCtxDirect(newExp);
-                return DeepType.makeNew(newExp, ctorArgs, ideaType);
+
+                L<Mt> generics = ArrCtorRes.resolveIdeaTypeCls(ideaType, newExp.getProject())
+                    .fap(clsPsi -> clsPsi.getMethods())
+                    .flt(m -> m.getName().equals("__construct"))
+                    .fap(ctor -> opt(ctor.getDocComment()))
+                    .map(ctorDoc -> PsalmFuncInfo.parse(ctorDoc))
+                    .map(ctorInfo -> ctorInfo.classGenerics
+                        .map(g -> PsalmRes.getGenTypeFromFunc(
+                            g, ctorInfo.params, ctorArgs, newExp
+                        ).wap(Mt::new))
+                        .arr())
+                    .flt(gens -> gens.size() > 0)
+                    .fst()
+                    .def(L());
+
+                return DeepType.makeNew(newExp, ctorArgs, generics, ideaType);
             });
     }
 

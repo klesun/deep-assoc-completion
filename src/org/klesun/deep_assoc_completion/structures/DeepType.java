@@ -30,7 +30,7 @@ public class DeepType extends Lang
     public final L<DeepType> pdoFetchTypes = L();
     public final LinkedHashSet<String> pdoBindVars = new LinkedHashSet<>();
     public Opt<IExprCtx> ctorArgs = opt(null);
-    // TODO: use them in function return/argument typing (through @template phpdoc tag)
+    // from PSALM @template phpdoc
     public L<Mt> generics = L();
     public Opt<PhpType> clsRefType = non();
     // constant name
@@ -76,10 +76,11 @@ public class DeepType extends Lang
     }
 
     /** new object creation */
-    public static DeepType makeNew(NewExpression newExp, IExprCtx ctorArgs, PhpType ideaType)
+    public static DeepType makeNew(NewExpression newExp, IExprCtx ctorArgs, L<Mt> generics, PhpType ideaType)
     {
         DeepType self = new DeepType(newExp, ideaType, null);
         self.ctorArgs = opt(ctorArgs);
+        self.generics = generics;
         return self;
     }
 

@@ -95,15 +95,20 @@ public class PsalmFuncInfo {
             .fap(t -> assertTplTag(t)).arr();
     }
 
+    private static L<GenericDef> getClassGenerics(PhpClass clsPsi)
+    {
+        return opt(clsPsi.getDocComment())
+            .fap(doc -> getGenerics(doc))
+            .arr();
+    }
+
     public static PsalmFuncInfo parse(PhpDocComment docComment)
     {
         Opt<PsiElement> clsMemOpt = opt(docComment.getNextPsiSibling());
         Opt<Function> funcOpt = clsMemOpt.cst(Function.class);
         Opt<PhpClass> clsOpt = clsMemOpt.fop(f -> opt(f.getParent())).cst(PhpClass.class);
 
-        L<GenericDef> classGenerics = clsOpt
-            .fop(clsPsi -> opt(clsPsi.getDocComment()))
-            .fap(doc -> getGenerics(doc)).arr();
+        L<GenericDef> classGenerics = clsOpt.fap(clsPsi -> getClassGenerics(clsPsi)).arr();
 
         L<PsalmDocTag> psalmTags = getPsalmTags(docComment);
         L<GenericDef> funcGenerics = getGenerics(docComment);

@@ -160,16 +160,24 @@ public class PsalmRes {
         );
     }
 
+    public static It<DeepType> getGenTypeFromFunc(PsalmFuncInfo.GenericDef g, L<PsalmFuncInfo.ArgDef> params, IExprCtx ctx, PsiElement psi)
+    {
+        return params.fap(p -> p.order.fap(o -> ctx.func().getArg(o))
+            .fap(mt -> p.psalmType
+                .fap(psalmt -> getGenericTypeFromArg(
+                    psalmt, mt, g.name, psi
+                ))));
+    }
+
     private static Map<String, MemIt<DeepType>> getGenericTypes(PsalmFuncInfo psalmInfo, IExprCtx ctx)
     {
         Map<String, MemIt<DeepType>> result = new HashMap<>();
-        psalmInfo.funcGenerics.fch(g -> result.put(g.name, psalmInfo.params
-            .fap(p -> p.order.fap(o -> ctx.func().getArg(o))
-                .fap(mt -> p.psalmType
-                    .fap(psalmt -> getGenericTypeFromArg(
-                        psalmt, mt, g.name, psalmInfo.psi
-                    ))))
-            .mem()));
+        psalmInfo.funcGenerics.fch(g -> {
+            MemIt<DeepType> mit = getGenTypeFromFunc(
+                g, psalmInfo.params, ctx, psalmInfo.psi
+            ).mem();
+            result.put(g.name, mit);
+        });
         psalmInfo.classGenerics.fch((g, i) -> result.put(g.name, ctx.getThisType()
             .fap(t -> t.generics.gat(i))
             .fap(mt -> mt.types).mem()));

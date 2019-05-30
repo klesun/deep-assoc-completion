@@ -1942,6 +1942,15 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    public function provideCtorGenerics()
+    {
+        $fromCtor = new ResultGen(true, new KiraYoshikage());
+        $fromCtor->unwrap()->e;
+        return [
+            [$fromCtor->unwrap()->bitesZaDusto(), ['time', 'goes', 'back']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
@@ -1952,11 +1961,9 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         $fromStaticMeth->unwrap()->bitesZaDusto()[''];
         $mapped = $fromStaticMeth->map(function($reimu){return new MarisaKirisame();});
         $mapped->unwrap()->m;
-        $fromCtor = new ResultGen(true, new KiraYoshikage());
         return [
             [$fromStaticMeth->unwrap()->bitesZaDusto(), ['time', 'goes', 'back']],
             [$mapped->unwrap()->masterSpark(), ['deadFoes']],
-            [$fromCtor->unwrap()->bitesZaDusto(), ['time', 'goes', 'back']],
         ];
     }
 
