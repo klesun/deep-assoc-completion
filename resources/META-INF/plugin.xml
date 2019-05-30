@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.05.23.001</version>
+    <version>2019.05.29.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,9 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#83 Support procedural mysqli_* functions</li>
-        <li>#87 Mind the caller class when resolving self/$this in the doc (To know which class to use when we need to choose abstract method implementation)</li>
-        <li>#88 Support third argument in array_column</li>
+        <li>#77 Support psalm `|` and scalar values like `3.14`, `'sale'`, `false`</li>
     </ul>
     ]]>
     </change-notes>
