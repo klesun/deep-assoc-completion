@@ -76,6 +76,7 @@ public class DeepSettingsForm implements Configurable
 
     @Override
     public void apply() throws ConfigurationException {
+        getSettings().removeUnusedImportsOnSaveEnabled = removeUnusedImportsOnSaveEnabled.isSelected();
         getSettings().passArgsToImplementations = passArgsToImplementations.isSelected();
         getSettings().explicitDepthLimit = validateInt(explicitDepthLimit, 0, 100);
         getSettings().implicitDepthLimit = validateInt(implicitDepthLimit, 0, 100);
