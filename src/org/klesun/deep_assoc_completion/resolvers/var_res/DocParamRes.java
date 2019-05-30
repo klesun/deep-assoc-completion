@@ -12,11 +12,14 @@ import com.jetbrains.php.lang.psi.elements.GroupStatement;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.Statement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.resolvers.other_plugin_integration.DeepAssocApi;
-import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.resolvers.other_plugin_integration.DeepAssocApi;
+import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DocParamRes extends Lang
 {
@@ -137,9 +140,27 @@ public class DocParamRes extends Lang
     public It<DeepType> parseEqExpression(String eqExpr, PsiElement sourcePsi)
     {
         IExprCtx docCtx = ctx.subCtxDoc(sourcePsi);
-        return Tls.regex("^\\s*=\\s*(.+)$", eqExpr)
+
+        /** @param $data['a']['b'] = 123 */
+        List<String> assKeys = new ArrayList<>();
+        Opt<L<String>> keyMatchOpt;
+        while ((keyMatchOpt = Tls.regex("\\s*\\[['\"]([^'\"]*?)['\"]\\](.*)", eqExpr)).has()) {
+            assKeys.add(keyMatchOpt.unw().get(0));
+            eqExpr = keyMatchOpt.unw().get(1);
+        }
+
+        It<DeepType> valTit = Tls.regex("^\\s*=\\s*(.+)$", eqExpr)
             .fop(matches -> matches.gat(0))
             .fap(expr -> parseExpression(expr, sourcePsi.getProject(), docCtx));
+        Mt valMt = new Mt(valTit);
+        for (int i = assKeys.size() - 1; i >= 0; --i) {
+            String k = assKeys.get(i);
+            DeepType arrt = new DeepType(sourcePsi, PhpType.ARRAY);
+            Mt valMtF = valMt;
+            arrt.addKey(k, sourcePsi).addType(() -> valMtF);
+            valMt = arrt.mt();
+        }
+        return valMt.types.itr();
     }
 
     private It<DeepType> parseDoc(PhpDocTag doc)

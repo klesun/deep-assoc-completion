@@ -1913,13 +1913,33 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     {
         $simple[''];
         $records[''];
-        $records[0]['user'][''];
+        $records[0]['order'][''];
         return [
             [$simple, ['a', 'b']],
             [$records[0], ['user', 'order', 'offer']],
             [$records[0]['user'], ['id', 'name']],
             [$records[0]['order'], ['id', 'offer_id']],
             [$records[0]['offer'], ['id', 'name']],
+        ];
+    }
+
+    /**
+     * @param $data['brand_detail'] = new ReimuHakurei
+     * @param $data['price'] = ['currency' => 'USD', 'amount' => '200.00']
+     */
+    public function provideDocForSingleKey($data)
+    {
+        /**
+         * @var $data['availability'] = ['free' => 18, 'reserved' => 3]
+         * @var $data['provider']['contacts'] = ['email' => 'support@opel.com', 'phone' => '+37199456874']
+         */
+        $data[''];
+        return [
+            [$data, ['brand_detail', 'price', 'availability', 'provider']],
+            [$data['price'], ['currency', 'amount']],
+            [$data['availability'], ['free', 'reserved']],
+            [$data['provider'], ['contacts']],
+            [$data['provider']['contacts'], ['email', 'phone']],
         ];
     }
 

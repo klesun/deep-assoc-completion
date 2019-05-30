@@ -273,7 +273,8 @@ public class ArgRes extends Lang
         It<DeepType> declTit = decls
             .fap(arg -> It.cnc(
                 opt(arg.getDocComment())
-                    .fop(doc -> opt(doc.getParamTagByName(param.getName())))
+                    .fap(doc -> It(doc.getParamTags()))
+                    .flt(tag -> param.getName().equals(tag.getVarName()))
                     .fap(doc -> new DocParamRes(clsCtx).resolve(doc)),
                 opt(arg.getParent()).fap(lst -> opt(lst.getParent()))
                     .cst(Function.class)
