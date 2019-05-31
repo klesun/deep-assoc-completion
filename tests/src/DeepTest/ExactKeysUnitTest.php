@@ -1955,11 +1955,13 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     {
         $fromStaticMeth = ResultGen::makeOk(new KiraYoshikage());
         $fromStaticMeth->unwrap()->bitesZaDusto()[''];
-        $mapped = $fromStaticMeth->map(function($reimu){return new MarisaKirisame();});
+        $mapped = $fromStaticMeth->map(function($kira){return new MarisaKirisame();});
         ([$mapped][0])->unwrap()->m;
+        $fromArg = $fromStaticMeth->map(function($reimu){return $reimu;});
         return [
             [$fromStaticMeth->unwrap()->bitesZaDusto(), ['time', 'goes', 'back']],
             [$mapped->unwrap()->masterSpark(), ['deadFoes']],
+            [$fromArg->sheerHeartAttack(), ['veryTough', 'smallCar']],
         ];
     }
 
