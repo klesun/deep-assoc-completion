@@ -17,8 +17,9 @@ class ResultGen
     public function __construct($isOk, $result, \Exception $error = null) {}
 
     /**
-     * @param T $result
-     * @return ResultGen<T>
+     * @template Tnew
+     * @param Tnew $result
+     * @return ResultGen<Tnew>
      */
     public static function makeOk($result) {}
 
@@ -48,6 +49,7 @@ class ResultGen
     public function flatMap(\Closure $mapper) {}
 
     /**
+     * @template T_NEW
      * @param callable<T, T_NEW> $mapper
      * @return ResultGen<T_NEW>
      */

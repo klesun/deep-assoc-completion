@@ -120,7 +120,7 @@ public class PsalmRes {
     // following functions retrieve generic type from signatures and context
     //====================================================
 
-    private static It<DeepType> getGenericTypeFromArg(IType psalmt, Mt deept, String generic, PsiElement psi)
+    private static It<DeepType> getGenericTypeFromArg(IType psalmt, Mt deept, String generic, PsiElement psi, IExprCtx emptyCtx)
     {
         return It.cnc(
             non()
@@ -132,27 +132,32 @@ public class PsalmRes {
                     if (cls.generics.size() == 1) {
                         Mt elMt = deept.getEl();
                         IType elPsalmt = cls.generics.get(0);
-                        return getGenericTypeFromArg(elPsalmt, elMt, generic, psi);
+                        return getGenericTypeFromArg(elPsalmt, elMt, generic, psi, emptyCtx);
                     } else if (cls.generics.size() == 2) {
                         Mt keyMt = deept.types.fap(t -> t.keys).fap(k -> k.keyType.getTypes).wap(Mt::new);
                         IType keyPsalmt = cls.generics.get(1);
-                        It<DeepType> genKeyTit = getGenericTypeFromArg(keyPsalmt, keyMt, generic, psi);
+                        It<DeepType> genKeyTit = getGenericTypeFromArg(keyPsalmt, keyMt, generic, psi, emptyCtx);
 
                         Mt valMt = deept.getEl();
                         IType valPsalmt = cls.generics.get(1);
-                        It<DeepType> getValTit = getGenericTypeFromArg(valPsalmt, valMt, generic, psi);
+                        It<DeepType> getValTit = getGenericTypeFromArg(valPsalmt, valMt, generic, psi, emptyCtx);
 
                         return It.cnc(genKeyTit, getValTit);
                     }
+                } else if (list("callable", "\\Closure", "function").contains(cls.fqn)) {
+                    // callable<Targ1, Targ2, Tret>
+                    return L(cls.generics).lst().fap(retPsalmt -> {
+                        Mt retmt = deept.types.fap(t -> t.getReturnTypes(emptyCtx)).wap(Mt::new);
+                        return getGenericTypeFromArg(retPsalmt, retmt, generic, psi, emptyCtx);
+                    });
                 } else {
-                    // TODO: support keyed arrays, fields, generics from
-                    //  class constructor, function types with generics
+                    // TODO: support keyed arrays, fields, function argument types
                 }
                 DeepType asParamCls = new DeepType(psi, phpType, false);
                 asParamCls.generics = It(cls.generics)
                     .map(psalmgt -> deept.types
                         .fap(t -> t.generics)
-                        .fap(gmt -> getGenericTypeFromArg(psalmgt, gmt, generic, psi))
+                        .fap(gmt -> getGenericTypeFromArg(psalmgt, gmt, generic, psi, emptyCtx))
                         .wap(Mt::new))
                     .arr();
                 return It(som(asParamCls));
@@ -165,7 +170,7 @@ public class PsalmRes {
         return params.fap(p -> p.order.fap(o -> ctx.func().getArg(o))
             .fap(mt -> p.psalmType
                 .fap(psalmt -> getGenericTypeFromArg(
-                    psalmt, mt, g.name, psi
+                    psalmt, mt, g.name, psi, ctx.subCtxEmpty()
                 ))));
     }
 

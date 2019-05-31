@@ -1951,21 +1951,21 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function provideMorePsalmGenerics()
     {
         $fromStaticMeth = ResultGen::makeOk(new KiraYoshikage());
         $fromStaticMeth->unwrap()->bitesZaDusto()[''];
         $mapped = $fromStaticMeth->map(function($reimu){return new MarisaKirisame();});
-        $mapped->unwrap()->m;
+        ([$mapped][0])->unwrap()->m;
         return [
             [$fromStaticMeth->unwrap()->bitesZaDusto(), ['time', 'goes', 'back']],
             [$mapped->unwrap()->masterSpark(), ['deadFoes']],
         ];
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     //===============================
     // TODO: testify following
