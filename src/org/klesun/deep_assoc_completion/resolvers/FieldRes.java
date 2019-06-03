@@ -18,7 +18,10 @@ import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.Assign;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
-import org.klesun.lang.*;
+import org.klesun.lang.It;
+import org.klesun.lang.Lang;
+import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 import java.util.Collection;
 import java.util.Set;
@@ -158,6 +161,28 @@ public class FieldRes extends Lang
         return It.cnc(mt.types.fap(t -> t.props.vls()), declared);
     }
 
+    public It<Field> getBriefDecls(MemberReference fieldRef)
+    {
+        MemRes memRes = new MemRes(ctx);
+        return It.frs(
+            () -> opt(fieldRef)
+                .flt(ref -> !ref.getText().startsWith("static::")) // IDEA is bad at static:: resolution
+                .fap(ref -> It(ref.multiResolve(false)))
+                .map(res -> res.getElement())
+                .fop(toCast(Field.class)),
+            () -> memRes.resolveCls(fieldRef)
+                .fap(cls -> cls.getFields())
+                .flt(f -> f.getName().equals(fieldRef.getName()))
+                .flt(f -> {
+                    Boolean isDeclConst = f.isConstant();
+                    Boolean hasDollar = Tls.cast(FieldReference.class, fieldRef)
+                        .any(fr -> !fr.isConstant());
+                    Boolean isRefConst = !hasDollar && fieldRef.isStatic();
+                    return isDeclConst == isRefConst;
+                })
+        );
+    }
+
     public It<DeepType> resolve(FieldReferenceImpl fieldRef)
     {
         MemRes memRes = new MemRes(ctx);
@@ -173,21 +198,7 @@ public class FieldRes extends Lang
 
         // declarations taken from IDEA type, without deep resolution,
         // since it would be very long in a laravel project otherwise
-        It<Field> briefDecls = It.frs(
-            () -> opt(fieldRef)
-                .flt(ref -> !ref.getText().startsWith("static::")) // IDEA is bad at static:: resolution
-                .fap(ref -> It(ref.multiResolve(false)))
-                .map(res -> res.getElement())
-                .fop(toCast(Field.class)),
-            () -> memRes.resolveCls(fieldRef)
-                .fap(cls -> cls.getFields())
-                .flt(f -> f.getName().equals(fieldRef.getName()))
-                .flt(f -> {
-                    Boolean isDeclConst = f.isConstant();
-                    Boolean isRefConst = fieldRef.isConstant() && fieldRef.isStatic();
-                    return isDeclConst == isRefConst;
-                })
-        );
+        It<Field> briefDecls = getBriefDecls(fieldRef);
         It<DeepType> dynamicPropTs = It(list());
         It<DeepType> magicPropTs = It(list());
         if (!briefDecls.has() || getObjMt.has()) {

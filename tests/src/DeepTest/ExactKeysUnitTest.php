@@ -38,6 +38,8 @@ abstract class AbstractExactKeysUnitTest
  */
 class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysUnitTest
 {
+    const SORT_TYPE_DEFAULT = 'default';
+
     public function provideInheritDocInterface($params)
     {
         $params[''];
@@ -1962,6 +1964,25 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
             [$fromStaticMeth->unwrap()->bitesZaDusto(), ['time', 'goes', 'back']],
             [$mapped->unwrap()->masterSpark(), ['deadFoes']],
             [$fromArg->sheerHeartAttack(), ['veryTough', 'smallCar']],
+        ];
+    }
+
+    /**
+     * @return array = [
+     *      "sort_by" => [static::SORT_TYPE_DEFAULT,"type","modified_time"][$enum],
+     * ]
+     */
+    private function getFilters()
+    {
+        static::SORT_TYPE_DEFAULT;
+    }
+
+    public function provide_selfConst()
+    {
+        $sortBy = $this->getFilters()['sort_by'];
+        $sortBy === '';
+        return [
+            [array_flip([$sortBy]), ['default', 'type', 'modified_time']],
         ];
     }
 

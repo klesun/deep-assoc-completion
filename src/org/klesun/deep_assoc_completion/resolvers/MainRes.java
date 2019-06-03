@@ -24,6 +24,18 @@ public class MainRes {
     {
         this.ctx = ctx;
     }
+
+    private It<ClassConstImpl> getClsConstDecl(ClassConstantReference cst)
+    {
+        return It.frs(
+            () -> Lang.It(cst.multiResolve(false))
+                .map(ref -> ref.getElement())
+                .cst(ClassConstImpl.class),
+            () -> new FieldRes(ctx).getBriefDecls(cst)
+                .cst(ClassConstImpl.class)
+        );
+    }
+
     private It<DeepType> resolveClsConst(ClassConstantReference cst)
     {
         if ("class".equals(cst.getName())) {
@@ -31,9 +43,7 @@ public class MainRes {
                 .fap(cls -> new MiscRes(ctx).resolveClassReference(cst, cls))
                 .map(ideaType -> DeepType.makeClsRef(cst, ideaType));
         } else {
-            return Lang.It(cst.multiResolve(false))
-                .map(ref -> ref.getElement())
-                .fop(toCast(ClassConstImpl.class))
+            return getClsConstDecl(cst)
                 .map(a -> a.getDefaultValue())
                 .fop(toCast(PhpExpression.class))
                 .fap(exp -> ctx.subCtxEmpty().findExprType(exp))
