@@ -31,6 +31,9 @@ import org.klesun.lang.It;
 import org.klesun.lang.MemIt;
 import org.klesun.lang.Tls;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static org.klesun.lang.Lang.*;
 
 // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
@@ -148,14 +151,21 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         long startTime = System.nanoTime();
+        Set<String> suggested = new HashSet();
         // run remaining so that our completions were in the bottom of the list since
         // they are global hence least probably to be needed in a given context
-        result.runRemainingContributors(parameters, true);
+        result.runRemainingContributors(parameters, (fromOtherSrc) -> {
+            LookupElement kup = fromOtherSrc.getLookupElement();
+            suggested.add(kup.getLookupString());
+            result.passResult(fromOtherSrc);
+        });
         It<DeepType> tit = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
             .fop(toCast(VariableImpl.class))
             .fap(lit -> resolve(lit, parameters.isAutoPopup()));
 
-        makeOptions(tit).fch(lookupElement -> result.addElement(lookupElement));
+        makeOptions(tit)
+            .flt(kup -> !suggested.contains(kup.getLookupString()))
+            .fch(lookupElement -> result.addElement(lookupElement));
         long elapsed = System.nanoTime() - startTime;
         double seconds = elapsed / 1000000000.0;
         if (seconds > 0.1) {
