@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.05.31.001</version>
+    <version>2019.06.13.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,10 +38,10 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#91 Support `@var $data["key"] = ...` in phpdoc</li>
-        <li>#77 Infer class @template generic types from constructor arguments</li>
-        <li>#77 Interpret last generic in callable<A, B, C> as return type</li>
-        <li>#90 Fix: do not miss removeUnusedImportsOnSaveEnabled field when setting settings values</li>
+        <li>#94 Allow typing free-form text comments inside psalm type with "//"</li>
+        <li>#93 Fix: do not suggest global var names already suggested by phpstorm itself</li>
+        <li>#93 Show global var name completion without $ same way as phpstorm does</li>
+        <li>#92 Support static::CONST_NAME in phpdoc</li>
     </ul>
     ]]>
     </change-notes>
