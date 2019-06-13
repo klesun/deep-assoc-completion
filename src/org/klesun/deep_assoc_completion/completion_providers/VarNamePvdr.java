@@ -39,7 +39,12 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
 {
     private static LookupElementBuilder makeLookupBase(String keyName, String type)
     {
-        return LookupElementBuilder.create(keyName)
+        return LookupElementBuilder.create(keyName) // show without $ in popup
+            .withLookupString('$' + keyName) // match leaf PSI starting with $
+            .withInsertHandler((ctx, lookup) -> {
+                // add $ back, as we removed it to show it same way as phpstorm does
+                ctx.getEditor().getDocument().insertString(ctx.getStartOffset(), "$");
+            })
             .bold()
             .withIcon(AssocKeyPvdr.getIcon())
             .withTypeText(type);
@@ -49,7 +54,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
     {
         return tit.fap(t -> t.keys)
             .fap(k -> k.keyType.getNames()
-                .map(strVal -> makeLookupBase("$" + strVal, k.getTypes().map(t -> t.briefType).unq().str("|")))
+                .map(strVal -> makeLookupBase(strVal, k.getTypes().map(t -> t.briefType).unq().str("|")))
                 .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, -1000 - i)))
             .unq(l -> l.getLookupString());
     }
