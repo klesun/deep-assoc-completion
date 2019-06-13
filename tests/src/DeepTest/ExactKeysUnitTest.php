@@ -1986,9 +1986,61 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    /**
+     * @param $person_id
+     * @param array{
+     *     filter_active: int, // comment 1
+     *     filter_pokemon: int|string,
+     *     filter_min_date: string, // comment 2
+     *     filter_max_date: string,
+     *     ignored_pokemon_ownership_ids: array<int>, // comment 3.1
+     *                                                // comment 3.2
+     * } $options
+     */
+    public function provide_psalmKeyComments($person_id, $options=[])
+    {
+        $options[''];
+        return [
+            [$options, ['filter_active', 'filter_pokemon', 'filter_min_date', 'filter_max_date', 'ignored_pokemon_ownership_ids']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
+
+    /**
+     * @template T
+     * @param T $mapping
+     * @return array<key-of<T>, >
+     */
+    private function importPnrFromMapping(array $mapping)
+    {
+    }
+
+    public function provide_importPnrMapping()
+    {
+        $imported = $this->importPnrFromMapping([
+            'reservation' => function() {
+                return [
+                    'passengers' => ['Vasya', 'Petya'],
+                    'itinerary' => ['LAX-LON', 'LON-JFK'],
+                ];
+            },
+            'fareQuoteInfo' => function() {
+                return [
+                    'netPrice' => ['currency' => 'USD', 'amount' => '500.00'],
+                    'validatingCarrier' => 'AA',
+                ];
+            },
+        ]);
+        return [
+            [$imported, ['reservation', 'fareQuoteInfo']],
+            [$imported['reservation'], ['passengers', 'itinerary']],
+            [$imported['fareQuoteInfo'], ['netPrice', 'validatingCarrier']],
+            [$imported['fareQuoteInfo']['netPrice']], ['currency', 'amount']],
+        ];
+    }
 
     //===============================
     // TODO: testify following
