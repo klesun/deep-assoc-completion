@@ -52,7 +52,7 @@ class DeepKeysTest
         // should suggest: "from", "to"
         $segments[0][''];
         // should suggest: "from", "to"
-        array_key_exists('', $segments[0]);
+        array_key_exists('from', $segments[0]);
 
         $pnrs = [];
         $pnrs[] = [

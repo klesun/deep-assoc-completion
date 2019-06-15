@@ -258,6 +258,13 @@ public class UsageBasedTypeResolver
                     .flt(n -> n.equals("method_exists"))
                     .flt(n -> argOrder == 1)
                     .fap(n -> resolveObjMethNames(argList.getParameters()[0])),
+                opt(builtInFunc.getName())
+                    .flt(n -> n.equals("array_key_exists") || n.equals("key_exists"))
+                    .flt(n -> argOrder == 0)
+                    .fap(n -> L(argList.getParameters()).gat(1)
+                        .cst(PhpExpression.class)
+                        .fap(arrExpr -> fakeCtx.findExprType(arrExpr))
+                        .fap(arrt -> arrt.keys.fap(k -> k.keyType.getTypes()))),
                 new ArgTypeDefs(fakeCtx.subCtxEmpty()).getArgType(builtInFunc, argOrder),
                 findKeysUsedInArrayMap(builtInFunc, argList, argOrder)
             ));

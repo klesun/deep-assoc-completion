@@ -10,7 +10,6 @@ import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.completion_providers.ArrFuncRefNamePvdr;
 import org.klesun.deep_assoc_completion.completion_providers.ArrayColumnPvdr;
-import org.klesun.deep_assoc_completion.completion_providers.ArrayKeyExistsPvdr;
 
 /**
  * my intention was to make string values appear _after_ Symfony plugin
@@ -28,15 +27,6 @@ public class DeepAssocLastCbtr extends CompletionContributor
                 .withSuperParent(2, ParameterList.class)
                 ,
             new ArrayColumnPvdr()
-        );
-        // array_key_exists('', $arr)
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                .withSuperParent(2, ParameterList.class)
-                ,
-            new ArrayKeyExistsPvdr()
         );
         // [Something::class, '']
         this.extend(

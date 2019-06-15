@@ -52,7 +52,6 @@ public class MainGoToDecl implements GotoDeclarationHandler {
             , AssocKeyGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
             , DeepObjMemberGoToDecl.resolveDeclPsis(psiElement, mouseOffset, funcCtx)
             , ArrayColumnPvdr.resolveDeclPsis(psiElement, mouseOffset)
-            , ArrayKeyExistsPvdr.resolveDeclPsis(psiElement, mouseOffset)
             , VarNamePvdr.resolveDeclPsis(psiElement, mouseOffset)
             , opt(psiElement.getParent()) // [self::class, 'soSomeStuff']
                 .cst(StringLiteralExpressionImpl.class)
