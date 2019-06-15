@@ -348,45 +348,6 @@ public class UsageResolver
         return It.cnc(asFqnMeta, asRealFuncArg, asMagicCtorArg);
     }
 
-    // if arg is assoc array - will return type with keys accessed on it
-    // if arg is string - will return type of values it can take
-    public It<DeepType> findExprTypeFromUsage(PhpExpression caretExpr)
-    {
-        Opt<MemIt<DeepType>> fromCache = takeFromCache(caretExpr);
-        if (fromCache.has()) {
-            return fromCache.unw().itr();
-        }
-        putToCache(caretExpr, new MemIt<>(It.non()));
-
-        // assoc array in an assoc array
-        It<DeepType> asAssocKey = resolveOuterArray(caretExpr);
-
-        It<DeepType> asPlusArr = opt(caretExpr.getParent())
-            .fop(toCast(BinaryExpression.class))
-            .flt(bin -> opt(bin.getOperation()).any(op -> op.getText().equals("+")))
-            .flt(sum -> caretExpr.isEquivalentTo(sum.getRightOperand()))
-            .map(sum -> sum.getLeftOperand())
-            .fop(toCast(PhpExpression.class))
-            .fap(exp -> fakeCtx.findExprType(exp));
-
-        Opt<DeepType> asEqStrVal = StrValsPvdr.assertEqOperand(caretExpr)
-            .cst(StringLiteralExpression.class)
-            .map(lit -> new DeepType(lit, PhpType.STRING, lit.getContents()));
-
-        It<DeepType> asRetVal = opt(caretExpr.getParent())
-            .fop(toCast(PhpReturn.class))
-            .fap(ret -> Tls.findParent(ret, Function.class))
-            .fap(func -> MethCallRes.findFuncDocRetType(func, fakeCtx));
-
-        It<DeepType> asFuncArg = opt(caretExpr.getParent())
-            .fop(toCast(ParameterList.class))
-            .fap(argList -> findArgExprTypeFromUsage(caretExpr, argList));
-
-        MemIt<DeepType> result = It.cnc(asAssocKey, asEqStrVal, asPlusArr, asFuncArg, asRetVal).mem();
-        putToCache(caretExpr, result);
-        return result.itr();
-    }
-
     private It<DeepType> findVarTypeFromUsage(PhpNamedElement caretVar)
     {
         if (depthLeft < 1) {
@@ -455,7 +416,7 @@ public class UsageResolver
                 }));
     }
 
-    public Mt findArrCtorTypeFromUsage(ArrayCreationExpression arrCtor)
+    private Mt findArrCtorTypeFromUsage(ArrayCreationExpression arrCtor)
     {
         SearchCtx fakeSearch = new SearchCtx(arrCtor.getProject());
         FuncCtx funcCtx = new FuncCtx(fakeSearch);
@@ -473,5 +434,44 @@ public class UsageResolver
                     findVarTypeFromUsage(var)
                 ))
         ).wap(Mt::new);
+    }
+
+    // if arg is assoc array - will return type with keys accessed on it
+    // if arg is string - will return type of values it can take
+    public It<DeepType> findExprTypeFromUsage(PhpExpression caretExpr)
+    {
+        Opt<MemIt<DeepType>> fromCache = takeFromCache(caretExpr);
+        if (fromCache.has()) {
+            return fromCache.unw().itr();
+        }
+        putToCache(caretExpr, new MemIt<>(It.non()));
+
+        // assoc array in an assoc array
+        It<DeepType> asAssocKey = resolveOuterArray(caretExpr);
+
+        It<DeepType> asPlusArr = opt(caretExpr.getParent())
+            .fop(toCast(BinaryExpression.class))
+            .flt(bin -> opt(bin.getOperation()).any(op -> op.getText().equals("+")))
+            .flt(sum -> caretExpr.isEquivalentTo(sum.getRightOperand()))
+            .map(sum -> sum.getLeftOperand())
+            .fop(toCast(PhpExpression.class))
+            .fap(exp -> fakeCtx.findExprType(exp));
+
+        Opt<DeepType> asEqStrVal = StrValsPvdr.assertEqOperand(caretExpr)
+            .cst(StringLiteralExpression.class)
+            .map(lit -> new DeepType(lit, PhpType.STRING, lit.getContents()));
+
+        It<DeepType> asRetVal = opt(caretExpr.getParent())
+            .fop(toCast(PhpReturn.class))
+            .fap(ret -> Tls.findParent(ret, Function.class))
+            .fap(func -> MethCallRes.findFuncDocRetType(func, fakeCtx));
+
+        It<DeepType> asFuncArg = opt(caretExpr.getParent())
+            .fop(toCast(ParameterList.class))
+            .fap(argList -> findArgExprTypeFromUsage(caretExpr, argList));
+
+        MemIt<DeepType> result = It.cnc(asAssocKey, asEqStrVal, asPlusArr, asFuncArg, asRetVal).mem();
+        putToCache(caretExpr, result);
+        return result.itr();
     }
 }
