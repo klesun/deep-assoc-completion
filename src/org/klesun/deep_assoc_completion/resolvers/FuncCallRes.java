@@ -167,7 +167,7 @@ public class FuncCallRes extends Lang
         String delim = callCtx.getArgMt(0).getStringValues().fst().def(" ");
         It<String> parts = callCtx.getArgMt(1).types
             .fap(t -> t.keys)
-            .fap(kv -> kv.getTypes())
+            .fap(kv -> kv.getValueTypes())
             .fop(t -> opt(t.stringValue));
         String joined = Tls.implode(delim, parts);
         // PHP string is not java string, of course, but pretty close

@@ -21,6 +21,7 @@ import org.klesun.lang.L;
 import org.klesun.lang.*;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.klesun.lang.Lang.*;
@@ -358,9 +359,7 @@ public class UsageResolver
         putToCache(caretExpr, new MemIt<>(It.non()));
 
         // assoc array in an assoc array
-        It<DeepType> asAssocKey = opt(caretExpr.getParent())
-            .fop(toCast(PhpPsiElementImpl.class))
-            .fap(val -> resolveOuterArray(val).types);
+        It<DeepType> asAssocKey = resolveOuterArray(caretExpr);
 
         It<DeepType> asPlusArr = opt(caretExpr.getParent())
             .fop(toCast(BinaryExpression.class))
@@ -420,31 +419,37 @@ public class UsageResolver
             ));
     }
 
-    private Mt resolveOuterArray(PhpPsiElementImpl val) {
-        return opt(val.getParent())
-            .fop(par -> {
-                Opt<String> key;
-                if (par instanceof ArrayHashElement) {
-                    key = opt(((ArrayHashElement) par).getKey())
-                        .fop(toCast(StringLiteralExpression.class))
-                        .map(lit -> lit.getContents());
-                    par = par.getParent();
-                } else {
+    private It<DeepType> resolveOuterArray(PhpExpression caretExpr) {
+        return opt(caretExpr.getParent())
+            .cst(PhpPsiElementImpl.class)
+            .fop(val -> opt(val.getParent()))
+            .fap(par -> Tls.cast(ArrayHashElement.class, par)
+                .uni(hash -> {
+                    // associative array element
+                    It<DeepType> arrTit = opt(par.getParent())
+                        .cst(ArrayCreationExpression.class)
+                        .fap(arrCtor -> findArrCtorTypeFromUsage(arrCtor).types);
+                    if (Objects.equals(hash.getValue(), caretExpr)) {
+                        Opt<String> key = opt(hash.getKey())
+                            .fop(toCast(StringLiteralExpression.class))
+                            .map(lit -> lit.getContents());
+                        return arrTit.fap(t -> Mt.getKeySt(t, key.def(null)));
+                    } else {
+                        return arrTit.fap(t -> t.keys.fap(k -> k.keyType.getTypes()));
+                    }
+                }, () -> {
+                    // sequential array element
                     int order = It(par.getChildren())
                         .fop(toCast(PhpPsiElementImpl.class))
-                        .arr().indexOf(val);
-                    key = order > -1 ? opt(order + "") : opt(null);
-                }
-                Opt<String> keyf = key;
-                return opt(par)
-                    .fop(toCast(ArrayCreationExpression.class))
-                    .map(outerArr -> resolve(outerArr))
-                    .map(outerMt -> outerMt.getKey(keyf.def(null)));
-            })
-            .def(Mt.INVALID_PSI);
+                        .arr().indexOf(caretExpr.getParent());
+                    Opt<String> key = order > -1 ? opt(order + "") : opt(null);
+                    return Tls.cast(ArrayCreationExpression.class, par)
+                        .fap(arrCtor -> findArrCtorTypeFromUsage(arrCtor)
+                            .getKey(key.def(null)).types);
+                }));
     }
 
-    public Mt resolve(ArrayCreationExpression arrCtor)
+    public Mt findArrCtorTypeFromUsage(ArrayCreationExpression arrCtor)
     {
         SearchCtx fakeSearch = new SearchCtx(arrCtor.getProject());
         FuncCtx funcCtx = new FuncCtx(fakeSearch);

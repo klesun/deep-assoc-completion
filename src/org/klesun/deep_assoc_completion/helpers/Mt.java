@@ -96,7 +96,7 @@ public class Mt extends Lang
             .flt(k -> keyName == null || k.keyType.getTypes()
                 .any(kt -> keyName.equals(kt.stringValue)
                     || kt.stringValue == null))
-            .fap(k -> k.getTypes());
+            .fap(k -> k.getValueTypes());
     }
 
     public static It<DeepType> getDynaPropSt(DeepType type, String keyName)
@@ -112,7 +112,7 @@ public class Mt extends Lang
                     .any(kt -> keyName.equals(kt.stringValue)
                         || kt.stringValue == null
                         && (!kt.isNumber() || Tls.isNum(keyName))))
-                .fap(k -> k.getTypes()),
+                .fap(k -> k.getValueTypes()),
             opt(type.briefType.elementType().filterUnknown().filterMixed())
                 .flt(it -> !it.isEmpty()).itr()
                 .map(it -> new DeepType(type.definition, it, false))

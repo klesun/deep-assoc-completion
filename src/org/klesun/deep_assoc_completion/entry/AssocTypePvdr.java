@@ -83,7 +83,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
                 String msg = "Unexpected exception in deep-assoc-completion plugin - " + exc.getClass() + " while resolving " + psi.getText() + " " + psi.getClass() + " " + opt(psi.getContainingFile()).map(f -> f.getName()).def("(no file)") + " :" + psi.getTextOffset();
                 com.intellij.openapi.diagnostic.Logger.getInstance(getClass()).debug(msg, exc);
                 System.out.println(msg + "\n" + Tls.getStackTrace(exc));
-                // it would also be nice to email such cases to me somehow...
+                // it would also be nice to email such cases to me somehow... but maybe not
                 return null;
             }
         }

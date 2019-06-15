@@ -7,10 +7,10 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.ArrayCreationExpression;
 import com.jetbrains.php.lang.psi.elements.ParameterList;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
-import com.jetbrains.php.lang.psi.elements.impl.ArrayHashElementImpl;
-import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
 import org.jetbrains.annotations.NotNull;
-import org.klesun.deep_assoc_completion.completion_providers.*;
+import org.klesun.deep_assoc_completion.completion_providers.ArrFuncRefNamePvdr;
+import org.klesun.deep_assoc_completion.completion_providers.ArrayColumnPvdr;
+import org.klesun.deep_assoc_completion.completion_providers.ArrayKeyExistsPvdr;
 
 /**
  * my intention was to make string values appear _after_ Symfony plugin
@@ -46,25 +46,6 @@ public class DeepAssocLastCbtr extends CompletionContributor
                 .withSuperParent(3, ArrayCreationExpression.class)
                 ,
             new ArrFuncRefNamePvdr()
-        );
-        // typing associative key when creating array
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                .withSuperParent(3, ArrayHashElementImpl.class)
-                ,
-            new UsedKeysPvdr()
-        );
-        // indexed value (that may become associative key as user continues typing)
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                .withSuperParent(2, PhpPsiElementImpl.class)
-                .withSuperParent(3, ArrayCreationExpression.class)
-                ,
-            new UsedKeysPvdr()
         );
     }
 

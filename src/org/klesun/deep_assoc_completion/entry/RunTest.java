@@ -119,9 +119,9 @@ public class RunTest extends AnAction
                 .els(() -> System.out.println("Failed to find data-providing functions"))
                 .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
                 .fap(tu -> tu.nme((ctx, actual, expected) -> {
-                    L<String> expectedKeys = new Mt(expected.getTypes())
+                    L<String> expectedKeys = new Mt(expected.getValueTypes())
                         .getEl().getStringValues().arr();
-                    It<String> actualKeys = actual.getTypes()
+                    It<String> actualKeys = actual.getValueTypes()
                         .fap(t -> t.keys).fap(k -> k.keyType.getNames());
                     if (expectedKeys.size() == 0 && !expected.definition.getText().equals("[]")) {
                         logger.logErrShort(non());

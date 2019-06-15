@@ -183,7 +183,7 @@ public class DeepType extends Lang
             addType(getter, PhpType.MIXED);
         }
 
-        public It<DeepType> getTypes()
+        public It<DeepType> getValueTypes()
         {
             return typeGetters.fap(g -> g.get().types);
         }
@@ -245,7 +245,7 @@ public class DeepType extends Lang
                     if (!mergedKeys.containsKey(k)) {
                         mergedKeys.put(k, list());
                     }
-                    v.getTypes().fch(el -> mergedKeys.get(k).add(el));
+                    v.getValueTypes().fch(el -> mergedKeys.get(k).add(el));
                 });
             });
             t.getListElemTypes().forEach(indexTypes::add);

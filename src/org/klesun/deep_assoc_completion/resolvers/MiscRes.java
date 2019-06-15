@@ -141,7 +141,7 @@ public class MiscRes extends Lang
             deepType.props.vls().cct(deepType.keys)
                 .fch(k -> k.keyType.getNames()
                     .fch(n -> objt.addProp(n, k.definition)
-                        .addType(() -> new Mt(k.getTypes()))));
+                        .addType(() -> new Mt(k.getValueTypes()))));
             return som(objt);
         } else if (phpType.equals("bool") || phpType.equals("boolean")) {
             return som(new DeepType(deepType.definition, PhpType.BOOLEAN, deepType.stringValue));

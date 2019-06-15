@@ -57,7 +57,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
     {
         return tit.fap(t -> t.keys)
             .fap(k -> k.keyType.getNames()
-                .map(strVal -> makeLookupBase(strVal, k.getTypes().map(t -> t.briefType).unq().str("|")))
+                .map(strVal -> makeLookupBase(strVal, k.getValueTypes().map(t -> t.briefType).unq().str("|")))
                 .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, -1000 - i)))
             .unq(l -> l.getLookupString());
     }
@@ -122,7 +122,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
                     DeepType resultt = new DeepType(t.definition, PhpType.ARRAY);
                     t.keys.fch(k -> k.keyType.getNames()
                         .fch(n -> resultt.addKey(prefix + n, k.definition)
-                            .addType(() -> new Mt(k.getTypes()), k.getBriefTypes().wap(Mt::joinIdeaTypes))));
+                            .addType(() -> new Mt(k.getValueTypes()), k.getBriefTypes().wap(Mt::joinIdeaTypes))));
                     return resultt;
                 });
             });

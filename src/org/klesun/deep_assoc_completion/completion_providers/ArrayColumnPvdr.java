@@ -47,7 +47,7 @@ public class ArrayColumnPvdr extends CompletionProvider<CompletionParameters>
         Mutable<Boolean> hadArrt = new Mutable<>(false);
         return tit.fap(type -> type.keys
             .fap(k -> k.keyType.getTypes().fap(kt -> {
-                String typeStr = k.getTypes().fst().map(t -> t.briefType.toString()).def("unknown");
+                String typeStr = k.getValueTypes().fst().map(t -> t.briefType.toString()).def("unknown");
                 if (kt.stringValue != null) {
                     if (!suggested.contains(kt.stringValue)) {
                         suggested.add(kt.stringValue);

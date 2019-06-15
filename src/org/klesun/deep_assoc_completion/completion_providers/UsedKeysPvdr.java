@@ -48,7 +48,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
     private static It<LookupElement> makeLookup(DeepType.Key keyEntry, Set<String> alreadyDeclared)
     {
         Opt<String> briefVal = keyEntry.getBriefVal();
-        String type = keyEntry.getTypes().fst()
+        String type = keyEntry.getValueTypes().fst()
             .map(t -> t.briefType.toString())
             .flt(t -> t.length() > 0).def("mixed");
         String comment = Tls.implode(" ", keyEntry.comments);
@@ -96,7 +96,7 @@ public class UsedKeysPvdr extends CompletionProvider<CompletionParameters>
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 
-        return new UsageResolver(exprCtx).resolve(lit);
+        return new UsageResolver(exprCtx).findArrCtorTypeFromUsage(lit);
     }
 
     @Override

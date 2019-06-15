@@ -35,7 +35,7 @@ public class ArrayKeyExistsPvdr extends CompletionProvider<CompletionParameters>
         Mutable<Boolean> hadArrt = new Mutable<>(false);
         return tit.fap(type -> It.cnc(
             type.keys.fap(keyEntry -> {
-                String typeStr = keyEntry.getTypes().fst().map(t -> t.briefType.toString()).def("unknown");
+                String typeStr = keyEntry.getValueTypes().fst().map(t -> t.briefType.toString()).def("unknown");
                 return keyEntry.keyType.getNames()
                     .map(keyName -> makeLookupBase(keyName, typeStr));
             }),

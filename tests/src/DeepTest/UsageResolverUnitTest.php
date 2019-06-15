@@ -4,7 +4,6 @@ namespace DeepTest;
 use App\Models\City;
 use Library\Book;
 use Library\Child;
-use function PHPSTORM_META\argumentsSet;
 
 /**
  * calls UsageResolver on the argument of each provide* function and
@@ -129,13 +128,27 @@ class UsageResolverUnitTest
         ];
     }
 
-    private static function testUsedKeysInAVar()
+    private static function testUsedKeysInAVar($arg, $key)
     {
         $params = [
             // should suggest: "docType", "docCountry", "docNumber", "gender", "dob", "lastName", "firstName"
             '' => 123,
         ];
         $cmd = self::makeAddSsrCmd($params);
+        $cmd = self::makeAddSsrCmd($arg);
+        $cmd = self::makeAddSsrCmd([$key => '2234']);
+        return [
+            'arg' => [
+                "docType" => [],
+                "docCountry" => [],
+                "docNumber" => [],
+                "gender" => [],
+                "dob" => [],
+                "lastName" => [],
+                "firstName" => [],
+            ],
+            'key' => ["docType", "docCountry", "docNumber", "gender", "dob", "lastName", "firstName"],
+        ];
     }
 
     public function provideConstructorCompletion($params)

@@ -94,7 +94,7 @@ public class MethCallRes extends Lang
                 .fap(k -> {
                     It<DeepType> keyTypes = isAssoc.get()
                         ? It(k.keyType.getTypes())
-                        : k.getTypes();
+                        : k.getValueTypes();
                     return keyTypes.fap(t -> opt(t.stringValue).map(str -> T2(str, t.definition)));
                 })
                 .unq(t2 -> t2.a);

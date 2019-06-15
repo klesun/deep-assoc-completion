@@ -32,10 +32,10 @@ public class CaseContext
         logger.setCaseContext(this);
         L<Error> errors = list();
 
-        DeepType expectedt = expected.getTypes().fst().unw();
+        DeepType expectedt = expected.getValueTypes().fst().unw();
         expectedt.keys.fch((subExpected) -> subExpected.keyType.getNames().fch(subKey -> {
             It<DeepType.Key> havingKey = Lang.It(actual)
-                .fap(krecs -> krecs.getTypes())
+                .fap(krecs -> krecs.getValueTypes())
                 .fap(t -> t.keys)
                 .flt(k -> k.keyType.getNames().any(n -> n.equals(subKey)));
 
