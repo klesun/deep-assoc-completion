@@ -6,7 +6,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionArgumentsIndex;
 import org.klesun.deep_assoc_completion.built_in_typedefs.ArgTypeDefs;
-import org.klesun.deep_assoc_completion.completion_providers.StrValsPvdr;
+import org.klesun.deep_assoc_completion.completion_providers.UsedStrValsPvdr;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
@@ -471,7 +471,7 @@ public class UsageResolver
             .fop(toCast(PhpExpression.class))
             .fap(exp -> fakeCtx.findExprType(exp));
 
-        Opt<DeepType> asEqStrVal = StrValsPvdr.assertEqOperand(caretExpr)
+        Opt<DeepType> asEqStrVal = UsedStrValsPvdr.assertEqOperand(caretExpr)
             .cst(StringLiteralExpression.class)
             .map(lit -> new DeepType(lit, PhpType.STRING, lit.getContents()));
 

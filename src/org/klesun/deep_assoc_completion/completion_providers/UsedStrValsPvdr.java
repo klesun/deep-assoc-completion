@@ -29,7 +29,7 @@ import static org.klesun.lang.Lang.*;
 
 // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
 // should suggest possible values of 'type'
-public class StrValsPvdr extends CompletionProvider<CompletionParameters>
+public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
 {
     private static LookupElementBuilder makeLookupBase(String keyName, String type)
     {
@@ -83,6 +83,12 @@ public class StrValsPvdr extends CompletionProvider<CompletionParameters>
     {
         return new UsageResolver(funcCtx).findExprTypeFromUsage(lit);
     }
+
+    /*
+     * moving all these built-in function resolutions inside UsageResolver.java
+     * would be cooler, as it would also cover cases when they are called deeper
+     * in some function, or when you put the value in a var
+     */
 
     /** in_array($type, ['']) */
     private static It<DeepType> resolveInArrayHaystack(StringLiteralExpression lit, IExprCtx funcCtx)

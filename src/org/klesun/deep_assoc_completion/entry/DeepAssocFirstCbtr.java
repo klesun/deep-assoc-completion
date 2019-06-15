@@ -97,7 +97,7 @@ public class DeepAssocFirstCbtr extends CompletionContributor
             PlatformPatterns.psiElement()
                 .withSuperParent(1, StringLiteralExpression.class)
                 ,
-            new StrValsPvdr()
+            new UsedStrValsPvdr()
         );
     }
 

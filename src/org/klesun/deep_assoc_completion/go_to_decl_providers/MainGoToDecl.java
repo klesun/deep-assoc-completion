@@ -61,7 +61,7 @@ public class MainGoToDecl implements GotoDeclarationHandler {
                         .map(t -> t.a)
                         .flt(meth -> meth.getName().equals(lit.getContents()))
                         .map(a -> a)
-                    , StrValsPvdr.resolve(lit, false)
+                    , UsedStrValsPvdr.resolve(lit, false)
                         .flt(t -> lit.getContents().equals(t.stringValue))
                         .map(t -> t.definition)
                 ))
