@@ -944,7 +944,7 @@ class UsageResolverUnitTest implements IUsageBase
             return $rules;
         } else {
             return [
-                '' => 123,
+                'prop1' => 123,
             ];
         }
     }

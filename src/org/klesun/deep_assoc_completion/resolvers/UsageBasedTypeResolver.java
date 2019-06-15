@@ -424,9 +424,10 @@ public class UsageBasedTypeResolver
         );
     }
 
-    private Set<String> getExplicitKeys(ArrayCreationExpression arrCtor) {
+    private Set<String> getExplicitKeys(ArrayCreationExpression arrCtor, PhpExpression caretExpr) {
         return It(arrCtor.getHashElements())
             .fop(el -> opt(el.getKey()))
+            .flt(keyPsi -> !keyPsi.equals(caretExpr)) // preserve for GoTo decl
             .fop(toCast(StringLiteralExpressionImpl.class))
             .map(lit -> lit.getContents())
             .wap(tit -> new HashSet<>(tit.arr()));
@@ -448,7 +449,7 @@ public class UsageBasedTypeResolver
                                 .map(lit -> lit.getContents());
                             return arrTit.fap(t -> Mt.getKeySt(t, key.def(null)));
                         } else {
-                            Set<String> alreadyDeclared = getExplicitKeys(arrCtor);
+                            Set<String> alreadyDeclared = getExplicitKeys(arrCtor, caretExpr);
                             return arrTit.fap(t -> t.keys.fap(k -> k.keyType.getTypes()))
                                 .flt(kt -> !alreadyDeclared.contains(kt.stringValue));
                         }
@@ -460,7 +461,7 @@ public class UsageBasedTypeResolver
                             .fop(toCast(PhpPsiElementImpl.class))
                             .arr().indexOf(caretExpr.getParent());
                         Opt<String> key = order > -1 ? opt(order + "") : opt(null);
-                        Set<String> alreadyDeclared = getExplicitKeys(arrCtor);
+                        Set<String> alreadyDeclared = getExplicitKeys(arrCtor, caretExpr);
                         return findArrCtorTypeFromUsage(arrCtor)
                             .fap(t -> It.cnc(
                                 Mt.getKeySt(t, key.def(null)),
