@@ -134,7 +134,7 @@ public class Mt extends Lang
 
     public Mt getKey(KeyType kt)
     {
-        String key = Mt.getStringValueSt(kt.getTypes);
+        String key = Mt.getStringValueSt(kt.types);
         return getKey(key);
     }
 

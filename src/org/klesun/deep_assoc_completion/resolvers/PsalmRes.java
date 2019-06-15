@@ -134,7 +134,7 @@ public class PsalmRes {
                         IType elPsalmt = cls.generics.get(0);
                         return getGenericTypeFromArg(elPsalmt, elMt, generic, psi, emptyCtx);
                     } else if (cls.generics.size() == 2) {
-                        Mt keyMt = deept.types.fap(t -> t.keys).fap(k -> k.keyType.getTypes).wap(Mt::new);
+                        Mt keyMt = deept.types.fap(t -> t.keys).fap(k -> k.keyType.types).wap(Mt::new);
                         IType keyPsalmt = cls.generics.get(1);
                         It<DeepType> genKeyTit = getGenericTypeFromArg(keyPsalmt, keyMt, generic, psi, emptyCtx);
 

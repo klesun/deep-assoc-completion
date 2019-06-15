@@ -265,6 +265,20 @@ public class UsageBasedTypeResolver
                         .cst(PhpExpression.class)
                         .fap(arrExpr -> fakeCtx.findExprType(arrExpr))
                         .fap(arrt -> arrt.keys.fap(k -> k.keyType.getTypes()))),
+                opt(builtInFunc.getName())
+                    .flt(n -> n.equals("array_column"))
+                    .flt(n -> argOrder == 1 || argOrder == 2)
+                    .fap(n -> L(argList.getParameters()).gat(0)
+                        .cst(PhpExpression.class)
+                        .fap(arrExpr -> fakeCtx.findExprType(arrExpr))
+                        .fap(arrTit -> Mt.getElSt(arrTit))
+                        .fap(rect -> It.cnc(
+                            // array_column supports array keys and object
+                            // properties (but not magic keys/props AFAIK)
+                            rect.keys,
+                            FieldRes.getPublicProps(rect.mt(),
+                                builtInFunc.getProject(), fakeCtx.subCtxEmpty())
+                        ).fap(k -> k.keyType.getTypes()))),
                 new ArgTypeDefs(fakeCtx.subCtxEmpty()).getArgType(builtInFunc, argOrder),
                 findKeysUsedInArrayMap(builtInFunc, argList, argOrder)
             ));

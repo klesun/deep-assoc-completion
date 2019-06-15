@@ -10,13 +10,13 @@ import static org.klesun.lang.Lang.*;
 /** is there actually a point in having this and Mt as two separate classes? */
 public class KeyType
 {
-    final public MemIt<DeepType> getTypes;
+    final public MemIt<DeepType> types;
     final public PsiElement definition;
 
     private KeyType(MemIt<DeepType> getTypes, PsiElement definition)
     {
         this.definition = definition;
-        this.getTypes = getTypes;
+        this.types = getTypes;
     }
 
     public static KeyType mt(Iterable<DeepType> mtg, PsiElement definition)
@@ -37,7 +37,7 @@ public class KeyType
 
     public MemIt<DeepType> getTypes()
     {
-        return getTypes;
+        return types;
     }
 
     public It<String> getNames()
