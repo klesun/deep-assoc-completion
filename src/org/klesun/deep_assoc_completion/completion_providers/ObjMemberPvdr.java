@@ -130,7 +130,8 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
 
     private It<? extends LookupElement> resolveObj(PhpExpression ref, FuncCtx funcCtx)
     {
-        Mt mt = funcCtx.findExprType(ref).wap(Mt::new);
+        ExprCtx exprCtx = new ExprCtx(funcCtx, ref, 0);
+        Mt mt = exprCtx.findExprType(ref).wap(Mt::new);
         return It.cnc(
             ArrCtorRes.resolveMtInstCls(mt, ref.getProject())
                 .fap(cls -> getPubKups(cls, funcCtx, false))

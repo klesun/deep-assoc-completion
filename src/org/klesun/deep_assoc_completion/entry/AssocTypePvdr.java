@@ -10,6 +10,7 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.resolve.types.PhpTypeProvider3;
 import org.jetbrains.annotations.Nullable;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
@@ -71,7 +72,7 @@ public class AssocTypePvdr extends Lang implements PhpTypeProvider3
         @Nullable PhpType result = null;
         try {
             result = Tls.cast(PhpExpression.class, psi)
-                .fap(exp -> funcCtx.findExprType(exp))
+                .fap(exp -> (new ExprCtx(funcCtx, exp, 0)).findExprType(exp))
                 .map(t -> t.briefType)
                 .wap(tit -> Mt.joinIdeaTypes(tit));
         } catch (Throwable exc) {

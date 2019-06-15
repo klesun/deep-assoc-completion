@@ -41,8 +41,9 @@ public class AssocKeyGoToDecl extends Lang
                 .fap(expr -> opt(expr.getValue()))
                 .fop(toCast(PhpExpression.class))
                 .fap(srcExpr -> {
-                    String key = funcCtx.findExprType(literal).wap(Mt::getStringValueSt);
-                    return funcCtx.findExprType(srcExpr)
+                    ExprCtx exprCtx = new ExprCtx(funcCtx, literal, 0);
+                    String key = exprCtx.findExprType(literal).wap(Mt::getStringValueSt);
+                    return exprCtx.findExprType(srcExpr)
                         .fap(arrt -> arrt.keys)
                         .fap(k -> k.keyType.getTypes())
                         .flt(t -> Objects.equals(t.stringValue, key))

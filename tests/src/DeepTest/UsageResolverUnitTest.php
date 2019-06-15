@@ -5,12 +5,21 @@ use App\Models\City;
 use Library\Book;
 use Library\Child;
 
+interface IUsageBase
+{
+    /** @return array = get_object_vars(new static) */
+    public static function getReturnDocObjectVars($rules);
+}
+
 /**
  * calls UsageResolver on the argument of each provide* function and
  * tests that it's return value matches the inferred argument type
  */
-class UsageResolverUnitTest
+class UsageResolverUnitTest implements IUsageBase
 {
+    public $prop1 = 123;
+    private $prop2 = ['asd' => 24, 'dsad' => 252];
+
     public function provideUsedKeys($params)
     {
         $soapData = [
@@ -896,7 +905,7 @@ class UsageResolverUnitTest
 
     public function provideStaticInDoc($param)
     {
-        Child::find([], ['' => '']);
+        Child::find([], ['user_id' => '']);
         Child::find([], $param);
         return [
             'param' => ['user_id' => 1, 'user_name' => 'mark'],
@@ -920,12 +929,38 @@ class UsageResolverUnitTest
         ];
     }
 
-    public function provideFromReturnDoc($param)
+    public function provideFromReturnMeta($param)
     {
         (new \MyClass())->getMetaData(['' => '']);
         (new \MyClass())->getMetaData($param);
         return [
             'param' => ['key1' => '', 'key2' => 0],
+        ];
+    }
+
+    public static function getReturnDocObjectVars($rules)
+    {
+        if (rand() > 0) {
+            return $rules;
+        } else {
+            return [
+                '' => 123,
+            ];
+        }
+    }
+
+    public static function provide_returnDocObjectVars($param)
+    {
+        self::getReturnDocObjectVars($param);
+        self::getReturnDocObjectVars(['' => 123]);
+        return [
+            'param' => [
+                'prop1' => '123',
+                'prop2' => [
+                    'asd' => 24,
+                    'dsad' => 252.
+                ],
+            ],
         ];
     }
 

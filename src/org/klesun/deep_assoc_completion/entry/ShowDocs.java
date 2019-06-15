@@ -41,7 +41,7 @@ public class ShowDocs extends AnAction
 
         return It.cnc(
             Tls.cast(PhpExpression.class, psi)
-                .fap(expr -> funcCtx.findExprType(expr)),
+                .fap(expr -> exprCtx.findExprType(expr)),
             Tls.cast(Parameter.class, psi)
                 .fap(par -> {
                     int order = opt(par.getParent()).fop(toCast(ParameterList.class))

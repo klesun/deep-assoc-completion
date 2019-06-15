@@ -6,6 +6,7 @@ import com.jetbrains.php.lang.psi.elements.PhpClass;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.completion_providers.ObjMemberPvdr;
+import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
@@ -38,7 +39,7 @@ public class DeepObjMemberGoToDecl extends Lang
             .flt(mem -> mem.multiResolve(false).length == 0)
             .fap(mem -> opt(mem.getFirstChild())
                 .fop(toCast(PhpExpression.class))
-                .map(exp -> funcCtx.findExprType(exp).wap(Mt::new))
+                .map(exp -> new ExprCtx(funcCtx, exp, 0).findExprType(exp).wap(Mt::new))
                 .fap(mt -> list(
                     ArrCtorRes.resolveMtCls(mt, mem.getProject())
                         .fap(cls -> resolveMember(cls, mem.getName(), funcCtx)),

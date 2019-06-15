@@ -20,6 +20,7 @@ import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
 import org.klesun.lang.Opt;
+import org.klesun.lang.Tls;
 
 import java.util.HashSet;
 import java.util.Objects;

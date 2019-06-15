@@ -109,13 +109,6 @@ public class FuncCtx extends Lang implements IFuncCtx
         }
     }
 
-    /** should be called _only_ from an entry level class */
-    public It<DeepType> findExprType(PhpExpression expr)
-    {
-        ExprCtx exprCtx = new ExprCtx(this, expr, 0);
-        return It(search.findExprType(expr, exprCtx));
-    }
-
     // when self::doSomething is used in non-static context and doSomething() is a non-static method
     // I believe this is deprecated in PHP 7, but there are few places in our framework that use this
     public static boolean isWhitelistedStaticThis(PhpExpression ref)

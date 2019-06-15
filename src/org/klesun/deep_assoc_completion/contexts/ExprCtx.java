@@ -7,10 +7,7 @@ import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.lang.It;
-import org.klesun.lang.L;
-import org.klesun.lang.MemIt;
-import org.klesun.lang.Opt;
+import org.klesun.lang.*;
 
 import java.util.Collection;
 import java.util.Map;
@@ -35,14 +32,28 @@ public class ExprCtx implements IExprCtx {
         this.expr = expr;
         this.depth = depth;
         this.parent = parent;
-
     }
 
     public ExprCtx(FuncCtx funcCtx, PsiElement expr, int depth) {
-        this(funcCtx, expr, depth, non());
+        this(initTopCtx(funcCtx, expr), expr, depth, non());
     }
 
     public IFuncCtx func() {
+        return funcCtx;
+    }
+
+    private static FuncCtx initTopCtx(FuncCtx funcCtx, PsiElement expr) {
+        Opt<Method> methOpt = Tls.findParent(expr, Method.class);
+        Opt<PhpClass> clsOpt = methOpt.fop(m -> Tls.findParent(m, PhpClass.class));
+        if (methOpt.has() && clsOpt.has()) {
+            Method meth = methOpt.unw();
+            PhpClass cls = clsOpt.unw();
+            if (meth.isStatic()) {
+                funcCtx = funcCtx.subCtxSelfCls(cls);
+            } else {
+                funcCtx = funcCtx.subCtxThisCls(cls);
+            }
+        }
         return funcCtx;
     }
 
