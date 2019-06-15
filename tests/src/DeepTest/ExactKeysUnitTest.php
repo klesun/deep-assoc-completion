@@ -11,6 +11,48 @@ use NeptuniaNs\Ksha;
 use SomeCls123;
 use TouhouNs\MarisaKirisame;
 use TouhouNs\ReimuHakurei;
+use TouhouNs\YakumoRan;
+
+interface ModelInterface
+{
+    /** @return array = static::sample() */
+    public function rules();
+}
+
+class SomeCls
+{
+    public function rules($arg)
+    {
+        return [
+            // should suggest: 'user_id', 'user_name'
+            '' => 145,
+        ];
+    }
+
+    public static function sample()
+    {
+        return [
+            'user_id' => 0,
+            'user_name' => '',
+        ];
+    }
+}
+
+class ObjectVarsInReturnCls
+{
+    public $prop1 = 5;
+    public $prop2 = 6;
+    public $prop3 = ['a' => 5, 'vb' => 7];
+
+    /** @return array = get_object_vars($this) */
+    public static function rules($arg)
+    {
+        return [
+            // should suggest: 'prop1', 'prop2', 'prop3'
+            '' => 145,
+        ];
+    }
+}
 
 interface IExactKeysUnitTest
 {
@@ -39,6 +81,9 @@ abstract class AbstractExactKeysUnitTest
 class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysUnitTest
 {
     const SORT_TYPE_DEFAULT = 'default';
+
+    public $prop1 = 123;
+    private $prop2 = ['a' => 5, 'b' => 6];
 
     public function provideInheritDocInterface($params)
     {
@@ -2005,46 +2050,24 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
-    /**
-     * @template T
-     * @param T $mapping
-     * @return array<key-of<T>, >
-     */
-    private function importPnrFromMapping(array $mapping)
+    /** @param $fromParam = get_object_vars($this) */
+    public function provide_objectVars($fromParam)
     {
-    }
-
-    public function provide_importPnrMapping()
-    {
-        $imported = $this->importPnrFromMapping([
-            'reservation' => function() {
-                return [
-                    'passengers' => ['Vasya', 'Petya'],
-                    'itinerary' => ['LAX-LON', 'LON-JFK'],
-                ];
-            },
-            'fareQuoteInfo' => function() {
-                return [
-                    'netPrice' => ['currency' => 'USD', 'amount' => '500.00'],
-                    'validatingCarrier' => 'AA',
-                ];
-            },
-        ]);
+        $chenSawArr = (array)(new YakumoRan()); // not worth it I guess
+        $chenSawVars = get_object_vars(new YakumoRan());
+        $chenSawVars[''];
+        $thisArr = get_object_vars($this);
+        $thisArr[''];
+        $fromReturnDoc = ObjectVarsInReturnCls::rules(123);
+        $fromReturnDoc[''];
+        $fromParam[''];
         return [
-            [$imported, ['reservation', 'fareQuoteInfo']],
-            [$imported['reservation'], ['passengers', 'itinerary']],
-            [$imported['fareQuoteInfo'], ['netPrice', 'validatingCarrier']],
-            [$imported['fareQuoteInfo']['netPrice']], ['currency', 'amount']],
+            [$fromParam, ['prop1', 'prop2']],
+            [$chenSawVars, ['love', 'shikigamis']],
+            [$thisArr, ['prop1', 'prop2']],
+            [$fromReturnDoc, ['', 'prop1', 'prop2', 'prop3']],
         ];
     }
-
-    //===============================
-    // TODO: testify following
-    //===============================
 
     private static function testIndexedArrayCreation()
     {
@@ -2139,6 +2162,43 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         $withTaxCode[0][''];
         return [
             [$withTaxCode[0], ['currency', 'amount', 'taxCode']],
+        ];
+    }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
+
+    /**
+     * @template T
+     * @param T $mapping
+     * @return array<key-of<T>, >
+     */
+    private function importPnrFromMapping(array $mapping)
+    {
+    }
+
+    public function provide_importPnrMapping()
+    {
+        $imported = $this->importPnrFromMapping([
+            'reservation' => function() {
+                return [
+                    'passengers' => ['Vasya', 'Petya'],
+                    'itinerary' => ['LAX-LON', 'LON-JFK'],
+                ];
+            },
+            'fareQuoteInfo' => function() {
+                return [
+                    'netPrice' => ['currency' => 'USD', 'amount' => '500.00'],
+                    'validatingCarrier' => 'AA',
+                ];
+            },
+        ]);
+        return [
+            //[$imported, ['reservation', 'fareQuoteInfo']],
+            //[$imported['reservation'], ['passengers', 'itinerary']],
+            //[$imported['fareQuoteInfo'], ['netPrice', 'validatingCarrier']],
+            //[$imported['fareQuoteInfo']['netPrice']], ['currency', 'amount'],
         ];
     }
 }
