@@ -444,8 +444,14 @@ public class UsageResolver
                         .arr().indexOf(caretExpr.getParent());
                     Opt<String> key = order > -1 ? opt(order + "") : opt(null);
                     return Tls.cast(ArrayCreationExpression.class, par)
-                        .fap(arrCtor -> findArrCtorTypeFromUsage(arrCtor)
-                            .getKey(key.def(null)).types);
+                        .fap(arrCtor -> findArrCtorTypeFromUsage(arrCtor).types)
+                        .fap(t -> It.cnc(
+                            Mt.getKeySt(t, key.def(null)),
+                            // if user just started typing the key, there is no => after it, hence IDEA
+                            // parses it as sequential element - show assoc key options here as well if any
+                            Tls.cast(StringLiteralExpression.class, caretExpr)
+                                .fap(lit -> t.keys.fap(k -> k.keyType.getTypes()).flt(kt -> !kt.isNumber()))
+                        ));
                 }));
     }
 
