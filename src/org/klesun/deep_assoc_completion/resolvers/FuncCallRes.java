@@ -176,12 +176,12 @@ public class FuncCallRes extends Lang
         return type;
     }
 
-    private DeepType get_object_vars(IFuncCtx callCtx, FunctionReferenceImpl call)
+    private DeepType get_object_vars(IExprCtx callExprCtx, FunctionReferenceImpl call)
     {
-        It<PhpClass> clses = callCtx.hasArgs()
-            ? callCtx.getArg(0)
+        It<PhpClass> clses = callExprCtx.func().hasArgs()
+            ? callExprCtx.func().getArg(0)
                 .fap(mt -> ArrCtorRes.resolveMtInstCls(mt, call.getProject()))
-            : Tls.findParent(call, PhpClass.class, a -> true).itr();
+            : Tls.findParent(callExprCtx.getRealPsi(call), PhpClass.class, a -> true).itr();
         DeepType type = new DeepType(call, PhpType.ARRAY);
         clses.fap(cls -> cls.getFields())
             .flt(fld -> !fld.getModifier().isStatic())
@@ -203,7 +203,8 @@ public class FuncCallRes extends Lang
     private Iterable<DeepType> findBuiltInFuncCallType(FunctionReferenceImpl call)
     {
         String name = opt(call.getName()).def("");
-        IFuncCtx callCtx = ctx.subCtxDirect(call).func();
+        IExprCtx callExprCtx = ctx.subCtxDirect(call);
+        IFuncCtx callCtx = callExprCtx.func();
         PsiElement[] params = call.getParameters();
         L<PsiElement> lParams = L(params);
 
@@ -280,7 +281,7 @@ public class FuncCallRes extends Lang
         } else if (name.equals("get_called_class")) {
             return ctx.getSelfType().map(idea -> DeepType.makeClsRef(call, idea));
         } else if (name.equals("get_object_vars")) {
-            return list(get_object_vars(callCtx, call));
+            return list(get_object_vars(callExprCtx, call));
         }
 
         It<DeepType> generalFuncTit = It.frs(
