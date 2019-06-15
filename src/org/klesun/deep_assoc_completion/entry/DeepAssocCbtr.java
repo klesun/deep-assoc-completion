@@ -20,9 +20,9 @@ import static org.klesun.lang.Lang.toCast;
  * using declaration inside the initial function
  * that created this array
  */
-public class DeepAssocFirstCbtr extends CompletionContributor
+public class DeepAssocCbtr extends CompletionContributor
 {
-    public DeepAssocFirstCbtr()
+    public DeepAssocCbtr()
     {
         // $arr[''];
         this.extend(
@@ -88,6 +88,16 @@ public class DeepAssocFirstCbtr extends CompletionContributor
                 .withSuperParent(1, MemberReference.class)
                 ,
             new ObjMemberPvdr()
+        );
+
+        // [Something::class, '']
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, StringLiteralExpression.class)
+                .withSuperParent(3, ArrayCreationExpression.class)
+                ,
+            new ArrFuncRefNamePvdr()
         );
         // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
         // or in_array('', $types) or in_array($type, ['AIR', ''])
