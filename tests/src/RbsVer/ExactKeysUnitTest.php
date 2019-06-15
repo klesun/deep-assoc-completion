@@ -64,7 +64,7 @@ class ExactKeysUnitTest
     {
         $this->importPnr()['result']['pnrFields']['reservation']['passengers'][0][''];
         return [
-            [$this->importPnr()['result']['pnrFields']['reservation']['passengers'][0], ['ageGroup', 'firstName', 'title', 'nameNumber', 'lastName', 'age', 'success', 'rawNumber', 'dob', 'ptc', 'carrierText', 'parsedNumber', 'joinedFirstNames']],
+            [$this->importPnr()['result']['pnrFields']['reservation']['passengers'][0], ['ageGroup', 'firstName', 'title', 'nameNumber', 'lastName', 'age', 'success', 'rawNumber', 'dob', 'ptc', 'carrierText', 'parsedNumber', 'joinedFirstNames', '0']],
         ];
     }
 

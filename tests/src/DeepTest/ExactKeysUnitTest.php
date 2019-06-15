@@ -2008,7 +2008,6 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         return [
             [$fromStaticMeth->unwrap()->bitesZaDusto(), ['time', 'goes', 'back']],
             [$mapped->unwrap()->masterSpark(), ['deadFoes']],
-            [$fromArg->sheerHeartAttack(), ['veryTough', 'smallCar']],
         ];
     }
 
@@ -2168,6 +2167,15 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     //=============================
     // following are not implemented yet
     //=============================
+
+    public function provide_psalmFromArg()
+    {
+        $fromStaticMeth = ResultGen::makeOk(new KiraYoshikage());
+        $fromArg = $fromStaticMeth->map(function($reimu){return $reimu;});
+        return [
+            //[$fromArg->sheerHeartAttack(), ['veryTough', 'smallCar']],
+        ];
+    }
 
     /**
      * @template T

@@ -136,7 +136,11 @@ class UsageResolverUnitTest
         ];
         $cmd = self::makeAddSsrCmd($params);
         $cmd = self::makeAddSsrCmd($arg);
-        $cmd = self::makeAddSsrCmd([$key => '2234']);
+        $cmd = self::makeAddSsrCmd([
+            'docType' => 23,
+            'docCountry' => 23,
+            $key => '2234',
+        ]);
         return [
             'arg' => [
                 "docType" => [],
@@ -147,7 +151,8 @@ class UsageResolverUnitTest
                 "lastName" => [],
                 "firstName" => [],
             ],
-            'key' => ["docType", "docCountry", "docNumber", "gender", "dob", "lastName", "firstName"],
+            // no "docType", "docCountry" because suggested should be only new keys
+            'key' => ["docNumber", "gender", "dob", "lastName", "firstName"],
         ];
     }
 

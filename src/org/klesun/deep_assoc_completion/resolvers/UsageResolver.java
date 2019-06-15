@@ -380,43 +380,7 @@ public class UsageResolver
             ));
     }
 
-    private It<DeepType> resolveOuterArray(PhpExpression caretExpr) {
-        return opt(caretExpr.getParent())
-            .cst(PhpPsiElementImpl.class)
-            .fop(val -> opt(val.getParent()))
-            .fap(par -> Tls.cast(ArrayHashElement.class, par)
-                .uni(hash -> {
-                    // associative array element
-                    It<DeepType> arrTit = opt(par.getParent())
-                        .cst(ArrayCreationExpression.class)
-                        .fap(arrCtor -> findArrCtorTypeFromUsage(arrCtor).types);
-                    if (Objects.equals(hash.getValue(), caretExpr)) {
-                        Opt<String> key = opt(hash.getKey())
-                            .fop(toCast(StringLiteralExpression.class))
-                            .map(lit -> lit.getContents());
-                        return arrTit.fap(t -> Mt.getKeySt(t, key.def(null)));
-                    } else {
-                        return arrTit.fap(t -> t.keys.fap(k -> k.keyType.getTypes()));
-                    }
-                }, () -> {
-                    // sequential array element
-                    int order = It(par.getChildren())
-                        .fop(toCast(PhpPsiElementImpl.class))
-                        .arr().indexOf(caretExpr.getParent());
-                    Opt<String> key = order > -1 ? opt(order + "") : opt(null);
-                    return Tls.cast(ArrayCreationExpression.class, par)
-                        .fap(arrCtor -> findArrCtorTypeFromUsage(arrCtor).types)
-                        .fap(t -> It.cnc(
-                            Mt.getKeySt(t, key.def(null)),
-                            // if user just started typing the key, there is no => after it, hence IDEA
-                            // parses it as sequential element - show assoc key options here as well if any
-                            Tls.cast(StringLiteralExpression.class, caretExpr)
-                                .fap(lit -> t.keys.fap(k -> k.keyType.getTypes()).flt(kt -> !kt.isNumber()))
-                        ));
-                }));
-    }
-
-    private Mt findArrCtorTypeFromUsage(ArrayCreationExpression arrCtor)
+    private It<DeepType> findArrCtorTypeFromUsage(ArrayCreationExpression arrCtor)
     {
         SearchCtx fakeSearch = new SearchCtx(arrCtor.getProject());
         FuncCtx funcCtx = new FuncCtx(fakeSearch);
@@ -433,7 +397,57 @@ public class UsageResolver
                     new VarRes(fakeCtx).getDocType(var),
                     findVarTypeFromUsage(var)
                 ))
-        ).wap(Mt::new);
+        );
+    }
+
+    private Set<String> getExplicitKeys(ArrayCreationExpression arrCtor) {
+        return It(arrCtor.getHashElements())
+            .fop(el -> opt(el.getKey()))
+            .fop(toCast(StringLiteralExpressionImpl.class))
+            .map(lit -> lit.getContents())
+            .wap(tit -> new HashSet<>(tit.arr()));
+    }
+
+    private It<DeepType> resolveOuterArray(PhpExpression caretExpr) {
+        return opt(caretExpr.getParent())
+            .cst(PhpPsiElementImpl.class)
+            .fop(val -> opt(val.getParent()))
+            .fap(par -> Tls.cast(ArrayHashElement.class, par).uni(
+                hash -> opt(par.getParent())
+                    .cst(ArrayCreationExpression.class)
+                    .fap(arrCtor -> {
+                        // associative array element
+                        It<DeepType> arrTit = findArrCtorTypeFromUsage(arrCtor);
+                        if (Objects.equals(hash.getValue(), caretExpr)) {
+                            Opt<String> key = opt(hash.getKey())
+                                .fop(toCast(StringLiteralExpression.class))
+                                .map(lit -> lit.getContents());
+                            return arrTit.fap(t -> Mt.getKeySt(t, key.def(null)));
+                        } else {
+                            Set<String> alreadyDeclared = getExplicitKeys(arrCtor);
+                            return arrTit.fap(t -> t.keys.fap(k -> k.keyType.getTypes()))
+                                .flt(kt -> !alreadyDeclared.contains(kt.stringValue));
+                        }
+                    }),
+                () -> Tls.cast(ArrayCreationExpression.class, par)
+                    .fap(arrCtor -> {
+                        // sequential array element
+                        int order = It(par.getChildren())
+                            .fop(toCast(PhpPsiElementImpl.class))
+                            .arr().indexOf(caretExpr.getParent());
+                        Opt<String> key = order > -1 ? opt(order + "") : opt(null);
+                        Set<String> alreadyDeclared = getExplicitKeys(arrCtor);
+                        return findArrCtorTypeFromUsage(arrCtor)
+                            .fap(t -> It.cnc(
+                                Mt.getKeySt(t, key.def(null)),
+                                // if user just started typing the key, there is no => after it, hence IDEA
+                                // parses it as sequential element - show assoc key options here as well if any
+                                Tls.cast(StringLiteralExpression.class, caretExpr)
+                                    .fap(lit -> t.keys.fap(k -> k.keyType.getTypes()))
+                                    .flt(kt -> !kt.isNumber())
+                                    .flt(kt -> !alreadyDeclared.contains(kt.stringValue))
+                            ));
+                    })));
     }
 
     // if arg is assoc array - will return type with keys accessed on it
