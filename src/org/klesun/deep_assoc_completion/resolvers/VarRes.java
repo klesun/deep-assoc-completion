@@ -349,7 +349,16 @@ public class VarRes
         DeepType typeFromIdea = new DeepType(caretVar);
         It<DeepType> thisType = opt(caretVar)
             .flt(vari -> vari.getText().equals("$this"))
-            .fap(vari -> ctx.getThisType());
+            .fap(vari -> {
+                It<DeepType> thist = ctx.getThisType();
+                // it's more convenient to type $this in
+                // doc comments instead of new self or such
+                if (ctx.isInComment()) {
+                    thist = It.cnc(thist, ctx.getSelfType()
+                        .map(pst -> new DeepType(caretVar, pst)));
+                }
+                return thist;
+            });
 
         It<DeepType> closureType = ctx.getClosureVars().itr()
             .flt(t2 -> t2.a.equals(caretVar.getName()))
