@@ -15,7 +15,7 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.MethCallRes;
 import org.klesun.deep_assoc_completion.resolvers.PsalmRes;
-import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
+import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.ArgOrder;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.Mkt;
@@ -127,7 +127,7 @@ public class ArgRes extends Lang
                                 , () -> It(call.multiResolve(false))
                                     .fop(res -> opt(res.getElement()))
                                     .fop(toCast(Function.class))
-                                    .fap(func -> new UsageResolver(subCtx, 0)
+                                    .fap(func -> new UsageBasedTypeResolver(subCtx, 0)
                                         .resolveArgCallArrKeys(func, funcVarOrder, caretArgOrder))
                             );
                         }))
@@ -279,7 +279,7 @@ public class ArgRes extends Lang
                 opt(arg.getParent()).fap(lst -> opt(lst.getParent()))
                     .cst(Function.class)
                     .fap(func -> It.cnc(
-                        UsageResolver.findMetaArgType(func, order, clsCtx),
+                        UsageBasedTypeResolver.findMetaArgType(func, order, clsCtx),
                         opt(func.getDocComment())
                             .fap(doc -> PsalmRes.resolveVar(doc, param.getName(), clsCtx))
 

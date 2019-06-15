@@ -28,20 +28,20 @@ import static org.klesun.lang.Lang.*;
 
 /**
  * takes associative array that caret points at and returns
- * all key names that will be accessed on this array later
+ * all key names that will be accessed on this array further in code
  */
-public class UsageResolver
+public class UsageBasedTypeResolver
 {
     final private IExprCtx fakeCtx;
     final private int depthLeft;
 
-    public UsageResolver(IExprCtx fakeCtx, int depthLeft)
+    public UsageBasedTypeResolver(IExprCtx fakeCtx, int depthLeft)
     {
         this.fakeCtx = fakeCtx;
         this.depthLeft = depthLeft;
     }
 
-    public UsageResolver(IExprCtx fakeCtx)
+    public UsageBasedTypeResolver(IExprCtx fakeCtx)
     {
         this(fakeCtx, fakeCtx.getSearch().project.map(proj ->
             DeepSettings.inst(proj).usageBasedCompletionDepthLimit).def(3));
@@ -93,7 +93,7 @@ public class UsageResolver
                             .map(name -> {
                                 DeepType assoct = new DeepType(arg, PhpType.ARRAY);
                                 S<Mt> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
-                                    .fap(acc -> new UsageResolver(nextCtx, depthLeft - 1).findExprTypeFromUsage(acc)).wap(Mt::new);
+                                    .fap(acc -> new UsageBasedTypeResolver(nextCtx, depthLeft - 1).findExprTypeFromUsage(acc)).wap(Mt::new);
                                 assoct.addKey(name, t.definition)
                                     .addType(getType, PhpType.UNSET);
                                 return assoct;
@@ -105,7 +105,7 @@ public class UsageResolver
                 opt(arg.getDefaultValue())
                     .cst(PhpExpression.class)
                     .fap(xpr -> nextCtx.subCtxEmpty().findExprType(xpr)),
-                new UsageResolver(nextCtx, depthLeft - 1).findVarTypeFromUsage(arg)
+                new UsageBasedTypeResolver(nextCtx, depthLeft - 1).findVarTypeFromUsage(arg)
             ));
     }
 

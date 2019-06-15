@@ -15,7 +15,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
-import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
+import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
@@ -97,7 +97,7 @@ public class RunTest extends AnAction
             return testArgNames.map((argName, i) -> {
                 int argOrder = funcArgNames.indexOf(argName);
                 IExprCtx exprCtx = makeNewExprCtx(func);
-                Mt actual = new UsageResolver(exprCtx, 10)
+                Mt actual = new UsageBasedTypeResolver(exprCtx, 10)
                     .findArgTypeFromUsage(func, argOrder, exprCtx.subCtxEmpty())
                     .wap(Mt::new);
                 Mt expected = Mt.getKeySt(rett, argName).wap(Mt::new);

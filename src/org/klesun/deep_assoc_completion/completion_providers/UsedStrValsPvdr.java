@@ -16,7 +16,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.GuiUtil;
 import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
+import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
 import org.klesun.lang.Opt;
@@ -81,11 +81,11 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
 
     private static It<DeepType> resolveUsedValues(StringLiteralExpression lit, IExprCtx funcCtx)
     {
-        return new UsageResolver(funcCtx).findExprTypeFromUsage(lit);
+        return new UsageBasedTypeResolver(funcCtx).findExprTypeFromUsage(lit);
     }
 
     /*
-     * moving all these built-in function resolutions inside UsageResolver.java
+     * moving all these built-in function resolutions inside UsageBasedTypeResolver.java
      * would be cooler, as it would also cover cases when they are called deeper
      * in some function, or when you put the value in a var
      */

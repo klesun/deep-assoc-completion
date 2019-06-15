@@ -18,7 +18,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
-import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
+import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
@@ -104,7 +104,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         IExprCtx ctx = new ExprCtx(funcCtx, cls, 0);
         return It(cls.getMethods())
             .flt(m -> m.getName().equals("__get"))
-            .fap(__get -> new UsageResolver(ctx.subCtxEmpty())
+            .fap(__get -> new UsageBasedTypeResolver(ctx.subCtxEmpty())
                 .findArgTypeFromUsage(__get, 0, ctx));
     }
 

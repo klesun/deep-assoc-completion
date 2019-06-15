@@ -15,13 +15,13 @@ import com.jetbrains.php.lang.psi.elements.Parameter;
 import com.jetbrains.php.lang.psi.elements.ParameterList;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
-import org.klesun.deep_assoc_completion.resolvers.UsageResolver;
 import org.klesun.lang.It;
 import org.klesun.lang.Tls;
 
@@ -51,7 +51,7 @@ public class ShowDocs extends AnAction
                         .fop(toCast(Function.class))
                         .fap(func -> {
                             DeepType arrt = new DeepType(par, PhpType.ARRAY);
-                            It<String> keys = new UsageResolver(exprCtx.subCtxEmpty())
+                            It<String> keys = new UsageBasedTypeResolver(exprCtx.subCtxEmpty())
                                 .findArgTypeFromUsage(func, order, exprCtx).fap(t -> t.keys).fap(k -> k.keyType.getNames()).unq();
                             keys.fch(k -> arrt.addKey(k, psi));
                             return list(arrt);
