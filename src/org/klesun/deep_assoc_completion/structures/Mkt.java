@@ -5,7 +5,7 @@ import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.resolvers.MainRes;
+import org.klesun.deep_assoc_completion.resolvers.DirectTypeResolver;
 import org.klesun.lang.It;
 import org.klesun.lang.Opt;
 
@@ -102,7 +102,7 @@ public class Mkt {
     {
         return ctx.getProject().map(p -> PhpIndex.getInstance(p))
             .fap(idx -> It(cstNames).fap(nme -> It(idx.getConstantsByName(nme)))
-                .fap(cstDef -> MainRes.resolveConst(cstDef, ctx)));
+                .fap(cstDef -> DirectTypeResolver.resolveConst(cstDef, ctx)));
     }
 
     public static DeepType mixed(PsiElement psi)

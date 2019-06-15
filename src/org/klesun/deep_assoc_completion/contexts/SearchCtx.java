@@ -7,7 +7,7 @@ import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.FieldReferenceImpl;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
-import org.klesun.deep_assoc_completion.resolvers.MainRes;
+import org.klesun.deep_assoc_completion.resolvers.DirectTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.PsiSig;
 import org.klesun.lang.*;
@@ -175,7 +175,7 @@ public class SearchCtx extends Lang
                 putToCache(exprCtx, expr, list());
             }
 
-            It<DeepType> tit = new MainRes(exprCtx).resolve(expr)
+            It<DeepType> tit = new DirectTypeResolver(exprCtx).resolve(expr)
                 //.lmt(1000) // .lmt() is just a safety measure, it should not be needed if everything works properly
                 .unq() // .unq() before caching is important since types taken from cache would grow in count exponentially otherwise
                 ;

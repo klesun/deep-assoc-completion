@@ -29,6 +29,9 @@ import static org.klesun.lang.Lang.*;
 /**
  * takes associative array that caret points at and returns
  * all key names that will be accessed on this array further in code
+ *
+ * unlike DirectTypeResolver.java, this one resolves the type var is
+ * _expected_ to have based on functions it is passed to in code below
  */
 public class UsageBasedTypeResolver
 {

@@ -16,11 +16,14 @@ import static org.klesun.lang.Lang.*;
  * Provides mechanism to determine expression type.
  * Unlike original jetbrain's type resolver, this
  * includes associative array key information
+ *
+ * unlike UsageBasedTypeResolver.java, this one resolves the type var
+ * has based on what was explicitly assigned to it in code above
  */
-public class MainRes {
+public class DirectTypeResolver {
     final private IExprCtx ctx;
 
-    public MainRes(IExprCtx ctx)
+    public DirectTypeResolver(IExprCtx ctx)
     {
         this.ctx = ctx;
     }

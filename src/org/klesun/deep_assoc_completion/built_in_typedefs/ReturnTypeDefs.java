@@ -5,7 +5,7 @@ import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.resolvers.MainRes;
+import org.klesun.deep_assoc_completion.resolvers.DirectTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.It;
@@ -162,7 +162,7 @@ public class ReturnTypeDefs
             "E_ALL" // 32767
         );
         It<DeepType> errCstTyppes = errCstNames.fap(nme -> It(idx.getConstantsByName(nme)))
-            .fap(cstDef -> MainRes.resolveConst(cstDef, ctx));
+            .fap(cstDef -> DirectTypeResolver.resolveConst(cstDef, ctx));
         return assoc(call, list(
             T2("type", new Mt(errCstTyppes)),
             T2("message", str(call, "proc_get_status() expects parameter 1 to be resource, null given").mt()),
