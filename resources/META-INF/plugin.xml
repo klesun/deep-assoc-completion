@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.06.13.001</version>
+    <version>2019.06.16.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,10 +38,11 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#94 Allow typing free-form text comments inside psalm type with "//"</li>
-        <li>#93 Fix: do not suggest global var names already suggested by phpstorm itself</li>
-        <li>#93 Show global var name completion without $ same way as phpstorm does</li>
-        <li>#92 Support static::CONST_NAME in phpdoc</li>
+        <li>Auto-indent next line in the doc after "[", "," and psalm "{"</li>
+        <li>#96 Fix, do not ignore snake_case functions in @return doc</li>
+        <li>#97 Allow using $this in phpdoc of a static function</li>
+        <li>#97 Always initialize top-level context with current class</li>
+        <li>A lot of refactoring, could break something, be cautious</li>
     </ul>
     ]]>
     </change-notes>
@@ -54,9 +55,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
         <completion.contributor language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.RestoreBuiltinCbtr"/>
         <psi.referenceContributor implementation="org.klesun.deep_assoc_completion.entry.ArrFuncRefCbtr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.MainGoToDecl"/>
-
         <enterHandlerDelegate order="first" implementation="org.klesun.deep_assoc_completion.entry.DeepEnterHandler"/>
-
         <projectConfigurable
             instance="org.klesun.deep_assoc_completion.entry.DeepSettingsForm"
             id="deep-assoc-completion.SettingsForm"
@@ -83,8 +82,6 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
     <depends>com.intellij.database</depends>
 
     <actions>
-
-
         <group id="DeepCompletionGroup" popup="true" text="deep-completion">
 
             <action id="ShowDeepType" text="Show deep-assoc Type"
