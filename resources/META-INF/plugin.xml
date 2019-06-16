@@ -55,6 +55,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
         <psi.referenceContributor implementation="org.klesun.deep_assoc_completion.entry.ArrFuncRefCbtr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.MainGoToDecl"/>
 
+        <enterHandlerDelegate order="first" implementation="org.klesun.deep_assoc_completion.entry.DeepEnterHandler"/>
+
         <projectConfigurable
             instance="org.klesun.deep_assoc_completion.entry.DeepSettingsForm"
             id="deep-assoc-completion.SettingsForm"
