@@ -27,14 +27,14 @@ public class DeepEnterHandler implements EnterHandlerDelegate {
 
         String ch = docWr.sub(pos - 1, pos);
         String nextCh = docWr.sub(pos, pos + 1);
+        String prefix = docWr.sub(pos - 100, pos);
+        String postfix = docWr.sub(pos, pos + 100);
 
         if (ch.equals("[")) {
             return opt(PsiTreeUtil.findElementOfClassAtOffset(psiFile, pos - 1, PhpDocTag.class, false))
-                .flt(tag -> tag.getTagValue().matches("\\s*=.*"))
-                .fop(tag -> Tls.regex(
-                    ".*\\n(\\s*\\*\\s*).*",
-                    docWr.sub(pos - 100, pos)
-                ).fop(match -> match.gat(0))
+                .flt(tag -> tag.getTagValue().matches("(?s)\\s*=.*"))
+                .fop(tag -> Tls.regex("[\\s\\S]*\\n(\\s*\\*\\s*).*", prefix, 0)
+                    .fop(match -> match.gat(0))
                     .map(baseIndent -> {
                         String insertion = "\n" + baseIndent + "    ";
                         docWr.doc.insertString(pos, insertion);
@@ -42,7 +42,7 @@ public class DeepEnterHandler implements EnterHandlerDelegate {
                         caret.moveToOffset(newPos);
                         if (nextCh.equals("]")) {
                             docWr.doc.insertString(newPos, "\n" + baseIndent);
-                        } else if (tag.getTagValue().matches(".*\\[\\s*")) {
+                        } else if (tag.getTagValue().matches("(?s).*\\[\\s*")) {
                             docWr.doc.insertString(newPos, "\n" + baseIndent + "]");
                         }
                         return Result.Stop;
@@ -50,17 +50,37 @@ public class DeepEnterHandler implements EnterHandlerDelegate {
                 .def(Result.Continue);
         } else if (ch.equals(",")) {
             return opt(PsiTreeUtil.findElementOfClassAtOffset(psiFile, pos - 1, PhpDocToken.class, false))
-                .fop(tag -> Tls.regex(
-                    ".*\\n(\\s*\\*\\s*).*",
-                    docWr.sub(pos - 100, pos)
-                ).fop(match -> match.gat(0))
-                    .map(baseIndent -> {
-                        String insertion = "\n" + baseIndent;
-                        docWr.doc.insertString(pos, insertion);
-                        int newPos = pos + insertion.length();
-                        caret.moveToOffset(newPos);
-                        return Result.Stop;
-                    }))
+                .flt(token -> Tls.findPrevSibling(token, PhpDocTag.class)
+                    .flt(tag ->
+                        tag.getTagValue().matches("(?s)\\s*=.*") ||
+                        tag.getText().matches("(?s).*array\\{.*")
+                    ).has())
+                .fop(token -> Tls.regex("[\\s\\S]*\\n(\\s*\\*\\s*).*", prefix, 0))
+                .fop(match -> match.gat(0))
+                .map(baseIndent -> {
+                    String insertion = "\n" + baseIndent;
+                    docWr.doc.insertString(pos, insertion);
+                    int newPos = pos + insertion.length();
+                    caret.moveToOffset(newPos);
+                    return Result.Stop;
+                })
+                .def(Result.Continue);
+        } else if (ch.equals("{")) {
+            return opt(PsiTreeUtil.findElementOfClassAtOffset(psiFile, pos - 1, PhpDocTag.class, false))
+                .fop(tag -> Tls.regex("[\\s\\S]*\\n(\\s*\\*\\s*).*array\\{", prefix, 0))
+                .fop(match -> match.gat(0))
+                .map(baseIndent -> {
+                    String insertion = "\n" + baseIndent + "    ";
+                    docWr.doc.insertString(pos, insertion);
+                    int newPos = pos + insertion.length();
+                    caret.moveToOffset(newPos);
+                    if (nextCh.equals("}")) {
+                        docWr.doc.insertString(newPos, "\n" + baseIndent);
+                    } else if (postfix.matches("(?s)\\s*([$\\n]).*")) {
+                        docWr.doc.insertString(newPos, "\n" + baseIndent + "}");
+                    }
+                    return Result.Stop;
+                })
                 .def(Result.Continue);
         } else {
             return Result.Continue;

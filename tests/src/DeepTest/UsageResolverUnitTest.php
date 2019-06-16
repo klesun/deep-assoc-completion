@@ -913,7 +913,13 @@ class UsageResolverUnitTest implements IUsageBase
     }
 
     /**
-     * @param $data
+     * @param array $data = [
+     *     'asd' => 123,
+     *     'asdsad' => [
+     *         'qweqwe' => 34234,
+     *         
+     *     ],
+     * ]
      * @return array = ['key1' => '', 'key2' => 0]
      */
     private function normDocData($data)
