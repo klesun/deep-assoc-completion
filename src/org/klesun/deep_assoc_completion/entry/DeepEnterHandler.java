@@ -10,6 +10,7 @@ import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocToken;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,26 +28,43 @@ public class DeepEnterHandler implements EnterHandlerDelegate {
         String ch = docWr.sub(pos - 1, pos);
         String nextCh = docWr.sub(pos, pos + 1);
 
-        return opt(PsiTreeUtil.findElementOfClassAtOffset(psiFile, pos - 1, PhpDocTag.class, false))
-            .flt(tag -> tag.getTagValue().matches("\\s*=.*"))
-            .flt(tag -> ch.equals("["))
-            .fop(tag -> Tls.regex(
-                ".*\\n(\\s*\\*\\s*).*",
-                docWr.sub(pos - 100, pos)
-            ).fop(match -> match.gat(0))
-                .map(baseIndent -> {
-                    String insertion = "\n" + baseIndent + "    ";
-                    docWr.doc.insertString(pos, insertion);
-                    int newPos = pos + insertion.length();
-                    caret.moveToOffset(newPos);
-                    if (nextCh.equals("]")) {
-                        docWr.doc.insertString(newPos, "\n" + baseIndent);
-                    } else if (tag.getTagValue().matches(".*\\[\\s*")) {
-                        docWr.doc.insertString(newPos, "\n" + baseIndent + "]");
-                    }
-                    return Result.Stop;
-                }))
-            .def(Result.Continue);
+        if (ch.equals("[")) {
+            return opt(PsiTreeUtil.findElementOfClassAtOffset(psiFile, pos - 1, PhpDocTag.class, false))
+                .flt(tag -> tag.getTagValue().matches("\\s*=.*"))
+                .fop(tag -> Tls.regex(
+                    ".*\\n(\\s*\\*\\s*).*",
+                    docWr.sub(pos - 100, pos)
+                ).fop(match -> match.gat(0))
+                    .map(baseIndent -> {
+                        String insertion = "\n" + baseIndent + "    ";
+                        docWr.doc.insertString(pos, insertion);
+                        int newPos = pos + insertion.length();
+                        caret.moveToOffset(newPos);
+                        if (nextCh.equals("]")) {
+                            docWr.doc.insertString(newPos, "\n" + baseIndent);
+                        } else if (tag.getTagValue().matches(".*\\[\\s*")) {
+                            docWr.doc.insertString(newPos, "\n" + baseIndent + "]");
+                        }
+                        return Result.Stop;
+                    }))
+                .def(Result.Continue);
+        } else if (ch.equals(",")) {
+            return opt(PsiTreeUtil.findElementOfClassAtOffset(psiFile, pos - 1, PhpDocToken.class, false))
+                .fop(tag -> Tls.regex(
+                    ".*\\n(\\s*\\*\\s*).*",
+                    docWr.sub(pos - 100, pos)
+                ).fop(match -> match.gat(0))
+                    .map(baseIndent -> {
+                        String insertion = "\n" + baseIndent;
+                        docWr.doc.insertString(pos, insertion);
+                        int newPos = pos + insertion.length();
+                        caret.moveToOffset(newPos);
+                        return Result.Stop;
+                    }))
+                .def(Result.Continue);
+        } else {
+            return Result.Continue;
+        }
     }
 
     @Override
