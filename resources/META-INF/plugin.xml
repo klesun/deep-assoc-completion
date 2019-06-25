@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.06.16.001</version>
+    <version>2019.06.25.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,11 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Auto-indent next line in the doc after "[", "," and psalm "{"</li>
-        <li>#96 Fix, do not ignore snake_case functions in @return doc</li>
-        <li>#97 Allow using $this in phpdoc of a static function</li>
-        <li>#97 Always initialize top-level context with current class</li>
-        <li>A lot of refactoring, could break something, be cautious</li>
+        <li>#98 Hotfix, private func usage based arg completion not working since 2019.06.16.001</li>
     </ul>
     ]]>
     </change-notes>
