@@ -250,7 +250,7 @@ public class FuncCtx extends Lang implements IFuncCtx
     /** will return true if function was called with 0 arguments */
     public boolean areArgsKnown()
     {
-        return !argPsiType.equals(EArgPsiType.NONE);
+        return !list(EArgPsiType.NONE, EArgPsiType.SELF_CLS, EArgPsiType.THIS_CLS).contains(argPsiType);
     }
 
     public SearchCtx getSearch()

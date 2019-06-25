@@ -913,13 +913,6 @@ class UsageResolverUnitTest implements IUsageBase
     }
 
     /**
-     * @param array $data = [
-     *     'asd' => 123,
-     *     'asdsad' => [
-     *         'qweqwe' => 34234,
-     *         
-     *     ],
-     * ]
      * @return array = ['key1' => '', 'key2' => 0]
      */
     private function normDocData($data)
@@ -949,6 +942,9 @@ class UsageResolverUnitTest implements IUsageBase
 
     public static function getReturnDocObjectVars($rules)
     {
+        // TODO: investigate, for some reason it does not work this
+        //  way - if you do not specify that returned value is $rules
+        //return json_decode(file_get_contents('data.json'), true);
         if (rand() > 0) {
             return $rules;
         } else {
@@ -967,7 +963,7 @@ class UsageResolverUnitTest implements IUsageBase
                 'prop1' => '123',
                 'prop2' => [
                     'asd' => 24,
-                    'dsad' => 252.
+                    'dsad' => 252,
                 ],
             ],
         ];
