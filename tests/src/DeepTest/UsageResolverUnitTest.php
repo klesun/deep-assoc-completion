@@ -942,9 +942,6 @@ class UsageResolverUnitTest implements IUsageBase
 
     public static function getReturnDocObjectVars($rules)
     {
-        // TODO: investigate, for some reason it does not work this
-        //  way - if you do not specify that returned value is $rules
-        //return json_decode(file_get_contents('data.json'), true);
         if (rand() > 0) {
             return $rules;
         } else {
