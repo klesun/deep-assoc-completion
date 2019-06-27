@@ -966,6 +966,20 @@ class UsageResolverUnitTest implements IUsageBase
         ];
     }
 
+    public function provide_polyfilledBuiltIn($param)
+    {
+        $records = [
+            ['ageGroup' => 'adult', 'netPrice' => '800.00'],
+            ['ageGroup' => 'child', 'netPrice' => '700.00'],
+            ['ageGroup' => 'infant', 'netPrice' => '600.00'],
+        ];
+        array_column($records, '');
+        array_column($records, $param);
+        return [
+            'param' => 'ageGroup' ?: 'netPrice',
+        ];
+    }
+
     //=========================
     // following not implemented yet
     //========================

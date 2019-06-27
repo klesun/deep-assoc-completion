@@ -129,16 +129,20 @@ public class UsageBasedTypeResolver
 
     private static Opt<Function> resolveFunc(ParameterList argList)
     {
+        // using multiResolve(), because resolve() returns null if there are
+        // multiple definitions of same function (in case of polyfill for example)
         return opt(argList.getParent())
             .fop(par -> Opt.fst(
                 () -> Tls.cast(FunctionReference.class, par)
-                    .map(call -> call.resolve()),
+                    .fop(call -> It(call.multiResolve(false))
+                        .fap(res -> opt(res.getElement())).fst()),
                 () -> Tls.cast(MethodReferenceImpl.class, par)
                     .fop(call -> It(call.multiResolve(false))
                         .fap(res -> opt(res.getElement())).fst()),
                 () -> Tls.cast(NewExpressionImpl.class, par)
                     .map(newEx -> newEx.getClassReference())
-                    .map(ref -> ref.resolve())
+                    .fop(ref -> It(ref.multiResolve(false))
+                        .fap(res -> opt(res.getElement())).fst())
             )  .fop(toCast(Function.class)));
     }
 
@@ -246,6 +250,8 @@ public class UsageBasedTypeResolver
 
     private It<DeepType> findBuiltInArgType(Function builtInFunc, int argOrder, ParameterList argList)
     {
+        // TODO: refactor, I believe there is no need to actually resolve the
+        //  built-in function definition - all we need is it's name, no?
         return Tls.cast(Method.class, builtInFunc)
             .uni(meth -> It.cnc(
                 findKeysUsedInPdoExec(meth, argList, argOrder),

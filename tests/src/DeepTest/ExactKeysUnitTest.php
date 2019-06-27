@@ -1180,6 +1180,11 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     private static function combineTicketsAndInvoices(array $tickets, array $invoices)
     {
         $invoices[0]['invoiceNumber'];
+        $zhopa = [
+            ['asd' => 5, 'b' => 6],
+            ['asd' => 5, 'b' => 6],
+        ];
+        array_column($zhopa, 'asd');
         $numToInv = array_combine(array_column($invoices, 'ticketNumber'), $invoices);
         return array_map(function($ticket)use($numToInv){
             $numToInv['0123456789012']['invoiceNumber'];
