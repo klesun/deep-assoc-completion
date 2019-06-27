@@ -5,6 +5,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
+import static org.klesun.lang.Lang.*;
 
 import java.util.*;
 
@@ -17,7 +18,7 @@ import java.util.*;
  * like getKey(), elToArr(), arToEl() - all the
  * static functions that take list of typeGetters
  */
-public class Mt extends Lang
+public class Mt
 {
     static enum REASON {OK, CIRCULAR_REFERENCE, FAILED_TO_RESOLVE, DEPTH_LIMIT, INVALID_PSI}
     public static Mt CIRCULAR_REFERENCE = new Mt(L(), REASON.CIRCULAR_REFERENCE);

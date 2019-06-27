@@ -28,7 +28,7 @@ public interface IExprCtx {
     IExprCtx subCtxDoc(PsiElement fakeFileSource);
     IExprCtx subCtxDirect(FunctionReference funcCall);
     IExprCtx subCtxDirect(NewExpression funcCall);
-    IExprCtx subCtxSingleArgArr(PhpExpression argArr);
+    IExprCtx subCtxSingleArgArr(PhpExpression argArr, int argOrder);
     IExprCtx subCtxIndirect(PhpExpression args);
     IExprCtx subCtxMagicProp(FieldReference fieldRef);
     IExprCtx subCtxMem(MemberReference fieldRef);

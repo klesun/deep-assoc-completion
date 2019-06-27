@@ -214,7 +214,7 @@ public class UsageBasedTypeResolver
                 L(argList.getParameters()).gat(caretArgOrder)
                     .cst(PhpExpression.class)
                     .thn(arrCtor -> k.addType(Tls.onDemand(() -> {
-                        IExprCtx subCtx = fakeCtx.subCtxSingleArgArr(arrCtor);
+                        IExprCtx subCtx = fakeCtx.subCtxSingleArgArr(arrCtor, 0);
                         return findArgTypeFromUsage(func, 0, subCtx).wap(Mt::new);
                     })));
                 return list(arrt);

@@ -203,9 +203,13 @@ public class FuncCtx extends Lang implements IFuncCtx
     }
 
     /** context from args passed in array for example in array_map or array_filter */
-    public FuncCtx subCtxSingleArgArr(PhpExpression argArr, F<PhpExpression, It<DeepType>> findExprType)
+    public FuncCtx subCtxSingleArgArr(PhpExpression argArr, int argOrder, F<PhpExpression, It<DeepType>> findExprType)
     {
-        L<S<Mt>> argGetters = list(() -> findExprType.apply(argArr).fap(Mt::getElSt).wap(Mt::new));
+        L<S<Mt>> argGetters = Tls.range(0, argOrder + 1)
+            .map(i -> S(() -> i == argOrder
+                ? findExprType.apply(argArr).fap(Mt::getElSt).wap(Mt::new)
+                : Mt.INVALID_PSI))
+            .arr();
         return new FuncCtx(this, argGetters, argArr, EArgPsiType.ARR);
     }
 

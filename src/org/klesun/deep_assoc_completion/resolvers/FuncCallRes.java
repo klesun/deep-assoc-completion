@@ -56,7 +56,7 @@ public class FuncCallRes extends Lang
         Mt arrMt = callCtx.getArgMt(1);
         IExprCtx subCtx = L(call.getParameters()).gat(1)
             .fop(array -> Tls.cast(PhpExpression.class, array))
-            .uni(argArr -> ctx.subCtxSingleArgArr(argArr),
+            .uni(argArr -> ctx.subCtxSingleArgArr(argArr, 0),
                 () -> ctx.subCtxEmpty()
             );
         S<Mt> getElMt = Tls.onDemand(() -> callCtx.getArgMt(0).types
@@ -72,6 +72,18 @@ public class FuncCallRes extends Lang
         It<DeepType> ktg = srcKeys.fap(k -> k.keyType.getTypes());
         mapRetType.addKey(KeyType.mt(ktg, call), call).addType(getElMt, PhpType.MIXED);
         return It.cnc(list(mapRetType), eachTMapped);
+    }
+
+    private It<DeepType> array_reduce(IFuncCtx callCtx, FunctionReferenceImpl call)
+    {
+        IExprCtx subCtx = L(call.getParameters()).gat(0)
+            .fop(array -> Tls.cast(PhpExpression.class, array))
+            .uni(argArr -> ctx.subCtxSingleArgArr(argArr, 1),
+                () -> ctx.subCtxEmpty()
+            );
+        return callCtx.getArg(1)
+            .fap(ft -> ft.types)
+            .fap(t -> t.getReturnTypes(subCtx));
     }
 
     private DeepType array_combine(IFuncCtx callCtx, FunctionReferenceImpl call)
@@ -210,6 +222,8 @@ public class FuncCallRes extends Lang
 
         if (name.equals("array_map")) {
             return array_map(callCtx, call);
+        } else if (name.equals("array_reduce")) {
+            return array_reduce(callCtx, call);
         } else if (name.equals("array_filter") || name.equals("array_reverse")
                 || name.equals("array_splice") || name.equals("array_slice")
                 || name.equals("array_values") || name.equals("array_pad")

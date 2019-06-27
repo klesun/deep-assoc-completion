@@ -84,8 +84,8 @@ public class ExprCtx implements IExprCtx {
         return subExpr(funcCall, funcCtx.subCtxDirect(funcCall, this::findExprType));
     }
 
-    public ExprCtx subCtxSingleArgArr(PhpExpression argArr) {
-        return subExpr(argArr, funcCtx.subCtxSingleArgArr(argArr, this::findExprType));
+    public ExprCtx subCtxSingleArgArr(PhpExpression argArr, int argOrder) {
+        return subExpr(argArr, funcCtx.subCtxSingleArgArr(argArr, argOrder, this::findExprType));
     }
 
     public ExprCtx subCtxIndirect(PhpExpression args) {

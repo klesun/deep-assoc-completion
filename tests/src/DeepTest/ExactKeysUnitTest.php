@@ -2164,6 +2164,29 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    public function provideArrayReduce(array $data)
+    {
+        $types = ['adult', 'infant', 'child'];
+        $prices = array_reduce($types, function ($prices, $type) {
+            if (isset($data[$type])) {
+                $prices[$type] = [
+                    'netPrice'   => countNetPrice((int)($data[$type]['totalMiles'] ?? 0), (float)($data[$type]['awardTaxes'] ?? 0)),
+                    'price'      => $data[$type]['price'] ?? null,
+                    'totalMiles' => $data[$type]['totalMiles'] ?? 0,
+                    'awardTaxes' => $data[$type]['awardTaxes'] ?? 0,
+                    'markUp'     => $data[$type]['markUp'] ?? null
+                ];
+            }
+            return $prices;
+        }, []);
+        $prices[''];
+        $prices['adult'][''];
+        return [
+            [$prices, ['adult', 'infant', 'child']],
+            [$prices['adult'], ['netPrice', 'price', 'totalMiles', 'awardTaxes', 'markUp']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
