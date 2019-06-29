@@ -217,6 +217,13 @@ public class FuncCallRes extends Lang
         return getVars(call, clses, true);
     }
 
+    private It<DeepType> get_class(IExprCtx callExprCtx, FunctionReferenceImpl call)
+    {
+        return callExprCtx.func().getArg(0)
+            .fap(mt -> ArrCtorRes.resolveMtInstCls(mt, call.getProject()))
+            .map(clsPsi -> DeepType.makeClsRef(call, clsPsi.getType()));
+    }
+
     public static DeepType makeAssoc(PsiElement psi, Iterable<T2<String, PhpType>> keys)
     {
         return Mkt.assoc(psi, It(keys)
@@ -310,6 +317,8 @@ public class FuncCallRes extends Lang
             return list(get_object_vars(callExprCtx, call));
         } else if (name.equals("get_class_vars")) {
             return list(get_class_vars(callExprCtx, call));
+        } else if (name.equals("get_class")) {
+            return get_class(callExprCtx, call);
         }
 
         It<DeepType> generalFuncTit = It.frs(

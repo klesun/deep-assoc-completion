@@ -13,12 +13,6 @@ use TouhouNs\MarisaKirisame;
 use TouhouNs\ReimuHakurei;
 use TouhouNs\YakumoRan;
 
-interface ModelInterface
-{
-    /** @return array = static::sample() */
-    public function rules();
-}
-
 class SomeCls
 {
     public function rules($arg)
@@ -2200,10 +2194,6 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function provide_get_class_vars()
     {
         get_object_vars($this)['prop1'];
@@ -2216,6 +2206,10 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
             [$thisClassVars, ['staticProp1', 'staticProp2', 'staticProp3']],
         ];
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     public function provide_psalmFromArg()
     {
