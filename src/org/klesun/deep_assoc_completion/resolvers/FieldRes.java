@@ -217,7 +217,11 @@ public class FieldRes extends Lang
             IExprCtx magicCtx = ctx.subCtxMagicProp(fieldRef);
             magicPropTs = memRes.resolveCls(fieldRef)
                 .fap(cls -> opt(fieldRef.getName())
-                    .fap(nme -> resolveMagicProp(cls, magicCtx)));
+                    .fap(nme -> It.cnc(
+                        resolveMagicProp(cls, magicCtx),
+                        opt(cls.getDocComment())
+                            .fap(doc -> PsalmRes.resolveMagicProp(doc, nme, ctx.subCtxEmpty()))
+                    )));
         }
         It<DeepType> declTypes = declsToTypes(fieldRef, briefDecls);
 

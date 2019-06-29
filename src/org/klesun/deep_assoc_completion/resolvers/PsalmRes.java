@@ -183,6 +183,15 @@ public class PsalmRes {
                 ))));
     }
 
+    private static Map<String, MemIt<DeepType>> getClsGenericTypes(L<PsalmFuncInfo.GenericDef> classGenerics, IExprCtx ctx)
+    {
+        Map<String, MemIt<DeepType>> result = new HashMap<>();
+        classGenerics.fch((g, i) -> result.put(g.name, ctx.getThisType()
+            .fap(t -> t.generics.gat(i))
+            .fap(mt -> mt.types).mem()));
+        return result;
+    }
+
     private static Map<String, MemIt<DeepType>> getGenericTypes(PsalmFuncInfo psalmInfo, IExprCtx ctx)
     {
         Map<String, MemIt<DeepType>> result = new HashMap<>();
@@ -192,9 +201,7 @@ public class PsalmRes {
             ).mem();
             result.put(g.name, mit);
         });
-        psalmInfo.classGenerics.fch((g, i) -> result.put(g.name, ctx.getThisType()
-            .fap(t -> t.generics.gat(i))
-            .fap(mt -> mt.types).mem()));
+        result.putAll(getClsGenericTypes(psalmInfo.classGenerics, ctx));
         return result;
     }
 
@@ -231,6 +238,15 @@ public class PsalmRes {
         Map<String, MemIt<DeepType>> generics = getGenericTypes(psalmInfo, ctx);
         return psalmInfo.params.flt(p -> p.name.equals(varName) || p.name.equals(""))
             .fap(p -> p.psalmType)
+            .fap(psalmt -> psalmToDeep(psalmt, docComment, generics));
+    }
+
+    public static It<DeepType> resolveMagicProp(PhpDocComment docComment, String name, IExprCtx ctx)
+    {
+        PsalmFuncInfo.PsalmClsInfo clsInfo = PsalmFuncInfo.parseClsDoc(docComment);
+        Map<String, MemIt<DeepType>> generics = getClsGenericTypes(clsInfo.generics, ctx);
+        return opt(clsInfo.magicProps.get(name))
+            .map(p -> p.psalmType)
             .fap(psalmt -> psalmToDeep(psalmt, docComment, generics));
     }
 }

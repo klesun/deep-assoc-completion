@@ -89,7 +89,11 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
 {
     const SORT_TYPE_DEFAULT = 'default';
 
-    public $prop1 = 123;
+    /** @var array{
+     *     bestGirl: 'Cirno',
+     *     secondBestGirl: 'Utsuho',
+     * } $prop1 */
+    public $prop1 = null;
     private $prop2 = ['a' => 5, 'b' => 6];
 
     public static $staticProp1 = 123;
@@ -2220,27 +2224,29 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
-    //=============================
-    // following are not implemented yet
-    //=============================
-
     public function provide_psalmMagicDoc()
     {
         $simpleEqMagic = $this->getSimpleEqMagic();
         $simpleEqMagic['author'];
-        // TODO: make completion/goto work as well on the psalmed methods
         $stebbinsMapping = $this->getPsalmMagic();
         $stebbinsMapping[''];
         $simpleEqProp = $this->simpleEqProp;
         $simpleEqProp[''];
         $stuffSrc = $this->stuffSrc;
+        $stuffSrc[''];
+
         return [
             [$simpleEqMagic, ['author', 'unpopularSong']],
             [$simpleEqProp, ['odyssey', 'touhou']],
             [$stebbinsMapping, ['Odyssey', 'Mortimer', 'Travis']],
-            [$stuffSrc, ['key1', 'key2', 'key3']],
+            [$stuffSrc, ['key1', 'key2']],
+            [$this->prop1, ['bestGirl', 'secondBestGirl']],
         ];
     }
+
+    //=============================
+    // following are not implemented yet
+    //=============================
 
     public function provide_psalmFromArg()
     {
