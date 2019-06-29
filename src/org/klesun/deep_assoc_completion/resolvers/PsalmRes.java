@@ -8,9 +8,9 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.KeyType;
-import org.klesun.deep_assoc_completion.structures.Mkt;
 import org.klesun.deep_assoc_completion.structures.psalm.*;
 import org.klesun.lang.It;
+import org.klesun.lang.L;
 import org.klesun.lang.*;
 
 import java.util.HashMap;
@@ -99,12 +99,21 @@ public class PsalmRes {
         return It.cnc(
             non()
             , Tls.cast(TAssoc.class, psalmType)
-                .map(assoc -> Mkt.assoc(goToPsi, Lang.It(assoc.keys.entrySet()).map(e -> {
-                    String keyName = e.getKey();
-                    IType psalmVal = e.getValue();
-                    It<DeepType> valTit = psalmToDeep(psalmVal, goToPsi, generics);
-                    return T2(keyName, new Mt(valTit));
-                })))
+                .map(assoc -> {
+                    DeepType assoct = new DeepType(goToPsi, PhpType.ARRAY, false);
+                    for (Map.Entry<String, IType> e: assoc.keys.entrySet()) {
+                        String keyName = e.getKey();
+                        IType psalmVal = e.getValue();
+                        Mt valMt = new Mt(psalmToDeep(psalmVal, goToPsi, generics));
+                        PhpType ideaType = valMt.getIdeaTypes().fst().def(PhpType.UNSET);
+                        List<String> comments = opt(assoc.keyToComments.get(keyName))
+                            .fap(c -> c).flt(c -> !c.trim().equals("")).map(c -> "// " + c).arr();
+                        assoct.addKey(keyName, goToPsi)
+                            .addType(Granted(valMt), ideaType)
+                            .addComments(comments);
+                    }
+                    return assoct;
+                })
             , Tls.cast(TClass.class, psalmType)
                 .fap(cls -> psalmClsToDeep(cls, goToPsi, generics))
             // if we ever support references, should add check for infinite recursion here...
