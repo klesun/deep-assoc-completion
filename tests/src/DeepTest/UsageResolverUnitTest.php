@@ -984,6 +984,47 @@ class UsageResolverUnitTest implements IUsageBase
     // following not implemented yet
     //========================
 
+    public function provide_inferReturnStaticInDoc($param1, $param2, $param3)
+    {
+        \App\Models\City::get(1)->except($param1);
+        \App\Models\City::get(1)->except(['']);
+        (new \App\Models\City())->except($param2);
+        (new \App\Models\City())->except(['']);
+        get_object_vars(\App\Models\City::get(1))[$param3];
+        get_object_vars(\App\Models\City::get(1))[''];
+        return [
+            'param1' => [
+                '_last_refresh' => 0,
+                '_snapshot' => [],
+                '_di' => [],
+                'country_id' => [],
+                'country' => [],
+                'city_id' => [],
+                'city' => [],
+                'last_update' => [],
+            ],
+            'param2' => [
+                '_last_refresh' => 0,
+                '_snapshot' => [],
+                '_di' => [],
+                'country_id' => [],
+                'country' => [],
+                'city_id' => [],
+                'city' => [],
+                'last_update' => [],
+            ],
+            'params3' =>
+                '_last_refresh' ?:
+                '_snapshot' ?:
+                '_di' ?:
+                'country_id' ?:
+                'country' ?:
+                'city_id' ?:
+                'city' ?:
+                'last_update',
+        ];
+    }
+
     //============================
     // TODO: testify following
     //============================

@@ -14,6 +14,7 @@ import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionArgument;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionScalarArgument;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedReturnValuesIndex;
@@ -176,7 +177,14 @@ public class MethCallRes extends Lang
             .fop(match -> match.gat(1))
             .fap(expr -> DocParamRes.parseExpression(expr, returnDoc.getProject(), docCtx));
         It<DeepType> asPsalm = PsalmRes.resolveReturn(returnDoc, funcCtx);
-        return It.cnc(asEq, asPsalm);
+        PhpType docPst = returnDoc.getDocType();
+        // phpstorm resolves explicit types ok, but not static, naturally
+        It<DeepType> asStatic = !docPst.getTypes().contains("static")
+            ? It.non() : It.cnc(
+                funcCtx.getSelfType().map(clst -> new DeepType(returnDoc, clst)),
+                funcCtx.getThisType()
+            );
+        return It.cnc(asStatic, asEq, asPsalm);
     }
 
     private static It<DeepType> parseMethDoc(PhpDocMethod doc, IExprCtx ctx)

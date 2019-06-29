@@ -3,6 +3,8 @@ namespace TouhouNs;
 
 class ReimuHakurei
 {
+    private $oneTrueLove = 'Yukari';
+
     public static function fantasySeal()
     {
         return [

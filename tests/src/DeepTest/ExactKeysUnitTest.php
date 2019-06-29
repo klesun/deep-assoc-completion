@@ -1724,7 +1724,7 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         $result = (new City())->first('cities', $param);
         $result['retrieval_time'];
         return [
-            [$result, ['retrieval_time', 'id', 'name']],
+            [$result, ['retrieval_time', 'id', 'name', '0']],
         ];
     }
 
@@ -2213,6 +2213,9 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
 
     public function provide_psalmFromArg()
     {
+        $reimu = new ReimuHakurei();
+        get_object_vars($reimu)[''];
+
         $fromStaticMeth = ResultGen::makeOk(new KiraYoshikage());
         $fromArg = $fromStaticMeth->map(function($reimu){return $reimu;});
         return [
