@@ -2048,6 +2048,10 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
      */
     public function provide_psalmKeyComments($person_id, $options=[])
     {
+        $arr = [
+            'someKey1' => new ReimuHakurei(), // a random key I added to test how comments look in the auto-popup
+        ];
+        $arr[''];
         $options[''];
         return [
             [$options, ['filter_active', 'filter_pokemon', 'filter_min_date', 'filter_max_date', 'ignored_pokemon_ownership_ids']],

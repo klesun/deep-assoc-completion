@@ -30,6 +30,7 @@ import static org.klesun.lang.Lang.*;
 public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 {
     final private static int BRIEF_VALUE_MAX_LEN = 50;
+    final private static int COMMENTED_MAX_LEN = 90;
 
     private static ImageIcon icon = null;
 
@@ -57,15 +58,14 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         return getMaxDepth(parameters.isAutoPopup(), parameters.getEditor().getProject());
     }
 
-    private static LookupElementBuilder makePaddedLookup(String keyName, String ideaType, String briefVal)
+    private static LookupElementBuilder makePaddedLookup(String keyName, String ideaType, String briefVal, int maxValLen)
     {
         ideaType = !ideaType.equals("") ? ideaType : "?";
 
         // (keyName + briefVal) length must be constant for all keys, or you'll
         // get nasty broken position of type when you highlight an option
         briefVal = briefVal.trim().equals("") ? "" : " = " + briefVal;
-        briefVal = briefVal + "                                                                ";
-        briefVal = Tls.substr(briefVal, 0, BRIEF_VALUE_MAX_LEN - keyName.length());
+        briefVal = Tls.substr(briefVal, 0, maxValLen - keyName.length());
         return LookupElementBuilder.create(keyName)
             .withBoldness(!Tls.isNum(keyName))
             .withInsertHandler(GuiUtil.toRemoveIntStrQuotes())
@@ -124,12 +124,14 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
     {
         Mt keyMt = It(arrMt.types).fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::new);
         String comment = Tls.implode(" ", comments);
-        String briefValue = keyMt.getBriefValueText(BRIEF_VALUE_MAX_LEN);
-        if (!comment.trim().equals("")) {
-            briefValue = Tls.substr(briefValue, 0, 12) + " " + comment;
+        boolean hasComments = !comment.trim().equals("");
+        int maxValLen = hasComments ? COMMENTED_MAX_LEN : BRIEF_VALUE_MAX_LEN;
+        String briefValue = keyMt.getBriefValueText(maxValLen);
+        if (hasComments) {
+            briefValue = Tls.substr(briefValue, 0, 16) + " " + comment;
         }
         String ideaTypeStr = keyMt.getIdeaTypes().flt(it -> !it.isEmpty()).lmt(2).str("|");
-        return makePaddedLookup(keyName, ideaTypeStr, briefValue);
+        return makePaddedLookup(keyName, ideaTypeStr, briefValue, maxValLen);
     }
 
     private static void printExprTree(ExprCtx root, SearchCtx search, int depth)
@@ -172,14 +174,14 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                         onFirst.accept(keyName);
                     }
                     keyNames.add(keyName);
-                    LookupElementBuilder justName = makePaddedLookup(keyName, "resolving...", "");
+                    LookupElementBuilder justName = makePaddedLookup(keyName, "resolving...", "", BRIEF_VALUE_MAX_LEN);
                     MutableLookup mutLookup = new MutableLookup(justName, includeQuotes);
                     int basePriority = Tls.isNum(keyName) ? 2000 : 2500;
                     result.addElement(PrioritizedLookupElement.withPriority(mutLookup, basePriority - keyNames.size()));
                     nameToMutLookup.put(keyName, mutLookup);
 
                     String briefTypeRaw = Mt.getKeyBriefTypeSt(k.getBriefTypes()).filterUnknown().filterMixed().toStringResolved();
-                    mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "");
+                    mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "", BRIEF_VALUE_MAX_LEN);
                 }
                 String comment = Tls.implode(" ", k.comments);
                 if (!comment.trim().equals("")) {
@@ -237,9 +239,17 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         Map<String, Set<String>> keyToComments = tuple.b;
 
         long elapsed = System.nanoTime() - startTime;
-        System.out.println("Resolved all key names in " + search.getExpressionsResolved() + " expressions");
-        result.addLookupAdvertisement("Press _Ctrl + Space_ for more options. Resolved " + search.getExpressionsResolved() +
-            " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0));
+        String prefix = "";
+        String postfix = "";
+        if (parameters.isAutoPopup()) {
+            prefix = "Press _Ctrl + Space_ for more options. ";
+        } else {
+            // trying to make it take same space despite font being not monospace...
+            postfix += "                                                      ";
+        }
+        // length of this message defines the width of popup dialog apparently
+        result.addLookupAdvertisement(prefix + "Resolved " + search.getExpressionsResolved() +
+            " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0) + postfix);
 
         //printExprTree(exprCtx, 0);
 
@@ -266,13 +276,20 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         // following code calculates deeper type info for
         // completion options and updates them in the dialog
 
+        Mutable<Boolean> hadComments = new Mutable<>(false);
         nameToMutLookup
             .fch((mutLook, keyName) -> {
                 search.overrideMaxExpr = som(search.getExpressionsResolved() + 25);
                 Set<String> comments = opt(keyToComments.get(keyName)).def(new HashSet<>());
                 LookupElementBuilder lookup = makeFullLookup(arrMt, keyName, comments);
+                hadComments.set(hadComments.get() || comments.size() > 0);
                 search.overrideMaxExpr = non();
                 mutLook.lookupData = lookup;
             });
+
+        if (hadComments.get()) {
+            // note, this character is not a simple space, it's U+2003 EM SPACE (mutton)
+            result.addLookupAdvertisement(Tls.repeat(" ", 80 ));
+        }
     }
 }
