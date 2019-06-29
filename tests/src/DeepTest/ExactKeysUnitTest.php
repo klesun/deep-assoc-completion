@@ -85,6 +85,10 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     public $prop1 = 123;
     private $prop2 = ['a' => 5, 'b' => 6];
 
+    public static $staticProp1 = 123;
+    protected static $staticProp2 = 123;
+    private static $staticProp3 = 123;
+
     public function provideInheritDocInterface($params)
     {
         $params[''];
@@ -2199,6 +2203,19 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     //=============================
     // following are not implemented yet
     //=============================
+
+    public function provide_get_class_vars()
+    {
+        get_object_vars($this)['prop1'];
+        $classVars = get_class_vars(self::class);
+        $classVars[''];
+        $thisClassVars = get_class_vars(get_class($this));
+        $thisClassVars[''];
+        return [
+            [$classVars, ['staticProp1', 'staticProp2', 'staticProp3']],
+            [$thisClassVars, ['staticProp1', 'staticProp2', 'staticProp3']],
+        ];
+    }
 
     public function provide_psalmFromArg()
     {

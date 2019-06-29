@@ -188,21 +188,33 @@ public class FuncCallRes extends Lang
         return type;
     }
 
-    private DeepType get_object_vars(IExprCtx callExprCtx, FunctionReferenceImpl call)
+    private DeepType getVars(FunctionReferenceImpl call, It<PhpClass> clses, boolean isStatic)
     {
-        It<PhpClass> clses = callExprCtx.func().hasArgs()
-            ? callExprCtx.func().getArg(0)
-                .fap(mt -> ArrCtorRes.resolveMtInstCls(mt, call.getProject()))
-            : Tls.findParent(callExprCtx.getRealPsi(call), PhpClass.class, a -> true).itr();
         DeepType type = new DeepType(call, PhpType.ARRAY);
         clses.fap(cls -> cls.getFields())
-            .flt(fld -> !fld.getModifier().isStatic())
+            .flt(fld -> !fld.isConstant() && isStatic == fld.getModifier().isStatic())
             .fch(fld -> type.addKey(fld.getName(), fld)
                 .addType(() -> opt(fld.getDefaultValue())
                     .cst(PhpExpression.class)
                     .fap(expr -> ctx.subCtxEmpty().findExprType(expr))
                     .wap(ts -> new Mt(ts)), fld.getType()));
         return type;
+    }
+
+    private DeepType get_object_vars(IExprCtx callExprCtx, FunctionReferenceImpl call)
+    {
+        It<PhpClass> clses = callExprCtx.func().hasArgs()
+            ? callExprCtx.func().getArg(0)
+                .fap(mt -> ArrCtorRes.resolveMtInstCls(mt, call.getProject()))
+            : Tls.findParent(callExprCtx.getRealPsi(call), PhpClass.class, a -> true).itr();
+        return getVars(call, clses, false);
+    }
+
+    private DeepType get_class_vars(IExprCtx callExprCtx, FunctionReferenceImpl call)
+    {
+        It<PhpClass> clses = callExprCtx.func().getArg(0)
+            .fap(mt -> ArrCtorRes.resolveMtClsRefCls(mt, call.getProject()));
+        return getVars(call, clses, true);
     }
 
     public static DeepType makeAssoc(PsiElement psi, Iterable<T2<String, PhpType>> keys)
@@ -296,6 +308,8 @@ public class FuncCallRes extends Lang
             return ctx.getSelfType().map(idea -> DeepType.makeClsRef(call, idea));
         } else if (name.equals("get_object_vars")) {
             return list(get_object_vars(callExprCtx, call));
+        } else if (name.equals("get_class_vars")) {
+            return list(get_class_vars(callExprCtx, call));
         }
 
         It<DeepType> generalFuncTit = It.frs(
