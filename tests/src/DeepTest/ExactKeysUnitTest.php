@@ -71,6 +71,19 @@ abstract class AbstractExactKeysUnitTest
 /**
  * unlike UnitTest.php, this test not just checks that actual result  has _at least_
  * such keys, but it tests that it has _exactly_ such keys, without extras
+ *
+ * @method array getSimpleEqMagic() = ['author' => 'Stebbins', 'unpopularSong' => 'FINAL BREATH']
+ * @method array{
+ *     Odyssey: 'Mortimer',
+ *     Mortimer: 'Travis',
+ *     Travis: 'Stebbins',
+ * } getPsalmMagic()
+ *
+ * @property array $simpleEqProp = ['odyssey' => 'best', 'touhou' => 'rulez']
+ * @property array{
+ *     key1: string,
+ *     key2: int,
+ * } $stuffSrc = ['key3' => true]
  */
 class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysUnitTest
 {
@@ -2210,6 +2223,23 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     //=============================
     // following are not implemented yet
     //=============================
+
+    public function provide_psalmMagicDoc()
+    {
+        $simpleEqMagic = $this->getSimpleEqMagic();
+        $simpleEqMagic['author'];
+        $stebbinsMapping = $this->getPsalmMagic();
+        $stebbinsMapping[''];
+        $simpleEqProp = $this->simpleEqProp;
+        $simpleEqProp[''];
+        $stuffSrc = $this->stuffSrc;
+        return [
+            [$simpleEqMagic, ['author', 'unpopularSong']],
+            [$simpleEqProp, ['odyssey', 'touhou']],
+            [$stebbinsMapping, ['Odyssey', 'Mortimer', 'Travis']],
+            [$stuffSrc, ['key1', 'key2', 'key3']],
+        ];
+    }
 
     public function provide_psalmFromArg()
     {

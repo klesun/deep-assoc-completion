@@ -992,9 +992,7 @@ class UsageResolverUnitTest implements IUsageBase
             'param1' => [
                 '_last_refresh' => 0,
                 '_snapshot' => [],
-                '_di' => [],
                 'country_id' => [],
-                'country' => [],
                 'city_id' => [],
                 'city' => [],
                 'last_update' => [],
@@ -1002,9 +1000,7 @@ class UsageResolverUnitTest implements IUsageBase
             'param2' => [
                 '_last_refresh' => 0,
                 '_snapshot' => [],
-                '_di' => [],
                 'country_id' => [],
-                'country' => [],
                 'city_id' => [],
                 'city' => [],
                 'last_update' => [],
@@ -1012,9 +1008,7 @@ class UsageResolverUnitTest implements IUsageBase
             'params3' =>
                 '_last_refresh' ?:
                 '_snapshot' ?:
-                '_di' ?:
                 'country_id' ?:
-                'country' ?:
                 'city_id' ?:
                 'city' ?:
                 'last_update',

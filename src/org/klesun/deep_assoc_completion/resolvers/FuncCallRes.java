@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocProperty;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FunctionReferenceImpl;
@@ -192,7 +193,9 @@ public class FuncCallRes extends Lang
     {
         DeepType type = new DeepType(call, PhpType.ARRAY);
         clses.fap(cls -> cls.getFields())
-            .flt(fld -> !fld.isConstant() && isStatic == fld.getModifier().isStatic())
+            .flt(fld -> !fld.isConstant())
+            .flt(fld -> !(fld instanceof PhpDocProperty))
+            .flt(fld -> isStatic == fld.getModifier().isStatic())
             .fch(fld -> type.addKey(fld.getName(), fld)
                 .addType(() -> opt(fld.getDefaultValue())
                     .cst(PhpExpression.class)
