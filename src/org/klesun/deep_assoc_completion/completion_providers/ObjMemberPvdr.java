@@ -20,6 +20,7 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.psalm.PsalmFuncInfo;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.*;
@@ -128,7 +129,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                 .fap(t -> makeMagicLookup(t)));
     }
 
-    private It<? extends LookupElement> resolveObj(PhpExpression ref, FuncCtx funcCtx)
+    private It<LookupElement> resolveObj(PhpExpression ref, FuncCtx funcCtx)
     {
         ExprCtx exprCtx = new ExprCtx(funcCtx, ref, 0);
         Mt mt = exprCtx.findExprType(ref).wap(Mt::new);
@@ -143,6 +144,19 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         );
     }
 
+    private It<LookupElement> getCustomDocOptions(Opt<PhpExpression> clsRefOpt)
+    {
+        return clsRefOpt
+            .fap(clsRef -> ArrCtorRes.filterObjPst(clsRef.getType())
+                .fap(pst -> ArrCtorRes.resolveIdeaTypeCls(pst, clsRef.getProject())))
+            .fap(clsPsi -> opt(clsPsi.getDocComment()))
+            .map(doc -> PsalmFuncInfo.parseClsDoc(doc))
+            .fap(clsInfo -> It.cnc(
+                It(clsInfo.magicMethods.keySet()).map(name -> makeBase(name + " ()", "from psalm")),
+                It(clsInfo.magicProps.keySet()).map(name -> makeBase(name, "from psalm"))
+            ));
+    }
+
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
@@ -153,32 +167,37 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             builtIns.add(kup);
             result.addElement(kup);
         });
+        Boolean hasBuiltIns = builtIns.any(b -> !"class".equals(b.getLookupString()));
+        Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()).arr());
         SearchCtx search = new SearchCtx(parameters)
             .setDepth(AssocKeyPvdr.getMaxDepth(parameters));
 
         Dict<String> times = new Dict<>(list());
-        It<? extends LookupElement> options = It(list());
-        Boolean hasBuiltIns = builtIns.any(b -> !"class".equals(b.getLookupString()));
+        It<LookupElement> deepOptions = It(list());
+        Opt<PhpExpression> clsRefOpt = opt(parameters.getPosition().getParent())
+            .fop(toCast(MemberReference.class))
+            .fop(mem -> opt(mem.getClassReference()));
         if (!hasBuiltIns || !parameters.isAutoPopup()) {
             FuncCtx funcCtx = new FuncCtx(search);
             hadBuiltIns = hasBuiltIns;
             // IDEA did not resolve the class on it's own - worth trying Deep resolution
-            options = opt(parameters.getPosition().getParent())
-                .fop(toCast(MemberReference.class))
-                .fap(mem -> opt(mem.getClassReference())
-                    // no point in deep resolution if it's an explicit class
-                    .flt(objRef -> !objRef.getText().equals("$this"))
-                    .fap(ref -> resolveObj(ref, funcCtx)));
+            deepOptions = clsRefOpt
+                // no point in deep resolution if it's an explicit class
+                .flt(objRef -> !objRef.getText().equals("$this"))
+                .fap(ref -> resolveObj(ref, funcCtx));
             times.put("iteratorDone", (System.nanoTime() - startTime) / 1000000000.0 + " " + search.getExpressionsResolved() + " ex.");
         }
-        Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()).arr());
-        options
+        // IDEA is not able to parse multi-line psalm phpdoc, so always adding these options if any
+        It<LookupElement> customDocOptions = getCustomDocOptions(clsRefOpt);
+        It<? extends LookupElement> opts = It.cnc(deepOptions, customDocOptions);
+        opts
             .flt(l -> !suggested.contains(l.getLookupString()))
             .fch((el, i) -> {
                 if (i == 0) {
                     times.put("firstSuggested", (System.nanoTime() - startTime) / 1000000000.0 + " " + search.getExpressionsResolved() + " ex.");
                 }
                 result.addElement(el);
+                suggested.add(el.getLookupString());
             });
         times.put("allSuggested", (System.nanoTime() - startTime) / 1000000000.0 + " " + search.getExpressionsResolved() + " ex.");
         result.addLookupAdvertisement("Resolved " + search.getExpressionsResolved() + " expressions: " +
