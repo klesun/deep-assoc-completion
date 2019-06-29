@@ -62,10 +62,12 @@ public class ArgCstPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        int pos = parameters.getEditor().getCaretModel().getOffset();
+        String ch = Tls.substr(parameters.getOriginalFile().getText(), pos - 1, pos);
         PsiElement caretLeaf = parameters.getPosition();
         It<LookupElement> suggestions = assertBuiltInFuncArg(parameters.getPosition())
             .fap(t -> t.nme((funcName, argOrder) -> {
-                if (parameters.isAutoPopup()) {
+                if (parameters.isAutoPopup() && list(" ", "(").contains(ch)) {
                     // skip all other contributors, since I enabled auto-popup in func args only for my
                     // particular case, not for hundreds of suggestions of all possible values in the scope
                     result.runRemainingContributors(parameters, otherSrc -> {});

@@ -787,6 +787,9 @@ $blancCls::;
 
 method_exists(new Blanc, '');
 
+debug_backtrace();
+json_encode([], );
+
 class A
 {
     public function getFoo($key) {
