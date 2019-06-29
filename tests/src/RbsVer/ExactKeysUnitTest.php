@@ -55,7 +55,7 @@ class ExactKeysUnitTest
                 'validatingCarrierFromItinerary',          'verifyConnectionTimes',
                 'transborderAvailabilityInfo',             'repeatedItinerary',
                 'contractInfo',                            'docSsrList',
-                'passengerTicketMapping',                  'forcedHistoricFare',
+                //'passengerTicketMapping',                  'forcedHistoricFare',
             ]],
         ];
     }
@@ -64,7 +64,7 @@ class ExactKeysUnitTest
     {
         $this->importPnr()['result']['pnrFields']['reservation']['passengers'][0][''];
         return [
-            [$this->importPnr()['result']['pnrFields']['reservation']['passengers'][0], ['ageGroup', 'firstName', 'title', 'nameNumber', 'lastName', 'age', 'success', 'rawNumber', 'dob', 'ptc', 'carrierText', 'parsedNumber', 'joinedFirstNames', '0']],
+            [$this->importPnr()['result']['pnrFields']['reservation']['passengers'][0], ['ageGroup', 'firstName', 'title', 'nameNumber', 'lastName', 'age', 'success', 'rawNumber', 'dob', 'ptc', 'carrierText', 'parsedNumber', 'joinedFirstNames']],
         ];
     }
 

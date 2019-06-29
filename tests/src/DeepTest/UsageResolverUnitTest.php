@@ -980,10 +980,6 @@ class UsageResolverUnitTest implements IUsageBase
         ];
     }
 
-    //=========================
-    // following not implemented yet
-    //========================
-
     public function provide_inferReturnStaticInDoc($param1, $param2, $param3)
     {
         \App\Models\City::get(1)->except($param1);
@@ -1024,6 +1020,10 @@ class UsageResolverUnitTest implements IUsageBase
                 'last_update',
         ];
     }
+
+    //=========================
+    // following not implemented yet
+    //========================
 
     //============================
     // TODO: testify following
