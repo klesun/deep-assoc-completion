@@ -202,16 +202,27 @@ public class PsalmRes {
     // following functions are entry points
     //====================================================
 
+    private static It<DeepType> infoToDeep(PsalmFuncInfo psalmInfo, PsiElement goToPsi, IExprCtx ctx)
+    {
+        return psalmInfo.returnType.fap(psalmt -> {
+            Map<String, MemIt<DeepType>> gents = getGenericTypes(psalmInfo, ctx);
+            return psalmToDeep(psalmt, goToPsi, gents);
+        });
+    }
+
     public static It<DeepType> resolveReturn(PhpDocReturnTag docTag, IExprCtx ctx)
     {
         return opt(docTag.getParent())
             .cst(PhpDocComment.class)
             .map(docComment -> PsalmFuncInfo.parse(docComment))
-            .fap(psalmInfo -> psalmInfo.returnType
-                .fap(psalmt -> {
-                    Map<String, MemIt<DeepType>> gents = getGenericTypes(psalmInfo, ctx);
-                    return psalmToDeep(psalmt, docTag, gents);
-                }));
+            .fap(psalmInfo -> infoToDeep(psalmInfo, docTag, ctx));
+    }
+
+    public static It<DeepType> resolveMagicReturn(PhpDocComment docComment, String methName, IExprCtx ctx)
+    {
+        PsalmFuncInfo.PsalmClsInfo clsInfo = PsalmFuncInfo.parseClsDoc(docComment);
+        return opt(clsInfo.magicMethods.get(methName))
+            .fap(psalmInfo -> infoToDeep(psalmInfo, docComment, ctx));
     }
 
     public static It<DeepType> resolveVar(PhpDocComment docComment, String varName, IExprCtx ctx)

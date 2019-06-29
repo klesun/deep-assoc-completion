@@ -2228,6 +2228,7 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
     {
         $simpleEqMagic = $this->getSimpleEqMagic();
         $simpleEqMagic['author'];
+        // TODO: make completion/goto work as well on the psalmed methods
         $stebbinsMapping = $this->getPsalmMagic();
         $stebbinsMapping[''];
         $simpleEqProp = $this->simpleEqProp;

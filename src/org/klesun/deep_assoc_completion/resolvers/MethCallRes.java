@@ -9,15 +9,13 @@ import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
-import com.jetbrains.php.lang.psi.elements.Function;
-import com.jetbrains.php.lang.psi.elements.Method;
-import com.jetbrains.php.lang.psi.elements.MethodReference;
-import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionArgument;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionScalarArgument;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedReturnValuesIndex;
+import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -219,6 +217,12 @@ public class MethCallRes extends Lang
             ));
     }
 
+    private It<DeepType> resolveMagicMethCustomDocFormat(PhpClass clsPsi, String methName)
+    {
+        return opt(clsPsi.getDocComment())
+            .fap(doc -> PsalmRes.resolveMagicReturn(doc, methName, ctx));
+    }
+
     public static F<IExprCtx, It<DeepType>> findMethRetType(Method meth)
     {
         return (IExprCtx funcCtx) -> {
@@ -259,18 +263,18 @@ public class MethCallRes extends Lang
             .flt(m -> Objects.equals(m.getName(), func));
     }
 
-    private It<Method> findReferenced(MethodReferenceImpl fieldRef)
+    private It<Method> findReferenced(@Nullable String methName, MemIt<PhpClass> clses)
     {
-        It<Method> mit = new MemRes(ctx).resolveCls(fieldRef)
+        It<Method> mit = clses
             .fap(cls -> cls.getMethods())
-            .flt(f -> f.getName().equals(fieldRef.getName()));
+            .flt(f -> f.getName().equals(methName));
         return mit;
     }
 
-    private It<Method> resolveMethodFromCall(MethodReferenceImpl call)
+    private It<Method> resolveMethodFromCall(MethodReferenceImpl call, MemIt<PhpClass> clses)
     {
         return It.frs(
-            () -> findReferenced(call),
+            () -> findReferenced(call.getName(), clses),
             () -> It(call.multiResolve(false))
                 .fap(v -> opt(v.getElement()))
                 .cst(Method.class),
@@ -281,15 +285,18 @@ public class MethCallRes extends Lang
     public It<DeepType> resolveCall(MethodReferenceImpl funcCall)
     {
         IExprCtx funcCtx = ctx.subCtxDirect(funcCall);
-        It<DeepType> declTit = resolveMethodFromCall(funcCall)
+        MemIt<PhpClass> clses = new MemRes(ctx).resolveCls(funcCall).unq().mem();
+
+        It<DeepType> noDeclTit = UsageBasedTypeResolver.getCallFqn(funcCall)
+            .fap(fqn -> findFqnMetaDefRetType(fqn, ctx));
+        It<DeepType> asCustomFormatClsDoc = opt(funcCall.getName())
+            .fap(nme -> clses.fap(cls -> resolveMagicMethCustomDocFormat(cls, nme)));
+        It<DeepType> declTit = resolveMethodFromCall(funcCall, clses)
             .fap(func -> It.cnc(
                 findMethRetType(func).apply(funcCtx),
                 findBuiltInRetType(func, funcCtx, funcCall)
             ));
 
-        It<DeepType> noDeclTit = UsageBasedTypeResolver.getCallFqn(funcCall)
-            .fap(fqn -> findFqnMetaDefRetType(fqn, ctx));
-
-        return It.cnc(noDeclTit, declTit);
+        return It.cnc(noDeclTit, asCustomFormatClsDoc, declTit);
     }
 }

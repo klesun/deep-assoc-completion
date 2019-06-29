@@ -12,7 +12,9 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.klesun.lang.Lang.*;
 
@@ -95,10 +97,41 @@ public class PsalmFuncInfo {
             .fap(t -> assertTplTag(t)).arr();
     }
 
+    public static PsalmClsInfo parseClsDoc(PhpDocComment doc)
+    {
+        PsalmClsInfo clsInfo = new PsalmClsInfo();
+        clsInfo.generics = DocParamRes.getDocCommentText(doc)
+            .fap(txt -> getRawTags(txt))
+            .fap(t -> assertTplTag(t)).arr();
+        for (PsalmDocTag psalmTag: getPsalmTags(doc)) {
+            if (psalmTag.tagName.equals("property")) {
+                Tls.regex("\\s*\\$(\\w+)\\s*(.*)", psalmTag.textLeft).thn(m -> {
+                    String propName = m.get(0);
+                    String textLeft = m.get(1);
+                    PsalmDocTag newPsalm = new PsalmDocTag(
+                        psalmTag.tagName, psalmTag.psalmType, textLeft
+                    );
+                    clsInfo.magicProps.put(propName, newPsalm);
+                });
+            } else if (psalmTag.tagName.equals("method")) {
+                Tls.regex("\\s*(\\w+)(.*)", psalmTag.textLeft).thn(m -> {
+                    String methName = m.get(0);
+                    String textLeft = m.get(1);
+                    L<ArgDef> args = L(); // TODO: parse!
+                    PsalmFuncInfo funcInfo = new PsalmFuncInfo(
+                        doc, clsInfo.generics, L(), args, som(psalmTag.psalmType)
+                    );
+                    clsInfo.magicMethods.put(methName, funcInfo);
+                });
+            }
+        }
+        return clsInfo;
+    }
+
     private static L<GenericDef> getClassGenerics(PhpClass clsPsi)
     {
         return opt(clsPsi.getDocComment())
-            .fap(doc -> getGenerics(doc))
+            .fap(doc -> parseClsDoc(doc).generics)
             .arr();
     }
 
@@ -172,5 +205,11 @@ public class PsalmFuncInfo {
             this.psalmType = psalmType;
             this.textLeft = textLeft;
         }
+    }
+
+    public static class PsalmClsInfo {
+        public L<GenericDef> generics = list();
+        public Map<String, PsalmFuncInfo> magicMethods = new LinkedHashMap<>();
+        public Map<String, PsalmDocTag> magicProps = new LinkedHashMap<>();
     }
 }
