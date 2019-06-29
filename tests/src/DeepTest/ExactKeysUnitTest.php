@@ -1,7 +1,7 @@
 <?php
 namespace DeepTest;
 
-use App\Models\City;
+use App\Models\City2;
 use Lib\ParamValidation\DictP;
 use Lib\ParamValidation\ListP;
 use Lib\ParamValidation\StringP;
@@ -1721,10 +1721,10 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
 
     public function provideInheritedFuncMetaFqn($param)
     {
-        $result = (new City())->first('cities', $param);
+        $result = (new City2())->first('cities', $param);
         $result['retrieval_time'];
         return [
-            [$result, ['retrieval_time', 'id', 'name', '0']],
+            [$result, ['retrieval_time', 'id', 'name']],
         ];
     }
 

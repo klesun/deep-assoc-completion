@@ -1,7 +1,7 @@
 <?php
 namespace DeepTest;
 
-use App\Models\City;
+use App\Models\City2;
 use Library\Book;
 use Library\Child;
 
@@ -876,8 +876,8 @@ class UsageResolverUnitTest implements IUsageBase
 
     public function provideInheritedFuncMetaFqn($param)
     {
-        (new City())->first('cities', $param);
-        (new City())->first('cities', [
+        (new City2())->first('cities', $param);
+        (new City2())->first('cities', [
             '' => 1,
         ]);
         return [
@@ -987,7 +987,7 @@ class UsageResolverUnitTest implements IUsageBase
     public function provide_inferReturnStaticInDoc($param1, $param2, $param3)
     {
         \App\Models\City::get(1)->except($param1);
-        \App\Models\City::get(1)->except(['']);
+        \App\Models\City::get(1)->except(['' => '']);
         (new \App\Models\City())->except($param2);
         (new \App\Models\City())->except(['']);
         get_object_vars(\App\Models\City::get(1))[$param3];

@@ -56,8 +56,8 @@ namespace PHPSTORM_META {
         'pricePerLitre' => '1.12',
     ]);
 
-    expectedArguments(\App\Models\City::first(), 1, ['city_id' => 1, 'city' => 'world', 'country_id' => 1]);
-    expectedReturnValues(\App\Models\City::first(), ['retrieval_time' => 0.024, 'id' => 432526, 'name' => 'Tokyo']);
+    expectedArguments(\App\Models\City2::first(), 1, ['city_id' => 1, 'city' => 'world', 'country_id' => 1]);
+    expectedReturnValues(\App\Models\City2::first(), ['retrieval_time' => 0.024, 'id' => 432526, 'name' => 'Tokyo']);
 
     // by King2500
     // key value arrays

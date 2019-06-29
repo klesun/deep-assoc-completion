@@ -30,10 +30,21 @@ public class ArrCtorRes extends Lang
         this.ctx = ctx;
     }
 
+    public static Opt<PhpType> filterObjPst(PhpType pst)
+    {
+        if (pst == null) {
+            return non();
+        }
+        PhpType filtered = pst.filterUnknown().filterPrimitives()
+            .filterNull().filterMixed().filter(PhpType.OBJECT);
+        return filtered.isEmpty() ? non() : som(filtered);
+    }
+
     public static Set<String> ideaTypeToFqn(PhpType ideaType)
     {
-        return new HashSet<>(opt(ideaType).def(PhpType.EMPTY).filterUnknown()
-            .filterNull().filterMixed().filter(PhpType.OBJECT).getTypes());
+        It<String> types = filterObjPst(ideaType)
+            .fap(pst -> It(pst.getTypes()));
+        return new HashSet<>(types.arr());
     }
 
     public static It<PhpClass> resolveIdeaTypeCls(PhpType ideaType, Project project)

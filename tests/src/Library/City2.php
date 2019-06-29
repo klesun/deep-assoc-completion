@@ -8,7 +8,7 @@ class Model
     }
 }
 
-class City extends Model
+class City2 extends Model
 {
     public $city_id;
     public $city;

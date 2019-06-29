@@ -41,8 +41,9 @@ public class MiscRes extends Lang
             // new static()
             () -> opt(clsRefPsi)
                 .flt(ref -> ref.getText().equals("static")).itr()
-                .fop(ref -> Opt.fst(
-                    () -> ctx.getSelfType(),
+                .fap(ref -> It.frs(
+                    () -> ctx.getSelfType().fap(pst -> ArrCtorRes.filterObjPst(pst)),
+                    () -> ctx.getThisType().fap(t -> ArrCtorRes.filterObjPst(t.briefType)),
                     () -> Tls.findParent(ref, PhpClass.class, a -> true)
                         .map(cls -> cls.getType())
                 )),
