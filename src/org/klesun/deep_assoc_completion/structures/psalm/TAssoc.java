@@ -10,11 +10,13 @@ public class TAssoc implements IType
 {
     final public LinkedHashMap<String, IType> keys;
     final public Map<String, List<String>> keyToComments;
+    final public String unparsed;
 
-    public TAssoc(LinkedHashMap<String, IType> keys, Map<String, List<String>> keyToComments)
+    public TAssoc(LinkedHashMap<String, IType> keys, Map<String, List<String>> keyToComments, String unparsed)
     {
         this.keys = keys;
         this.keyToComments = keyToComments;
+        this.unparsed = unparsed;
     }
 
     @Override

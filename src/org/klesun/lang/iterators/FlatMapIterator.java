@@ -13,13 +13,8 @@ public class FlatMapIterator<A, B> implements Iterator<B> {
     private int i = 0;
 
     public FlatMapIterator(Iterator<A> sourceIt, Lang.F2<A, Integer, Iterable<B>> flatten) {
-        // hundreds of thousands of types come here. this is probably wrong and should be fixed
         this.iterables = It(() -> sourceIt)
-            .map((el, i) -> flatten.apply(el,i))
-            // this does not seem a good solution since it slows tests
-            // it would be better if there were no duplicates in the first place
-            .unq(ble -> ble instanceof It ? ((It<B>) ble).getSourceHash() : ble)
-            ;
+            .map((el, i) -> flatten.apply(el,i));
     }
 
     private Iterator<Iterator<B>> getIterators() {

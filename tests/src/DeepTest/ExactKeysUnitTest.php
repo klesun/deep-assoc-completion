@@ -2244,6 +2244,38 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    /**
+     * @param array{
+     *     key1: string,
+     *     key2: string,
+     *     key3 string,
+     * } $arg
+     * @param array{
+     *     healer: 'Eirin',
+     *     gamer: 'Kaguya',
+     *     players: array{
+     *         main: 'Reimu',
+     *         middle: 'Marisa',
+     *         brokenKey 'very broken';
+     *     },
+     *     stages: array{
+     *         first: 'nightbug girl',
+     *         last: 'Mokou',
+     *     },
+     * } $arg2
+     */
+    public function provide_psalmWithMistakes($arg, $arg2)
+    {
+        $arg[''];
+        $arg2[''];
+        return [
+            [$arg, ['key1', 'key2']],
+            [$arg2, ['healer', 'gamer', 'players', 'stages']],
+            [$arg2['players'], ['main', 'middle']],
+            [$arg2['stages'], ['first', 'last']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

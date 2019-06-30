@@ -8,7 +8,6 @@ import org.klesun.lang.Tls;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import static org.klesun.lang.Lang.*;
@@ -84,32 +83,6 @@ public class PsalmTypeExprParser
         return som(types);
     }
 
-    private Opt<T2<LinkedHashMap<String, IType>, Map<String, List<String>>>> parseKeys()
-    {
-        LinkedHashMap<String, IType> keys = new LinkedHashMap<>();
-        LinkedHashMap<String, List<String>> keyToComments = new LinkedHashMap<>();
-        while (this.unprefix("\\s*(\\w+)\\s*:\\s*")) {
-            String keyName = this.lastMatch.get(1);
-            Opt<? extends IType> typeOpt = parseMultiValue();
-            if (typeOpt.has()) {
-                keys.put(keyName, typeOpt.unw());
-                if (!unprefix("\\s*\\,\\s*")) {
-                    break; // end of array, since no coma
-                }
-                while (this.unprefix("\\s*\\/\\/\\s*(.*?)\\s*\\n\\s*")) {
-                    String comment = lastMatch.get(1);
-                    if (!keyToComments.containsKey(keyName)) {
-                        keyToComments.put(keyName, new ArrayList<>());
-                    }
-                    keyToComments.get(keyName).add(comment);
-                }
-            } else {
-                return non();
-            }
-        }
-        return som(T2(keys, keyToComments));
-    }
-
     private Opt<String> parseString(char quote)
     {
         boolean escape = false;
@@ -131,6 +104,62 @@ public class PsalmTypeExprParser
         return non();
     }
 
+    private String skipTillClosed(char openCh, char closeCh)
+    {
+        int level = 1;
+        int start = this.offset;
+        for (; this.offset < this.text.length(); ++this.offset) {
+            char ch = this.text.charAt(this.offset);
+            if (ch == openCh) {
+                ++level;
+            } else if (ch == closeCh) {
+                --level;
+                if (level <= 0) {
+                    String closed = Tls.substr(this.text, start, this.offset);
+                    ++this.offset;
+                    return closed;
+                }
+            } else if (ch == '"' || ch == '\'') {
+                parseString(ch);
+            }
+        }
+        String closed = Tls.substr(this.text, start);
+        this.offset = this.text.length();
+        return closed;
+    }
+
+    private Opt<TAssoc> parseAssocKeys()
+    {
+        LinkedHashMap<String, IType> keys = new LinkedHashMap<>();
+        LinkedHashMap<String, List<String>> keyToComments = new LinkedHashMap<>();
+        while (this.unprefix("\\s*(\\w+)\\s*:\\s*")) {
+            String keyName = this.lastMatch.get(1);
+            Opt<? extends IType> typeOpt = parseMultiValue();
+            if (typeOpt.has()) {
+                keys.put(keyName, typeOpt.unw());
+                if (!unprefix("\\s*\\,\\s*")) {
+                    break; // end of array, since no coma
+                }
+                while (this.unprefix("\\s*\\/\\/\\s*(.*?)\\s*\\n\\s*")) {
+                    String comment = lastMatch.get(1);
+                    if (!keyToComments.containsKey(keyName)) {
+                        keyToComments.put(keyName, new ArrayList<>());
+                    }
+                    keyToComments.get(keyName).add(comment);
+                }
+            } else {
+                break;
+            }
+        }
+        unprefix(",\\s*"); // optional trailing coma
+        if (unprefix("\\s*}\\s*")) {
+            return som(new TAssoc(keys, keyToComments, ""));
+        } else {
+            String unparsed = skipTillClosed('{', '}');
+            return som(new TAssoc(keys, keyToComments, unparsed));
+        }
+    }
+
     private Opt<? extends IType> parseSingleValue()
     {
         this.unprefix("\\s+");
@@ -143,12 +172,7 @@ public class PsalmTypeExprParser
                 .map(generics -> new TClass(fqn, generics))
                 .flt(t -> unprefix("\\s*>\\s*"));
         } else if (this.unprefix("array\\s*\\{\\s*")) {
-            parsed = parseKeys()
-                .map(t -> t.nme((keys, keyToComments) -> new TAssoc(keys, keyToComments)))
-                .flt(t -> {
-                    unprefix(",\\s*"); // optional trailing coma
-                    return unprefix("\\s*}\\s*");
-                });
+            parsed = parseAssocKeys();
         } else if (this.unprefix("([a-zA-Z\\\\_][a-zA-Z\\\\_0-9]*)\\s*")) {
             // should be put after SomeClass::class check when it is implemented
             String fqn = this.lastMatch.get(1);
@@ -199,8 +223,6 @@ public class PsalmTypeExprParser
 
     public static Opt<T2<IType, String>> parse(String typeText)
     {
-        // TODO: would be nice to return what we managed to parse so far at least,
-        //  that would help user to understand where is the mistake in his definition
         PsalmTypeExprParser self = new PsalmTypeExprParser(typeText);
         return self.parseMultiValue()
             .map(t -> T2(t, self.getTextLeft()));

@@ -156,7 +156,6 @@ public class Tls extends Lang
         return findChildren(parent, cls, (a) -> true);
     }
 
-    // TODO: rename this one to "regex" and the other one to "regexNoFull"
     public static Opt<L<String>> regexWithFull(String patternText, String subjectText, int flags)
     {
         List<String> result = list();
