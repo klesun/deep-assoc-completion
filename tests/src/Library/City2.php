@@ -1,14 +1,14 @@
 <?php
 namespace App\Models;
 
-class Model
+class Model2
 {
     public static function first($table, $params)
     {
     }
 }
 
-class City2 extends Model
+class City2 extends Model2
 {
     public $city_id;
     public $city;

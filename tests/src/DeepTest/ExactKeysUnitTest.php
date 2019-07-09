@@ -2276,6 +2276,24 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    public function provide_builtIn_key()
+    {
+        $fields = [
+            'birth_dt' => [
+                'local' => '2019-05-18 22:13:24',
+                'utc' => '2019-05-18 20:13:24',
+            ],
+        ];
+        $keyField = key($fields);
+        $valueField = current($fields);
+        $keyField === '';
+        $valueField[''];
+        return [
+            [array_flip([$keyField]), ['birth_dt']],
+            [$valueField, ['local', 'utc']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

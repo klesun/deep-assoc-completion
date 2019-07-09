@@ -293,6 +293,10 @@ public class FuncCallRes extends Lang
                     .map(keyName -> new DeepType(kt.definition, PhpType.STRING, keyName)))
                 .wap(types -> new Mt(types))));
             return list(arrt);
+        } else if (name.equals("key")) {
+            return callCtx.getArgMt(0)
+                .types.fap(t -> t.keys)
+                .fap(k -> k.keyType.getTypes());
         } else if (name.equals("func_get_args")) {
             return ctx.func().getArg(new ArgOrder(0, true)).itr().fap(a -> a.types);
         } else if (name.equals("func_get_arg")) {
