@@ -91,7 +91,7 @@ public class MysqliRes
     /** @param mysqliResultExpr - Nullable */
     public It<DeepType> fetch_all(PhpExpression mysqliResultExpr, L<PsiElement> callArgs)
     {
-        if (!callArgs.gat(0).any(p -> p.getText().equals("MYSQLI_ASSOC"))) {
+        if (!callArgs.gat(0).any(p -> p.getText().equals("MYSQLI_ASSOC") || p.getText().equals("PDO::FETCH_ASSOC"))) {
             return It.non();
         }
         DeepType arrType = opt(mysqliResultExpr)
@@ -140,7 +140,8 @@ public class MysqliRes
                 || clsNme.equals("mysqli_result") && meth.getName().equals("fetch_assoc")
         ) {
             return new MysqliRes(ctx).fetch_assoc(methCall.getClassReference());
-        } else if (clsNme.equals("mysqli_result") && meth.getName().equals("fetch_all")
+        } else if (clsNme.equals("PDOStatement") && meth.getName().equals("fetchAll")
+                || clsNme.equals("mysqli_result") && meth.getName().equals("fetch_all")
         ) {
             return new MysqliRes(ctx).fetch_all(methCall.getClassReference(), L(methCall.getParameters()));
         } else if (clsNme.equals("mysqli") && meth.getName().equals("query")) {
