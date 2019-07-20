@@ -10,7 +10,7 @@ Steps to compile plugin into a `.jar` follow:
 - Start creating a new project in _[Intelliji Idea](https://www.jetbrains.com/idea/)_.
 - Select `Intelliji Platform Plugin`.
 - Select a _phpstorm_ installation directory as `Project SDK` (java version is 8).
-- Select phpstorm-deep-keys project folder as `Project location`.
+- Select `deep-assoc-completion` project folder as `Project location`.
 - In `Project Structure -> Libraries` add `php.jar` and `php-openapi.jar` from `YourPhpStormDirectory/plugins/php/lib/`.
 - In `Project Structure -> Modules -> Dependencies` set `Scope` of `php-openapi` to `Provided`.
 
