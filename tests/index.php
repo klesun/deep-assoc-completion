@@ -676,6 +676,34 @@ class DeepKeysTest
         // don't have 'key3' used in the function
         $mapped = array_map($mapping, $records);
     }
+
+
+    /**
+     * @param array $attributes = [
+     *     'namespace' => '',
+     *     'slug' => '',
+     *     'name' => '',
+     *     'is_localized' => false,
+     *     'is_nullable' => false,
+     *     'is_to_be_changed' => false,
+     *     'default_value' => null,
+     *     'validation_rules' => [],
+     *     'field_type' => \App\Enums\SettingFieldType::getInstance(),
+     *     'options' => []
+     * ]
+     * @param callable $callback
+     */
+    public static function group(array $attributes, callable $callback): void
+    {
+    }
+
+    public static function doStuff()
+    {
+        static::group([
+            // should not show _string_ in each key type
+            '' => '',
+        ]);
+    }
 }
 
 function main()

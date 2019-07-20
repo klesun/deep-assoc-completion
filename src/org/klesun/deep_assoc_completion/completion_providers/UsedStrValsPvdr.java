@@ -48,7 +48,9 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         return tit.unq(t -> t.stringValue).fap((t, i) -> It.cnc(
             opt(t.stringValue)
                 .flt(strVal -> !t.cstName.has() || !t.isNumber)
-                .map(strVal -> makeLookupBase(strVal, t.briefType + ""))
+                // could actually make some mechanism to pass optional context type info, like
+                // value in case it is array key, or signatures when it is method name...
+                .map(strVal -> makeLookupBase(strVal, "from usage"))
                 .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 100 - i)),
             t.cstName
                 .map(cstName -> makeLookupBase(cstName, t.briefType + "")
