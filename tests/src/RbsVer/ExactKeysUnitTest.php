@@ -55,7 +55,7 @@ class ExactKeysUnitTest
                 'validatingCarrierFromItinerary',          'verifyConnectionTimes',
                 'transborderAvailabilityInfo',             'repeatedItinerary',
                 'contractInfo',                            'docSsrList',
-                //'passengerTicketMapping',                  'forcedHistoricFare',
+                'passengerTicketMapping',                  'forcedHistoricFare',
             ]],
         ];
     }

@@ -83,7 +83,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
 
     private static It<DeepType> resolveUsedValues(StringLiteralExpression lit, IExprCtx funcCtx)
     {
-        return new UsageBasedTypeResolver(funcCtx).findExprTypeFromUsage(lit);
+        return new UsageBasedTypeResolver(funcCtx).resolve(lit);
     }
 
     /*

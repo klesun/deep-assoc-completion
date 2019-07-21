@@ -2,12 +2,20 @@ package org.klesun.deep_assoc_completion.helpers;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.deep_assoc_completion.structures.KeyType;
-import org.klesun.lang.*;
-import static org.klesun.lang.Lang.*;
+import org.klesun.lang.It;
+import org.klesun.lang.L;
+import org.klesun.lang.MemIt;
+import org.klesun.lang.Tls;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import static org.klesun.lang.Lang.*;
 
 /**
  * this data structure represents a list of
@@ -41,10 +49,10 @@ public class Mt
 
     public static DeepType getInArraySt(It<DeepType> types, PsiElement call)
     {
-        DeepType result = new DeepType(call, PhpType.ARRAY);
-        result.addKey(KeyType.integer(call), call)
+        Key keyEntry = new Key(KeyType.integer(call), call)
             .addType(Tls.onDemand(() -> new Mt(types)), PhpType.MIXED);
-        return result;
+        return new Build(call, PhpType.ARRAY)
+            .keys(som(keyEntry)).get();
     }
 
     /** transforms type T to T[] */
@@ -91,7 +99,7 @@ public class Mt
         return getKey(nullKey);
     }
 
-    public static It<DeepType> getPropOfName(It<DeepType.Key> allProps, String keyName)
+    public static It<DeepType> getPropOfName(It<Key> allProps, String keyName)
     {
         return allProps
             .flt(k -> keyName == null || k.keyType.getTypes()
@@ -152,7 +160,7 @@ public class Mt
             .fap(k -> k.keyType.getNames()).unq();
     }
 
-    public It<DeepType.Key> getAssignedProps()
+    public It<Key> getAssignedProps()
     {
         return types.fap(t -> t.props.vls());
     }

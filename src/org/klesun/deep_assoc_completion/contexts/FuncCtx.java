@@ -7,6 +7,8 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.structures.ArgOrder;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.deep_assoc_completion.structures.Build;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.lang.*;
 
 import java.util.HashMap;
@@ -98,14 +100,12 @@ public class FuncCtx extends Lang implements IFuncCtx
             int index = orderObj.order;
             return argGetters.gat(index).map(argGetter -> getCached(index, argGetter));
         } else {
-            return uniqueRef.map(ref -> {
-                DeepType allArgs = new DeepType(ref, PhpType.ARRAY);
-                argGetters.sub(orderObj.order)
+            return uniqueRef.map(ref -> new Build(ref, PhpType.ARRAY)
+                .keys(argGetters.sub(orderObj.order)
                     .map((argGetter, i) -> getCached(i, argGetter))
-                    .fch((mt, i) -> allArgs.addKey(i + "", ref)
-                        .addType(() -> mt, mt.getIdeaTypes().fst().def(PhpType.EMPTY)));
-                return new Mt(list(allArgs));
-            });
+                    .map((mt, i) -> new Key(i + "", ref)
+                        .addType(() -> mt, mt.getIdeaTypes().fst().def(PhpType.EMPTY))))
+                .get().mt());
         }
     }
 

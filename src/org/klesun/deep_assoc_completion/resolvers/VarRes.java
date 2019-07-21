@@ -16,9 +16,7 @@ import org.klesun.deep_assoc_completion.helpers.ScopeFinder;
 import org.klesun.deep_assoc_completion.resolvers.var_res.ArgRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
-import org.klesun.deep_assoc_completion.structures.Assign;
-import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.KeyType;
+import org.klesun.deep_assoc_completion.structures.*;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
@@ -49,12 +47,13 @@ public class VarRes
         return regexTypes
             .fop(strt -> opt(strt.stringValue)
                 .map(s -> parseRegexNameCaptures(s))
-                .map(names -> {
-                    DeepType t = new DeepType(strt.definition, PhpType.ARRAY);
-                    names.forEach(n -> t.addKey(n, strt.definition)
-                        .addType(() -> new Mt(list(new DeepType(strt.definition, PhpType.STRING))), PhpType.STRING));
-                    return t;
-                }));
+                .map(names -> new Build(strt.definition, PhpType.ARRAY)
+                    .keys(names.map(n -> {
+                        DeepType valt = new DeepType(strt.definition, PhpType.STRING);
+                        return new Key(n, strt.definition)
+                            .addType(() -> new Mt(list(valt)), PhpType.STRING);
+                    }))
+                    .get()));
     }
 
     // array_unshift($itin, ['from' => 'KIV', 'to' => 'RIX']);

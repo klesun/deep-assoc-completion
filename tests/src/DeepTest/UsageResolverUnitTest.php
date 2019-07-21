@@ -990,7 +990,7 @@ class UsageResolverUnitTest implements IUsageBase
         get_object_vars(\App\Models\City::get(1))[''];
         return [
             'param1' => [
-                '_last_refresh' => 0,
+                '_last_refresh' => [],
                 '_snapshot' => [],
                 'country_id' => [],
                 'city_id' => [],

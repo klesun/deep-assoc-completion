@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
@@ -16,6 +17,7 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.icons.DeepIcons;
+import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
 import javax.swing.*;

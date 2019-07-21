@@ -5,9 +5,7 @@ import com.jetbrains.php.lang.psi.elements.Function;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.KeyType;
-import org.klesun.deep_assoc_completion.structures.Mkt;
+import org.klesun.deep_assoc_completion.structures.*;
 import org.klesun.lang.It;
 import org.klesun.lang.Tls;
 
@@ -154,16 +152,16 @@ public class ArgTypeDefs
         } else if ("curl_setopt".equals(name) && argOrder == 1) {
             return cst(ctx, Cst.CURLOPT_().map(cst -> cst.a));
         } else if ("curl_setopt_array".equals(name) && argOrder == 1) {
-            DeepType arrt = new DeepType(builtInFunc, PhpType.ARRAY, false);
-            Cst.CURLOPT_().fch(t -> t.nme((cstName, getType, descr) -> {
-                Mkt.cst(ctx, som(cstName)).fch(cst -> {
+            It<Key> keyEntries = Cst.CURLOPT_().fap(t -> t.nme((cstName, getType, descr) -> {
+                return Mkt.cst(ctx, som(cstName)).map(cst -> {
                     Mt valmt = getType.apply(cst.definition);
-                    arrt.addKey(KeyType.mt(som(cst), cst.definition))
+                    return new Key(KeyType.mt(som(cst), cst.definition), cst.definition)
                         .addType(Granted(valmt), valmt.getIdeaTypes().fst().def(PhpType.UNSET))
                         .addComments(opt(descr).flt(c -> c.length() > 0));
                 });
             }));
-            return som(arrt);
+            return new Build(builtInFunc, PhpType.ARRAY)
+                .isExactPsi(false).keys(keyEntries).itr();
         } else if ("file_put_contents".equals(name) && argOrder == 2) {
             return cst(ctx, list(
                 "FILE_USE_INCLUDE_PATH", "FILE_IGNORE_NEW_LINES",

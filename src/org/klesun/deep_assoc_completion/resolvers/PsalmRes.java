@@ -6,7 +6,9 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.deep_assoc_completion.structures.psalm.*;
 import org.klesun.lang.It;
@@ -50,11 +52,11 @@ public class PsalmRes {
             || cls.fqn.equals("SplQueue") || cls.fqn.equals("\\SplQueue");
     }
 
-    private static It<DeepType.Key> genericsToArrKeys(List<IType> defs, PsiElement goToPsi, Map<String, MemIt<DeepType>> generics)
+    private static It<Key> genericsToArrKeys(List<IType> defs, PsiElement goToPsi, Map<String, MemIt<DeepType>> generics)
     {
         if (defs.size() == 1) {
             KeyType keyt = KeyType.integer(goToPsi);
-            DeepType.Key keyObj = new DeepType.Key(keyt, goToPsi);
+            Key keyObj = new Key(keyt, goToPsi);
             keyObj.addType(() -> {
                 It<DeepType> tit = psalmToDeep(defs.get(0), goToPsi, generics);
                 return new Mt(tit);
@@ -63,7 +65,7 @@ public class PsalmRes {
         } else if (defs.size() == 2) {
             It<DeepType> kit = psalmToDeep(defs.get(1), goToPsi, generics);
             KeyType keyt = KeyType.mt(kit, goToPsi);
-            DeepType.Key keyObj = new DeepType.Key(keyt, goToPsi);
+            Key keyObj = new Key(keyt, goToPsi);
             keyObj.addType(() -> {
                 It<DeepType> tit = psalmToDeep(defs.get(1), goToPsi, generics);
                 return new Mt(tit);
@@ -81,16 +83,17 @@ public class PsalmRes {
             return genOpt.fap(a -> a);
         } else {
             PhpType phpType = new PhpType().add(cls.fqn);
-            DeepType deep = new DeepType(goToPsi, phpType, false);
-            deep.generics = Lang.It(cls.generics)
+            L<Mt> genMts = Lang.It(cls.generics)
                 .map(psalm -> psalmToDeep(psalm, goToPsi, generics))
                 .map(tit -> new Mt(tit))
                 .arr();
+            It<Key> keyEntries = It.non();
             if (isArrayLike(cls)) {
-                genericsToArrKeys(cls.generics, goToPsi, generics)
-                    .fch(k -> deep.addKey(k));
+                keyEntries = genericsToArrKeys(cls.generics, goToPsi, generics);
             }
-            return It(som(deep));
+            return new Build(goToPsi, phpType)
+                .isExactPsi(false).generics(genMts)
+                .keys(keyEntries).itr();
         }
     }
 
@@ -100,19 +103,21 @@ public class PsalmRes {
             non()
             , Tls.cast(TAssoc.class, psalmType)
                 .map(assoc -> {
-                    DeepType assoct = new DeepType(goToPsi, PhpType.ARRAY, false);
-                    for (Map.Entry<String, IType> e: assoc.keys.entrySet()) {
+                    It<Key> keyEntries = It(assoc.keys.entrySet()).map(e -> {
                         String keyName = e.getKey();
                         IType psalmVal = e.getValue();
                         Mt valMt = new Mt(psalmToDeep(psalmVal, goToPsi, generics));
                         PhpType ideaType = valMt.getIdeaTypes().fst().def(PhpType.UNSET);
                         List<String> comments = opt(assoc.keyToComments.get(keyName))
                             .fap(c -> c).flt(c -> !c.trim().equals("")).map(c -> "// " + c).arr();
-                        assoct.addKey(keyName, goToPsi)
+                        return new Key(keyName, goToPsi)
                             .addType(Granted(valMt), ideaType)
                             .addComments(comments);
-                    }
-                    return assoct;
+                    });
+                    return new Build(goToPsi, PhpType.ARRAY)
+                        .isExactPsi(false)
+                        .keys(keyEntries)
+                        .get();
                 })
             , Tls.cast(TClass.class, psalmType)
                 .fap(cls -> psalmClsToDeep(cls, goToPsi, generics))

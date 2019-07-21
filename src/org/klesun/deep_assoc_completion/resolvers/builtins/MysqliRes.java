@@ -11,7 +11,11 @@ import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
+import org.klesun.lang.It;
+import org.klesun.lang.L;
 import org.klesun.lang.*;
 import org.klesun.lang.iterators.RegexIterator;
 
@@ -46,14 +50,13 @@ public class MysqliRes
 
     public DeepType parseSqlSelect(DeepType strType, Project project)
     {
-        DeepType parsedType = new DeepType(strType.definition, PhpType.ARRAY);
         String sql = opt(strType.stringValue).def("");
         int regexFlags = Pattern.DOTALL | Pattern.CASE_INSENSITIVE;
         Opt<L<String>> matched = Opt.fst(
             () -> Tls.regex("\\s*SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql, regexFlags),
             () -> Tls.regex("\\s*SELECT\\s+(\\S.*)", sql, regexFlags) // partial SQL without FROM
         );
-        matched.fap(matches -> {
+        Iterable<Key> keys = matched.fap(matches -> {
             It<String> fields = It(matches.gat(0).def("").split(",", -1));
             String table = matches.gat(1).def("");
             return fields.map(str -> str.trim())
@@ -66,9 +69,12 @@ public class MysqliRes
                             .fap(a -> list(a));
                     }
                 });
-        }).fch(name -> parsedType.addKey(name, ctx.getRealPsi(strType.definition))
+        }).map(name -> new Key(name, ctx.getRealPsi(strType.definition))
             .addType(() -> new Mt(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
-        return parsedType;
+
+        return new Build(strType.definition, PhpType.ARRAY)
+            .keys(keys)
+            .get();
     }
 
     private static It<String> getBindVars(DeepType sqlStrT)

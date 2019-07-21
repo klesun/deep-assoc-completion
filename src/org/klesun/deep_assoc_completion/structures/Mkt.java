@@ -80,22 +80,29 @@ public class Mkt {
 
     public static DeepType assoc(PsiElement psi, Iterable<T2<String, Mt>> keys)
     {
-        DeepType assoct = new DeepType(psi, PhpType.ARRAY, false);
-        for (T2<String, Mt> key: keys) {
-            PhpType ideaType = key.b.getIdeaTypes().fst().def(PhpType.UNSET);
-            assoct.addKey(key.a, psi).addType(Granted(key.b), ideaType);
-        }
-        return assoct;
+        It<Key> keyEntries = It(keys)
+            .map(tup -> tup.nme((name, valMt) -> {
+                PhpType ideaType = valMt.getIdeaTypes().fst().def(PhpType.UNSET);
+                return new Key(name, psi).addType(Granted(valMt), ideaType);
+            }));
+        return new Build(psi, PhpType.ARRAY)
+            .isExactPsi(false)
+            .keys(keyEntries)
+            .get();
     }
 
     public static DeepType assocCmnt(PsiElement psi, Iterable<T3<String, Mt, Opt<String>>> keys)
     {
-        DeepType assoct = new DeepType(psi, PhpType.ARRAY, false);
-        keys.forEach(t -> t.nme((keyName, mt, cmnt) -> {
-            PhpType ideaType = mt.getIdeaTypes().fst().def(PhpType.UNSET);
-            assoct.addKey(keyName, psi).addType(Granted(mt), ideaType).addComments(cmnt);
-        }));
-        return assoct;
+        It<Key> keyEntries = It(keys)
+            .map(tup -> tup.nme((keyName, mt, cmnt) -> {
+                PhpType ideaType = mt.getIdeaTypes().fst().def(PhpType.UNSET);
+                return new Key(keyName, psi)
+                    .addType(Granted(mt), ideaType).addComments(cmnt);
+            }));
+        return new Build(psi, PhpType.ARRAY)
+            .isExactPsi(false)
+            .keys(keyEntries)
+            .get();
     }
 
     public static It<DeepType> cst(IExprCtx ctx, Iterable<String> cstNames)

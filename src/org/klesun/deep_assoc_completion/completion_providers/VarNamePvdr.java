@@ -26,7 +26,9 @@ import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.VarRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
+import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.lang.It;
 import org.klesun.lang.MemIt;
 import org.klesun.lang.Tls;
@@ -118,13 +120,14 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
                 IExprCtx extractCtx = exprCtx.subCtxDirect(call);
                 Mt source = extractCtx.func().getArgMt(0);
                 String prefix = extractCtx.func().getArgMt(2).getStringValues().fst().def("");
-                return source.types.map(t -> {
-                    DeepType resultt = new DeepType(t.definition, PhpType.ARRAY);
-                    t.keys.fch(k -> k.keyType.getNames()
-                        .fch(n -> resultt.addKey(prefix + n, k.definition)
-                            .addType(() -> new Mt(k.getValueTypes()), k.getBriefTypes().wap(Mt::joinIdeaTypes))));
-                    return resultt;
-                });
+                return source.types.map(t -> new Build(t.definition, PhpType.ARRAY)
+                    .keys(t.keys.fap(k -> {
+                        PhpType briefType = k.getBriefTypes().wap(Mt::joinIdeaTypes);
+                        return k.keyType.getNames()
+                            .map(n -> new Key(prefix + n, k.definition)
+                                .addType(() -> new Mt(k.getValueTypes()), briefType));
+                    }))
+                    .get());
             });
     }
 

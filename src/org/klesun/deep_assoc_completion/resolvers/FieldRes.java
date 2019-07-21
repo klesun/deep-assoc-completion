@@ -17,6 +17,7 @@ import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.Assign;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.It;
 import org.klesun.lang.Lang;
@@ -147,15 +148,15 @@ public class FieldRes extends Lang
      * includes both dynamic props and props belonging to class
      * not sure, but probably should use this in resolve() to remove duplicating code
      */
-    public static It<DeepType.Key> getPublicProps(Mt mt, Project proj, IExprCtx memCtx)
+    public static It<Key> getPublicProps(Mt mt, Project proj, IExprCtx memCtx)
     {
-        It<DeepType.Key> declared = ArrCtorRes.resolveMtInstCls(mt, proj)
+        It<Key> declared = ArrCtorRes.resolveMtInstCls(mt, proj)
             .fap(cls -> cls.getFields())
             .flt(f -> !f.getModifier().isPrivate())
             .map(f -> {
                 DeepType kt = new DeepType(f, PhpType.STRING, f.getName());
                 KeyType keyType = KeyType.mt(som(kt), f);
-                return new DeepType.Key(keyType, f)
+                return new Key(keyType, f)
                     .addType(() -> new Mt(declToExplTypes(f, memCtx)), f.getType());
             });
         return It.cnc(mt.types.fap(t -> t.props.vls()), declared);

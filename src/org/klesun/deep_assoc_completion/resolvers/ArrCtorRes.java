@@ -13,7 +13,9 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.mem_res.MemRes;
+import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
@@ -189,48 +191,54 @@ public class ArrCtorRes extends Lang
         return It.cnc(getTopComments(hashEl), getSideComments(hashEl));
     }
 
-    public DeepType resolve(ArrayCreationExpressionImpl expr)
+    private It<Key> resolveAssoc(ArrayCreationExpressionImpl expr)
     {
-        DeepType arrayType = new DeepType(expr);
-
-        L<PsiElement> orderedParams = It(expr.getChildren())
-            .flt(psi -> !(psi instanceof ArrayHashElement)).arr();
-
-        resolveMethodFromArray(orderedParams)
-            .map(meth -> MethCallRes.findMethRetType(meth))
-            .fch(retTypeGetter -> arrayType.returnTypeGetters
-                .add((ctx) -> new MemIt<>(retTypeGetter.apply(ctx))));
-
-        // indexed elements
-        orderedParams
-            .fch((valuePsi, i) -> Tls.cast(PhpExpression.class, valuePsi)
-                // currently each value is wrapped into a plane Psi element
-                // i believe this is likely to change in future - so we try both cases
-                .elf(() -> opt(valuePsi.getFirstChild()).fop(toCast(PhpExpression.class)))
-                .thn(val -> arrayType.addKey(i + "", ctx.getRealPsi(val))
-                    .addType(() -> ctx.findExprType(val).wap(Mt::new), Tls.getIdeaType(val))));
-
-        // keyed elements
-        It(expr.getHashElements()).fch((keyRec) -> opt(keyRec.getValue())
+        return It(expr.getHashElements()).fap((keyRec) -> opt(keyRec.getValue())
             .fop(toCast(PhpExpression.class))
-            .thn(v -> {
+            .fap(v -> {
                 S<Mt> getType = Tls.onDemand(() -> ctx.findExprType(v).wap(Mt::new));
-                opt(keyRec.getKey())
+                return opt(keyRec.getKey())
                     .fop(toCast(PhpExpression.class))
                     .map(keyPsi -> ctx.findExprType(keyPsi))
                     .map(keyTypes -> keyTypes.fop(t -> opt(t.stringValue)))
-                    .thn(keyStrValues -> {
+                    .fap(keyStrValues -> {
                         if (keyStrValues.has()) {
-                            keyStrValues.fch(key -> arrayType
-                                .addKey(key, ctx.getRealPsi(keyRec))
+                            return keyStrValues.map(key ->
+                                new Key(key, ctx.getRealPsi(keyRec))
                                     .addType(getType, Tls.getIdeaType(v))
                                     .addComments(gatherSurroundingComments(keyRec)));
                         } else {
-                            arrayType.addKey(KeyType.unknown(keyRec)).addType(getType);
+                            Key keyEntry = new Key(
+                                KeyType.unknown(keyRec), keyRec.getKey()
+                            );
+                            return som(keyEntry.addType(getType));
                         }
                     });
             }));
+    }
 
-        return arrayType;
+    public DeepType resolve(ArrayCreationExpressionImpl expr)
+    {
+        L<PsiElement> orderedParams = It(expr.getChildren())
+            .flt(psi -> !(psi instanceof ArrayHashElement)).arr();
+
+        It<Lang.F<IExprCtx, MemIt<DeepType>>> returnTypeGetters = resolveMethodFromArray(orderedParams)
+            .map(meth -> MethCallRes.findMethRetType(meth))
+            .map(retTypeGetter -> (ctx) -> new MemIt<>(retTypeGetter.apply(ctx)));
+
+        It<Key> idxKeys = orderedParams
+            .fap((valuePsi, i) -> Tls.cast(PhpExpression.class, valuePsi)
+                // currently each value is wrapped into a plane Psi element
+                // i believe this is likely to change in future - so we try both cases
+                .elf(() -> opt(valuePsi.getFirstChild()).fop(toCast(PhpExpression.class)))
+                .map(val -> new Key(i + "", ctx.getRealPsi(val))
+                    .addType(() -> ctx.findExprType(val).wap(Mt::new), Tls.getIdeaType(val))));
+
+        It<Key> assocKeys = resolveAssoc(expr);
+
+        return new Build(expr, PhpType.ARRAY)
+            .keys(It.cnc(idxKeys, assocKeys))
+            .returnTypeGetters(returnTypeGetters)
+            .get();
     }
 }

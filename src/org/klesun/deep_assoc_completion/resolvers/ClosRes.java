@@ -2,11 +2,14 @@ package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl;
+import com.jetbrains.php.lang.psi.elements.impl.PhpReturnImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
-import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.structures.Build;
+import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
@@ -96,9 +99,11 @@ public class ClosRes extends Lang
                 .map(key -> ctx.findExprType(key))
                 .map(kit -> KeyType.mt(kit, yld))
                 .def(KeyType.integer(yld));
-            DeepType result = new DeepType(yld, pst);
-            result.addKey(kt, yld)
+            Key keyEntry = new Key(kt, yld)
                 .addType(Tls.onDemand(() -> valMt), PhpType.MIXED);
+            DeepType result = new Build(yld, pst)
+                .keys(som(keyEntry)).get();
+
             return It(som(result));
         }
     }

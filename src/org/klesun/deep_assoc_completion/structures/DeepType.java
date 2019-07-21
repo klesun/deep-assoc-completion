@@ -18,15 +18,19 @@ import java.util.*;
  */
 public class DeepType extends Lang
 {
-    // maybe should make it a memoizing iterable?
-    public final L<Key> keys = new L<>();
+    // please, do not change this fields directly - ise Build.java
+    // probably should make them all protected and add getters...
+
+    public MemIt<Key> keys = new MemIt<>(It.non());
     // just like array keys, but dynamic object properties
     public final Dict<Key> props = new Dict<>(L());
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
     // list of functions that take arg list and return list of return types
-    public final L<F<IExprCtx, MemIt<DeepType>>> returnTypeGetters = L();
+    //
+    // probably would make sense to make it MemIt as well...
+    public L<F<IExprCtx, MemIt<DeepType>>> returnTypeGetters = L();
     public final L<DeepType> pdoFetchTypes = L();
     public final LinkedHashSet<String> pdoBindVars = new LinkedHashSet<>();
     public Opt<IExprCtx> ctorArgs = opt(null);
@@ -35,11 +39,11 @@ public class DeepType extends Lang
     public Opt<PhpType> clsRefType = non();
     // constant name
     public Opt<String> cstName = non();
-    public final @Nullable String stringValue;
+    public @Nullable String stringValue = null;
     public final PsiElement definition;
     public final PhpType briefType;
     public boolean isNumber = false;
-    final public boolean isExactPsi;
+    public boolean isExactPsi = true;
 
     private DeepType(PsiElement definition, PhpType briefType, String stringValue, boolean isExactPsi)
     {
@@ -112,31 +116,12 @@ public class DeepType extends Lang
             .fap(k -> k.typeGetters.fap(mtg -> mtg.get().types));
     }
 
-    public Key addKey(String name, PsiElement definition)
-    {
-        DeepType kt = new DeepType(definition, PhpType.STRING, name);
-        KeyType keyType = KeyType.mt(som(kt), definition);
-        Key keyEntry = new Key(keyType, definition);
-        keys.add(keyEntry);
-        return keyEntry;
-    }
-
-    public Key addKey(KeyType keyType, PsiElement definition)
-    {
-        Key keyEntry = new Key(keyType, definition);
-        keys.add(keyEntry);
-        return keyEntry;
-    }
-
+    /** @deprecated - kept for compatibility with deep-js, shall be remove eventually */
     public Key addKey(KeyType keyType)
     {
-        return addKey(keyType, keyType.definition);
-    }
-
-    public Key addKey(Key key)
-    {
-        keys.add(key);
-        return key;
+        Key keyEntry = new Key(keyType, definition);
+        keys = It.cnc(keys, som(keyEntry)).mem();
+        return keyEntry;
     }
 
     public Key addProp(String name, PsiElement definition)
@@ -146,74 +131,6 @@ public class DeepType extends Lang
         Key keyEntry = new Key(keyType, definition);
         props.put(name, keyEntry);
         return keyEntry;
-    }
-
-    public static class Key
-    {
-        final public KeyType keyType;
-        // TODO: rename to valueTypeGetters
-        final private L<Tls.OnDemand<Mt>> typeGetters = L();
-        // to get quick built-in type info
-        final private L<PhpType> briefTypes = L();
-        // where Go To Definition will lead
-        final public PsiElement definition;
-        public Set<String> comments = new LinkedHashSet<>();
-
-        public Key(KeyType keyType, PsiElement definition)
-        {
-            this.keyType = keyType;
-            this.definition = definition;
-        }
-
-        public Key addType(S<Mt> getter, PhpType briefType)
-        {
-            typeGetters.add(Tls.onDemand(getter));
-            briefTypes.add(briefType);
-            return this;
-        }
-
-        public Key addComments(Iterable<String> comments)
-        {
-            comments.forEach(this.comments::add);
-            return this;
-        }
-
-        public void addType(S<Mt> getter)
-        {
-            addType(getter, PhpType.MIXED);
-        }
-
-        public It<DeepType> getValueTypes()
-        {
-            return typeGetters.fap(g -> g.get().types);
-        }
-
-        public L<PhpType> getBriefTypes()
-        {
-            return briefTypes;
-        }
-
-        public L<Tls.OnDemand<Mt>> getTypeGetters()
-        {
-            return typeGetters;
-        }
-
-        public Opt<String> getBriefKey()
-        {
-            return It(keyType.getTypes()).fst()
-                .fop(t -> opt(t.stringValue))
-                .map(n -> n + ":");
-        }
-
-        public Opt<String> getBriefVal()
-        {
-            return typeGetters
-                .fap(g -> g.ifHas())
-                .fap(mt -> mt.types)
-                .fap(t -> t.getBriefVal()).unq()
-                .wap(fqns -> fqns.arr())
-                .wap(fqns -> fqns.size() > 0 ? som(fqns.itr().str("|")) : non());
-        }
     }
 
     private static String indent(int level)

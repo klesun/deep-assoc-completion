@@ -17,6 +17,7 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
@@ -73,7 +74,7 @@ public class RunTest extends AnAction
             .fap(retVal -> makeNewExprCtx(retVal).findExprType(retVal));
     }
 
-    private static It<T3<CaseContext, DeepType.Key, DeepType.Key>> parseReturnedTestCase(Method func, Logger logger)
+    private static It<T3<CaseContext, Key, Key>> parseReturnedTestCase(Method func, Logger logger)
     {
         return getReturnType(func)
             .fap(t -> Mt.getKeySt(t, null))

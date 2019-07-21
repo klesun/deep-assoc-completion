@@ -15,7 +15,9 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.other_plugin_integration.DeepAssocApi;
+import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.lang.*;
 
 import java.util.ArrayList;
@@ -155,11 +157,11 @@ public class DocParamRes extends Lang
             .fap(expr -> parseExpression(expr, sourcePsi.getProject(), docCtx));
         Mt valMt = new Mt(valTit);
         for (int i = assKeys.size() - 1; i >= 0; --i) {
-            String k = assKeys.get(i);
-            DeepType arrt = new DeepType(sourcePsi, PhpType.ARRAY);
             Mt valMtF = valMt;
-            arrt.addKey(k, sourcePsi).addType(() -> valMtF);
-            valMt = arrt.mt();
+            Key keyEntry = new Key(assKeys.get(i), sourcePsi)
+                .addType(() -> valMtF);
+            valMt = new Build(sourcePsi, PhpType.ARRAY)
+                .keys(som(keyEntry)).get().mt();
         }
         return valMt.types.itr();
     }

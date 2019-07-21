@@ -14,7 +14,9 @@ import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
+import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
@@ -94,12 +96,13 @@ public class UsageBasedTypeResolver
                         .unq(t -> t.stringValue)
                         .fap(t -> opt(t.stringValue)
                             .map(name -> {
-                                DeepType assoct = new DeepType(arg, PhpType.ARRAY);
                                 S<Mt> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
-                                    .fap(acc -> new UsageBasedTypeResolver(nextCtx, depthLeft - 1).findExprTypeFromUsage(acc)).wap(Mt::new);
-                                assoct.addKey(name, t.definition)
-                                    .addType(getType, PhpType.UNSET);
-                                return assoct;
+                                    .fap(acc -> new UsageBasedTypeResolver(nextCtx, depthLeft - 1).resolve(acc))
+                                    .wap(Mt::new);
+                                Key keyEntry = new Key(name, t.definition).addType(getType, PhpType.UNSET);
+                                return new Build(arg, PhpType.ARRAY)
+                                    .keys(som(keyEntry))
+                                    .get();
                             }))
                     ),
                 opt(arg.getDocComment())
@@ -156,11 +159,9 @@ public class UsageBasedTypeResolver
 
     public static DeepType makeAssoc(PsiElement psi, Iterable<T2<String, PsiElement>> keys)
     {
-        DeepType assoct = new DeepType(psi, PhpType.ARRAY);
-        for (T2<String, PsiElement> key: keys) {
-            assoct.addKey(key.a, key.b);
-        }
-        return assoct;
+        return new Build(psi, PhpType.ARRAY)
+            .keys(It(keys).map(tup -> new Key(tup.a, tup.b)))
+            .get();
     }
 
     // add completion from new SomeClass() that depends
@@ -213,15 +214,14 @@ public class UsageBasedTypeResolver
                 .map(expr -> expr.getFirstChild())
                 .fop(toCast(Function.class))) // TODO: support in a var
             .fap(func -> {
-                DeepType arrt = new DeepType(argList, PhpType.ARRAY);
-                DeepType.Key k = arrt.addKey(KeyType.unknown(argList));
-                L(argList.getParameters()).gat(caretArgOrder)
-                    .cst(PhpExpression.class)
-                    .thn(arrCtor -> k.addType(Tls.onDemand(() -> {
-                        IExprCtx subCtx = fakeCtx.subCtxSingleArgArr(arrCtor, 0);
-                        return findArgTypeFromUsage(func, 0, subCtx).wap(Mt::new);
-                    })));
-                return list(arrt);
+                Key keyEntry = new Key(KeyType.unknown(argList))
+                    .addType(() -> L(argList.getParameters()).gat(caretArgOrder)
+                        .cst(PhpExpression.class)
+                        .map(arrCtor -> fakeCtx.subCtxSingleArgArr(arrCtor, 0))
+                        .fap(subCtx -> findArgTypeFromUsage(func, 0, subCtx))
+                        .wap(Mt::new));
+                return new Build(argList, PhpType.ARRAY)
+                    .keys(som(keyEntry)).itr();
             });
     }
 
@@ -387,7 +387,7 @@ public class UsageBasedTypeResolver
             .flt(ref -> ref.getTextOffset() > caretVar.getTextOffset())
             .fop(toCast(Variable.class))
             .fap(refVar -> It.cnc(
-                findExprTypeFromUsage(refVar),
+                resolve(refVar),
                 // $this->$magicProp
                 opt(refVar.getParent())
                     .cst(FieldReference.class)
@@ -417,7 +417,7 @@ public class UsageBasedTypeResolver
         IExprCtx fakeCtx = new ExprCtx(funcCtx, arrCtor, 0);
 
         return It.cnc(
-            findExprTypeFromUsage(arrCtor),
+            resolve(arrCtor),
             opt(arrCtor.getParent())
                 .fop(toCast(AssignmentExpression.class))
                 .flt(ass -> arrCtor.isEquivalentTo(ass.getValue()))
@@ -483,7 +483,7 @@ public class UsageBasedTypeResolver
 
     // if arg is assoc array - will return type with keys accessed on it
     // if arg is string - will return type of values it can take
-    public It<DeepType> findExprTypeFromUsage(PhpExpression caretExpr)
+    public It<DeepType> resolve(PhpExpression caretExpr)
     {
         Opt<MemIt<DeepType>> fromCache = takeFromCache(caretExpr);
         if (fromCache.has()) {

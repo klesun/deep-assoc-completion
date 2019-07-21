@@ -3,13 +3,12 @@ package org.klesun.deep_assoc_completion.resolvers.var_res;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.ArrayAccessExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
-import com.jetbrains.php.lang.psi.elements.impl.*;
+import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
+import com.jetbrains.php.lang.psi.elements.impl.AssignmentExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
-import org.klesun.deep_assoc_completion.structures.Assign;
-import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.helpers.*;
-import org.klesun.deep_assoc_completion.structures.KeyType;
+import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.structures.*;
 import org.klesun.lang.*;
 
 import java.util.List;
@@ -32,13 +31,14 @@ public class AssRes extends Lang
         if (keys.size() == 0) {
             return It(getType.get());
         } else {
-            DeepType arr = new DeepType(psi, PhpType.ARRAY);
             KeyType nextKey = keys.get(0);
             L<KeyType> furtherKeys = keys.sub(1);
             S<Iterable<DeepType>> memoized = Tls.onDemand(() -> new MemIt<>(getType.get()));
-            arr.addKey(nextKey, nextKey.definition).addType(() ->
+
+            Key keyEntry = new Key(nextKey, nextKey.definition).addType(() ->
                 makeType(furtherKeys, memoized, psi, briefType).wap(Mt::new), briefType);
-            return It(list(arr));
+            return new Build(psi, PhpType.ARRAY)
+                .keys(som(keyEntry)).itr();
         }
     }
 

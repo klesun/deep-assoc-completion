@@ -13,10 +13,7 @@ import org.klesun.deep_assoc_completion.contexts.IFuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.ScopeFinder;
 import org.klesun.deep_assoc_completion.resolvers.builtins.MysqliRes;
-import org.klesun.deep_assoc_completion.structures.ArgOrder;
-import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.KeyType;
-import org.klesun.deep_assoc_completion.structures.Mkt;
+import org.klesun.deep_assoc_completion.structures.*;
 import org.klesun.lang.*;
 
 public class FuncCallRes extends Lang
@@ -53,7 +50,6 @@ public class FuncCallRes extends Lang
 
     private It<DeepType> array_map(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
-        DeepType mapRetType = new DeepType(call);
         Mt arrMt = callCtx.getArgMt(1);
         IExprCtx subCtx = L(call.getParameters()).gat(1)
             .fop(array -> Tls.cast(PhpExpression.class, array))
@@ -63,16 +59,20 @@ public class FuncCallRes extends Lang
         S<Mt> getElMt = Tls.onDemand(() -> callCtx.getArgMt(0).types
             .fap(t -> t.getReturnTypes(subCtx))
             .wap(Mt::new));
-        It<DeepType> eachTMapped = arrMt.types.map(t -> {
-            DeepType mapped = new DeepType(t.definition, PhpType.ARRAY);
-            t.keys.fch((v, i) -> mapped.addKey(v.keyType, v.definition)
-                .addType(getElMt, call.getType().elementType()));
-            return mapped;
-        });
-        MemIt<DeepType.Key> srcKeys = arrMt.types.fap(t -> t.keys).mem();
+        It<DeepType> eachTMapped = arrMt.types
+            .map(t -> new Build(t.definition, PhpType.ARRAY)
+                .keys(t.keys.map((v, i) -> new Key(v.keyType, v.definition)
+                    .addType(getElMt, call.getType().elementType())))
+                .get());
+        MemIt<Key> srcKeys = arrMt.types.fap(t -> t.keys).mem();
         It<DeepType> ktg = srcKeys.fap(k -> k.keyType.getTypes());
-        mapRetType.addKey(KeyType.mt(ktg, call), call).addType(getElMt, PhpType.MIXED);
-        return It.cnc(list(mapRetType), eachTMapped);
+
+        Key keyEntry = new Key(KeyType.mt(ktg, call), call)
+            .addType(getElMt, PhpType.MIXED);
+        It<DeepType> mapRetTit = new Build(call, PhpType.ARRAY)
+            .keys(som(keyEntry)).itr();
+
+        return It.cnc(mapRetTit, eachTMapped);
     }
 
     private It<DeepType> array_reduce(IFuncCtx callCtx, FunctionReferenceImpl call)
@@ -89,43 +89,46 @@ public class FuncCallRes extends Lang
 
     private DeepType array_combine(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
-        DeepType combine = new DeepType(call, PhpType.ARRAY);
         S<Mt> getElMt = Tls.onDemand(() -> callCtx.getArgMt(1).getEl());
         PhpType ideaElType = L(call.getParameters()).gat(1)
             .fop(toCast(PhpExpression.class))
             .map(e -> e.getType()).def(PhpType.MIXED);
-        combine.addKey(KeyType.mt(callCtx.getArgMt(0).getEl().types, call))
+
+        MemIt<DeepType> kit = callCtx.getArgMt(0).getEl().types;
+        Key keyEntry = new Key(KeyType.mt(kit, call))
             .addType(getElMt, ideaElType);
-        return combine;
+
+        return new Build(call, PhpType.ARRAY)
+            .keys(som(keyEntry)).get();
     }
 
     private It<DeepType> array_column(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
-        DeepType type = new DeepType(call, PhpType.ARRAY);
         Mt srcArrMt = callCtx.getArgMt(0);
         KeyType kt = callCtx.getArg(2)
             .map(groupKmt -> KeyType.mt(groupKmt.types, call))
             .map(groupKt -> srcArrMt.getEl().getKey(groupKt))
             .map(kmt -> KeyType.mt(kmt.types, call))
             .def(KeyType.integer(call));
-        DeepType.Key keyRec = type.addKey(kt);
         S<Mt> getElMt = () -> callCtx.getArgMt(0).getEl();
-        if (L(call.getParameters()).any(p -> p.getText().equals("null"))) {
-            keyRec.addType(getElMt);
-        } else {
-            keyRec.addType(() -> {
+
+        Key keyRec = new Key(kt).addType(() -> {
+            if (L(call.getParameters()).any(p -> p.getText().equals("null"))) {
+                return getElMt.get();
+            } else {
                 Mt elType = getElMt.get();
                 String keyName = callCtx.getArgMt(1).getStringValue();
-                It<DeepType.Key> allProps = FieldRes.getPublicProps(
+                It<Key> allProps = FieldRes.getPublicProps(
                     elType, call.getProject(), ctx.subCtxEmpty()
                 );
                 return new Mt(It.cnc(
                     elType.getKey(keyName).types,
                     Mt.getPropOfName(allProps, keyName)
                 ));
-            });
-        }
-        return list(type).itr();
+            }
+        });
+        return new Build(call, PhpType.ARRAY)
+            .keys(som(keyRec)).itr();
     }
 
     private DeepType array_fill_keys(IFuncCtx callCtx, FunctionReferenceImpl call)
@@ -138,41 +141,50 @@ public class FuncCallRes extends Lang
 
     private DeepType array_flip(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
-        DeepType flip = new DeepType(call, PhpType.ARRAY);
         Mt sourceMt = callCtx.getArgMt(0);
         Mt newValueMt = sourceMt.getKeyNames()
             .map(name -> new DeepType(call, PhpType.STRING, name)).wap(Mt::new);
-        L<String> newKeys = sourceMt.getEl().types.map(t -> t.stringValue).arr();
+        MemIt<String> newKeys = sourceMt.getEl().types.map(t -> t.stringValue).mem();
+
+        It<Key> keys = It.non();
+        /** @performance-hole */
         if (!newKeys.has() || newKeys.any(k -> k == null)) {
-            flip.addKey(KeyType.unknown(call), call).addType(() -> newValueMt, PhpType.MIXED);
+            Key keyEntry = new Key(KeyType.unknown(call), call)
+                .addType(() -> newValueMt, PhpType.MIXED);
+            keys = keys.cct(som(keyEntry));
         }
         for (String key: newKeys) {
-            flip.addKey(key, call).addType(() -> newValueMt, It(newValueMt.types).map(t -> t.briefType).fst().def(PhpType.EMPTY));
+            PhpType briefType = It(newValueMt.types).map(t -> t.briefType).fst().def(PhpType.EMPTY);
+            Key keyEntry = new Key(key, call)
+                .addType(() -> newValueMt, briefType);
+            keys = keys.cct(som(keyEntry));
         }
-        return flip;
+        return new Build(call, PhpType.ARRAY).keys(keys).get();
     }
 
     private DeepType compact(IFuncCtx callCtx, FunctionReferenceImpl call)
     {
-        DeepType arrt = new DeepType(call, PhpType.ARRAY);
-        Tls.findParent(call, GroupStatement.class, a -> true)
-            .thn(scope -> Tls.range(0, call.getParameters().length)
-                .fch(i -> callCtx.getArg(i)
+        It<Key> keyEntries = Tls.findParent(call, GroupStatement.class, a -> true)
+            .fap(scope -> Tls.range(0, call.getParameters().length)
+                .fap(i -> callCtx.getArg(i)
                     .map(keyt -> keyt.getStringValue())
-                    .thn(varName -> {
+                    .fap(varName -> {
                         L<Variable> refs = findVarRefsInFunc(scope, varName)
                             .flt(ref -> ScopeFinder.didPossiblyHappen(ref, call)).arr()
                             ;
                         if (refs.size() > 0) {
                             PhpType briefType = new PhpType();
                             refs.map(var -> Tls.getIdeaType(var)).fch(briefType::add);
-                            arrt.addKey(varName, call)
+                            return som(new Key(varName, call)
                                 .addType(() -> refs
                                     .fap(ref -> ctx.findExprType(ref))
-                                    .wap(Mt::new), briefType);
+                                    .wap(Mt::new), briefType));
+                        } else {
+                            return non();
                         }
                     })));
-        return arrt;
+
+        return new Build(call, PhpType.ARRAY).keys(keyEntries).get();
     }
 
     private DeepType implode(IFuncCtx callCtx, FunctionReferenceImpl call)
@@ -191,17 +203,17 @@ public class FuncCallRes extends Lang
 
     private DeepType getVars(FunctionReferenceImpl call, It<PhpClass> clses, boolean isStatic)
     {
-        DeepType type = new DeepType(call, PhpType.ARRAY);
-        clses.fap(cls -> cls.getFields())
+        It<Key> keyEntries = clses.fap(cls -> cls.getFields())
             .flt(fld -> !fld.isConstant())
             .flt(fld -> !(fld instanceof PhpDocProperty))
             .flt(fld -> isStatic == fld.getModifier().isStatic())
-            .fch(fld -> type.addKey(fld.getName(), fld)
+            .map(fld -> new Key(fld.getName(), fld)
                 .addType(() -> opt(fld.getDefaultValue())
                     .cst(PhpExpression.class)
                     .fap(expr -> ctx.subCtxEmpty().findExprType(expr))
                     .wap(ts -> new Mt(ts)), fld.getType()));
-        return type;
+
+        return new Build(call, PhpType.ARRAY).keys(keyEntries).get();
     }
 
     private DeepType get_object_vars(IExprCtx callExprCtx, FunctionReferenceImpl call)
@@ -285,14 +297,15 @@ public class FuncCallRes extends Lang
         } else if (name.equals("implode")) {
             return list(implode(callCtx, call));
         } else if (name.equals("array_keys")) {
-            DeepType arrt = new DeepType(call, PhpType.ARRAY);
-            arrt.addKey(KeyType.integer(call)).addType(Tls.onDemand(() -> callCtx.getArgMt(0).types
-                .fap(t -> t.keys)
-                .fap(k -> k.keyType.getTypes())
-                .fap(kt -> opt(kt.stringValue)
-                    .map(keyName -> new DeepType(kt.definition, PhpType.STRING, keyName)))
-                .wap(types -> new Mt(types))));
-            return list(arrt);
+            Key keyEntry = new Key(KeyType.integer(call))
+                .addType(Tls.onDemand(() -> callCtx.getArgMt(0).types
+                    .fap(t -> t.keys)
+                    .fap(k -> k.keyType.getTypes())
+                    .fap(kt -> opt(kt.stringValue)
+                        .map(keyName -> new DeepType(kt.definition, PhpType.STRING, keyName)))
+                    .wap(types -> new Mt(types))));
+            return new Build(call, PhpType.ARRAY)
+                .keys(som(keyEntry)).itr();
         } else if (name.equals("key")) {
             return callCtx.getArgMt(0)
                 .types.fap(t -> t.keys)
@@ -314,10 +327,11 @@ public class FuncCallRes extends Lang
             return callCtx.getArgMt(0).types
                 .fap(t -> t.getReturnTypes(newCtx)).map(a -> a);
         } else if (name.equals("explode")) {
-            DeepType arrt = new DeepType(call, PhpType.ARRAY);
-            arrt.addKey(KeyType.integer(call))
-                .addType(() -> new Mt(list(new DeepType(call, PhpType.STRING))), PhpType.STRING);
-            return list(arrt);
+            Mt valMt = new DeepType(call, PhpType.STRING).mt();
+            Key keyEntry = new Key(KeyType.integer(call))
+                .addType(Granted(valMt), PhpType.STRING);
+            return new Build(call, PhpType.ARRAY)
+                .keys(som(keyEntry)).itr();
         } else if (name.equals("get_called_class")) {
             return ctx.getSelfType().map(idea -> DeepType.makeClsRef(call, idea));
         } else if (name.equals("get_object_vars")) {
