@@ -208,9 +208,7 @@ public class FuncCallRes extends Lang
             .flt(fld -> !(fld instanceof PhpDocProperty))
             .flt(fld -> isStatic == fld.getModifier().isStatic())
             .map(fld -> new Key(fld.getName(), fld)
-                .addType(() -> opt(fld.getDefaultValue())
-                    .cst(PhpExpression.class)
-                    .fap(expr -> ctx.subCtxEmpty().findExprType(expr))
+                .addType(() -> FieldRes.declToExplTypes(fld, ctx.subCtxEmpty())
                     .wap(ts -> new Mt(ts)), fld.getType()));
 
         return new Build(call, PhpType.ARRAY).keys(keyEntries).get();

@@ -98,7 +98,7 @@ public class FieldRes extends Lang
                 .fop(methCtx -> (new AssRes(methCtx)).collectAssignment(assPsi, false)));
     }
 
-    private static It<DeepType> declToExplTypes(Field resolved, IExprCtx memCtx)
+    public static It<DeepType> declToExplTypes(Field resolved, IExprCtx memCtx)
     {
         IExprCtx implCtx = memCtx.subCtxEmpty();
         It<DeepType> defTs = Tls.cast(FieldImpl.class, resolved).itr()
