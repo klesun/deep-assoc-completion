@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.06.30.001</version>
+    <version>2019.07.24.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,21 +38,10 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Risky</li>
-        <li>Remove performance hack in the core iterator processing function (could possibly cause hangs in Laravel/Symfony projects - please scream if you experience something bad)</li>
-        <li>#94 Make completion dialog wider when there is a comment on a key</li>
-        <li>#97 Fix: resolve `new static` from instance context as well, not just from static context</li>
-
-        <li>Fixes</li>
-        <li>#101 Fix: do not disable built-in arg constant completions that trigger auto-popup on their own</li>
-        <li>Still provide usage completion when built-in function is declared more than once in project</li>
-
-        <li>Features</li>
-        <li>#99 Suggest at least some keys from psalm phpdoc even if there are mistakes in the format</li>
-        <li>#100 Support psalm type phpdoc format in @property and @method</li>
-        <li>#94 Show "//" key comments in the completion options</li>
-        <li>#97 Provide completion from get_class_vars()</li>
-        <li>Provide completion in array_reduce() result</li>
+        <li>Resolve get_object_vars() field value type from phpdoc as well (Not just from default value)</li>
+        <li>#104 Fix, stop always showing misleading "string" type in usage-based keys completion</li>
+        <li>#105 Add support for fetchAll method of PDOStatements (by NickUfer)</li>
+        <li>Refactor, make key list in DeepType.js immutable</li>
     </ul>
     ]]>
     </change-notes>
