@@ -31,20 +31,22 @@ import java.util.Set;
 import static org.klesun.lang.Lang.*;
 
 /**
- * provides completion of method names in `[Some\ClassName::class, '']`
+ * provides completion of method names `$someObj->`
  */
 public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
 {
     private boolean hadBuiltIns = false;
 
-    private static InsertHandler<LookupElement> makeMethInsertHandler()
+    private static InsertHandler<LookupElement> makeMethInsertHandler(Method meth)
     {
+        int shift = meth.getParameters().length > 0 ? 1 : 2;
+
         return (ctx, lookup) -> {
             int to = ctx.getTailOffset();
             // adding parentheses around caret
             ctx.getEditor().getDocument().insertString(to, "(");
             ctx.getEditor().getDocument().insertString(to + 1, ")");
-            ctx.getEditor().getCaretModel().moveToOffset(to + 1);
+            ctx.getEditor().getCaretModel().moveToOffset(to + shift);
         };
     }
 
@@ -73,7 +75,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         return Opt.fst(
             () -> Tls.cast(Method.class, member)
                 .map(m -> base
-                    .withInsertHandler(makeMethInsertHandler())
+                    .withInsertHandler(makeMethInsertHandler(m))
                     .withTailText("(" +
                         Tls.implode(", ", L(m.getParameters()).map(p -> p.getText())) +
                     ")", true))
