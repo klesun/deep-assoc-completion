@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.07.24.001</version>
+    <version>2019.07.31.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,10 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Resolve get_object_vars() field value type from phpdoc as well (Not just from default value)</li>
-        <li>#104 Fix, stop always showing misleading "string" type in usage-based keys completion</li>
-        <li>#105 Add support for fetchAll method of PDOStatements (by NickUfer)</li>
-        <li>Refactor, make key list in DeepType.js immutable</li>
+        <li>#107 Make caret end up _after_ the parentheses during method completion if said method does not take any args</li>
     </ul>
     ]]>
     </change-notes>
