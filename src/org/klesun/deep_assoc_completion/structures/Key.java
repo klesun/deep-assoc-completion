@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.structures;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 
@@ -19,7 +20,7 @@ public class Key
     final public PsiElement definition;
     public Set<String> comments = new LinkedHashSet<>();
 
-    public Key(String name, PsiElement definition)
+    public Key(String name, @NotNull PsiElement definition)
     {
         DeepType kt = new DeepType(definition, PhpType.STRING, name);
         KeyType keyType = KeyType.mt(Lang.som(kt), definition);
@@ -27,7 +28,7 @@ public class Key
         this.definition = definition;
     }
 
-    public Key(KeyType keyType, PsiElement definition)
+    public Key(KeyType keyType, @NotNull PsiElement definition)
     {
         this.keyType = keyType;
         this.definition = definition;

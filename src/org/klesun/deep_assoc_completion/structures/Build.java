@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.structures;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.It;
@@ -17,7 +18,7 @@ import static org.klesun.lang.Lang.*;
 public class Build {
     final private DeepType deepType;
 
-    public Build(PsiElement definition, PhpType briefType) {
+    public Build(@NotNull PsiElement definition, PhpType briefType) {
         this.deepType = new DeepType(definition, briefType);
     }
 

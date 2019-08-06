@@ -5,6 +5,7 @@ import com.jetbrains.php.lang.psi.elements.NewExpression;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.StringLiteralExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.*;
@@ -45,7 +46,7 @@ public class DeepType extends Lang
     public boolean isNumber = false;
     public boolean isExactPsi = true;
 
-    private DeepType(PsiElement definition, PhpType briefType, String stringValue, boolean isExactPsi)
+    private DeepType(@NotNull PsiElement definition, PhpType briefType, String stringValue, boolean isExactPsi)
     {
         this.definition = definition;
         this.briefType = briefType.filterUnknown().filterMixed();

@@ -32,7 +32,7 @@ public class MainGoToDecl implements GotoDeclarationHandler {
     private Opt<PsiElement> lastCaretPsi = non();
     private boolean lastFinished = true;
 
-    private static boolean areSamePsi(PsiElement declPsi, PsiElement caretPsi)
+    private static boolean areSamePsi(@NotNull PsiElement declPsi, @NotNull PsiElement caretPsi)
     {
         if (Objects.equals(declPsi, caretPsi)) {
             return true;
@@ -63,10 +63,11 @@ public class MainGoToDecl implements GotoDeclarationHandler {
                         .flt(t -> lit.getContents().equals(t.stringValue))
                         .map(t -> t.definition)
                 ))
-        ).flt(declPsi -> !areSamePsi(declPsi, psiElement));
+        )   .flt(declPsi -> declPsi != null) // some nulls leak in here - possibly I set unchecked value in "definition"
+            .flt(declPsi -> !areSamePsi(declPsi, psiElement));
     }
 
-    private static PsiElement truncateOnLineBreak(PsiElement psi)
+    private static PsiElement truncateOnLineBreak(@NotNull PsiElement psi)
     {
         PsiElement truncated = psi.getFirstChild();
         while (psi.getText().contains("\n") && truncated != null) {
