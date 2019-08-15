@@ -134,15 +134,15 @@ public class Lang
         if (startIndex < 0) {
             startIndex = str.length() + startIndex;
         }
+        startIndex = Math.max(0, startIndex);
+
         if (endIndex < 0) {
             endIndex = str.length() + endIndex;
         }
+        endIndex = Math.min(str.length(), endIndex);
 
         return str.length() > 0 && startIndex < endIndex
-            ? str.substring(
-                Math.max(0, startIndex),
-                Math.min(str.length(), endIndex)
-            )
+            ? str.substring(startIndex, endIndex)
             : "";
     }
 

@@ -63,7 +63,8 @@ public class ArgCstPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         int pos = parameters.getEditor().getCaretModel().getOffset();
-        String ch = Tls.substr(parameters.getOriginalFile().getText(), pos - 1, pos);
+        String text = parameters.getOriginalFile().getText();
+        String ch = Tls.substr(text, pos - 1, pos);
         PsiElement caretLeaf = parameters.getPosition();
         It<LookupElement> suggestions = assertBuiltInFuncArg(parameters.getPosition())
             .fap(t -> t.nme((funcName, argOrder) -> {
