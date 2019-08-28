@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.08.15.001</version>
+    <version>2019.08.28.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#109 Fix Tls.substr(): check that start index is before end index _after_ they were normalized to fit in string length</li>
+        <li>#108 Add very explicit null checks in the truncateOnLineBreak(), hopefully that will fix the issue for good</li>
     </ul>
     ]]>
     </change-notes>

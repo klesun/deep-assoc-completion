@@ -67,12 +67,31 @@ public class MainGoToDecl implements GotoDeclarationHandler {
             .flt(declPsi -> !areSamePsi(declPsi, psiElement));
     }
 
+    private static Boolean hasLineBreaks(@NotNull PsiElement psi)
+    {
+        String text = psi.getText();
+        return text.contains("\n");
+    }
+
+    private static Boolean isNullPsi(@Nullable PsiElement psi)
+    {
+        return psi == null || psi.getText() == null;
+    }
+
+    private static @Nullable PsiElement getFirstChild(@NotNull PsiElement psi)
+    {
+        return psi == null ? null : psi.getFirstChild();
+    }
+
     private static PsiElement truncateOnLineBreak(@NotNull PsiElement psi)
     {
-        PsiElement truncated = psi.getFirstChild();
-        while (psi.getText().contains("\n") && truncated != null) {
+        // something here caused null-pointer exception. My suspicion list:
+        // 1. psi.getText() probably could be null
+        // 2. psi passed here is null (despite us explicitly filtering out nulls higher)
+        PsiElement truncated = getFirstChild(psi);
+        while (!isNullPsi(truncated) && hasLineBreaks(psi)) {
             psi = truncated;
-            truncated = psi.getFirstChild();
+            truncated = getFirstChild(psi);
         }
         return psi;
     }
