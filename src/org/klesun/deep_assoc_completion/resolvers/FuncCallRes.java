@@ -38,14 +38,9 @@ public class FuncCallRes extends Lang
         return findUsedVars(meth).flt(varUsage -> varName.equals(varUsage.getName()));
     }
 
-    private static PhpType getDocType(Function func)
+    private static It<DeepType> getDocType(Function func, IExprCtx ctx)
     {
-        //return func.getDocType();
-        return opt(func.getDocComment())
-            .map(doc -> doc.getReturnTag())
-            .map(ret -> ret.getType())
-            .def(PhpType.EMPTY)
-            ;
+        return MethCallRes.findFuncDocRetType(func, ctx);
     }
 
     private It<DeepType> array_map(IFuncCtx callCtx, FunctionReferenceImpl call)
@@ -345,7 +340,7 @@ public class FuncCallRes extends Lang
             () -> opt(call.resolve())
                 // try to get type info from standard_2.php
                 .fop(toCast(Function.class))
-                .map(func -> new DeepType(call, getDocType(func)))
+                .fap(func -> getDocType(func, callExprCtx))
         );
 
         It<DeepType> mysqliTit = new MysqliRes(ctx)
