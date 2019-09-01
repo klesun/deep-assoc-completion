@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.08.28.001</version>
+    <version>2019.09.01.002</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#108 Add very explicit null checks in the truncateOnLineBreak(), hopefully that will fix the issue for good</li>
+        <li>#111 Provide psalm @return doccomment completion from simple functions too, not just from methods</li>
+        <li>#112 Fix: space before parentheses in psalm method completion</li>
     </ul>
     ]]>
     </change-notes>

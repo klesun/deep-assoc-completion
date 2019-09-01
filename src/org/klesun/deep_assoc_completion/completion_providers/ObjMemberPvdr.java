@@ -154,7 +154,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
             .fap(clsPsi -> opt(clsPsi.getDocComment()))
             .map(doc -> PsalmFuncInfo.parseClsDoc(doc))
             .fap(clsInfo -> It.cnc(
-                It(clsInfo.magicMethods.keySet()).map(name -> makeBase(name + " ()", "from psalm")),
+                It(clsInfo.magicMethods.keySet()).map(name -> makeBase(name + "()", "from psalm")),
                 It(clsInfo.magicProps.keySet()).map(name -> makeBase(name, "from psalm"))
             ));
     }
