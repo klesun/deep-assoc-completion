@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.09.01.002</version>
+    <version>2019.09.11.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,8 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#111 Provide psalm @return doccomment completion from simple functions too, not just from methods</li>
-        <li>#112 Fix: space before parentheses in psalm method completion</li>
+        <li>Allow function call be prefixed with "\" in @return phpdoc. Like in `@return array = \mysqli_query($h, 'SELECT * FROM priceQuote')`</li>
     </ul>
     ]]>
     </change-notes>

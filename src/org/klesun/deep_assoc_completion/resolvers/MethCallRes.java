@@ -170,7 +170,7 @@ public class MethCallRes extends Lang
     private static It<DeepType> parseReturnDoc(PhpDocReturnTag returnDoc, IExprCtx funcCtx)
     {
         IExprCtx docCtx = funcCtx.subCtxDoc(returnDoc);
-        String regex = "^\\s*(like|=|)\\s*((?:\\[|[a-zA-Z_]+[\\(:]|new\\s+).*)$";
+        String regex = "^\\s*(like|=|)\\s*((?:\\[|\\\\?[a-zA-Z_]+[\\(:]|new\\s+).*)$";
         It<DeepType> asEq = Tls.regex(regex, returnDoc.getTagValue())
             .fop(match -> match.gat(1))
             .fap(expr -> DocParamRes.parseExpression(expr, returnDoc.getProject(), docCtx));
