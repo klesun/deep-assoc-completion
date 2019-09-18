@@ -410,24 +410,43 @@ public class UsageBasedTypeResolver
             ));
     }
 
-    private It<DeepType> findArrCtorTypeFromUsage(ArrayCreationExpression arrCtor)
+    private It<DeepType> resolveAssignmentValue(AssignmentExpression ass, PhpExpression expr)
     {
-        SearchCtx fakeSearch = new SearchCtx(arrCtor.getProject());
-        FuncCtx funcCtx = new FuncCtx(fakeSearch);
-        IExprCtx fakeCtx = new ExprCtx(funcCtx, arrCtor, 0);
+        if (!expr.isEquivalentTo(ass.getValue())) {
+            return It.non();
+        }
 
-        return It.cnc(
-            resolve(arrCtor),
-            opt(arrCtor.getParent())
-                .fop(toCast(AssignmentExpression.class))
-                .flt(ass -> arrCtor.isEquivalentTo(ass.getValue()))
-                .map(ass -> ass.getVariable())
+        // could cover more cases by deeply resolving the field,
+        // but I'm scared of potential performance issues
+        It<DeepType> asField = opt(ass.getVariable())
+            .cst(FieldReferenceImpl.class)
+            .fap(ref -> L(ref.multiResolve(false)))
+            .fap(res -> opt(res.getElement()))
+            .cst(FieldImpl.class)
+            .fap(fld -> FieldRes.declToExplTypes(fld, fakeCtx.subCtxEmpty()));
+
+        // trying to only lookup for var usage for the direct expression
+        // in which caret is placed to avoid circular catastrophes and stuff
+        It<DeepType> asVar = It.non();
+        if (expr instanceof ArrayCreationExpression ||
+            expr instanceof StringLiteralExpression
+        ) {
+            // not sure these 3 lines do something meaningful
+            // and are not just refactoring artifacts...
+            SearchCtx fakeSearch = new SearchCtx(expr.getProject());
+            FuncCtx funcCtx = new FuncCtx(fakeSearch);
+            IExprCtx fakeCtx = new ExprCtx(funcCtx, expr, 0);
+
+            asVar = opt(ass.getVariable())
                 .fop(toCast(Variable.class))
                 .fap(var -> It.cnc(
                     new VarRes(fakeCtx).getDocType(var),
                     findVarTypeFromUsage(var)
-                ))
-        );
+                ));
+        }
+
+
+        return It.cnc(asField, asVar);
     }
 
     private Set<String> getExplicitKeys(ArrayCreationExpression arrCtor, PhpExpression caretExpr) {
@@ -448,7 +467,7 @@ public class UsageBasedTypeResolver
                     .cst(ArrayCreationExpression.class)
                     .fap(arrCtor -> {
                         // associative array element
-                        It<DeepType> arrTit = findArrCtorTypeFromUsage(arrCtor);
+                        It<DeepType> arrTit = resolve(arrCtor);
                         if (Objects.equals(hash.getValue(), caretExpr)) {
                             Opt<String> key = opt(hash.getKey())
                                 .fop(toCast(StringLiteralExpression.class))
@@ -468,7 +487,7 @@ public class UsageBasedTypeResolver
                             .arr().indexOf(caretExpr.getParent());
                         Opt<String> key = order > -1 ? opt(order + "") : opt(null);
                         Set<String> alreadyDeclared = getExplicitKeys(arrCtor, caretExpr);
-                        return findArrCtorTypeFromUsage(arrCtor)
+                        return resolve(arrCtor)
                             .fap(t -> It.cnc(
                                 Mt.getKeySt(t, key.def(null)),
                                 // if user just started typing the key, there is no => after it, hence IDEA
@@ -512,6 +531,12 @@ public class UsageBasedTypeResolver
             .cst(StringLiteralExpression.class)
             .map(lit -> new DeepType(lit, PhpType.STRING, lit.getContents()));
 
+        // trying to not cover too many things here to avoid hangs when
+        // user types the value, but possibly this is not so needed...
+        It<DeepType> asAssignment = opt(caretExpr.getParent())
+            .fop(toCast(AssignmentExpression.class))
+            .fap(ass -> resolveAssignmentValue(ass, caretExpr));
+
         It<DeepType> asRetVal = opt(caretExpr.getParent())
             .fop(toCast(PhpReturn.class))
             .fap(ret -> Tls.findParent(ret, Function.class))
@@ -528,7 +553,8 @@ public class UsageBasedTypeResolver
 
         MemIt<DeepType> result = It.cnc(
             asAssocKey, asEqStrVal, asPlusArr,
-            asFuncArg, asRetVal, asPropInit
+            asFuncArg, asRetVal, asPropInit,
+            asAssignment
         ).mem();
         putToCache(caretExpr, result);
         return result.itr();

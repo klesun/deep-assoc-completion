@@ -11,6 +11,12 @@ interface IUsageBase
     public static function getReturnDocObjectVars($rules);
 }
 
+class Example_fieldStrAss
+{
+    /** @var string=['a','b','c'][$i] */
+    var $field;
+}
+
 /**
  * calls UsageResolver on the argument of each provide* function and
  * tests that it's return value matches the inferred argument type
@@ -1015,6 +1021,15 @@ class UsageResolverUnitTest implements IUsageBase
         ];
     }
 
+    public function provide_fieldStrAss($param1)
+    {
+        $obj=new Example_fieldStrAss();
+        $obj->field=$param1; // it fails to autocomplete
+        return [
+            'param1' => 'a' ?: 'b' ?: 'c',
+        ];
+    }
+
     //=========================
     // following not implemented yet
     //========================
@@ -1025,7 +1040,7 @@ class UsageResolverUnitTest implements IUsageBase
 
     public function testBuiltInArgTypeDefs()
     {
-        proc_open('ls', [0 => 1], &$pipes, $cwd, $env, [
+        proc_open('ls', [0 => 1], $pipes, $cwd, $env, [
             ''
         ]);
 
