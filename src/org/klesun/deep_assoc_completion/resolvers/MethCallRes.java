@@ -10,6 +10,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.FieldImpl;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import com.jetbrains.php.lang.psi.stubs.indexes.expectedArguments.PhpExpectedFunctionArgument;
@@ -63,6 +64,15 @@ public class MethCallRes extends Lang
             .fap(clsArg -> clsArg.getMethods())
             .flt(m -> m.getName().equals(meth.getName()));
         return It.cnc(som(meth), overridden);
+    }
+
+    /** note, does not include the overriding field unlike findOverriddenMethods() */
+    public static It<Field> findOverriddenFields(FieldImpl caretField)
+    {
+        return opt(caretField.getContainingClass())
+            .fap(cls -> It(cls.getSupers()))
+            .fap(clsArg -> clsArg.getFields())
+            .flt(m -> m.getName().equals(caretField.getName()));
     }
 
     /**

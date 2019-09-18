@@ -838,3 +838,23 @@ class A
 $a = new A();
 $a->getFoo('');
 $a->getBar(JSON_PRETTY_PRINT);
+
+class BasePlugin
+{
+    /**
+     * @var array = [$name => ['uses' => '', 'action' => '']]
+     */
+    public $routes = [];
+}
+$p = new BasePlugin;
+$p->routes['asdfasdf']['action']; // completion works
+
+class MyPlugin extends BasePlugin
+{
+    public $routes = [
+        'a' => [
+            // mahalai-mahalai, completion works now!
+            '' => 'ololo',
+        ]
+    ];
+}

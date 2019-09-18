@@ -481,6 +481,12 @@ public class UsageBasedTypeResolver
                     })));
     }
 
+    private It<DeepType> resolveOverriddenFieldType(FieldImpl field)
+    {
+        return MethCallRes.findOverriddenFields(field)
+            .fap(f -> FieldRes.declToExplTypes(f, fakeCtx.subCtxEmpty()));
+    }
+
     // if arg is assoc array - will return type with keys accessed on it
     // if arg is string - will return type of values it can take
     public It<DeepType> resolve(PhpExpression caretExpr)
@@ -515,7 +521,15 @@ public class UsageBasedTypeResolver
             .fop(toCast(ParameterList.class))
             .fap(argList -> findArgExprTypeFromUsage(caretExpr, argList));
 
-        MemIt<DeepType> result = It.cnc(asAssocKey, asEqStrVal, asPlusArr, asFuncArg, asRetVal).mem();
+        It<DeepType> asPropInit = opt(caretExpr.getParent())
+            .cst(FieldImpl.class)
+            .flt(f -> caretExpr.equals(f.getDefaultValue()))
+            .fap(f -> resolveOverriddenFieldType(f));
+
+        MemIt<DeepType> result = It.cnc(
+            asAssocKey, asEqStrVal, asPlusArr,
+            asFuncArg, asRetVal, asPropInit
+        ).mem();
         putToCache(caretExpr, result);
         return result.itr();
     }
