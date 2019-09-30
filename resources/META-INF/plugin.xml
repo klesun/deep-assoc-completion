@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.09.18.002</version>
+    <version>2019.09.30.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,8 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#111 Provide string value completion in object field assignment</li>
-        <li>#114 Provide completion in overridden field initialization based on the keys in the parent class</li>
+        <li>#115 Make phpstorm not highlight methods as "not found" when called on an object from associative array</li>
     </ul>
     ]]>
     </change-notes>
@@ -65,6 +64,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
     </extensions>
 
     <extensions defaultExtensionNs="com.jetbrains.php">
+        <typeProvider4 order="first" implementation="org.klesun.deep_assoc_completion.entry.MixedTypePvdr"/>
         <typeProvider3 order="last" implementation="org.klesun.deep_assoc_completion.entry.AssocTypePvdr"/>
     </extensions>
 
