@@ -2294,6 +2294,25 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    /** @param $tuple = [['a' => 5], ['b' => 6]] */
+    public function provide_php71TupleAssignment($tuple)
+    {
+        list($a1, $b1) = $tuple;
+        [$a2, $b2] = $tuple;
+
+        $a1[''];
+        $a2[''];
+        $b1[''];
+        $b2[''];
+
+        return [
+            [$a1, ['a']],
+            [$a2, ['a']],
+            [$b1, ['b']],
+            [$b2, ['b']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

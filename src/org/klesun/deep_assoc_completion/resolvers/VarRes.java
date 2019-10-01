@@ -23,6 +23,8 @@ import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 import org.klesun.lang.iterators.RegexIterator;
 
+import java.util.List;
+
 import static org.klesun.deep_assoc_completion.structures.Mkt.*;
 import static org.klesun.lang.Lang.*;
 
@@ -152,32 +154,62 @@ public class VarRes
                 .fap(globt -> Mt.getKeySt(globt, varPsi.getName())));
     }
 
+    private static Opt<T2<L<String>, PhpExpression>> parseTupleAssignment(MultiassignmentExpression multi, PsiElement varRef)
+    {
+        List<Variable> vars = L(multi.getVariables())
+            // the var will be wrapped in PhpPsiElementImpl in case of [$a]
+            .fop(v -> Tls.cast(Variable.class, v)
+                .elf(() -> opt(v.getFirstPsiChild())
+                    .cst(Variable.class)))
+            .arr();
+        int order = vars.indexOf(varRef);
+        return opt(multi.getValue())
+            /** assigned value is wrapped inside an "expression impl" */
+            .fop(v -> opt(v.getFirstPsiChild()))
+            .fop(toCast(PhpExpression.class))
+            .fop(assignedValue -> {
+                if (order > -1) {
+                    // for now handling just simple list($a, $b) = ...
+                    // ignoring stuff like list($a, list($b)) = ...
+                    // and list('a' => $a, 'b' => $b) = ...
+                    L<String> keyPath = list(order + "");
+                    return som(T2(keyPath, assignedValue));
+                } else {
+                    return non();
+                }
+            });
+    }
+
+    /** @return tuple: (keyPath, sourceArrayExpression) */
+    private static Opt<T2<L<String>, PhpExpression>> parseAsTupleAssignment(PsiElement varRef)
+    {
+        return opt(varRef.getParent()).fop(p -> Opt.fst(
+            // list($a, $b) = $tuple;
+            () -> Tls.cast(MultiassignmentExpressionImpl.class, p)
+                /** array creation is wrapped inside an "expression impl" */
+                .fop(multi -> parseTupleAssignment(multi, varRef)),
+            // [$a, $b] = $tuple;
+            () -> Tls.cast(PhpPsiElementImpl.class, p)
+                .fop(wrapperPsi -> opt(wrapperPsi.getParent()))
+                .cst(ArrayCreationExpression.class)
+                .fop(arrCtor -> opt(arrCtor.getParent()))
+                .cst(MultiassignmentExpression.class)
+                .fop(multi -> parseTupleAssignment(multi, varRef))
+        ));
+    }
+
     private Opt<S<It<DeepType>>> assertTupleAssignment(PsiElement varRef)
     {
-        return opt(varRef.getParent())
-            .fop(toCast(MultiassignmentExpressionImpl.class))
-            .fop(multi -> opt(multi.getValue())
-                /** array creation is wrapped inside an "expression impl" */
-                .map(v -> v.getFirstPsiChild())
-                .fop(toCast(PhpExpression.class))
-                .map(val -> ctx.findExprType(val))
-                .flt(types -> types.has())
-                .fop(arrts -> opt(multi.getVariables())
-                    .fop(vars -> {
-                        for (Integer i = 0; i < vars.size(); ++i) {
-                            if (vars.get(i).isEquivalentTo(varRef)) {
-                                return opt(i);
-                            }
+        return parseAsTupleAssignment(varRef)
+            .map(tuple -> () -> tuple
+                .nme((keyPath, arrVal) -> ctx.findExprType(arrVal)
+                    .fap(arrt -> {
+                        It<DeepType> takenTit = list(arrt).itr();
+                        for (String key: keyPath) {
+                            takenTit = takenTit.fap(t -> Mt.getKeySt(t, key));
                         }
-                        return opt(null);
-                    })
-                    .map(i -> arrts
-                        .fap(t -> t.keys)
-                        .flt(k -> k.keyType.getNames().any(n -> n.equals(i + "")))
-                        .fap(k -> k.getTypeGetters()))
-                )
-                .map(mtgs -> () -> mtgs.fap(g -> g.get().types))
-            );
+                        return takenTit;
+                    })));
     }
 
     private Opt<S<It<DeepType>>> assertPregMatchResult(PsiElement varRef)
