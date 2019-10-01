@@ -27,11 +27,8 @@ public class MixedTypePvdr implements PhpTypeProvider4
     @Nullable
     public PhpType getType(PsiElement psi)
     {
-
         boolean isArrAcc = PlatformPatterns.psiElement(PhpElementTypes.ARRAY_ACCESS_EXPRESSION)
             .accepts(psi);
-
-        System.out.println("zhopa arr acc " + isArrAcc + " - " + psi.getText());
 
         if (isArrAcc) {
             // when you store some object in an associative array, phpstorm
