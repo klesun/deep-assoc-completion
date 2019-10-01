@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.10.01.001</version>
+    <version>2019.10.01.002</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#115 Make phpstorm not highlight methods as "not found" when called on an object from associative array</li>
+        <li>#116: Support php 7.1 [] tuple assignment</li>
     </ul>
     ]]>
     </change-notes>
