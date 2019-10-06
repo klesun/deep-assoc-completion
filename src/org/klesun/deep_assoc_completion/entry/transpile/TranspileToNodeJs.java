@@ -21,6 +21,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.FuncCallRes;
 import org.klesun.deep_assoc_completion.resolvers.VarRes;
+import org.klesun.deep_assoc_completion.structures.ForEach;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
@@ -175,22 +176,22 @@ public class TranspileToNodeJs extends AnAction
     {
         It<PsiElement> stats = Tls.findChildren(typed, GroupStatement.class)
             .fst().fap(gr -> It(gr.getStatements()));
-        return VarRes.parseForeach(typed)
-            .fop(tup -> tup.nme((arr, keyOpt, valOpt, tuple) -> {
+        return ForEach.parse(typed)
+            .fop(fch -> {
                 Opt<String> valuePartOpt = Opt.fst(
-                    () -> valOpt.map(vari -> vari.getText()),
-                    () -> som("[" + tuple.map(vari -> vari.getText()).str(", ") + "]")
+                    () -> fch.valVar.map(vari -> vari.getText()),
+                    () -> som("[" + fch.listVars.map(vari -> vari.b.getText()).str(", ") + "]")
                 );
                 return valuePartOpt.map(valuePart -> {
-                    String arrPart = trans(arr);
-                    String content = keyOpt
+                    String arrPart = trans(fch.srcArr);
+                    String content = fch.keyVar
                         .map(key -> "[" + key.getText() + ", " + valuePart + "] of Object.entries(" + arrPart + ")")
                         .def(valuePart + " of Object.values(" + arrPart + ")");
                     return "for (" + content + ") {\n"
                         + stats.map(st -> getIndent(st) + trans(st)).str("\n")
                         + "}";
                 });
-            }));
+            });
     }
 
     /**

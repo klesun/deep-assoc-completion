@@ -2321,6 +2321,7 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ['postal_code' => $zipCode2, 'locality' => $locality2] = $record;
         $records = [$record, $record, $record];
         $mapped = [];
+        //foreach ($records as list('locality' => $loc, 'postal_code' => $zip)) {
         foreach ($records as ['locality' => $loc, 'postal_code' => $zip]) {
             $mapped[] = ['loc' => $loc, 'zip' => $zip];
             //$mapped[] = compact('loc', 'zip');
@@ -2328,6 +2329,7 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         $locality[''];
         $locality2[''];
         $zipCode[0][''];
+        $mapped[0]['loc'][''];
         return [
             [$locality, ['Tunis']],
             [$locality2, ['Tunis']],
