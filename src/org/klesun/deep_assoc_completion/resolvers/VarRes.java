@@ -1,5 +1,6 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
+import com.intellij.formatting.WhiteSpace;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
@@ -154,7 +155,18 @@ public class VarRes
                 .fap(globt -> Mt.getKeySt(globt, varPsi.getName())));
     }
 
-    private static Opt<T2<L<String>, PhpExpression>> parseTupleAssignment(MultiassignmentExpression multi, PsiElement varRef)
+    private static Opt<String> assertListKey(PsiElement varRef)
+    {
+        return opt(varRef.getPrevSibling())
+            .fop(s -> s instanceof PsiWhiteSpace ? opt(s.getPrevSibling()) : som(s))
+            .fop(s -> s.getText().equals("=>") ? opt(s.getPrevSibling()) : non())
+            .fop(s -> s instanceof PsiWhiteSpace ? opt(s.getPrevSibling()) : som(s))
+            .cst(StringLiteralExpression.class)
+            .map(s -> s.getContents())
+        ;
+    }
+
+    private static Opt<T2<L<String>, PhpExpression>> parseTupleAssignment(MultiassignmentExpression multi, PsiElement varRef, Opt<String> keyOpt)
     {
         List<Variable> vars = L(multi.getVariables())
             // the var will be wrapped in PhpPsiElementImpl in case of [$a]
@@ -163,20 +175,19 @@ public class VarRes
                     .cst(Variable.class)))
             .arr();
         int order = vars.indexOf(varRef);
+        if (order < 0) {
+            return non();
+        }
+        String key = keyOpt.def(order + "");
         return opt(multi.getValue())
             /** assigned value is wrapped inside an "expression impl" */
             .fop(v -> opt(v.getFirstPsiChild()))
             .fop(toCast(PhpExpression.class))
             .fop(assignedValue -> {
-                if (order > -1) {
-                    // for now handling just simple list($a, $b) = ...
-                    // ignoring stuff like list($a, list($b)) = ...
-                    // and list('a' => $a, 'b' => $b) = ...
-                    L<String> keyPath = list(order + "");
-                    return som(T2(keyPath, assignedValue));
-                } else {
-                    return non();
-                }
+                // for now handling just simple list($a, $b) = ...
+                // ignoring stuff like list($a, list($b)) = ...
+                L<String> keyPath = list(key);
+                return som(T2(keyPath, assignedValue));
             });
     }
 
@@ -187,14 +198,25 @@ public class VarRes
             // list($a, $b) = $tuple;
             () -> Tls.cast(MultiassignmentExpressionImpl.class, p)
                 /** array creation is wrapped inside an "expression impl" */
-                .fop(multi -> parseTupleAssignment(multi, varRef)),
+                .fop(multi -> parseTupleAssignment(multi, varRef, assertListKey(varRef))),
             // [$a, $b] = $tuple;
             () -> Tls.cast(PhpPsiElementImpl.class, p)
                 .fop(wrapperPsi -> opt(wrapperPsi.getParent()))
-                .cst(ArrayCreationExpression.class)
-                .fop(arrCtor -> opt(arrCtor.getParent()))
-                .cst(MultiassignmentExpression.class)
-                .fop(multi -> parseTupleAssignment(multi, varRef))
+                .fop(valParent -> {
+                    Opt<String> keyOpt = non();
+                    if (valParent instanceof ArrayHashElement) {
+                        keyOpt = opt(((ArrayHashElement) valParent).getKey())
+                            .cst(StringLiteralExpression.class)
+                            .map(lit -> lit.getContents());
+                        valParent = valParent.getParent();
+                    }
+                    Opt<String> keyOptf = keyOpt;
+                    return opt(valParent)
+                        .cst(ArrayCreationExpression.class)
+                        .fop(arrCtor -> opt(arrCtor.getParent()))
+                        .cst(MultiassignmentExpression.class)
+                        .fop(multi -> parseTupleAssignment(multi, varRef, keyOptf));
+                })
         ));
     }
 

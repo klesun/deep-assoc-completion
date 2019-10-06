@@ -2313,6 +2313,31 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    public function provideListWithKeys()
+    {
+        $record = ['locality' => ['Tunis' => 1], 'postal_code' => [['value' => '1110']]];
+
+        list('postal_code' => $zipCode, 'locality' => $locality) = $record;
+        ['postal_code' => $zipCode2, 'locality' => $locality2] = $record;
+        $records = [$record, $record, $record];
+        $mapped = [];
+        foreach ($records as ['locality' => $loc, 'postal_code' => $zip]) {
+            $mapped[] = ['loc' => $loc, 'zip' => $zip];
+            //$mapped[] = compact('loc', 'zip');
+        }
+        $locality[''];
+        $locality2[''];
+        $zipCode[0][''];
+        return [
+            [$locality, ['Tunis']],
+            [$locality2, ['Tunis']],
+            [$zipCode[0], ['value']],
+            [$zipCode2[0], ['value']],
+            [$mapped[0]['loc'], ['Tunis']],
+            [$mapped[0]['zip'][0], ['value']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
