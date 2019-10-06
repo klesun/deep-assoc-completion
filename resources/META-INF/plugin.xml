@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.10.01.002</version>
+    <version>2019.10.07.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#116: Support php 7.1 [] tuple assignment</li>
+        <li>#117 Support php 7.1 list() and [] with keys: in both var declaration and foreach</li>
     </ul>
     ]]>
     </change-notes>
