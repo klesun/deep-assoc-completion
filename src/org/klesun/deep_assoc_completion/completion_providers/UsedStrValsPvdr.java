@@ -6,9 +6,11 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
+import com.jetbrains.php.lang.psi.elements.impl.ForeachImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
@@ -150,6 +152,23 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
                 .fap(t -> Mt.getElSt(t)));
     }
 
+    private static It<DeepType> resolveForeachListKey(StringLiteralExpression lit, IExprCtx funcCtx)
+    {
+        boolean isKeyInList = opt(lit.getNextSibling())
+            .fop(sib -> sib instanceof PsiWhiteSpace ? opt(sib.getNextSibling()) : som(sib))
+            .any(sib -> sib.getText().equals("=>"));
+        if (!isKeyInList) {
+            return It.non();
+        }
+        return opt(lit.getParent())
+            .cst(ForeachImpl.class)
+            .fap(fch -> opt(fch.getArray()))
+            .cst(PhpExpression.class)
+            .fap(expr -> funcCtx.findExprType(expr))
+            .fap(arrt -> Mt.getElSt(arrt))
+            .fap(elt -> elt.keys.fap(k -> k.keyType.types));
+    }
+
     public static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
         SearchCtx search = new SearchCtx(lit.getProject())
@@ -159,6 +178,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
 
         return It.cnc(
             resolveEqExpr(lit, exprCtx),
+            resolveForeachListKey(lit, exprCtx),
             resolveUsedValues(lit, exprCtx),
             resolveInArrayHaystack(lit, exprCtx),
             resolveInArrayNeedle(lit, exprCtx),
