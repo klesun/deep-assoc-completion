@@ -177,7 +177,6 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
             alreadySuggested.add(otherSourceResult.getLookupElement().getLookupString());
         });
 
-
         long startTime = System.nanoTime();
         It<DeepType> tit = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
             .fop(toCast(StringLiteralExpression.class))

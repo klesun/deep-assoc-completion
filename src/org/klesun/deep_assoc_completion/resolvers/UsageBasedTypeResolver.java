@@ -458,6 +458,16 @@ public class UsageBasedTypeResolver
             .wap(tit -> new HashSet<>(tit.arr()));
     }
 
+    private It<DeepType> resolveArrCtor(ArrayCreationExpression arrCtor) {
+        It<DeepType> asListAss = opt(arrCtor.getParent())
+            .cst(MultiassignmentExpression.class)
+            .fap(multi -> opt(multi.getValue()))
+            .fap(wrapperPsi -> opt(wrapperPsi.getFirstPsiChild()))
+            .cst(PhpExpression.class)
+            .fap(valPsi -> fakeCtx.findExprType(valPsi));
+        return It.cnc(resolve(arrCtor), asListAss);
+    }
+
     private It<DeepType> resolveOuterArray(PhpExpression caretExpr) {
         return opt(caretExpr.getParent())
             .cst(PhpPsiElementImpl.class)
@@ -467,7 +477,7 @@ public class UsageBasedTypeResolver
                     .cst(ArrayCreationExpression.class)
                     .fap(arrCtor -> {
                         // associative array element
-                        It<DeepType> arrTit = resolve(arrCtor);
+                        It<DeepType> arrTit = resolveArrCtor(arrCtor);
                         if (Objects.equals(hash.getValue(), caretExpr)) {
                             Opt<String> key = opt(hash.getKey())
                                 .fop(toCast(StringLiteralExpression.class))
@@ -487,7 +497,7 @@ public class UsageBasedTypeResolver
                             .arr().indexOf(caretExpr.getParent());
                         Opt<String> key = order > -1 ? opt(order + "") : opt(null);
                         Set<String> alreadyDeclared = getExplicitKeys(arrCtor, caretExpr);
-                        return resolve(arrCtor)
+                        return resolveArrCtor(arrCtor)
                             .fap(t -> It.cnc(
                                 Mt.getKeySt(t, key.def(null)),
                                 // if user just started typing the key, there is no => after it, hence IDEA
