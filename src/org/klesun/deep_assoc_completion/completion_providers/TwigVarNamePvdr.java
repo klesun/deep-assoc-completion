@@ -56,19 +56,31 @@ public class TwigVarNamePvdr extends CompletionProvider<CompletionParameters>
                 search.isMain = true;
                 ExprCtx exprCtx = new ExprCtx(funcCtx, caretLeaf, 0);
 
-                Mt rootMt = opt(caretLeaf.getContainingFile())
+                Mt mt = opt(caretLeaf.getContainingFile())
                     .cst(TwigFile.class)
-                    .fap(f -> getRootDocTypes(f, exprCtx))
+                    .fap(f -> {
+                        It<DeepType> rootTit = getRootDocTypes(f, exprCtx);
+
+                        int r = caretLeaf.getTextOffset();
+                        int l = Math.max(0, r - 100);
+                        String prefix = f.getText().substring(l, r);
+                        L<String> keyPath = Tls.regex("^[\\s\\S]*?((?:\\w+\\.)+)\\w*$", prefix)
+                            .fap(m -> m.gat(0))
+                            .fap(str -> L(str.split("\\.")))
+                            .arr();
+
+                        return rootTit.fap(t -> Mt.getKeyPath(t, keyPath));
+                    })
                     .wap(Mt::new);
 
-                return rootMt.types
+                return mt.types
                     .fap(t -> t.keys)
                     .fap(k -> k.keyType.getTypes())
                     .fap(kt -> opt(kt.stringValue))
                     .unq()
                     .map(name -> LookupElementBuilder.create(name)
                         .withIcon(AssocKeyPvdr.getIcon())
-                        .withTailText(" = " + rootMt.getKey(name).getBriefValueText(50)));
+                        .withTailText(" = " + mt.getKey(name).getBriefValueText(50)));
             });
         options.forEach(result::addElement);
     }

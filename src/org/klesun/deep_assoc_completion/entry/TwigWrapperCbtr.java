@@ -17,7 +17,6 @@ public class TwigWrapperCbtr extends CompletionContributor
 {
     public TwigWrapperCbtr()
     {
-        System.out.println("guzno extend");
         // {{ varName }}
         this.extend(
             CompletionType.BASIC,

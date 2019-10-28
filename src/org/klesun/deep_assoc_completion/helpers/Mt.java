@@ -128,6 +128,17 @@ public class Mt
         );
     }
 
+    public static It<DeepType> getKeyPath(DeepType type, L<String> keyPath)
+    {
+        Mt mt = type.mt();
+        for (String key: keyPath) {
+            // not sure how java will behave with this `key` var
+            // in lazy calls, possibly it will screw things up...
+            mt = mt.getKey(key);
+        }
+        return mt.types.itr();
+    }
+
     public Mt getKey(String keyName)
     {
         if (isGettingKey) { // see issue #45
