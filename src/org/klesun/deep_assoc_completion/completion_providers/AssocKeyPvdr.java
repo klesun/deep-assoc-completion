@@ -205,10 +205,6 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        int depth = getMaxDepth(parameters);
-        SearchCtx search = new SearchCtx(parameters).setDepth(depth);
-        FuncCtx funcCtx = new FuncCtx(search);
-        search.isMain = true;
         Set<String> suggested = new HashSet<>();
         PsiElement caretPsi = parameters.getPosition(); // usually leaf element
         Opt<PsiElement> firstParent = opt(caretPsi.getParent());
@@ -219,6 +215,10 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         long startTime = System.nanoTime();
         Mutable<Long> firstTime = new Mutable<>(-1L);
 
+        int depth = getMaxDepth(parameters);
+        SearchCtx search = new SearchCtx(parameters).setDepth(depth);
+        FuncCtx funcCtx = new FuncCtx(search);
+        search.isMain = true;
         ExprCtx exprCtx = new ExprCtx(funcCtx, caretPsi, 0);
         It<DeepType> arrTit;
         try {

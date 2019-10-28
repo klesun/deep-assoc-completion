@@ -1,0 +1,5 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <completion.contributor order="first" language="Twig" implementationClass="org.klesun.deep_assoc_completion.entry.TwigWrapperCbtr"/>
+    </extensions>
+</idea-plugin>
