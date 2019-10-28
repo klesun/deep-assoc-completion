@@ -11,6 +11,7 @@ import com.intellij.psi.impl.source.tree.PsiCommentImpl;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.twig.TwigFile;
+import com.jetbrains.twig.elements.TwigCompositeElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
@@ -45,6 +46,37 @@ public class TwigVarNamePvdr extends CompletionProvider<CompletionParameters>
             .fap(eqExpr -> new DocParamRes(ctx).parseEqExpression(eqExpr, f));
     }
 
+    private static L<T2<String, String>> getParentLoops(PsiElement caretLeaf)
+    {
+        // el var name, arr var name tuples
+        L<T2<String, String>> fchs = L();
+        Opt<PsiElement> parentOpt = opt(caretLeaf.getParent());
+        while (parentOpt.has()) {
+            PsiElement parent = parentOpt.unw();
+            // ignoring the key as it is not of use for us for now
+            Opt<L<String>> fchMatch = Tls.regex("^\\{\\%\\s*for\\s+(?:\\w+\\s*,\\s*)?(\\w+)\\s*in\\s*(\\w+).*", parent.getText());
+            if (fchMatch.has()) {
+                L<String> m = fchMatch.unw();
+                fchs.add(T2(m.get(0), m.get(1)));
+            }
+            parentOpt = opt(parent.getParent());
+        }
+        return fchs;
+    }
+
+    private static It<DeepType> resolveVar(String varName, L<T2<String, String>> parentLoops, Mt rootMt)
+    {
+        for (int i = 0; i < parentLoops.size(); ++i) {
+            String itemVar = parentLoops.get(i).a;
+            String arrVar = parentLoops.get(i).b;
+            if (itemVar.equals(varName)) {
+                return resolveVar(arrVar, parentLoops.sub(i + 1), rootMt)
+                    .fap(parentType -> Mt.getElSt(parentType));
+            }
+        }
+        return rootMt.getKey(varName).types.itr();
+    }
+
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
@@ -68,8 +100,15 @@ public class TwigVarNamePvdr extends CompletionProvider<CompletionParameters>
                             .fap(m -> m.gat(0))
                             .fap(str -> L(str.split("\\.")))
                             .arr();
-
-                        return rootTit.fap(t -> Mt.getKeyPath(t, keyPath));
+                        if (keyPath.size() > 0) {
+                            String varName = keyPath.remove(0);
+                            L<T2<String, String>> parentLoops = getParentLoops(caretLeaf);
+                            Mt rootMt = new Mt(rootTit);
+                            It<DeepType> varTit = resolveVar(varName, parentLoops, rootMt);
+                            return varTit.fap(t -> Mt.getKeyPath(t, keyPath));
+                        } else {
+                            return rootTit;
+                        }
                     })
                     .wap(Mt::new);
 
