@@ -56,16 +56,19 @@ public class TwigVarNamePvdr extends CompletionProvider<CompletionParameters>
                 search.isMain = true;
                 ExprCtx exprCtx = new ExprCtx(funcCtx, caretLeaf, 0);
 
-                It<DeepType> dataSrcTit = opt(caretLeaf.getContainingFile())
+                Mt rootMt = opt(caretLeaf.getContainingFile())
                     .cst(TwigFile.class)
-                    .fap(f -> getRootDocTypes(f, exprCtx));
-                return dataSrcTit
+                    .fap(f -> getRootDocTypes(f, exprCtx))
+                    .wap(Mt::new);
+
+                return rootMt.types
                     .fap(t -> t.keys)
                     .fap(k -> k.keyType.getTypes())
                     .fap(kt -> opt(kt.stringValue))
                     .unq()
                     .map(name -> LookupElementBuilder.create(name)
-                        .withIcon(AssocKeyPvdr.getIcon()));
+                        .withIcon(AssocKeyPvdr.getIcon())
+                        .withTailText(" = " + rootMt.getKey(name).getBriefValueText(50)));
             });
         options.forEach(result::addElement);
     }
