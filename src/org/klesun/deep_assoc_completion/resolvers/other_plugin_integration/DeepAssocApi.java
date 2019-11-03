@@ -35,7 +35,7 @@ public class DeepAssocApi
 
     public It<DeepType> parseDoc(String content, PsiElement psi)
     {
-        if (content.matches("\\s*=\\s*\\[\\s*['\"]\\w*['\"]\\s*=>.*")) {
+        if (content.matches("\\s*=\\s*\\[\\s*['\"]\\w*['\"]\\s*=>[\\s\\S]*")) {
             // do not parse ['key' => 123] as javascript array
             return It.non();
         }
