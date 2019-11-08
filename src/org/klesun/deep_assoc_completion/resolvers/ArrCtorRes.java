@@ -37,9 +37,26 @@ public class ArrCtorRes extends Lang
         if (pst == null) {
             return non();
         }
-        PhpType filtered = pst.filterUnknown().filterPrimitives()
-            .filterNull().filterMixed().filter(PhpType.OBJECT);
-        return filtered.isEmpty() ? non() : som(filtered);
+        PhpType objt = PhpType.builder()
+            .add(PhpType.OBJECT)
+            .add(PhpType.$THIS)
+            .add(PhpType.STATIC).build();
+        Set<String> partiallyFiltered = pst.filterPrimitives()
+            .filterNull().filterMixed().filter(objt).getTypes();
+        L<String> filtered = L(partiallyFiltered).flt(fqn -> !fqn.equals("?")).arr();
+        if (!filtered.has()) {
+            return non();
+        } else {
+            PhpType.PhpTypeBuilder builder = PhpType.builder();
+            for (String fqn: filtered) {
+                if (fqn.startsWith("#S")) {
+                    // since 2019.2.3 phpstorm started to prefix _static_ class type with "#S"
+                    fqn = fqn.substring(2);
+                }
+                builder.add(fqn);
+            }
+            return som(builder.build());
+        }
     }
 
     public static Set<String> ideaTypeToFqn(PhpType ideaType)

@@ -44,7 +44,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
     </change-notes>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-    <idea-version since-build="191.6707.66"/> <!-- .phpstorm.meta.php -->
+    <idea-version since-build="192.6817.20"/> <!-- PhpType.STATIC -->
 
     <extensions defaultExtensionNs="com.intellij">
         <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DeepAssocCbtr"/>
