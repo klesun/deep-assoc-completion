@@ -2340,6 +2340,16 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    /** @param $row = Magic::dbRow('delete_me') */
+    public function provide_magicDbRow($row)
+    {
+        $row[''];
+        \Magic::dbRow('delete_me')[''];
+        return [
+            [$row, ['id', 'name', 'price']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

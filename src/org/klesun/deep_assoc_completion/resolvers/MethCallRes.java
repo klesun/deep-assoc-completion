@@ -10,6 +10,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FieldImpl;
 import com.jetbrains.php.lang.psi.elements.impl.MethodReferenceImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
@@ -24,6 +25,7 @@ import org.klesun.deep_assoc_completion.resolvers.builtins.MysqliRes;
 import org.klesun.deep_assoc_completion.resolvers.mem_res.MemRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Mkt;
 import org.klesun.lang.*;
 
 import java.util.Collection;
@@ -292,6 +294,25 @@ public class MethCallRes extends Lang
         );
     }
 
+    private It<DeepType> resolveMagicFqn(MethodReferenceImpl methCall, IExprCtx callCtx)
+    {
+        String clsFqn = opt(methCall.getClassReference())
+            .cst(ClassReferenceImpl.class)
+            .map(ref -> ref.getFQN())
+            .def("");
+        String methName = opt(methCall.getName()).def("");
+        if ((clsFqn.equals("Magic") || clsFqn.equals("\\Magic")) &&
+            methName.equals("dbRow")
+        ) {
+            return callCtx.func().getArgMt(0).types
+                .fap(t -> opt(t.stringValue)).unq()
+                .fap(table -> MysqliRes.getTableColumns(table, methCall.getProject()))
+                .map(keyName -> Mkt.assoc(methCall, list(T2(keyName, Mkt.str(methCall).mt()))));
+        } else {
+            return It.non();
+        }
+    }
+
     public It<DeepType> resolveCall(MethodReferenceImpl funcCall)
     {
         IExprCtx funcCtx = ctx.subCtxDirect(funcCall);
@@ -306,7 +327,8 @@ public class MethCallRes extends Lang
                 findMethRetType(func).apply(funcCtx),
                 findBuiltInRetType(func, funcCtx, funcCall)
             ));
+        It<DeepType> magicFqnTit = resolveMagicFqn(funcCall, funcCtx);
 
-        return It.cnc(noDeclTit, asCustomFormatClsDoc, declTit);
+        return It.cnc(noDeclTit, asCustomFormatClsDoc, declTit, magicFqnTit);
     }
 }

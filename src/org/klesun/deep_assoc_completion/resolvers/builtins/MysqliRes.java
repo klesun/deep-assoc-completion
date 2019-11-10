@@ -38,7 +38,7 @@ public class MysqliRes
         return It(parent.getDbChildren(DasObject.class, kind));
     }
 
-    private static It<String> getTableColumns(String table, Project project)
+    public static It<String> getTableColumns(String table, Project project)
     {
         return It(DbPsiFacade.getInstance(project).getDataSources())
             .fap(src -> src.getModel().getModelRoots())
