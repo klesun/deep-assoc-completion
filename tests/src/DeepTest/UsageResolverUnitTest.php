@@ -991,12 +991,12 @@ class UsageResolverUnitTest implements IUsageBase
         \App\Models\City::get(1)->except($param1);
         \App\Models\City::get(1)->except(['' => '']);
         (new \App\Models\City())->except($param2);
-        (new \App\Models\City())->except(['']);
+        (new \App\Models\City())->except(['' => '']);
         get_object_vars(\App\Models\City::get(1))[$param3];
         get_object_vars(\App\Models\City::get(1))[''];
         return [
             'param1' => [
-                '_last_refresh' => [],
+                '_last_refresh' => 0,
                 '_snapshot' => [],
                 'country_id' => [],
                 'city_id' => [],
