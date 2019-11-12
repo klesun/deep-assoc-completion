@@ -2219,8 +2219,8 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         $thisClassVars = get_class_vars(get_class($this));
         $thisClassVars[''];
         return [
-            [$classVars, ['staticProp1', 'staticProp2', 'staticProp3']],
-            [$thisClassVars, ['staticProp1', 'staticProp2', 'staticProp3']],
+            [$classVars, ['staticProp1', 'staticProp2', 'staticProp3', 'table']],
+            [$thisClassVars, ['staticProp1', 'staticProp2', 'staticProp3', 'table']],
         ];
     }
 
@@ -2340,10 +2340,11 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
-    /** @param $row = Magic::dbRow('delete_me') */
+    private static $table = 'delete_me';
+
+    /** @param $row = Magic::dbRow(static::$table) */
     public function provide_magicDbRow($row)
     {
-        $row[''];
         \Magic::dbRow('delete_me')[''];
         return [
             [$row, ['id', 'name', 'price']],
