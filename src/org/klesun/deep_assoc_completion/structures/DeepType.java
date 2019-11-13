@@ -218,6 +218,8 @@ public class DeepType extends Lang
                 typeInfo = "int";
             } else if (ctorArgs.has()) {
                 typeInfo = "new()";
+            } else if (generics.size() > 0) {
+                typeInfo = "new<" + generics.size() + ">";
             }
         }
         return "deep(" + typeInfo + ")" + " " + briefType + " " + Tls.singleLine(definition.getText(), 60);

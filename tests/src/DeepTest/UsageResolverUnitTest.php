@@ -1030,6 +1030,18 @@ class UsageResolverUnitTest implements IUsageBase
         ];
     }
 
+    public function provide_genericsInDeepDoc($param1)
+    {
+        \Manaphp2\City::where()->where($param1);
+        \Manaphp2\City::where()->where(['']);
+        return [
+            'param1' => [
+                'iataCode' => [],
+                'countryCode' => [],
+            ],
+        ];
+    }
+
     //=========================
     // following not implemented yet
     //========================

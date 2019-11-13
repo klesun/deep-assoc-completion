@@ -2351,6 +2351,14 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    public function provide_psalmStatic()
+    {
+        $model = \Manaphp2\City::where()->getModel();
+        return [
+            [get_object_vars($model), ['iataCode', 'countryCode']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

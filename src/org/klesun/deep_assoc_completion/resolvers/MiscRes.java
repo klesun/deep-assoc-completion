@@ -35,6 +35,21 @@ public class MiscRes extends Lang
             .fap(casted -> ctx.findExprType(casted));
     }
 
+    private It<PhpType> resolveAsGeneric(PsiElement docPsi, String name)
+    {
+        return Tls.findParent(docPsi, PhpClass.class)
+            .fap(clsPsi -> opt(clsPsi.getDocComment()))
+            .fap(doc -> {
+                PsalmFuncInfo.PsalmClsInfo clsInfo = PsalmFuncInfo.parseClsDoc(doc);
+                return clsInfo.generics.fap((gen, i) -> gen.name
+                    .equals(name) ? som(i) : non());
+            })
+            .fap(genPos -> ctx.getThisType()
+                .fap(t -> t.generics.gat(genPos)))
+            .fap(mt -> mt.types)
+            .map(t -> t.briefType);
+    }
+
     public It<PhpType> resolveAnyClassReference(PhpExpression clsRefPsi, boolean ideaKnows)
     {
         return It.frs(
@@ -51,8 +66,15 @@ public class MiscRes extends Lang
             () -> opt(clsRefPsi)
                 // don't allow IDEA to resolve $someCls::doSomething(), since it loses static:: context
                 .flt(ref -> !ref.getText().startsWith("$"))
-                .flt(ref -> ideaKnows)
-                .map(exp -> exp.getType()),
+                .fap(ref -> {
+                    System.out.println("zhopa ctx " + ctx + " " + ctx.isInComment());
+                    if (ideaKnows) {
+                        return som(ref.getType());
+                    } else {
+                        return ctx.getFakeFileSource()
+                            .fap(funcDoc -> resolveAsGeneric(funcDoc, ref.getText()));
+                    }
+                }),
             // new $clsInAVar()
             () -> opt(clsRefPsi)
                 .fap(ref -> ctx.findExprType(ref))
@@ -67,7 +89,8 @@ public class MiscRes extends Lang
 
     public It<PhpType> resolveClassReferenceFromMember(MemberReference memRef)
     {
-        return resolveAnyClassReference(memRef.getClassReference(), It(memRef.multiResolve(false)).has());
+        return opt(memRef.getClassReference())
+            .fap(ref -> resolveAnyClassReference(ref, It(memRef.multiResolve(false)).has()));
     }
 
     private It<DeepType> resolveNew(NewExpression newExp)
@@ -76,7 +99,6 @@ public class MiscRes extends Lang
             .fap(cls -> resolveClassReference(cls, cls))
             .map(ideaType -> {
                 IExprCtx ctorArgs = ctx.subCtxDirect(newExp);
-
                 L<Mt> generics = ArrCtorRes.resolveIdeaTypeCls(ideaType, newExp.getProject())
                     .fap(clsPsi -> clsPsi.getMethods())
                     .flt(m -> m.getName().equals("__construct"))
