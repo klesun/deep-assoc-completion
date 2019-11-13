@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.11.11.001</version>
+    <version>2019.11.13.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,9 +38,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#123 Support Magic::dbRow() in phpdoc</li>
-        <li>Fix: handle phpstorm v2019.2.4 release new fqn prefixes - with #S when it is `self::` and with #M#C when it is `@return static`</li>
-        <li>Do not parse ["key" => 123] in a phpdoc as a javascript array</li>
+        <li>#122 Allow using @template generics in `=` php doc expression. Like `@param $arg = get_object_vars(new T)`</li>
+        <li>#122 Support `static` as type in PSALM phpdoc resolution</li>
     </ul>
     ]]>
     </change-notes>
