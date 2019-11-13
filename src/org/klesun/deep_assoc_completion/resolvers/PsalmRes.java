@@ -207,6 +207,8 @@ public class PsalmRes {
             result.put(g.name, mit);
         });
         result.putAll(getClsGenericTypes(psalmInfo.classGenerics, ctx));
+        // not a real generic, but close enough
+        result.put("static", ctx.getSelfType().map(pst -> new DeepType(psalmInfo.psi, pst)).itr().mem());
         return result;
     }
 
