@@ -42,19 +42,16 @@ public class MixedTypePvdr implements PhpTypeProvider4
     @Nullable
     @Override
     public PhpType complete(String expression, Project project) {
-        System.out.println("zalupa " + expression);
         return null;
     }
 
     // 2016.2.2
     public Collection<? extends PhpNamedElement> getBySignature(String s, Project project) {
-        System.out.println("4len " + s);
         return list();
     }
 
     public Collection<? extends PhpNamedElement> getBySignature(String s, Set<String> set, int i, Project project)
     {
-        System.out.println("zhopa " + s);
         return list();
     }
 }

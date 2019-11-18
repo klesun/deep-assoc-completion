@@ -67,7 +67,6 @@ public class MiscRes extends Lang
                 // don't allow IDEA to resolve $someCls::doSomething(), since it loses static:: context
                 .flt(ref -> !ref.getText().startsWith("$"))
                 .fap(ref -> {
-                    System.out.println("zhopa ctx " + ctx + " " + ctx.isInComment());
                     if (ideaKnows) {
                         return som(ref.getType());
                     } else {
