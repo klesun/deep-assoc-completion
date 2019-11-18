@@ -6,6 +6,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.indexing.ID;
 import com.jetbrains.php.PhpIndex;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
@@ -214,6 +215,12 @@ public class MethCallRes extends Lang
             });
     }
 
+    public static It<DeepType> findDocRetType(PhpDocComment doc, IExprCtx ctx)
+    {
+        return opt(doc.getReturnTag())
+            .fap(tag -> parseReturnDoc(tag, ctx).mem());
+    }
+
     public static It<DeepType> findFuncDocRetType(Function func, IExprCtx ctx)
     {
         It<Function> redecls = Tls.cast(Method.class, func)
@@ -222,9 +229,7 @@ public class MethCallRes extends Lang
             .def(som(func));
         return redecls
             .fap(m -> It.cnc(
-                opt(m.getDocComment())
-                    .map(doc -> doc.getReturnTag())
-                    .fap(tag -> parseReturnDoc(tag, ctx).mem()),
+                opt(m.getDocComment()).fap(doc -> findDocRetType(doc, ctx)),
                 findFqnMetaDefRetType(m.getFQN(), ctx)
             ));
     }

@@ -5,10 +5,14 @@ namespace Manaphp2;
  * @template M
  */
 class Query {
+    private static function addMoreKeys($model) {
+        return array_merge(get_object_vars($model), ['ololo' => 123]);
+    }
+
     /** @return M */
     public function getModel() {}
 
-    /** @param $filters = get_object_vars(new M) */
+    /** @param $filters = Query::addMoreKeys(new M) */
     public function where($filters) {}
 }
 

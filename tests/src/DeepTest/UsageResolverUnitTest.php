@@ -1036,6 +1036,7 @@ class UsageResolverUnitTest implements IUsageBase
         \Manaphp2\City::where()->where(['']);
         return [
             'param1' => [
+                'ololo' => 123,
                 'iataCode' => [],
                 'countryCode' => [],
             ],

@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
@@ -549,8 +550,12 @@ public class UsageBasedTypeResolver
 
         It<DeepType> asRetVal = opt(caretExpr.getParent())
             .fop(toCast(PhpReturn.class))
-            .fap(ret -> Tls.findParent(ret, Function.class))
-            .fap(func -> MethCallRes.findFuncDocRetType(func, fakeCtx));
+            .fap(ret -> It.cnc(
+                Tls.findParent(ret, Function.class)
+                    .fap(func -> MethCallRes.findFuncDocRetType(func, fakeCtx)),
+                opt(ret.getPrevPsiSibling()).cst(PhpDocComment.class)
+                    .fap(doc -> MethCallRes.findDocRetType(doc, fakeCtx))
+            ));
 
         It<DeepType> asFuncArg = opt(caretExpr.getParent())
             .fop(toCast(ParameterList.class))

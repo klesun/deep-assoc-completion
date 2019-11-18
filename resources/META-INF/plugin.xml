@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.11.13.001</version>
+    <version>2019.11.18.001</version>
     <vendor email="arturklesun@gmail.com" url="http://midiana.lv/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,8 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#122 Allow using @template generics in `=` php doc expression. Like `@param $arg = get_object_vars(new T)`</li>
-        <li>#122 Support `static` as type in PSALM phpdoc resolution</li>
+        <li>#129 Allow using /** @return array = ... */ phpdoc above script return statement to get completion in it</li>
     </ul>
     ]]>
     </change-notes>
