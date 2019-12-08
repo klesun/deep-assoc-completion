@@ -2,23 +2,29 @@ package org.klesun.deep_assoc_completion.completion_providers;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.psi.PsiElement;
+import com.intellij.ui.IconManager;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.assertj.core.internal.bytebuddy.implementation.bytecode.Throw;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.icons.DeepIcons;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
+import org.klesun.lib.PhpToolbox;
 
 import javax.swing.*;
 import java.net.URL;
@@ -122,15 +128,43 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
             .fap(srcExpr -> funcCtx.findExprType(srcExpr));
     }
 
-    public static LookupElementBuilder makeFullLookup(Mt arrMt, String keyName, Set<String> comments)
+    private static It<F<LookupElementBuilder, LookupElementBuilder>> assertMetaComment(String comment, ExprCtx ctx) {
+        L<T2<String, F2<LookupElementBuilder, String, LookupElementBuilder>>> mappers = list(
+            T2("type_text", (lookup, value) -> lookup.withTypeText(value)),
+            T2("icon", (lookup, value) -> {
+                try {
+                    Icon icon = PhpToolbox.getLookupIconOnString(value);
+                    if (icon != null) {
+                        lookup = lookup.withIcon(icon);
+                    }
+                } catch (Throwable exc) {
+                    exc.printStackTrace();
+                }
+                return lookup;
+            }),
+            //T2("target", (lookup, value) -> lookup.withTarget(value)),
+            T2("tail_text", (lookup, value) -> lookup.withTailText(value))
+        );
+        return DocParamRes.parseExpression(comment, ctx.expr.getProject(), ctx)
+            .fap(t -> mappers
+                .fap(tup -> tup.nme((key, mapper) -> t.mt()
+                    .getKey(key)
+                    .getStringValues()
+                    .flt(str -> !str.equals(""))
+                    .map(value -> {
+                        F<LookupElementBuilder, LookupElementBuilder> updater =
+                            (lookup) -> mapper.apply(lookup, value);
+                        return updater;
+                    }))));
+    }
+
+    public static LookupElementBuilder makeFullLookup(Mt arrMt, String keyName, Opt<String> commentOpt)
     {
         Mt keyMt = It(arrMt.types).fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::new);
-        String comment = Tls.implode(" ", comments);
-        boolean hasComments = !comment.trim().equals("");
-        int maxValLen = hasComments ? COMMENTED_MAX_LEN : BRIEF_VALUE_MAX_LEN;
+        int maxValLen = commentOpt.has() ? COMMENTED_MAX_LEN : BRIEF_VALUE_MAX_LEN;
         String briefValue = keyMt.getBriefValueText(maxValLen);
-        if (hasComments) {
-            briefValue = Tls.substr(briefValue, 0, 16) + " " + comment;
+        if (commentOpt.has()) {
+            briefValue = Tls.substr(briefValue, 0, 20) + " // " + commentOpt.unw();
         }
         String ideaTypeStr = keyMt.getIdeaTypes().flt(it -> !it.isEmpty()).lmt(2).str("|");
         return makePaddedLookup(keyName, ideaTypeStr, briefValue, maxValLen);
@@ -282,9 +316,21 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         nameToMutLookup
             .fch((mutLook, keyName) -> {
                 search.overrideMaxExpr = som(search.getExpressionsResolved() + 25);
+
                 Set<String> comments = opt(keyToComments.get(keyName)).def(new HashSet<>());
-                LookupElementBuilder lookup = makeFullLookup(arrMt, keyName, comments);
-                hadComments.set(hadComments.get() || comments.size() > 0);
+                String comment = Tls.implode(" ", comments);
+                Opt<String> commentOpt = comment.trim().equals("") ? non() : som(comment);
+                L<F<LookupElementBuilder, LookupElementBuilder>> metCommentOpt = list();
+                metCommentOpt = commentOpt.fap(c -> assertMetaComment(c, exprCtx)).arr();
+                if (metCommentOpt.has()) {
+                    commentOpt = non();
+                }
+
+                LookupElementBuilder lookup = makeFullLookup(arrMt, keyName, commentOpt);
+                for (F<LookupElementBuilder, LookupElementBuilder> updater: metCommentOpt) {
+                    lookup = updater.apply(lookup);
+                }
+                hadComments.set(commentOpt.has());
                 search.overrideMaxExpr = non();
                 mutLook.lookupData = lookup;
             });

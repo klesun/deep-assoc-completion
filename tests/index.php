@@ -710,6 +710,14 @@ function main()
 {
     $zhopa = ['a' => 5, 'b' => 6, 'c' => ['d' => 7, 'e' => 8]];
     print($zhopa['a']);
+
+    $blockchain = [
+        // ['type_text' => 'object', 'icon' => 'com.jetbrains.php.PhpIcons.VARIABLE', 'tail_text' => '->streams::addon.themes']
+        'type' => 'ETH',
+        'rpcUrl' => 'ololomainnet.com',
+    ];
+    // should use styling info from the key comment
+    $blockchain[''];
 }
 
 main();

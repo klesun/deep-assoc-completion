@@ -109,7 +109,7 @@ public class PsalmRes {
                         Mt valMt = new Mt(psalmToDeep(psalmVal, goToPsi, generics));
                         PhpType ideaType = valMt.getIdeaTypes().fst().def(PhpType.UNSET);
                         List<String> comments = opt(assoc.keyToComments.get(keyName))
-                            .fap(c -> c).flt(c -> !c.trim().equals("")).map(c -> "// " + c).arr();
+                            .fap(c -> c).flt(c -> !c.trim().equals("")).map(c -> c).arr();
                         return new Key(keyName, goToPsi)
                             .addType(Granted(valMt), ideaType)
                             .addComments(comments);

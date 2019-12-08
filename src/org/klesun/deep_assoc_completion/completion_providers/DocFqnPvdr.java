@@ -107,7 +107,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                     fakeFileOpt
                         .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))
                         .map(psi -> AssocKeyPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::new))
-                        .fap(mt -> mt.getKeyNames().map(k -> AssocKeyPvdr.makeFullLookup(mt, k, new HashSet<>())))
+                        .fap(mt -> mt.getKeyNames().map(k -> AssocKeyPvdr.makeFullLookup(mt, k, non())))
                 );
             });
     }

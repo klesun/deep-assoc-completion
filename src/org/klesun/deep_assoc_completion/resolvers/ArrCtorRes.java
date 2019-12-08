@@ -210,7 +210,9 @@ public class ArrCtorRes extends Lang
 
     private static It<String> gatherSurroundingComments(ArrayHashElement hashEl)
     {
-        return It.cnc(getTopComments(hashEl), getSideComments(hashEl));
+        return It.cnc(getTopComments(hashEl), getSideComments(hashEl))
+            .map(c -> c.replaceAll("^/\\*\\s*([\\s\\S]+?)\\*/$", "$1"))
+            .map(c -> c.replaceAll("^//\\s*", ""));
     }
 
     private It<Key> resolveAssoc(ArrayCreationExpressionImpl expr)
@@ -231,7 +233,7 @@ public class ArrCtorRes extends Lang
                                     .addComments(gatherSurroundingComments(keyRec)));
                         } else {
                             Key keyEntry = new Key(
-                                KeyType.unknown(keyRec), keyRec.getKey()
+                                KeyType.unknown(keyRec), opt(keyRec.getKey()).def(expr)
                             );
                             return som(keyEntry.addType(getType));
                         }
