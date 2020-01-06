@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2019.12.08.001</version>
+    <version>2020.01.06.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#131: Allow specifying meta data for completion looks over array key declaration. Format is similar to php-toolbox: /** ['type_text' => 'object', 'icon' => 'com.jetbrains.php.PhpIcons.VARIABLE', 'tail_text' => '->streams::addon.themes'] */</li>
+        <li>Very important update: add plugin logo on repository screen</li>
     </ul>
     ]]>
     </change-notes>
