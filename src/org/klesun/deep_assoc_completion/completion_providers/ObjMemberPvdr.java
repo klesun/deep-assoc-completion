@@ -6,6 +6,7 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
@@ -16,6 +17,7 @@ import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
@@ -162,6 +164,11 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        Project proj = parameters.getEditor().getProject();
+        if (proj == null || !DeepSettings.inst(proj).enableMemberCompletion) {
+            return;
+        }
+
         long startTime = System.nanoTime();
         L<LookupElement> builtIns = list();
         result.runRemainingContributors(parameters, otherSourceResult -> {
@@ -171,7 +178,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         });
         Boolean hasBuiltIns = builtIns.any(b -> !"class".equals(b.getLookupString()));
         Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()).arr());
-        SearchCtx search = new SearchCtx(parameters)
+        SearchCtx search = new SearchCtx(proj)
             .setDepth(AssocKeyPvdr.getMaxDepth(parameters));
 
         Dict<String> times = new Dict<>(list());

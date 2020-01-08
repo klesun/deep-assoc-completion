@@ -25,6 +25,7 @@ public class DeepSettings implements PersistentStateComponent<DeepSettings> {
     public Integer usageBasedCompletionDepthLimit = 3;
     public Boolean removeUnusedImportsOnSaveEnabled = false;
     public Boolean passArgsToImplementations = false;
+    public Boolean enableMemberCompletion = true;
 
     public static DeepSettings inst(Project project) {
         return Opt.fst(
