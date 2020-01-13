@@ -2359,6 +2359,18 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    /**
+     * AbstractController constructor.
+     * @param Container $container = \Slim\App::getContainer()
+     */
+    public function provide_dirOverDocComment($container)
+    {
+        $container['settings'][''];
+        return [
+            [$container['settings'], ['ololo', 'lalala']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================

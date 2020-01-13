@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.01.08.001</version>
+    <version>2020.01.13.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Add option to disable method/field suggestions in _File -> Settings -> Languages & Frameworks -> PHP -> deep-assoc-completion -> Enable Method/Field Deep Completion_</li>
+        <li>#135 Fix, resolve __DIR__ relative to it's file, not file of the doc comment when function reference takes place</li>
     </ul>
     ]]>
     </change-notes>

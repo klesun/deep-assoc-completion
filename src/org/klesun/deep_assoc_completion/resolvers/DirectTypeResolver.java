@@ -1,5 +1,8 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
+import com.intellij.psi.PsiDirectory;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
@@ -70,6 +73,13 @@ public class DirectTypeResolver {
             .btw(t -> t.cstName = opt(cst.getName()));
     }
 
+    private static boolean isInFakeFile(PsiElement ref) {
+        PsiFile file = ref.getContainingFile();
+        PsiDirectory dir = file == null ? null :
+            file.getContainingDirectory();
+        return dir == null;
+    }
+
     public It<DeepType> resolve(PhpExpression expr)
     {
         return It.frs(() -> It.non()
@@ -85,7 +95,7 @@ public class DirectTypeResolver {
                 .fap(lit -> list(new DeepType(lit)))
             , () -> Tls.cast(ConstantReferenceImpl.class, expr)
                 .flt(cst -> cst.getText().equals("__DIR__"))
-                .map(ref -> ctx.getFakeFileSource().def(ref))
+                .fap(ref -> !isInFakeFile(ref) ? som(ref) : ctx.getFakeFileSource())
                 .fap(psi -> opt(psi.getContainingFile()))
                 .fap(psi -> opt(psi.getOriginalFile()))
                 .fap(psiFile -> opt(psiFile.getContainingDirectory()))
