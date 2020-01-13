@@ -87,3 +87,4 @@ Extremely useful for small private helper functions - you don't need to document
 ![built-ins](https://user-images.githubusercontent.com/5202330/48871378-2e9eef00-eded-11e8-8bbc-26c9d675cbeb.png)
 
 ![static key built-ins](https://user-images.githubusercontent.com/5202330/48871517-bd137080-eded-11e8-9208-3725d81b960a.png)
+
