@@ -1,10 +1,12 @@
 package org.klesun.deep_assoc_completion.resolvers.builtins;
 
 import com.intellij.database.model.DasObject;
+import com.intellij.database.model.DasTable;
 import com.intellij.database.model.ObjectKind;
 import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.util.containers.JBIterable;
 import com.jetbrains.php.lang.psi.elements.Method;
 import com.jetbrains.php.lang.psi.elements.MethodReference;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
@@ -32,20 +34,38 @@ public class MysqliRes
         this.ctx = ctx;
     }
 
-    private static It<DasObject> getDasChildren(DasObject parent, ObjectKind kind)
+    private static It<String> getTableColumnsInRootLegacy(DasObject root, String table)
     {
-        // return getDasChildren(ObjectKind.COLUMN);
-        return It(parent.getDbChildren(DasObject.class, kind));
+        return It(root.getDbChildren(DasObject.class, ObjectKind.TABLE))
+            .flt(t -> t.getName().equals(table))
+            .fap(tab -> tab.getDbChildren(DasObject.class, ObjectKind.COLUMN))
+            .map(col -> col.getName());
+    }
+
+    private static It<String> getTableColumnsInRoot(DasObject root, String table)
+    {
+        S<It<DasObject>> mysqlTables = () ->
+            It(root.getDasChildren(ObjectKind.TABLE))
+                .map(t -> (DasObject)t);
+        S<It<DasObject>> postgresTables = () ->
+            It(root.getDasChildren(ObjectKind.SCHEMA))
+                .fap(sc -> sc.getDasChildren(ObjectKind.TABLE))
+                .map(t -> (DasObject)t);
+
+        return It.frs(mysqlTables, postgresTables)
+            .flt(t -> t.getName().equals(table))
+            .fap(tab -> tab.getDasChildren(ObjectKind.COLUMN))
+            .map(col -> col.getName()).unq();
     }
 
     public static It<String> getTableColumns(String table, Project project)
     {
         return It(DbPsiFacade.getInstance(project).getDataSources())
             .fap(src -> src.getModel().getModelRoots())
-            .fap(root -> getDasChildren(root, ObjectKind.TABLE))
-            .flt(t -> t.getName().equals(table))
-            .fap(tab -> getDasChildren(tab, ObjectKind.COLUMN))
-            .map(col -> col.getName());
+            .fap(root -> It.frs(
+                () -> getTableColumnsInRootLegacy(root, table),
+                () -> getTableColumnsInRoot(root, table)
+            ));
     }
 
     public DeepType parseSqlSelect(DeepType strType, Project project)

@@ -1,13 +1,10 @@
 <?php
 
-use RbsVer\Process\Apollo\ImportPnr\ApolloPnrFieldsOnDemand;
-use RbsVer\Process\Common\ImportPnr\IGdsPnrFieldsProvider;
-
 class ExactKeysUnitTest
 {
     private function importPnr()
     {
-        $imported = (new \Rbs\Process\Common\ImportPnr\ImportPnrAction)->execute();
+        $imported = (new \Rbs\ImportPnr\Common\ImportPnrAction)->execute();
         $imported['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'][''];
 
         $imported[''];

@@ -5,7 +5,7 @@ class UnitTest
 {
     public function provideImportPnr()
     {
-        $imported = \Rbs\Process\Common\ImportPnr\ImportPnrAction::makeByGds([
+        $imported = \Rbs\ImportPnr\Common\ImportPnrAction::makeByGds([
             'gdsName' => 'apollo',
             'recordLocator' => 'qwe123',
             'pnrFields' => ['reservation'],
