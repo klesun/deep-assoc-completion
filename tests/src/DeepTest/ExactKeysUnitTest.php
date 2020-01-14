@@ -1342,6 +1342,7 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
             [$storage->pnrData, ['reservation', 'currentPricing']],
             [$storage->pnrData['currentPricing'], ['pricingList']],
             [$reimu->unwrap()->demandDonuts(), ['patience', 'amount', 'consequences']],
+            // @method
             [$flushed, ['status', 'affected_rows']],
             [$info, ['connections', 'uptime_seconds']],
         ];
