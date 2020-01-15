@@ -35,6 +35,9 @@ When you are going to type an associative key of a variable, like in `$user['']`
 To go to the key definition, hover on it and press `ctrl` + `click` or put carret on it and press `ctrl` + `b`.
 
 ### Completion from phpdoc
+
+[See formats description](https://github.com/klesun/deep-assoc-completion/issues/63)
+
 ![Completion from phpdoc](https://cloud.githubusercontent.com/assets/5202330/26426602/0f72f554-40e2-11e7-8873-30b873310746.png)
 
 You can specify function argument type using `@param SomeType $varName = Some::phpExpression()`, like `@param $anime = ['genre' => 'shounen', 'studio' => 'Shaft']`. `=` is mandatory and expression must be a valid php expression. Class methods can be specified either with complete namespace like `\Very\Long\Namespace\ClassName::funcName()`, or with just `ClassName::funcName()`.
