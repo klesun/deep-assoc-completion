@@ -204,13 +204,14 @@ public class MethCallRes extends Lang
             .cst(PhpDocMethodTag.class)
             .fap(tag -> {
                 L<PsiElement> tagParts = L(tag.getChildren());
+                L<PsiElement> methAndRest = L(tagParts).sub(-2);
                 // text after signature _on same line_
                 final String descrPart;
-                if (tagParts.size() == 2 &&
-                    tagParts.get(0) instanceof PhpDocMethod &&
-                    tagParts.get(0).getText().endsWith(")")
+                if (methAndRest.size() == 2 &&
+                    methAndRest.get(0) instanceof PhpDocMethod &&
+                    methAndRest.get(0).getText().endsWith(")")
                 ) {
-                    descrPart = tagParts.get(1).getText();
+                    descrPart = methAndRest.get(1).getText();
                 } else {
                     // before around ending of 2019 @method psi
                     // contents were not structured much

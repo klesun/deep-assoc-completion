@@ -178,6 +178,9 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IIt<T>
 
     public L<T> sub(int start)
     {
+        if (start < 0) {
+            start = Math.max(0, this.size() + start);
+        }
         return sub(start, this.size() - start);
     }
 
