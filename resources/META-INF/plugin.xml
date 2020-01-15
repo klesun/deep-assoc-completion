@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.01.13.001</version>
+    <version>2020.01.15.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#135 Fix, resolve __DIR__ relative to it's file, not file of the doc comment when function reference takes place</li>
+        <li>#134 - Support new syntax tree format of @method tag parsed by phpstorm</li>
+        <li>#134 Support cases when Data Source wraps tables in a schema. Postgres does so sometimes so 'SELECT * FROM tablename' inference did not work</li>
     </ul>
     ]]>
     </change-notes>
