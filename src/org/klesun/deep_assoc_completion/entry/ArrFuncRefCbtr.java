@@ -57,7 +57,7 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
 
         @NotNull
         public PsiReference[] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
-            return Tls.cast(StringLiteralExpression.class, element)
+            PsiReference[] results = Tls.cast(StringLiteralExpression.class, element)
                 .map(lit -> lit.getParent()) // array value
                 .map(val -> val.getParent())
                 .fop(toCast(ArrayCreationExpression.class))
@@ -71,6 +71,13 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
                 .map(arr -> getCallbackReference(arr, element))
                 .map(ref -> new PsiReference[]{ref})
                 .def(PsiReference.EMPTY_ARRAY);
+            if (results.length <= 1) {
+                // 1 means only the reference at caret, not sure
+                // if I'm supposed to include it ins results though...
+                return PsiReference.EMPTY_ARRAY;
+            } else {
+                return results;
+            }
         }
     }
 }
