@@ -9,4 +9,4 @@ community_bridge: # Replace with a single Community Bridge project-name e.g., cl
 liberapay: # Replace with a single Liberapay username
 issuehunt: # Replace with a single IssueHunt username
 otechie: # Replace with a single Otechie username
-custom: # Replace with up to 4 custom sponsorship URLs e.g., ['link1', 'link2']
+custom: ['https://www.paypal.me/klesun', 'https://heliowallet.com/ethereum-donation?address=0x722eFe9E540b75D3A7370E97601f9988eF0dce34&amount=0.01&accessWallet=1&qrCode=1&ethBalance=1&history=1']
