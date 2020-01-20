@@ -7,7 +7,7 @@ Jetbrains Repository: [9927-deep-assoc-completion](https://plugins.jetbrains.com
 
 ## Features description
 
-(a bit more detailed usage guide can be found [here](https://github.com/klesun/phpstorm-deep-keys/blob/master/docs/deep-keys-overview.md))
+(a bit more relaxed usage guide can be found [here](https://github.com/klesun/phpstorm-deep-keys/blob/master/docs/deep-keys-overview.md))
 
 - ### Completion from expression
     When you are going to type an associative key of a variable, like in `$user['']`, put caret between quotes and press `ctrl` + `space`. The plugin will analyze your code, determine what keys does `$user` have and suggest completion.
