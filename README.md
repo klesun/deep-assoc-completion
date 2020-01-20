@@ -2,7 +2,7 @@ Autocomplete keys of associative arrays defined in other functions.
 
 Jetbrains Repository: [9927-deep-assoc-completion](https://plugins.jetbrains.com/plugin/9927-deep-assoc-completion)
 
-![alt tag](https://raw.githubusercontent.com/klesun/phpstorm-deep-keys/master/imgs/screenshot.png)
+![](https://user-images.githubusercontent.com/5202330/41823825-f82a5724-780e-11e8-9a8e-4eb37c89aa53.png)
 
 
 ## Features description
