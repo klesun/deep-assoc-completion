@@ -110,7 +110,16 @@ public class ClosRes extends Lang
 
     public static It<DeepType> getReturnedValue(PsiElement funcBody, IExprCtx ctx)
     {
+        It<DeepType> asArrow = It.non();
+        if (funcBody.getText().startsWith("fn(")) {
+            asArrow = L(funcBody.getChildren())
+                .cst(PhpExpression.class)
+                // would be good to eventually to support inference from passed arguments at some
+                // point, maybe simulate closure use behaviour for all vars in local scope?
+                .fap(expr -> ctx.subCtxEmpty().findExprType(expr));
+        }
         return It.cnc(
+            asArrow,
             findFunctionReturns(funcBody)
                 .fop(ret -> opt(ret.getArgument()))
                 .fop(toCast(PhpExpression.class))

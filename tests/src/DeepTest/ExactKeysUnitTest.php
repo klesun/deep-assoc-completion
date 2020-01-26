@@ -2372,6 +2372,19 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    public function provide_arrowFunc()
+    {
+        $persons = [
+            ['name' => 'Misha', 'age' => 28, 'likes' => 'sports'],
+            ['name' => 'Igor', 'age' => 24, 'likes' => 'justice'],
+        ];
+        $getPerson = fn($n = 0) => $persons[$n];
+        $getPerson(1)[''];
+        return [
+            [$getPerson(1), ['name', 'age', 'likes']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
