@@ -4,16 +4,21 @@ import com.intellij.patterns.PlatformPatterns;
 import com.intellij.patterns.PsiElementPattern;
 import com.intellij.psi.*;
 import com.intellij.util.ProcessingContext;
+import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.PhpCallbackFunctionUtil;
-import com.jetbrains.php.lang.PhpCallbackReferenceBase;
+import static com.jetbrains.php.lang.PhpCallbackReferenceBase.PhpClassMemberCallbackReference;
 import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.parser.PhpElementTypes;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
+
+import java.util.Collection;
 
 import static org.klesun.lang.Lang.*;
 
@@ -46,8 +51,26 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
     private static class ArrFuncRefPvdr extends PsiReferenceProvider {
         private static boolean hasMethod(PhpExpression clsRef, StringLiteralExpression methLit) {
             String methName = methLit.getContents();
-            return ArrCtorRes.resolveIdeaTypeCls(clsRef.getType(), clsRef.getProject())
-                .any(clsPsi -> L(clsPsi.getMethods()).any(m -> methName.equals(m.getName())));
+            It<T2<Boolean, String>> clsFqns = It.frs(
+                () -> It(ArrCtorRes.ideaTypeToFqn(clsRef.getType())).map(fqn -> T2(false, fqn)),
+                () -> Tls.cast(ClassConstantReference.class, clsRef)
+                    .flt(cstRef -> clsRef.getText().endsWith("::class"))
+                    .fap(cstRef -> opt(cstRef.getClassReference()))
+                    .cst(ClassReferenceImpl.class)
+                    .fap(clsPart -> opt(clsPart.getFQN()))
+                    .map(fqn -> T2(true, fqn))
+            );
+            return clsFqns
+                .fap(t -> t.nme((isStatic, clsPath) -> {
+                    PhpIndex idx = PhpIndex.getInstance(clsRef.getProject());
+                    Collection<PhpClass> clsPsis = idx.getAnyByFQN(clsPath);
+                    return It(clsPsis)
+                        .fap(clsPsi -> clsPsi.getMethods())
+                        .flt(meth ->
+                            methName.equals(meth.getName()) &&
+                            meth.isStatic() == isStatic);
+                }))
+                .has();
         }
 
         @NotNull
@@ -72,9 +95,8 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
                 })
                 .fop(t -> t.nme((clsRef, methLit) -> {
                     if (hasMethod(clsRef, methLit)) {
-                        PhpCallbackReferenceBase ref = PhpCallbackReferenceBase
-                            .createMemberReference(clsRef, methLit, true);
-                        return opt(ref);
+                        PhpClassMemberCallbackReference ref = new PhpClassMemberCallbackReference(clsRef, methLit, true);
+                        return som(ref);
                     } else {
                         return non();
                     }
