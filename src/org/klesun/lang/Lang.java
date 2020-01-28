@@ -10,20 +10,28 @@ import java.util.function.*;
 public class Lang
 {
     // tuple of 2 elements
-    public static class T2<T1, T2>
+    public static class T2<Ta, Tb>
     {
-        final public T1 a;
-        final public T2 b;
+        final public Ta a;
+        final public Tb b;
 
-        public T2(T1 a, T2 b)
+        public T2(Ta a, Tb b)
         {
             this.a = a;
             this.b = b;
         }
 
-        public <Tnew> Tnew nme(F2<T1, T2, Tnew> namer)
+        public <Tnew> Tnew nme(F2<Ta, Tb, Tnew> namer)
         {
             return namer.apply(a,b);
+        }
+
+        public static <Ta, Tb> Opt<T2<Ta, Tb>> all(Opt<Ta> aOpt, Opt<Tb> bOpt) {
+            if (aOpt.has() && bOpt.has()) {
+                return som(T2(aOpt.unw(), bOpt.unw()));
+            } else {
+                return non();
+            }
         }
     }
 

@@ -10,7 +10,9 @@ import com.jetbrains.php.lang.PhpLanguage;
 import com.jetbrains.php.lang.parser.PhpElementTypes;
 import com.jetbrains.php.lang.psi.elements.*;
 import org.jetbrains.annotations.NotNull;
+import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.L;
+import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
 import static org.klesun.lang.Lang.*;
@@ -42,17 +44,10 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
     }
 
     private static class ArrFuncRefPvdr extends PsiReferenceProvider {
-
-        private static PsiReference getCallbackReference(@NotNull ArrayCreationExpression parameter, @NotNull PsiElement element) {
-            // mostly copied from PhpReferenceContributor.CallbackReferenceProvider
-            PhpCallbackFunctionUtil.PhpCallbackInfoHolder callback = PhpCallbackFunctionUtil.createCallback(parameter);
-            if (callback instanceof PhpCallbackFunctionUtil.PhpMemberCallbackInfoHolder) {
-                PsiElement classRef = ((PhpCallbackFunctionUtil.PhpMemberCallbackInfoHolder)callback).getClassElement();
-                if (callback.getCallbackElement() == element) {
-                    return PhpCallbackReferenceBase.createMemberReference(classRef, callback.getCallbackElement(), true);
-                }
-            }
-            return null;
+        private static boolean hasMethod(PhpExpression clsRef, StringLiteralExpression methLit) {
+            String methName = methLit.getContents();
+            return ArrCtorRes.resolveIdeaTypeCls(clsRef.getType(), clsRef.getProject())
+                .any(clsPsi -> L(clsPsi.getMethods()).any(m -> methName.equals(m.getName())));
         }
 
         @NotNull
@@ -61,23 +56,33 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
                 .map(lit -> lit.getParent()) // array value
                 .map(val -> val.getParent())
                 .fop(toCast(ArrayCreationExpression.class))
-                .flt(arr -> {
-                    L<PsiElement> vals = L(arr.getChildren());
-                    return !vals.any(v -> v instanceof ArrayHashElement)
-                        && vals.size() == 2
-                        && element.isEquivalentTo(vals.get(1).getFirstChild())
-                        && !(vals.get(1) instanceof StringLiteralExpression);
+                .map(arr -> L(arr.getChildren()))
+                .flt(valsPsis -> {
+                    return valsPsis.size() == 2
+                        && element.isEquivalentTo(valsPsis.get(1).getFirstChild())
+                        && !valsPsis.any(v -> v instanceof ArrayHashElement);
                 })
-                .map(arr -> getCallbackReference(arr, element))
+                // phpstorm wraps each value, probably due to assoc/ordered array syntax ambiguation
+                .fop(valsPsis -> valsPsis.fal(psi -> opt(psi.getFirstChild())))
+                .fop(vals -> {
+                    Opt<PhpExpression> clsRefOpt = vals.gat(0)
+                        .cst(PhpExpression.class);
+                    Opt<StringLiteralExpression> methLitOpt = vals.gat(1)
+                        .cst(StringLiteralExpression.class);
+                    return T2.all(clsRefOpt, methLitOpt);
+                })
+                .fop(t -> t.nme((clsRef, methLit) -> {
+                    if (hasMethod(clsRef, methLit)) {
+                        PhpCallbackReferenceBase ref = PhpCallbackReferenceBase
+                            .createMemberReference(clsRef, methLit, true);
+                        return opt(ref);
+                    } else {
+                        return non();
+                    }
+                }))
                 .map(ref -> new PsiReference[]{ref})
                 .def(PsiReference.EMPTY_ARRAY);
-            if (results.length <= 1) {
-                // 1 means only the reference at caret, not sure
-                // if I'm supposed to include it ins results though...
-                return PsiReference.EMPTY_ARRAY;
-            } else {
-                return results;
-            }
+            return results;
         }
     }
 }

@@ -867,12 +867,4 @@ class MyPlugin extends BasePlugin
     ];
 }
 
-
-class Asd {
-    public function ololo() {
-
-    }
-}
-call_user_func([new Asd(), "doesNotExist"]);
-
 ['asd' => 123, 'dsa' => 456][''];
