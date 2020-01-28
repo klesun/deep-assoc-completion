@@ -57,13 +57,12 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
                 .map(val -> val.getParent())
                 .fop(toCast(ArrayCreationExpression.class))
                 .map(arr -> L(arr.getChildren()))
-                .flt(valsPsis -> {
-                    return valsPsis.size() == 2
-                        && element.isEquivalentTo(valsPsis.get(1).getFirstChild())
-                        && !valsPsis.any(v -> v instanceof ArrayHashElement);
-                })
+                .flt(valsPsis -> valsPsis.size() == 2 &&
+                    element.isEquivalentTo(valsPsis.get(1).getFirstChild()) &&
+                    !valsPsis.any(v -> v instanceof ArrayHashElement))
                 // phpstorm wraps each value, probably due to assoc/ordered array syntax ambiguation
                 .fop(valsPsis -> valsPsis.fal(psi -> opt(psi.getFirstChild())))
+                .flt(vals ->  !(vals.get(0) instanceof StringLiteralExpression))
                 .fop(vals -> {
                     Opt<PhpExpression> clsRefOpt = vals.gat(0)
                         .cst(PhpExpression.class);
