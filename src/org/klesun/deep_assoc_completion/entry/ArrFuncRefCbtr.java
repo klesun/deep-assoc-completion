@@ -66,9 +66,11 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
                     Collection<PhpClass> clsPsis = idx.getAnyByFQN(clsPath);
                     return It(clsPsis)
                         .fap(clsPsi -> clsPsi.getMethods())
-                        .flt(meth ->
-                            methName.equals(meth.getName()) &&
-                            meth.isStatic() == isStatic);
+                        .flt(meth -> {
+                            boolean isPossible = meth.isStatic() || !isStatic;
+                            return methName.equals(meth.getName())
+                                && isPossible;
+                        });
                 }))
                 .has();
         }
