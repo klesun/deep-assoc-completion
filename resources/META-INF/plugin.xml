@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.01.28.001</version>
+    <version>2020.01.28.002</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,6 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
+        <li>#144 Follow-up fix for static method references</li>
         <li>#144 Fix array method reference resolution broken in #138</li>
         <li>#140 Add basic support for arrow functions (Without argument inference for now, though)</li>
         <li>Compile with targeting jre 8, not 11 (since on some linux distributions IDEA seems to use system jre instead of bundled one)</li>
