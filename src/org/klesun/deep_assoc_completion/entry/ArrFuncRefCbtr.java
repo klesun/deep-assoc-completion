@@ -51,6 +51,8 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
     private static class ArrFuncRefPvdr extends PsiReferenceProvider {
         private static boolean hasMethod(PhpExpression clsRef, StringLiteralExpression methLit) {
             String methName = methLit.getContents();
+            boolean isInstCtx = Tls.findParent(clsRef, PhpClassMember.class)
+                .any(m -> !m.getModifier().isStatic());
             It<T2<Boolean, String>> clsFqns = It.frs(
                 () -> It(ArrCtorRes.ideaTypeToFqn(clsRef.getType())).map(fqn -> T2(false, fqn)),
                 () -> Tls.cast(ClassConstantReference.class, clsRef)
@@ -58,16 +60,30 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
                     .fap(cstRef -> opt(cstRef.getClassReference()))
                     .cst(ClassReferenceImpl.class)
                     .fap(clsPart -> opt(clsPart.getFQN()))
-                    .map(fqn -> T2(true, fqn))
+                    .map(fqn -> {
+                        boolean isSelf =
+                            clsRef.getText().equals("self::class") ||
+                            clsRef.getText().equals("static::class");
+                        boolean allowInst = isSelf && isInstCtx;
+                        return T2(!allowInst, fqn);
+                    }),
+                () -> Tls.cast(StringLiteralExpression.class, clsRef)
+                    .flt(lit -> "self".equals(lit.getContents()))
+                    .fap(lit -> {
+                        boolean onlyStatic = !isInstCtx;
+                        return Tls.findParent(lit, PhpClass.class)
+                            .fap(clsPsi -> opt(clsPsi.getFQN()))
+                            .map(fqn -> T2(onlyStatic, fqn));
+                    })
             );
             return clsFqns
-                .fap(t -> t.nme((isStatic, clsPath) -> {
+                .fap(t -> t.nme((onlyStatic, clsPath) -> {
                     PhpIndex idx = PhpIndex.getInstance(clsRef.getProject());
                     Collection<PhpClass> clsPsis = idx.getAnyByFQN(clsPath);
                     return It(clsPsis)
                         .fap(clsPsi -> clsPsi.getMethods())
                         .flt(meth -> {
-                            boolean isPossible = meth.isStatic() || !isStatic;
+                            boolean isPossible = meth.isStatic() || !onlyStatic;
                             return methName.equals(meth.getName())
                                 && isPossible;
                         });
@@ -87,7 +103,11 @@ public class ArrFuncRefCbtr extends PsiReferenceContributor
                     !valsPsis.any(v -> v instanceof ArrayHashElement))
                 // phpstorm wraps each value, probably due to assoc/ordered array syntax ambiguation
                 .fop(valsPsis -> valsPsis.fal(psi -> opt(psi.getFirstChild())))
-                .flt(vals ->  !(vals.get(0) instanceof StringLiteralExpression))
+                .flt(vals -> Tls.cast(StringLiteralExpression.class, vals.get(0))
+                    .uni( // the only string allowed as class reference is "self"
+                        lit -> "self".equals(lit.getContents()),
+                        () -> true
+                    ))
                 .fop(vals -> {
                     Opt<PhpExpression> clsRefOpt = vals.gat(0)
                         .cst(PhpExpression.class);
