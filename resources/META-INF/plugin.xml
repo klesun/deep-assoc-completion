@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.02.04.001</version>
+    <version>2020.02.17.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#146 Support `self` method references to non-static methods in non-static context (for class fields)</li>
+        <li>#147 Handle blade file errors caused by custom directives (just skip completion when they occur)</li>
     </ul>
     ]]>
     </change-notes>

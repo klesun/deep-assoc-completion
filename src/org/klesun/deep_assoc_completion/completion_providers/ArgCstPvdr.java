@@ -63,7 +63,14 @@ public class ArgCstPvdr extends CompletionProvider<CompletionParameters>
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
         int pos = parameters.getEditor().getCaretModel().getOffset();
-        String text = parameters.getOriginalFile().getText();
+        final String text;
+        try {
+            text = parameters.getOriginalFile().getText();
+        } catch (AssertionError exc) {
+            // #147 may happen in blade files, I believe only with some
+            // custom directives set up, dunno if it is jetbrains bug...
+            return;
+        }
         String ch = Tls.substr(text, pos - 1, pos);
         PsiElement caretLeaf = parameters.getPosition();
         It<LookupElement> suggestions = assertBuiltInFuncArg(parameters.getPosition())
