@@ -111,7 +111,10 @@ public class ClosRes extends Lang
     public static It<DeepType> getReturnedValue(PsiElement funcBody, IExprCtx ctx)
     {
         It<DeepType> asArrow = It.non();
-        if (funcBody.getText().startsWith("fn(")) {
+        boolean isArrow = opt(funcBody)
+            .fop(psi -> opt(psi.getText()))
+            .any(txt -> txt.startsWith("fn("));
+        if (isArrow) {
             asArrow = L(funcBody.getChildren())
                 .cst(PhpExpression.class)
                 // would be good to eventually to support inference from passed arguments at some
