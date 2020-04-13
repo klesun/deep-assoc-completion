@@ -1903,7 +1903,8 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         $codeToRow = array_column($items, null, 'value');
         $codeToRow[''];
         return [
-            [$codeToRow, ['JFK', 'KBP', 'NYC', 'LON']],
+            // 0,1,2,3 because there is a custom array_column definition in helpers.php
+            [$codeToRow, ['JFK', 'KBP', 'NYC', 'LON', 0, 1, 2, 3]],
             [$codeToRow['NYC'], ['type', 'value']],
         ];
     }

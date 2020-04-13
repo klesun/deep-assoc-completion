@@ -4,6 +4,7 @@ namespace DeepTest;
 use App\Models\City2;
 use Library\Book;
 use Library\Child;
+use Test\Furniture;
 
 interface IUsageBase
 {
@@ -905,6 +906,18 @@ class UsageResolverUnitTest implements IUsageBase
                 'object' => new \DateTime() | new \DateInterval() | null,
                 'mode' => 'qwe_any',
                 'flags' => FLAG_A | FLAG_B,
+            ],
+        ];
+    }
+
+    public function provide_metaWithDupeFqnFunc($param1)
+    {
+        $class = (new Furniture())
+            ->add(['chair' => $param1]);
+
+        return [
+            'param1' => [
+                'options' => [],
             ],
         ];
     }

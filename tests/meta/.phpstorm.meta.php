@@ -83,6 +83,35 @@ namespace PHPSTORM_META {
     ));
     expectedReturnValues(\MyInterface::getMetaData(), argumentsSet('my_array'));
 
+
+    function describe_data_set() {
+        return [
+            'options' => [],
+        ];
+    }
+    function describe_data_set() {
+        return [
+            'options' => [],
+        ];
+    }
+
+    registerArgumentsSet('optionsSet', [
+        'options' => [],
+    ]);
+
+    $optionsSet = [
+        'options' => [],
+    ];
+
+    expectedArguments(\Test\Furniture::add(), 0, [
+        'chair' => \PHPSTORM_META\describe_data_set(),
+        'sofa' => argumentsSet('optionsSet'),
+        'window' => [
+            'options' => [],
+        ],
+        'table' => $data,
+    ]);
+
 }
 
 function gzip_by_dict($params)

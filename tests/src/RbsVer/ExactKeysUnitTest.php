@@ -4,7 +4,7 @@ class ExactKeysUnitTest
 {
     private function importPnr()
     {
-        $imported = (new \Rbs\ImportPnr\Common\ImportPnrAction)->execute();
+        $imported = (new \Rbs\Process\Common\ImportPnr\ImportPnrAction)->execute();
         $imported['result']['pnrFields']['reservation']['passengers'][0]['nameNumber'][''];
 
         $imported[''];

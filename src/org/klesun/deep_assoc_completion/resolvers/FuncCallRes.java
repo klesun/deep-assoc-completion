@@ -365,8 +365,9 @@ public class FuncCallRes extends Lang
                 .fop(toCast(PhpExpression.class))
                 .fap(funcVar -> ctx.findExprType(funcVar))
                 .fap(t -> t.getReturnTypes(funcCtx)),
-            opt(funcCall.resolve())
-                .fop(Tls.toCast(FunctionImpl.class))
+            It(funcCall.multiResolve(false))
+                .fap(res -> opt(res.getElement()))
+                .fap(psi -> Tls.cast(FunctionImpl.class, psi))
                 .fap(func -> new ClosRes(ctx)
                     .resolve(func).getReturnTypes(funcCtx))
         );
