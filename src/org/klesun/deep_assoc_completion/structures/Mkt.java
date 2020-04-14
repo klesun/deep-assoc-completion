@@ -6,6 +6,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.DirectTypeResolver;
+import org.klesun.lang.IResolvedIt;
 import org.klesun.lang.It;
 import org.klesun.lang.Opt;
 
@@ -78,13 +79,14 @@ public class Mkt {
         return elt.getInArray(psi);
     }
 
-    public static DeepType assoc(PsiElement psi, Iterable<T2<String, Mt>> keys)
+    public static DeepType assoc(PsiElement psi, IResolvedIt<T2<String, Mt>> keys)
     {
-        It<Key> keyEntries = It(keys)
+        IResolvedIt<Key> keyEntries = It(keys)
             .map(tup -> tup.nme((name, valMt) -> {
                 PhpType ideaType = valMt.getIdeaTypes().fst().def(PhpType.UNSET);
                 return new Key(name, psi).addType(Granted(valMt), ideaType);
-            }));
+            }))
+            .arr();
         return new Build(psi, PhpType.ARRAY)
             .isExactPsi(false)
             .keys(keyEntries)

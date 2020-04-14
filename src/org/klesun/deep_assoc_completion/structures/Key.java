@@ -97,4 +97,10 @@ public class Key
             .wap(IIt::arr)
             .wap(fqns -> fqns.has() ? Lang.som(fqns.itr().str("|")) : Lang.non());
     }
+
+    @Override
+    public String toString()
+    {
+        return "Key<" + getBriefKey(true) + ", " + getBriefVal() + ">";
+    }
 }

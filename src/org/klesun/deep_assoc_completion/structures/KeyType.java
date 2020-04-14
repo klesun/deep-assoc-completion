@@ -21,6 +21,11 @@ public class KeyType
         this.types = getTypes;
     }
 
+    public static KeyType mt(IReusableIt<DeepType> mtg, PsiElement definition)
+    {
+        return new KeyType(mtg, definition);
+    }
+
     public static KeyType mt(Iterable<DeepType> mtg, PsiElement definition)
     {
         Iterable<DeepType> anyt = som(new DeepType(definition, PhpType.MIXED));
@@ -29,12 +34,12 @@ public class KeyType
 
     public static KeyType integer(PsiElement psi)
     {
-        return new KeyType(new MemIt<>(som(new DeepType(psi, PhpType.INT))), psi);
+        return new KeyType(som(new DeepType(psi, PhpType.INT)), psi);
     }
 
     public static KeyType unknown(PsiElement psi)
     {
-        return new KeyType(new MemIt<>(som(new DeepType(psi, PhpType.MIXED))), psi);
+        return new KeyType(som(new DeepType(psi, PhpType.MIXED)), psi);
     }
 
     public IReusableIt<DeepType> getTypes()

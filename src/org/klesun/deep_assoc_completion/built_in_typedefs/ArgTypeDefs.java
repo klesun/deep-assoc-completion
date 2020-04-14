@@ -111,7 +111,8 @@ public class ArgTypeDefs
         } else if ("imageaffine".equals(name)) {
             if (argOrder == 1) {
                 return som(assoc(builtInFunc, Tls.range(0, 6)
-                    .map(n -> T2(n + "", mixed(builtInFunc).mt()))));
+                    .map(n -> T2(n + "", mixed(builtInFunc).mt()))
+                    .arr()));
             } else if (argOrder == 2) {
                 return som(assoc(builtInFunc, list(
                     T2("x", mixed(builtInFunc).mt()),

@@ -22,7 +22,7 @@ public class DeepType extends Lang
     // please, do not change this fields directly - ise Build.java
     // probably should make them all protected and add getters...
 
-    public IReusableIt<Key> keys = new MemIt<>(It.non());
+    public IReusableIt<Key> keys = L.non();
     // just like array keys, but dynamic object properties
     public final Dict<Key> props = new Dict<>(L());
     // applicable to closures and function names

@@ -82,7 +82,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
             .fap((assoct, i) -> assoct.keys.fap(keyObj -> {
                 L<DeepType> valtarr = keyObj.typeGetters
                     .fap(g -> g instanceof Granted ? som(g.get()) : non())
-                    .fap(mt -> mt.types instanceof L ? mt.types.arr() : non())
+                    .fap(mt -> mt.types instanceof IResolvedIt ? mt.types.arr() : non())
                     .arr();
                 return keyObj.keyType.types.fap((t) -> It.cnc(
                     opt(t.stringValue)
@@ -240,7 +240,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
                     resolveArrayIntersect(lit, exprCtx)
                 );
                 return strts.map(strt -> new Build(lit, PhpType.UNSET).keys(list(
-                    new Key(KeyType.mt(list(strt), strt.definition))
+                    new Key(KeyType.mt(som(strt), strt.definition))
                 )).get());
             }
         );

@@ -232,11 +232,12 @@ public class FuncCallRes extends Lang
             .map(clsPsi -> DeepType.makeClsRef(call, clsPsi.getType()));
     }
 
-    public static DeepType makeAssoc(PsiElement psi, Iterable<T2<String, PhpType>> keys)
+    public static DeepType makeAssoc(PsiElement psi, IResolvedIt<T2<String, PhpType>> keys)
     {
-        return Mkt.assoc(psi, It(keys)
+        return Mkt.assoc(psi, keys
             .map(t -> t.nme((keyName, ideaType) ->
-                T2(keyName, new DeepType(psi, ideaType).mt()))));
+                T2(keyName, new DeepType(psi, ideaType).mt())))
+            .arr());
     }
 
     private Iterable<DeepType> findBuiltInFuncCallType(FunctionReferenceImpl call)
