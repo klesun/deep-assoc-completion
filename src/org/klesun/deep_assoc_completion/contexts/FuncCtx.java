@@ -84,7 +84,7 @@ public class FuncCtx extends Lang implements IFuncCtx
                     return list();
                 }
             }))
-            .map(types -> new Mt(types));
+            .map(Mt::mem);
     }
 
     public Opt<Mt> getArg(ArgOrder orderObj)
@@ -94,7 +94,7 @@ public class FuncCtx extends Lang implements IFuncCtx
             if (orderObj.isVariadic) {
                 return uniqueRef.map(ref -> fromVariadic.unw().getInArray(ref)).map(t -> new Mt(list(t)));
             } else {
-                return opt(fromVariadic.fap(mt -> mt.types).wap(Mt::new));
+                return opt(fromVariadic.fap(mt -> mt.types).wap(Mt::mem));
             }
         } else if (!orderObj.isVariadic) {
             int index = orderObj.order;
@@ -123,7 +123,7 @@ public class FuncCtx extends Lang implements IFuncCtx
             .thn(clsRef -> {
                 this.clsIdeaType = opt(clsRef.getType());
                 if (!(clsRef instanceof ClassReference) || isWhitelistedStaticThis(memRef)) {
-                    this.instGetter = opt(() -> new Mt(findExprType.apply(clsRef)));
+                    this.instGetter = opt(() -> Mt.mem(findExprType.apply(clsRef)));
                 }
             });
     }
@@ -147,7 +147,7 @@ public class FuncCtx extends Lang implements IFuncCtx
                 .flt((c,i) -> i > 0) // skip first psi, it is the object var
                 .cst(Variable.class)
                 .fst()
-                .map(vari -> () -> new Mt(findExprType.apply(vari)))
+                .map(vari -> () -> Mt.mem(findExprType.apply(vari)))
         );
         FuncCtx subCtx = new FuncCtx(this, argGetter.arr(), fieldRef, EArgPsiType.DIRECT);
         subCtx.setThisType(fieldRef, findExprType);
@@ -190,7 +190,7 @@ public class FuncCtx extends Lang implements IFuncCtx
         L<PsiElement> psiArgs = L(funcCall.getParameters());
         L<S<Mt>> argGetters = psiArgs.map((psi) -> S(() ->
             Tls.cast(PhpExpression.class, psi) .uni(
-                arg -> new Mt(findExprType.apply(arg)),
+                arg -> Mt.mem(findExprType.apply(arg)),
                 () -> Mt.INVALID_PSI)
         )).arr();
         FuncCtx subCtx = new FuncCtx(this, argGetters, funcCall, EArgPsiType.DIRECT);
@@ -207,7 +207,7 @@ public class FuncCtx extends Lang implements IFuncCtx
     {
         L<S<Mt>> argGetters = Tls.range(0, argOrder + 1)
             .map(i -> S(() -> i == argOrder
-                ? findExprType.apply(argArr).fap(Mt::getElSt).wap(Mt::new)
+                ? findExprType.apply(argArr).fap(Mt::getElSt).wap(Mt::mem)
                 : Mt.INVALID_PSI))
             .arr();
         return new FuncCtx(this, argGetters, argArr, EArgPsiType.ARR);
@@ -216,7 +216,7 @@ public class FuncCtx extends Lang implements IFuncCtx
     /** when you have expression PSI and it is not directly passed to the func, ex. call_user_func_array() */
     public FuncCtx subCtxIndirect(PhpExpression args, F<PhpExpression, It<DeepType>> findExprType)
     {
-        S<Mt> getMt = Tls.onDemand(() -> new Mt(findExprType.apply(args)));
+        S<Mt> getMt = Tls.onDemand(() -> Mt.mem(findExprType.apply(args)));
         L<S<Mt>> argGetters = list();
         // always 10 arguments, got any problem?
         // it probably should be done correctly one day...

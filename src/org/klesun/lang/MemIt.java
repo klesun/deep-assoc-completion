@@ -9,7 +9,7 @@ import static org.klesun.lang.Lang.It;
  * a wrapper for an iterator, that remembers all retrieved elements
  * and reuses them on the next attempt to iterate over it
  */
-public class MemIt<A> implements IIt<A>
+public class MemIt<A> implements IReusableIt<A>
 {
     final private Node head = new Node(null); // first value will be skipped
     final private Lang.S<Iterator<A>> sourceBle;
@@ -75,11 +75,6 @@ public class MemIt<A> implements IIt<A>
         {
             this.value = value;
         }
-    }
-
-    public L<A> arr()
-    {
-        return It(this).arr();
     }
 
     /** probably should comment after debug cuz if it gets somewhere accidentally, it would be disaster for performance.... */

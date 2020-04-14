@@ -63,7 +63,7 @@ public class MemRes {
                         .fap(ideat -> ArrCtorRes.resolveIdeaTypeCls(ideat, proj))
                         .def(som(clsPsi));
                 } else if ("$this".equals(cls)) {
-                    Mt thisMt = ctx.getThisType().wap(Mt::new);
+                    Mt thisMt = ctx.getThisType().wap(Mt::mem);
                     return ArrCtorRes.resolveMtInstCls(thisMt, proj)
                         .def(som(clsPsi));
                 } else {
@@ -78,7 +78,7 @@ public class MemRes {
                     .flt(typ -> obj.getText().equals("static"))
                     .fap(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, obj.getProject())),
                 () -> {
-                    Mt mt = new Mt(ctx.findExprType(obj));
+                    Mt mt = Mt.mem(ctx.findExprType(obj));
                     return mem.isStatic()
                         ? ArrCtorRes.resolveMtClsRefCls(mt, proj)
                         : ArrCtorRes.resolveMtInstCls(mt, proj);

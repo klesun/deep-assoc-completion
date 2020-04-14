@@ -106,7 +106,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                     // assoc array completion
                     fakeFileOpt
                         .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))
-                        .map(psi -> AssocKeyPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::new))
+                        .map(psi -> AssocKeyPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::mem))
                         .fap(mt -> mt.getKeyNames().map(k -> AssocKeyPvdr.makeFullLookup(mt, k, non())))
                 );
             });

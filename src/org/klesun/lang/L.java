@@ -10,7 +10,7 @@ import java.util.List;
  * the class (yeah, less performance, but easier to read)
  * some integration with Opt class
  */
-public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IIt<T>
+public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IReusableIt<T>
 {
     L(List<T> source)
     {
@@ -59,6 +59,7 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IIt<T>
         return size() > 0;
     }
 
+    @Override
     public L<T> arr()
     {
         return this;

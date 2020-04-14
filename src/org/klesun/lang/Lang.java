@@ -256,7 +256,7 @@ public class Lang
      * will have special behaviour in places where
      * we have a getter with already resolved value
      */
-    public static <T> S<T> Granted(T value)
+    public static <T> Granted<T> Granted(T value)
     {
         // return () -> value;
         return new Granted<>(value);

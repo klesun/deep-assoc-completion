@@ -6,10 +6,7 @@ import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.deep_assoc_completion.structures.KeyType;
-import org.klesun.lang.It;
-import org.klesun.lang.L;
-import org.klesun.lang.MemIt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -33,24 +30,36 @@ public class Mt
     public static Mt INVALID_PSI = new Mt(L(), REASON.INVALID_PSI);
 
     private REASON reason;
-    final public MemIt<DeepType> types;
+    final public IReusableIt<DeepType> types;
 
     private boolean isGettingKey = false;
 
-    public Mt(Iterable<DeepType> types, REASON reason)
+    public Mt(IReusableIt<DeepType> types, REASON reason)
     {
-        this.types = new MemIt<>(types);
+        this.types = types;
         this.reason = reason;
     }
+
+    /** @deprecated - keeping for deep-js-completion */
     public Mt(Iterable<DeepType> types)
     {
+        this(new MemIt<>(types), REASON.OK);
+    }
+
+    public Mt(IReusableIt<DeepType> types)
+    {
         this(types, REASON.OK);
+    }
+
+    public static Mt mem(It<DeepType> iter)
+    {
+        return new Mt(iter.mem());
     }
 
     public static DeepType getInArraySt(It<DeepType> types, PsiElement call)
     {
         Key keyEntry = new Key(KeyType.integer(call), call)
-            .addType(Tls.onDemand(() -> new Mt(types)), PhpType.MIXED);
+            .addType(Tls.onDemand(() -> new Mt(types.mem())), PhpType.MIXED);
         return new Build(call, PhpType.ARRAY)
             .keys(som(keyEntry)).get();
     }
@@ -149,7 +158,7 @@ public class Mt
         It<DeepType> keyTsIt = types.fap(t -> getKeySt(t, keyName));
 
         isGettingKey = false;
-        return new Mt(keyTsIt);
+        return new Mt(keyTsIt.mem());
     }
 
     public Mt getKey(KeyType kt)

@@ -115,7 +115,7 @@ public class DocParamRes extends Lang
                     .addType(
                         () -> propDescToType(prop.desc, decl).itr()
                             .cct(list(new DeepType(decl, fqnType, false)))
-                            .wap(Mt::new),
+                            .wap(Mt::mem),
                         fqnType
                     );
             });
@@ -155,7 +155,7 @@ public class DocParamRes extends Lang
         It<DeepType> valTit = Tls.regex("^\\s*=\\s*(.+)$", eqExpr)
             .fop(matches -> matches.gat(0))
             .fap(expr -> parseExpression(expr, sourcePsi.getProject(), docCtx));
-        Mt valMt = new Mt(valTit);
+        Mt valMt = Mt.mem(valTit);
         for (int i = assKeys.size() - 1; i >= 0; --i) {
             Mt valMtF = valMt;
             Key keyEntry = new Key(assKeys.get(i), sourcePsi)

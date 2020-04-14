@@ -11,6 +11,9 @@ import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.BinaryExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.ForeachImpl;
+import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType.PhpTypeBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
@@ -19,9 +22,8 @@ import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.helpers.GuiUtil;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
-import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.lang.It;
-import org.klesun.lang.Opt;
+import org.klesun.deep_assoc_completion.structures.*;
+import org.klesun.lang.*;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -33,33 +35,70 @@ import static org.klesun.lang.Lang.*;
 // should suggest possible values of 'type'
 public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
 {
-    private static LookupElementBuilder makeLookupBase(String keyName, String type)
+    /**
+     * to show above built-in options, at same time it must be in the
+     * order of resolution, but constant suggestions must always go first
+     */
+    private static class BasePriorityOption
     {
+        final public LookupElement lookup;
+        final public int basePriority;
+
+        public BasePriorityOption(LookupElement lookup, int basePriority)
+        {
+            this.lookup = lookup;
+            this.basePriority = basePriority;
+        }
+    }
+
+    private static LookupElementBuilder makeLookupBase(String keyName, L<DeepType> valtarr)
+    {
+        String typeStr = valtarr.size() < 1 ? "from usage" :
+            valtarr.fop(t -> opt(t.briefType)).wap(pstit -> {
+                PhpTypeBuilder pstBuilder = PhpType.builder();
+                pstit.fch(pstBuilder::add);
+                return pstBuilder.build().toString();
+            });
         LookupElementBuilder lookup = LookupElementBuilder.create(keyName)
             .bold()
             .withIcon(AssocKeyPvdr.getIcon())
-            .withTypeText(type);
-        if ("int".equals(type)) {
+            .withTypeText(typeStr);
+        if ("int".equals(typeStr)) {
             lookup = lookup.withInsertHandler(GuiUtil.toRemoveIntStrQuotes());
+        }
+        It<String> briefValStrs = valtarr.fap(DeepType::getBriefVal);
+        if (briefValStrs.has()) {
+            String valStr = briefValStrs.str("|");
+            valStr = Tls.substr(valStr, 0, AssocKeyPvdr.BRIEF_VALUE_MAX_LEN);
+            lookup = lookup.withTailText(" = " + valStr, true);
         }
         return lookup;
     }
 
-    private static It<LookupElement> makeOptions(It<DeepType> tit)
+    private static It<LookupElement> makeOptions(It<DeepType> assocTit)
     {
-        return tit.unq(t -> t.stringValue).fap((t, i) -> It.cnc(
-            opt(t.stringValue)
-                .flt(strVal -> !t.cstName.has() || !t.isNumber)
-                // could actually make some mechanism to pass optional context type info, like
-                // value in case it is array key, or signatures when it is method name...
-                .map(strVal -> makeLookupBase(strVal, "from usage"))
-                .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 100 - i)),
-            t.cstName
-                .map(cstName -> makeLookupBase(cstName, t.briefType + "")
-                    .withTailText(opt(t.stringValue).map(strVal -> " = " + strVal).def(""), true)
-                    .withInsertHandler(GuiUtil.toAlwaysRemoveQuotes()))
-                .map((lookup) -> PrioritizedLookupElement.withPriority(lookup, 100 - i + 50))
-        ));
+        return assocTit
+            .fap((assoct, i) -> assoct.keys.fap(keyObj -> {
+                L<DeepType> valtarr = keyObj.typeGetters
+                    .fap(g -> g instanceof Granted ? som(g.get()) : non())
+                    .fap(mt -> mt.types instanceof L ? mt.types.arr() : non())
+                    .arr();
+                return keyObj.keyType.types.fap((t) -> It.cnc(
+                    opt(t.stringValue)
+                        .flt(strVal -> !t.cstName.has() || !t.isNumber)
+                        // could actually make some mechanism to pass optional context type info, like
+                        // value in case it is array key, or signatures when it is method name...
+                        .map(strVal -> makeLookupBase(strVal, valtarr))
+                        .map((lookup) -> new BasePriorityOption(lookup, 100)),
+                    t.cstName
+                        .map(cstName -> makeLookupBase(cstName, list(t))
+                            .withTailText(opt(t.stringValue).map(strVal -> " = " + strVal).def(""), true)
+                            .withInsertHandler(GuiUtil.toAlwaysRemoveQuotes()))
+                        .map((lookup) -> new BasePriorityOption(lookup, 150))
+                ));
+            }))
+            .map((prio, i) -> PrioritizedLookupElement.withPriority(prio.lookup, prio.basePriority - i))
+            .unq(LookupElement::getLookupString);
     }
 
     /** @return - the other operand */
@@ -81,6 +120,17 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
     private static It<DeepType> resolveEqExpr(StringLiteralExpression lit, IExprCtx funcCtx)
     {
         return assertEqOperand(lit).fap(exp -> funcCtx.findExprType(exp));
+    }
+
+    private static It<DeepType> resolveKeyArrCtor(StringLiteralExpression lit, IExprCtx funcCtx)
+    {
+        return opt(lit.getParent())
+            .cst(PhpPsiElementImpl.class)
+            .fop(psi -> opt(psi.getParent()))
+            .cst(ArrayHashElement.class)
+            .fop(psi -> opt(psi.getParent()))
+            .cst(ArrayCreationExpression.class)
+            .fap(arrCtor -> new UsageBasedTypeResolver(funcCtx).resolve(arrCtor));
     }
 
     private static It<DeepType> resolveUsedValues(StringLiteralExpression lit, IExprCtx funcCtx)
@@ -169,6 +219,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
             .fap(elt -> elt.keys.fap(k -> k.keyType.types));
     }
 
+    /** @return - association: requested string value type as key and related value, if applicable, as value */
     public static It<DeepType> resolve(StringLiteralExpression lit, boolean isAutoPopup)
     {
         SearchCtx search = new SearchCtx(lit.getProject())
@@ -176,13 +227,21 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         FuncCtx funcCtx = new FuncCtx(search);
         IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 
-        return It.cnc(
-            resolveEqExpr(lit, exprCtx),
-            resolveForeachListKey(lit, exprCtx),
-            resolveUsedValues(lit, exprCtx),
-            resolveInArrayHaystack(lit, exprCtx),
-            resolveInArrayNeedle(lit, exprCtx),
-            resolveArrayIntersect(lit, exprCtx)
+        return It.frs(
+            () -> resolveKeyArrCtor(lit, exprCtx),
+            () -> {
+                It<DeepType> strts = It.cnc(
+                    resolveEqExpr(lit, exprCtx),
+                    resolveForeachListKey(lit, exprCtx),
+                    resolveUsedValues(lit, exprCtx),
+                    resolveInArrayHaystack(lit, exprCtx),
+                    resolveInArrayNeedle(lit, exprCtx),
+                    resolveArrayIntersect(lit, exprCtx)
+                );
+                return strts.map(strt -> new Build(lit, PhpType.UNSET).keys(list(
+                    new Key(KeyType.mt(list(strt), strt.definition))
+                )).get());
+            }
         );
     }
 
@@ -198,11 +257,11 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         });
 
         long startTime = System.nanoTime();
-        It<DeepType> tit = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
+        It<DeepType> assocTit = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
             .fop(toCast(StringLiteralExpression.class))
             .fap(lit -> resolve(lit, parameters.isAutoPopup()));
 
-        makeOptions(tit)
+        makeOptions(assocTit)
             .flt(our -> !alreadySuggested.contains(our.getLookupString()))
             .fch(result::addElement);
         long elapsed = System.nanoTime() - startTime;

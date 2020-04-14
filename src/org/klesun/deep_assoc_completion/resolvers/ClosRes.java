@@ -88,13 +88,13 @@ public class ClosRes extends Lang
                 valPsi = non();
             }
         }
-        It<DeepType> vit = valPsi.fap(val -> ctx.findExprType(val));
+        It<DeepType> vit = valPsi.fap(ctx::findExprType);
         if (gotFrom) {
             // could exclude non-iterable types here and set
             // \Generator as fqn type one of these not lazy day
             return vit;
         } else {
-            Mt valMt = new Mt(vit);
+            Mt valMt = Mt.mem(vit);
             KeyType kt = keyPsi
                 .map(key -> ctx.findExprType(key))
                 .map(kit -> KeyType.mt(kit, yld))

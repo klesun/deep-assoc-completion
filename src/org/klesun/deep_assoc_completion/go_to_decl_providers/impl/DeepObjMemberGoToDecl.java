@@ -39,7 +39,7 @@ public class DeepObjMemberGoToDecl extends Lang
             .flt(mem -> mem.multiResolve(false).length == 0)
             .fap(mem -> opt(mem.getFirstChild())
                 .fop(toCast(PhpExpression.class))
-                .map(exp -> new ExprCtx(funcCtx, exp, 0).findExprType(exp).wap(Mt::new))
+                .map(exp -> new ExprCtx(funcCtx, exp, 0).findExprType(exp).wap(Mt::mem))
                 .fap(mt -> list(
                     // TODO: reuse ObjMemberPvdr.getPubKups() ?
                     ArrCtorRes.resolveMtCls(mt, mem.getProject())

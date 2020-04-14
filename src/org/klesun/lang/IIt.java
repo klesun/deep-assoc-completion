@@ -199,4 +199,10 @@ public interface IIt<A> extends Iterable<A> {
         return end(false, endPred);
     }
 
+    default L<A> arr()
+    {
+        L<A> arr = L();
+        iterator().forEachRemaining(arr::add);
+        return arr;
+    }
 }

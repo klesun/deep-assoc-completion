@@ -125,7 +125,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
                         PhpType briefType = k.getBriefTypes().wap(Mt::joinIdeaTypes);
                         return k.keyType.getNames()
                             .map(n -> new Key(prefix + n, k.definition)
-                                .addType(() -> new Mt(k.getValueTypes()), briefType));
+                                .addType(() -> Mt.mem(k.getValueTypes()), briefType));
                     }))
                     .get());
             });

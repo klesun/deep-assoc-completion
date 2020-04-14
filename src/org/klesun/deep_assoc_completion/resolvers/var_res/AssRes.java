@@ -36,7 +36,7 @@ public class AssRes extends Lang
             S<Iterable<DeepType>> memoized = Tls.onDemand(() -> new MemIt<>(getType.get()));
 
             Key keyEntry = new Key(nextKey, nextKey.definition).addType(() ->
-                makeType(furtherKeys, memoized, psi, briefType).wap(Mt::new), briefType);
+                makeType(furtherKeys, memoized, psi, briefType).wap(Mt::mem), briefType);
             return new Build(psi, PhpType.ARRAY)
                 .keys(som(keyEntry)).itr();
         }

@@ -5,6 +5,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
+import static org.klesun.lang.Lang.Granted;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -13,7 +14,7 @@ public class Key
 {
     final public KeyType keyType;
     // TODO: rename to valueTypeGetters
-    final public L<Tls.OnDemand<Mt>> typeGetters = Lang.L();
+    final public L<Tls.IOnDemand<Mt>> typeGetters = Lang.L();
     // to get quick built-in type info
     final private L<PhpType> briefTypes = Lang.L();
     // where Go To Definition will lead
@@ -41,7 +42,11 @@ public class Key
 
     public Key addType(Lang.S<Mt> getter, PhpType briefType)
     {
-        typeGetters.add(Tls.onDemand(getter));
+        if (getter instanceof Granted) {
+            typeGetters.add(Granted(getter.get()));
+        } else {
+            typeGetters.add(Tls.onDemand(getter));
+        }
         briefTypes.add(briefType);
         return this;
     }
@@ -68,7 +73,7 @@ public class Key
         return briefTypes;
     }
 
-    public L<Tls.OnDemand<Mt>> getTypeGetters()
+    public L<Tls.IOnDemand<Mt>> getTypeGetters()
     {
         return typeGetters;
     }

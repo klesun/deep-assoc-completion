@@ -103,14 +103,14 @@ public class TwigVarNamePvdr extends CompletionProvider<CompletionParameters>
                         if (keyPath.size() > 0) {
                             String varName = keyPath.remove(0);
                             L<T2<String, String>> parentLoops = getParentLoops(caretLeaf);
-                            Mt rootMt = new Mt(rootTit);
+                            Mt rootMt = Mt.mem(rootTit);
                             It<DeepType> varTit = resolveVar(varName, parentLoops, rootMt);
                             return varTit.fap(t -> Mt.getKeyPath(t, keyPath));
                         } else {
                             return rootTit;
                         }
                     })
-                    .wap(Mt::new);
+                    .wap(Mt::mem);
 
                 return mt.types
                     .fap(t -> t.keys)

@@ -5,10 +5,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
-import org.klesun.lang.It;
-import org.klesun.lang.L;
-import org.klesun.lang.Lang;
-import org.klesun.lang.MemIt;
+import org.klesun.lang.*;
 
 import static org.klesun.lang.Lang.*;
 

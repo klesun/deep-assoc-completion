@@ -106,7 +106,7 @@ public class MiscRes extends Lang
                     .map(ctorInfo -> ctorInfo.classGenerics
                         .map(g -> PsalmRes.getGenTypeFromFunc(
                             g, ctorInfo.params, ctorArgs, newExp
-                        ).wap(Mt::new))
+                        ).wap(Mt::mem))
                         .arr())
                     .flt(gens -> gens.size() > 0)
                     .fst()
@@ -163,7 +163,7 @@ public class MiscRes extends Lang
             deepType.props.vls().cct(deepType.keys)
                 .fch(k -> k.keyType.getNames()
                     .fch(n -> objt.addProp(n, k.definition)
-                        .addType(() -> new Mt(k.getValueTypes()))));
+                        .addType(() -> Mt.mem(k.getValueTypes()))));
             return som(objt);
         } else if (phpType.equals("bool") || phpType.equals("boolean")) {
             return som(new DeepType(deepType.definition, PhpType.BOOLEAN, deepType.stringValue));

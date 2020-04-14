@@ -59,7 +59,7 @@ public class PsalmRes {
             Key keyObj = new Key(keyt, goToPsi);
             keyObj.addType(() -> {
                 It<DeepType> tit = psalmToDeep(defs.get(0), goToPsi, generics);
-                return new Mt(tit);
+                return Mt.mem(tit);
             });
             return It(som(keyObj));
         } else if (defs.size() == 2) {
@@ -68,7 +68,7 @@ public class PsalmRes {
             Key keyObj = new Key(keyt, goToPsi);
             keyObj.addType(() -> {
                 It<DeepType> tit = psalmToDeep(defs.get(1), goToPsi, generics);
-                return new Mt(tit);
+                return Mt.mem(tit);
             });
             return It(som(keyObj));
         } else {
@@ -85,7 +85,7 @@ public class PsalmRes {
             PhpType phpType = new PhpType().add(cls.fqn);
             L<Mt> genMts = Lang.It(cls.generics)
                 .map(psalm -> psalmToDeep(psalm, goToPsi, generics))
-                .map(tit -> new Mt(tit))
+                .map(Mt::mem)
                 .arr();
             It<Key> keyEntries = It.non();
             if (isArrayLike(cls)) {
@@ -106,7 +106,7 @@ public class PsalmRes {
                     It<Key> keyEntries = It(assoc.keys.entrySet()).map(e -> {
                         String keyName = e.getKey();
                         IType psalmVal = e.getValue();
-                        Mt valMt = new Mt(psalmToDeep(psalmVal, goToPsi, generics));
+                        Mt valMt = Mt.mem(psalmToDeep(psalmVal, goToPsi, generics));
                         PhpType ideaType = valMt.getIdeaTypes().fst().def(PhpType.UNSET);
                         List<String> comments = opt(assoc.keyToComments.get(keyName))
                             .fap(c -> c).flt(c -> !c.trim().equals("")).map(c -> c).arr();
@@ -148,7 +148,7 @@ public class PsalmRes {
                         IType elPsalmt = cls.generics.get(0);
                         return getGenericTypeFromArg(elPsalmt, elMt, generic, psi, emptyCtx);
                     } else if (cls.generics.size() == 2) {
-                        Mt keyMt = deept.types.fap(t -> t.keys).fap(k -> k.keyType.types).wap(Mt::new);
+                        Mt keyMt = deept.types.fap(t -> t.keys).fap(k -> k.keyType.types).wap(Mt::mem);
                         IType keyPsalmt = cls.generics.get(1);
                         It<DeepType> genKeyTit = getGenericTypeFromArg(keyPsalmt, keyMt, generic, psi, emptyCtx);
 
@@ -161,7 +161,7 @@ public class PsalmRes {
                 } else if (list("callable", "\\Closure", "function").contains(cls.fqn)) {
                     // callable<Targ1, Targ2, Tret>
                     return L(cls.generics).lst().fap(retPsalmt -> {
-                        Mt retmt = deept.types.fap(t -> t.getReturnTypes(emptyCtx)).wap(Mt::new);
+                        Mt retmt = deept.types.fap(t -> t.getReturnTypes(emptyCtx)).wap(Mt::mem);
                         return getGenericTypeFromArg(retPsalmt, retmt, generic, psi, emptyCtx);
                     });
                 } else {
@@ -172,7 +172,7 @@ public class PsalmRes {
                     .map(psalmgt -> deept.types
                         .fap(t -> t.generics)
                         .fap(gmt -> getGenericTypeFromArg(psalmgt, gmt, generic, psi, emptyCtx))
-                        .wap(Mt::new))
+                        .wap(tit -> Mt.mem(tit)))
                     .arr();
                 return It(som(asParamCls));
             })

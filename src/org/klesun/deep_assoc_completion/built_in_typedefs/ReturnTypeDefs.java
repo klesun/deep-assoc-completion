@@ -167,7 +167,7 @@ public class ReturnTypeDefs
         It<DeepType> errCstTyppes = errCstNames.fap(nme -> It(idx.getConstantsByName(nme)))
             .fap(cstDef -> DirectTypeResolver.resolveConst(cstDef, ctx));
         return assoc(call, list(
-            T2("type", new Mt(errCstTyppes)),
+            T2("type", Mt.mem(errCstTyppes)),
             T2("message", str(call, "proc_get_status() expects parameter 1 to be resource, null given").mt()),
             T2("file", str(call, "php shell code").mt()),
             T2("line", inte(call, 1).mt())

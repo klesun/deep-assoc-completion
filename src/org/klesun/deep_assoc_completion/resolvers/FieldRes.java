@@ -157,7 +157,7 @@ public class FieldRes extends Lang
                 DeepType kt = new DeepType(f, PhpType.STRING, f.getName());
                 KeyType keyType = KeyType.mt(som(kt), f);
                 return new Key(keyType, f)
-                    .addType(() -> new Mt(declToExplTypes(f, memCtx)), f.getType());
+                    .addType(() -> Mt.mem(declToExplTypes(f, memCtx)), f.getType());
             });
         return It.cnc(mt.types.fap(t -> t.props.vls()), declared);
     }
@@ -193,7 +193,7 @@ public class FieldRes extends Lang
                     .flt(typ -> ref.getText().equals("static"))
                     .flt(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, ref.getProject()).has())
                     .map(typ -> new Mt(list(new DeepType(ref, typ)))),
-                () -> opt(ctx.findExprType(ref).wap(Mt::new))
+                () -> opt(ctx.findExprType(ref).wap(Mt::mem))
             ))
             .def(Mt.INVALID_PSI));
 

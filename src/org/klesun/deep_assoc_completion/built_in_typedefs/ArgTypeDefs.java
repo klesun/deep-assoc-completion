@@ -27,7 +27,7 @@ public class ArgTypeDefs
         return assoc(def, list(
             T2("http", assoc(def, list(
                 T2("header", str(def, "Content-type: application/x-www-form-urlencoded\\r\\n").mt()),
-                T2("method", new Mt(list("GET", "POST", "OPTIONS", "PUT", "HEAD", "DELETE", "CONNECT", "TRACE", "PATCH").map(m -> str(def, m)))),
+                T2("method", new Mt(list("GET", "POST", "OPTIONS", "PUT", "HEAD", "DELETE", "CONNECT", "TRACE", "PATCH").map(m -> str(def, m)).arr())),
                 T2("content", str(def, "name=Vasya&age=26&price=400").mt()),
                 T2("user_agent", str(def, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/71.0.3578.80 Chrome/71.0.3578.80 Safari/537.36").mt()),
                 T2("proxy", str(def, "tcp://proxy.example.com:5100").mt()),

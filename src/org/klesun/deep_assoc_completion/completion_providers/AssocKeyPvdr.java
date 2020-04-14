@@ -36,7 +36,7 @@ import static org.klesun.lang.Lang.*;
  */
 public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 {
-    final private static int BRIEF_VALUE_MAX_LEN = 50;
+    final public static int BRIEF_VALUE_MAX_LEN = 50;
     final private static int COMMENTED_MAX_LEN = 90;
 
     private static ImageIcon icon = null;
@@ -159,7 +159,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
     public static LookupElementBuilder makeFullLookup(Mt arrMt, String keyName, Opt<String> commentOpt)
     {
-        Mt keyMt = It(arrMt.types).fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::new);
+        Mt keyMt = It(arrMt.types).fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::mem);
         int maxValLen = commentOpt.has() ? COMMENTED_MAX_LEN : BRIEF_VALUE_MAX_LEN;
         String briefValue = keyMt.getBriefValueText(maxValLen);
         if (commentOpt.has()) {
@@ -264,7 +264,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         arrTit.has();
         System.out.println("checked if iterator has anything, took " + search.getExpressionsResolved() + " expressions");
 
-        Mt arrMt = new Mt(arrTit);
+        Mt arrMt = Mt.mem(arrTit);
         // preliminary keys without type - they may be at least 3 times faster in some cases
         T2<Dict<MutableLookup>, Map<String, Set<String>>> tuple = addNameOnly(arrMt, result, includeQuotes, (keyName) -> {
             System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);

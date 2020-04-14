@@ -107,13 +107,6 @@ public class It<A> implements IIt<A>
         return new MemIt<>(() -> dispose());
     }
 
-    public L<A> arr()
-    {
-        L<A> arr = L();
-        dispose().forEachRemaining(arr::add);
-        return arr;
-    }
-
     public void fch(Lang.C2<A, Integer> f)
     {
         Lang.Mutable<Integer> mutI = new Lang.Mutable<>(0);

@@ -65,7 +65,7 @@ public class UsageBasedTypeResolver
     {
         It<DeepType> objTit = Tls.cast(PhpExpression.class, objPsi)
             .fap(expr -> fakeCtx.findExprType(expr));
-        Mt mt = new Mt(objTit);
+        Mt mt = Mt.mem(objTit);
         It<PhpClass> clses = ArrCtorRes.resolveMtCls(mt, objPsi.getProject());
         return clses.fap(cls -> cls.getMethods())
             .map(m -> new DeepType(m, PhpType.STRING, m.getName()));
@@ -99,7 +99,7 @@ public class UsageBasedTypeResolver
                             .map(name -> {
                                 S<Mt> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
                                     .fap(acc -> new UsageBasedTypeResolver(nextCtx, depthLeft - 1).resolve(acc))
-                                    .wap(Mt::new);
+                                    .wap(Mt::mem);
                                 Key keyEntry = new Key(name, t.definition).addType(getType, PhpType.UNSET);
                                 return new Build(arg, PhpType.ARRAY)
                                     .keys(som(keyEntry))
@@ -191,7 +191,7 @@ public class UsageBasedTypeResolver
                         .map(fld -> T2(fld.getName(), fld))).mt().types;
                 }
             })
-            .wap(Mt::new);
+            .wap(Mt::mem);
     }
 
     private static It<? extends Function> getImplementations(Function meth)
@@ -216,11 +216,12 @@ public class UsageBasedTypeResolver
                 .fop(toCast(Function.class))) // TODO: support in a var
             .fap(func -> {
                 Key keyEntry = new Key(KeyType.unknown(argList))
-                    .addType(() -> L(argList.getParameters()).gat(caretArgOrder)
+                    .addType(() -> L(argList.getParameters())
+                        .gat(caretArgOrder)
                         .cst(PhpExpression.class)
                         .map(arrCtor -> fakeCtx.subCtxSingleArgArr(arrCtor, 0))
                         .fap(subCtx -> findArgTypeFromUsage(func, 0, subCtx))
-                        .wap(Mt::new));
+                        .wap(tit -> Mt.mem(tit)));
                 return new Build(argList, PhpType.ARRAY)
                     .keys(som(keyEntry)).itr();
             });

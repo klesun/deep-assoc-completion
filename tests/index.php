@@ -826,6 +826,12 @@ method_exists(new Blanc, '');
 debug_backtrace();
 json_encode([], );
 
+stream_context_create([
+    'http' => [
+        '' => '',
+    ],
+]);
+
 class A
 {
     public function getFoo($key) {

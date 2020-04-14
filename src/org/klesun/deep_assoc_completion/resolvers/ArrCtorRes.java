@@ -113,7 +113,7 @@ public class ArrCtorRes extends Lang
 
     public It<PhpClass> resolveInstEpxrCls(PhpExpression expr)
     {
-        Mt mt = new Mt(ctx.findExprType(expr));
+        Mt mt = Mt.mem(ctx.findExprType(expr));
         return resolveMtInstCls(mt, expr.getProject());
     }
 
@@ -220,7 +220,7 @@ public class ArrCtorRes extends Lang
         return It(expr.getHashElements()).fap((keyRec) -> opt(keyRec.getValue())
             .fop(toCast(PhpExpression.class))
             .fap(v -> {
-                S<Mt> getType = Tls.onDemand(() -> ctx.findExprType(v).wap(Mt::new));
+                S<Mt> getType = Tls.onDemand(() -> ctx.findExprType(v).wap(Mt::mem));
                 return opt(keyRec.getKey())
                     .fop(toCast(PhpExpression.class))
                     .map(keyPsi -> ctx.findExprType(keyPsi))
@@ -251,12 +251,10 @@ public class ArrCtorRes extends Lang
             .map(retTypeGetter -> (ctx) -> new MemIt<>(retTypeGetter.apply(ctx)));
 
         It<Key> idxKeys = orderedParams
-            .fap((valuePsi, i) -> Tls.cast(PhpExpression.class, valuePsi)
-                // currently each value is wrapped into a plane Psi element
-                // i believe this is likely to change in future - so we try both cases
-                .elf(() -> opt(valuePsi.getFirstChild()).fop(toCast(PhpExpression.class)))
+            .fap((valuePsi, i) -> opt(valuePsi.getFirstChild())
+                .fop(toCast(PhpExpression.class))
                 .map(val -> new Key(i + "", ctx.getRealPsi(val))
-                    .addType(() -> ctx.findExprType(val).wap(Mt::new), Tls.getIdeaType(val))));
+                    .addType(() -> ctx.findExprType(val).wap(Mt::mem), Tls.getIdeaType(val))));
 
         It<Key> assocKeys = resolveAssoc(expr);
 

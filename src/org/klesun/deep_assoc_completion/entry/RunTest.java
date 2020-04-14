@@ -100,8 +100,8 @@ public class RunTest extends AnAction
                 IExprCtx exprCtx = makeNewExprCtx(func);
                 Mt actual = new UsageBasedTypeResolver(exprCtx, 10)
                     .findArgTypeFromUsage(func, argOrder, exprCtx.subCtxEmpty())
-                    .wap(Mt::new);
-                Mt expected = Mt.getKeySt(rett, argName).wap(Mt::new);
+                    .wap(Mt::mem);
+                Mt expected = Mt.getKeySt(rett, argName).wap(Mt::mem);
                 CaseContext caseCtx = new CaseContext(logger);
                 caseCtx.dataProviderName = func.getName();
                 caseCtx.testNumber = i;
@@ -120,7 +120,7 @@ public class RunTest extends AnAction
                 .els(() -> System.out.println("Failed to find data-providing functions"))
                 .fap(funcs -> funcs.fap(f -> parseReturnedTestCase(f, logger)))
                 .fap(tu -> tu.nme((ctx, actual, expected) -> {
-                    L<String> expectedKeys = new Mt(expected.getValueTypes())
+                    L<String> expectedKeys = Mt.mem(expected.getValueTypes())
                         .getEl().getStringValues().arr();
                     It<String> actualKeys = actual.getValueTypes()
                         .fap(t -> t.keys).fap(k -> k.keyType.getNames());

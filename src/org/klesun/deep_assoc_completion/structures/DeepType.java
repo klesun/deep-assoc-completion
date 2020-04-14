@@ -22,7 +22,7 @@ public class DeepType extends Lang
     // please, do not change this fields directly - ise Build.java
     // probably should make them all protected and add getters...
 
-    public MemIt<Key> keys = new MemIt<>(It.non());
+    public IIt<Key> keys = new MemIt<>(It.non());
     // just like array keys, but dynamic object properties
     public final Dict<Key> props = new Dict<>(L());
     // applicable to closures and function names
@@ -117,7 +117,7 @@ public class DeepType extends Lang
             .fap(k -> k.typeGetters.fap(mtg -> mtg.get().types));
     }
 
-    /** @deprecated - kept for compatibility with deep-js, shall be remove eventually */
+    /** @deprecated - kept for compatibility with deep-js, shall be remove eventually - use Build.java instead */
     public Key addKey(KeyType keyType)
     {
         Key keyEntry = new Key(keyType, definition);
