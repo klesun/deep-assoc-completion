@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.resolvers.var_res;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.ArrayAccessExpression;
+import com.jetbrains.php.lang.psi.elements.ArrayIndex;
 import com.jetbrains.php.lang.psi.elements.PhpExpression;
 import com.jetbrains.php.lang.psi.elements.impl.ArrayAccessExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.AssignmentExpressionImpl;
@@ -48,7 +49,7 @@ public class AssRes extends Lang
     }
 
     // null in key chain means index (when it is number or variable, not named key)
-    private Opt<T2<List<KeyType>, S<It<DeepType>>>> collectKeyAssignment(AssignmentExpressionImpl ass)
+    private Opt<T2<List<KeyType>, S<IIt<DeepType>>>> collectKeyAssignment(AssignmentExpressionImpl ass)
     {
         Opt<ArrayAccessExpressionImpl> nextKeyOpt = opt(ass.getVariable())
             .fop(toCast(ArrayAccessExpressionImpl.class));
@@ -59,7 +60,7 @@ public class AssRes extends Lang
             ArrayAccessExpressionImpl nextKey = nextKeyOpt.def(null);
 
             KeyType name = opt(nextKey.getIndex())
-                .map(index -> index.getValue())
+                .map(ArrayIndex::getValue)
                 .fop(toCast(PhpExpression.class))
                 .map(key -> KeyType.mt(ctx.findExprType(key), key))
                 .def(KeyType.integer(nextKey));
@@ -83,10 +84,10 @@ public class AssRes extends Lang
         return opt(caretVar.getParent())
             .fop(parent -> Opt.fst(
                 () -> Tls.cast(ArrayAccessExpression.class, parent)
-                    .fop(acc -> findParentAssignment(acc)),
+                    .fop(AssRes::findParentAssignment),
                 () -> Tls.cast(AssignmentExpressionImpl.class, parent)
                     .flt(ass -> opt(ass.getVariable())
-                        .map(assVar -> caretVar.isEquivalentTo(assVar))
+                        .map(caretVar::isEquivalentTo)
                         .def(false))
             ));
     }

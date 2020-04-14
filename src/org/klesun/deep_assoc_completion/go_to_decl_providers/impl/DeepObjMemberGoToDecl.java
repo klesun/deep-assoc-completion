@@ -10,6 +10,7 @@ import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.lang.IIt;
 import org.klesun.lang.It;
 import org.klesun.lang.Lang;
 

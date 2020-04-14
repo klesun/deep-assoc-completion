@@ -44,7 +44,7 @@ public interface IExprCtx {
     SearchCtx getSearch();
     int getDepth();
 
-    It<DeepType> findExprType(PhpExpression expr);
+    IIt<DeepType> findExprType(PhpExpression expr);
     It<DeepType> limitResolveDepth(int depthLimit, PhpExpression expr);
 
 

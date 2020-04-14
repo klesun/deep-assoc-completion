@@ -29,6 +29,7 @@ import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.Key;
+import org.klesun.lang.IIt;
 import org.klesun.lang.It;
 import org.klesun.lang.MemIt;
 import org.klesun.lang.Tls;
@@ -61,7 +62,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
             .fap(k -> k.keyType.getNames()
                 .map(strVal -> makeLookupBase(strVal, k.getValueTypes().map(t -> t.briefType).unq().str("|")))
                 .map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, -1000 - i)))
-            .unq(l -> l.getLookupString());
+            .unq(LookupElement::getLookupString);
     }
 
     public static boolean isGlobalContext(Variable caretVar)
@@ -92,7 +93,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
                     funcCtx.getSearch().globalsVarType = som(new MemIt<>(It.non()));
                     It<DeepType> tit = getGlobalsMagicVarUsages(proj)
                         .fap(glob -> new VarRes(funcCtx.subCtxEmpty()).resolveRef(glob, false))
-                        .wap(asses -> AssRes.assignmentsToTypes(asses));
+                        .wap(AssRes::assignmentsToTypes);
                     funcCtx.getSearch().globalsVarType = som(tit.mem());
                 }
                 return funcCtx.getSearch().globalsVarType.unw();
@@ -168,7 +169,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
 
         makeOptions(tit)
             .flt(kup -> !suggested.contains(kup.getLookupString()))
-            .fch(lookupElement -> result.addElement(lookupElement));
+            .forEach(result::addElement);
         long elapsed = System.nanoTime() - startTime;
         double seconds = elapsed / 1000000000.0;
         if (seconds > 0.1) {

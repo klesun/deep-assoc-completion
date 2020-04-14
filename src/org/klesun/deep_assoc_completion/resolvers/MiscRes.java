@@ -160,7 +160,7 @@ public class MiscRes extends Lang
             return som(arrt);
         } else if (phpType.equals("object")) {
             DeepType objt = new DeepType(deepType.definition, PhpType.OBJECT);
-            deepType.props.vls().cct(deepType.keys)
+            It.cnc(deepType.props.vls(), deepType.keys)
                 .fch(k -> k.keyType.getNames()
                     .fch(n -> objt.addProp(n, k.definition)
                         .addType(() -> Mt.mem(k.getValueTypes()))));
@@ -193,17 +193,6 @@ public class MiscRes extends Lang
                     )))
             , Tls.cast(BinaryExpressionImpl.class, expr)
                 .fap(bin -> opt(bin.getOperation())
-                    .flt(op -> op.getText().equals("-")
-                        || op.getText().equals("*") || op.getText().equals("/")
-                        || op.getText().equals("%") || op.getText().equals("**")
-                    )
-                    .fap(op -> {
-                        DeepType type = new DeepType(bin, PhpType.NUMBER);
-                        type.isNumber = true;
-                        return list(type);
-                    }))
-            , Tls.cast(BinaryExpressionImpl.class, expr)
-                .fap(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("+"))
                     .fap(op -> {
                         It<DeepType> tit = It.cnc(
@@ -233,13 +222,13 @@ public class MiscRes extends Lang
             , Tls.cast(UnaryExpression.class, expr)
                 .fap(bin -> opt(bin.getOperation())
                     .fap(op -> Tls.regex("^\\(\\s*(" + Tls.implode("|", getCastTypes()) + ")\\s*\\)$", op.getText()))
-                    .fap(m -> m.fst())
+                    .fap(IIt::fst)
                     .fap(phpType -> findPsiExprType(bin.getValue())
                         .fap(t -> castToPhpType(t, phpType))))
             , Tls.cast(NewExpressionImpl.class, expr)
-                .fap(newExp -> resolveNew(newExp))
+                .fap(this::resolveNew)
             , Tls.cast(Include.class, expr)
-                .fap(casted -> resolveInclude(casted))
+                .fap(this::resolveInclude)
         );
     }
 

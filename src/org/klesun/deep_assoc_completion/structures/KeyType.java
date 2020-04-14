@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.structures;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.klesun.lang.IReusableIt;
 import org.klesun.lang.It;
 import org.klesun.lang.MemIt;
 
@@ -10,10 +11,11 @@ import static org.klesun.lang.Lang.*;
 /** is there actually a point in having this and Mt as two separate classes? */
 public class KeyType
 {
-    final public MemIt<DeepType> types;
+    final public IReusableIt<DeepType> types;
     final public PsiElement definition;
 
-    private KeyType(MemIt<DeepType> getTypes, PsiElement definition)
+    // TODO: pass array/opt here when possible
+    private KeyType(IReusableIt<DeepType> getTypes, PsiElement definition)
     {
         this.definition = definition;
         this.types = getTypes;
@@ -22,7 +24,7 @@ public class KeyType
     public static KeyType mt(Iterable<DeepType> mtg, PsiElement definition)
     {
         Iterable<DeepType> anyt = som(new DeepType(definition, PhpType.MIXED));
-        return new KeyType(It(mtg).def(anyt).mem(), definition);
+        return new KeyType(It(mtg).orr(anyt).mem(), definition);
     }
 
     public static KeyType integer(PsiElement psi)
@@ -35,7 +37,7 @@ public class KeyType
         return new KeyType(new MemIt<>(som(new DeepType(psi, PhpType.MIXED))), psi);
     }
 
-    public MemIt<DeepType> getTypes()
+    public IReusableIt<DeepType> getTypes()
     {
         return types;
     }

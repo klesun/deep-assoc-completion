@@ -16,10 +16,7 @@ import org.klesun.deep_assoc_completion.resolvers.var_res.ArgRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.*;
-import org.klesun.lang.It;
-import org.klesun.lang.L;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 import org.klesun.lang.iterators.RegexIterator;
 
 import java.util.List;
@@ -43,7 +40,7 @@ public class VarRes
             .map(groups -> groups.get(1));
     }
 
-    private static It<DeepType> makeRegexNameCaptureTypes(It<DeepType> regexTypes)
+    private static IIt<DeepType> makeRegexNameCaptureTypes(IIt<DeepType> regexTypes)
     {
         return regexTypes
             .fop(strt -> opt(strt.stringValue)
@@ -77,13 +74,13 @@ public class VarRes
             });
     }
 
-    private Opt<S<It<DeepType>>> assertForeachElement(PsiElement varRef)
+    private Opt<S<IIt<DeepType>>> assertForeachElement(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .cst(ForeachImpl.class)
             .fop(fch -> ForEach.parse(fch))
             .map(fchObj -> () -> {
-                It<DeepType> artit = ctx.findExprType(fchObj.srcArr);
+                IIt<DeepType> artit = ctx.findExprType(fchObj.srcArr);
                 if (opt(varRef).equals(fchObj.keyVar)) {
                     return artit.fap(t -> t.keys)
                         .fap(k -> k.keyType.getTypes())
@@ -101,7 +98,7 @@ public class VarRes
             });
     }
 
-    private Opt<S<It<DeepType>>> assertDeclFromGlobal(PsiElement varRef)
+    private Opt<S<IIt<DeepType>>> assertDeclFromGlobal(PsiElement varRef)
     {
         return Tls.cast(Variable.class, varRef)
             .flt(varPsi -> VarNamePvdr.isGlobalContext(varPsi))
@@ -175,7 +172,7 @@ public class VarRes
         ));
     }
 
-    private Opt<S<It<DeepType>>> assertTupleAssignment(PsiElement varRef)
+    private Opt<S<IIt<DeepType>>> assertTupleAssignment(PsiElement varRef)
     {
         return parseAsTupleAssignment(varRef)
             .map(tuple -> () -> tuple
@@ -189,7 +186,7 @@ public class VarRes
                     })));
     }
 
-    private Opt<S<It<DeepType>>> assertPregMatchResult(PsiElement varRef)
+    private Opt<S<IIt<DeepType>>> assertPregMatchResult(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fop(toCast(ParameterListImpl.class))
@@ -202,12 +199,12 @@ public class VarRes
             .fop(fun -> L(fun.getParameters()).fst())
             .fop(toCast(PhpExpression.class))
             .map(regexPsi -> () -> {
-                It<DeepType> tit = ctx.findExprType(regexPsi);
+                IIt<DeepType> tit = ctx.findExprType(regexPsi);
                 return makeRegexNameCaptureTypes(tit);
             });
     }
 
-    private static It<PsiElement> findDeclarations(Variable variable)
+    private static IIt<PsiElement> findDeclarations(Variable variable)
     {
         // if this line is still here when you read this, that means I
         // decided to just do DumbService::isDumb() check in Type Provider
@@ -245,7 +242,7 @@ public class VarRes
                 .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi, PhpType.ARRAY))
             , () -> Tls.cast(ParameterImpl.class, refPsi)
                 .map(param -> {
-                    S<It<DeepType>> mtg = () -> new ArgRes(ctx).resolveArg(param);
+                    S<IIt<DeepType>> mtg = () -> new ArgRes(ctx).resolveArg(param);
                     return new Assign(list(), mtg, true, refPsi, param.getType());
                 })
             , () -> Tls.cast(Variable.class, refPsi)
@@ -316,7 +313,7 @@ public class VarRes
 
     public It<DeepType> resolve(Variable caretVar)
     {
-        It<PsiElement> references = findDeclarations(caretVar)
+        IIt<PsiElement> references = findDeclarations(caretVar)
             .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, caretVar))
             ;
 
@@ -377,12 +374,12 @@ public class VarRes
         return It.cnc(
             docTypes, superGlobalTit,
             hasClassInfo(typeFromIdea.briefType)
-                ? list(typeFromIdea) : list(),
+                ? som(typeFromIdea) : non(),
             thisType, closureType,
             AssRes.assignmentsToTypes(asses)
-        )   .def(() -> assertDeclFromGlobal(caretVar)
+        )   .orr(() -> assertDeclFromGlobal(caretVar)
                 .fap(f -> f.get()).iterator())
-            .def(list(typeFromIdea));
+            .orr(som(typeFromIdea));
     }
 
 }

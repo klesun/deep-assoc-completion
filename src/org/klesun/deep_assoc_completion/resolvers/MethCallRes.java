@@ -64,7 +64,7 @@ public class MethCallRes extends Lang
     {
         It<Method> overridden = opt(meth.getContainingClass())
             .fap(cls -> It(cls.getSupers()))
-            .fap(clsArg -> clsArg.getMethods())
+            .fap(PhpClass::getMethods)
             .flt(m -> m.getName().equals(meth.getName()));
         return It.cnc(som(meth), overridden);
     }
@@ -153,7 +153,7 @@ public class MethCallRes extends Lang
                             () -> getFuncByFqn(fqn, phpIdx).fst().map(a -> a)
                         );
                         IExprCtx docCtx = declOpt
-                            .map(decl -> ctx.subCtxDoc(decl))
+                            .map(ctx::subCtxDoc)
                             .def(ctx.subCtxEmpty());
                         return DocParamRes.parseExpression(exp.getValue(), ctx.getProject().unw(), docCtx);
                     }));
@@ -238,7 +238,7 @@ public class MethCallRes extends Lang
         It<Function> redecls = Tls.cast(Method.class, func)
             .fap(m -> findOverriddenMethods(m))
             .map(m -> (Function)m)
-            .def(som(func));
+            .orr(som(func));
         return redecls
             .fap(m -> It.cnc(
                 opt(m.getDocComment()).fap(doc -> findDocRetType(doc, ctx)),
@@ -282,7 +282,7 @@ public class MethCallRes extends Lang
     {
         String cls = opt(call.getClassReference()).map(c -> c.getText()).def("");
         String mth = opt(call.getName()).def("");
-        return MethCallRes.resolveMethodsNoNs(cls, mth, call.getProject());
+        return resolveMethodsNoNs(cls, mth, call.getProject());
     }
 
     private static It<Method> resolveMethodsNoNs(String partialFqn, String func, Project proj)
@@ -294,10 +294,10 @@ public class MethCallRes extends Lang
 
     private It<Method> findReferenced(@Nullable String methName, MemIt<PhpClass> clses)
     {
-        It<Method> mit = clses
+        It<Method> tit = clses
             .fap(cls -> cls.getMethods())
             .flt(f -> f.getName().equals(methName));
-        return mit;
+        return tit;
     }
 
     private It<Method> resolveMethodFromCall(MethodReferenceImpl call, MemIt<PhpClass> clses)

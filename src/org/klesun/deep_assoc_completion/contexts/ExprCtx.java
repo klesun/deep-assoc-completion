@@ -141,8 +141,8 @@ public class ExprCtx implements IExprCtx {
         return funcCtx.closureVars;
     }
 
-    public It<DeepType> findExprType(PhpExpression expr) {
-        return It(funcCtx.getSearch().findExprType(expr, subExpr(expr, funcCtx)));
+    public IIt<DeepType> findExprType(PhpExpression expr) {
+        return funcCtx.getSearch().findExprType(expr, subExpr(expr, funcCtx));
     }
 
     public It<DeepType> limitResolveDepth(int depthLimit, PhpExpression expr) {

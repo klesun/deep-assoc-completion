@@ -9,9 +9,7 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.lang.It;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import static org.klesun.lang.Lang.*;
 
@@ -42,7 +40,7 @@ public class DirectTypeResolver {
         );
     }
 
-    private It<DeepType> resolveClsConst(ClassConstantReference cst)
+    private IIt<DeepType> resolveClsConst(ClassConstantReference cst)
     {
         if ("class".equals(cst.getName())) {
             return opt(cst.getClassReference())
@@ -80,19 +78,47 @@ public class DirectTypeResolver {
         return dir == null;
     }
 
-    public It<DeepType> resolve(PhpExpression expr)
+    /* to reuse the collection instead of creating new iterator each time, when possible */
+    private IResolvedIt<DeepType> resolveAsPlainType(PhpExpression expr)
     {
-        return It.frs(() -> It.non()
+        return IResolvedIt.fst(L::non
+            , () -> Tls.cast(ArrayCreationExpressionImpl.class, expr)
+                .map(arr -> new ArrCtorRes(ctx).resolve(arr))
+            , () -> Tls.cast(StringLiteralExpressionImpl.class, expr)
+                .map(lit -> new DeepType(lit))
+            , () -> Tls.cast(PhpExpressionImpl.class, expr)
+                .fop(casted -> opt(casted.getText())
+                    .flt(text -> Tls.regex("^\\d+$", text).has())
+                    .map(num -> DeepType.makeInt(casted, num)))
+            , () -> Tls.cast(BinaryExpressionImpl.class, expr)
+                .fop(bin -> opt(bin.getOperation())
+                    .flt(op -> op.getText().equals("-")
+                        || op.getText().equals("*") || op.getText().equals("/")
+                        || op.getText().equals("%") || op.getText().equals("**")
+                    )
+                    .map(op -> {
+                        DeepType type = new DeepType(bin, PhpType.NUMBER);
+                        type.isNumber = true;
+                        return type;
+                    }))
+        );
+    }
+
+    public IIt<DeepType> resolve(PhpExpression expr)
+    {
+        IResolvedIt<DeepType> plainTypes = resolveAsPlainType(expr);
+        if (plainTypes.has()) {
+            // no lazy resolution for straightforward expressions like 'ololo', 123, ['a' => 5, 'b' => 6]
+            return plainTypes;
+        }
+
+        return It.frs(It::non
             , () -> Tls.cast(VariableImpl.class, expr)
                 .fap(v -> new VarRes(ctx).resolve(v))
-            , () -> Tls.cast(ArrayCreationExpressionImpl.class, expr)
-                .fap(arr -> new ArrCtorRes(ctx).resolve(arr).mt().types)
             , () -> Tls.cast(FunctionReferenceImpl.class, expr)
                 .fap(call -> new FuncCallRes(ctx).resolve(call))
             , () -> Tls.cast(ArrayAccessExpressionImpl.class, expr)
                 .fap(keyAccess -> new ArrAccRes(ctx).resolve(keyAccess))
-            , () -> Tls.cast(StringLiteralExpressionImpl.class, expr)
-                .fap(lit -> list(new DeepType(lit)))
             , () -> Tls.cast(ConstantReferenceImpl.class, expr)
                 .flt(cst -> cst.getText().equals("__DIR__"))
                 .fap(ref -> !isInFakeFile(ref) ? som(ref) : ctx.getFakeFileSource())
@@ -142,10 +168,6 @@ public class DirectTypeResolver {
                 .map(v -> v.getFirstChild())
                 .fop(toCast(FunctionImpl.class))
                 .fap(lambda -> list(new ClosRes(ctx).resolve(lambda)))
-            , () -> Tls.cast(PhpExpressionImpl.class, expr)
-                .fap(casted -> opt(casted.getText())
-                    .flt(text -> Tls.regex("^\\d+$", text).has())
-                    .fap(num -> list(DeepType.makeInt(casted, num))))
             // leave rest to MiscRes
             , () -> new MiscRes(ctx).resolve(expr)
             , () -> Tls.cast(MethodReferenceImpl.class, expr)

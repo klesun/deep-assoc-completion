@@ -7,6 +7,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.structures.*;
 import org.klesun.lang.It;
+import org.klesun.lang.L;
 import org.klesun.lang.Tls;
 
 import static org.klesun.deep_assoc_completion.structures.Mkt.*;
@@ -82,7 +83,7 @@ public class ArgTypeDefs
     // first arg
     private It<DeepType> image_type_to_mime_type(PsiElement def)
     {
-        It<String> cstNames = Cst.IMAGETYPE_.map(t -> t.a);
+        L<String> cstNames = Cst.IMAGETYPE_.map(t -> t.a).arr();
         return cst(ctx, cstNames);
     }
 

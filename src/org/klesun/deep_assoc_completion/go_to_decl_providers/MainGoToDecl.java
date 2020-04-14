@@ -13,6 +13,7 @@ import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.AssocKeyGoToDecl;
 import org.klesun.deep_assoc_completion.go_to_decl_providers.impl.DeepObjMemberGoToDecl;
+import org.klesun.lang.IIt;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Opt;

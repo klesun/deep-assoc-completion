@@ -6,6 +6,7 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
@@ -56,7 +57,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         String typeStr = valtarr.size() < 1 ? "from usage" :
             valtarr.fop(t -> opt(t.briefType)).wap(pstit -> {
                 PhpTypeBuilder pstBuilder = PhpType.builder();
-                pstit.fch(pstBuilder::add);
+                pstit.forEach(pstBuilder::add);
                 return pstBuilder.build().toString();
             });
         LookupElementBuilder lookup = LookupElementBuilder.create(keyName)
@@ -66,7 +67,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         if ("int".equals(typeStr)) {
             lookup = lookup.withInsertHandler(GuiUtil.toRemoveIntStrQuotes());
         }
-        It<String> briefValStrs = valtarr.fap(DeepType::getBriefVal);
+        It<String> briefValStrs = valtarr.fap(t -> t.getBriefVal());
         if (briefValStrs.has()) {
             String valStr = briefValStrs.str("|");
             valStr = Tls.substr(valStr, 0, AssocKeyPvdr.BRIEF_VALUE_MAX_LEN);
@@ -105,7 +106,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
     public static Opt<PhpExpression> assertEqOperand(PhpExpression lit)
     {
         return opt(lit)
-            .map(literal -> literal.getParent()) // BinaryExpressionImpl
+            .map(PsiElement::getParent) // BinaryExpressionImpl
             .fop(toCast(BinaryExpressionImpl.class))
             .fap(bin -> opt(bin.getOperation())
                 .flt(op -> op.getText().equals("==") || op.getText().equals("===")
@@ -119,7 +120,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
     /** $type === '' */
     private static It<DeepType> resolveEqExpr(StringLiteralExpression lit, IExprCtx funcCtx)
     {
-        return assertEqOperand(lit).fap(exp -> funcCtx.findExprType(exp));
+        return assertEqOperand(lit).fap(funcCtx::findExprType);
     }
 
     private static It<DeepType> resolveKeyArrCtor(StringLiteralExpression lit, IExprCtx funcCtx)
@@ -148,8 +149,8 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
     private static It<DeepType> resolveInArrayHaystack(StringLiteralExpression lit, IExprCtx funcCtx)
     {
         return opt(lit)
-            .map(literal -> literal.getParent()) // array value
-            .map(literal -> literal.getParent())
+            .map(PsiElement::getParent) // array value
+            .map(PsiElement::getParent)
             .fop(toCast(ArrayCreationExpression.class))
             .fap(arr -> opt(arr.getParent())
                 .fop(toCast(ParameterList.class))
@@ -158,11 +159,11 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
                 )
                 .flt(lst -> opt(lst.getParent())
                     .fop(toCast(FunctionReference.class))
-                    .map(fun -> fun.getName())
+                    .map(PhpReference::getName)
                     .flt(nme -> nme.equals("in_array")).has())
                 .fop(lst -> L(lst.getParameters()).gat(0))
                 .fop(toCast(PhpExpression.class))
-                .fap(str -> funcCtx.findExprType(str)));
+                .fap(funcCtx::findExprType));
     }
 
     /** in_array('', $types) */
@@ -174,32 +175,32 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
                 .flt(arg -> arg.isEquivalentTo(lit)).has())
             .flt(lst -> opt(lst.getParent())
                 .fop(toCast(FunctionReference.class))
-                .map(fun -> fun.getName())
+                .map(PhpReference::getName)
                 .flt(nme -> nme.equals("in_array")).has())
             .fop(lst -> L(lst.getParameters()).gat(1))
             .fop(toCast(PhpExpression.class))
-            .fap(str -> funcCtx.findExprType(str))
-            .fap(t -> Mt.getElSt(t));
+            .fap(funcCtx::findExprType)
+            .fap(Mt::getElSt);
     }
 
     // array_intersect($cmdTypes, ['redisplayPnr', 'itinerary', 'airItinerary', 'storeKeepPnr', 'changeArea', ''])
     private static It<DeepType> resolveArrayIntersect(StringLiteralExpression lit, IExprCtx funcCtx)
     {
         return opt(lit)
-            .map(literal -> literal.getParent()) // array value
-            .map(literal -> literal.getParent())
+            .map(PsiElement::getParent) // array value
+            .map(PsiElement::getParent)
             .fop(toCast(ArrayCreationExpression.class))
             .fap(arr -> opt(arr.getParent())
                 .fop(toCast(ParameterList.class))
                 .flt(lst -> opt(lst.getParent())
                     .fop(toCast(FunctionReference.class))
-                    .map(fun -> fun.getName())
+                    .map(PhpReference::getName)
                     .flt(nme -> nme.equals("array_intersect")).has())
                 .fap(lst -> L(lst.getParameters()))
                 .flt(par -> !arr.isEquivalentTo(par))
                 .fop(toCast(PhpExpression.class))
-                .fap(str -> funcCtx.findExprType(str))
-                .fap(t -> Mt.getElSt(t)));
+                .fap(funcCtx::findExprType)
+                .fap(Mt::getElSt));
     }
 
     private static It<DeepType> resolveForeachListKey(StringLiteralExpression lit, IExprCtx funcCtx)
@@ -214,8 +215,8 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
             .cst(ForeachImpl.class)
             .fap(fch -> opt(fch.getArray()))
             .cst(PhpExpression.class)
-            .fap(expr -> funcCtx.findExprType(expr))
-            .fap(arrt -> Mt.getElSt(arrt))
+            .fap(funcCtx::findExprType)
+            .fap(Mt::getElSt)
             .fap(elt -> elt.keys.fap(k -> k.keyType.types));
     }
 
@@ -263,7 +264,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
 
         makeOptions(assocTit)
             .flt(our -> !alreadySuggested.contains(our.getLookupString()))
-            .fch(result::addElement);
+            .forEach(result::addElement);
         long elapsed = System.nanoTime() - startTime;
         double seconds = elapsed / 1000000000.0;
         if (seconds > 0.1) {

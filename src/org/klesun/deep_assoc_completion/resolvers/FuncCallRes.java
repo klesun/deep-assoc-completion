@@ -54,7 +54,7 @@ public class FuncCallRes extends Lang
         S<Mt> getElMt = Tls.onDemand(() -> callCtx.getArgMt(0).types
             .fap(t -> t.getReturnTypes(subCtx))
             .wap(Mt::mem));
-        It<DeepType> eachTMapped = arrMt.types
+        IIt<DeepType> eachTMapped = arrMt.types
             .map(t -> new Build(t.definition, PhpType.ARRAY)
                 .keys(t.keys.map((v, i) -> new Key(v.keyType, v.definition)
                     .addType(getElMt, call.getType().elementType())))
@@ -169,7 +169,7 @@ public class FuncCallRes extends Lang
                             ;
                         if (refs.size() > 0) {
                             PhpType briefType = new PhpType();
-                            refs.map(var -> Tls.getIdeaType(var)).fch(briefType::add);
+                            refs.map(var -> Tls.getIdeaType(var)).forEach(briefType::add);
                             return som(new Key(varName, call)
                                 .addType(() -> refs
                                     .fap(ref -> ctx.findExprType(ref))

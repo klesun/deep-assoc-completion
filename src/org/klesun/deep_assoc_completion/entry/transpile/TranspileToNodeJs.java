@@ -20,12 +20,8 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.klesun.deep_assoc_completion.resolvers.ClosRes;
 import org.klesun.deep_assoc_completion.resolvers.FuncCallRes;
-import org.klesun.deep_assoc_completion.resolvers.VarRes;
 import org.klesun.deep_assoc_completion.structures.ForEach;
-import org.klesun.lang.It;
-import org.klesun.lang.L;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 import static org.klesun.lang.Lang.*;
 import static org.klesun.lang.Tls.getChildrenWithLeaf;
@@ -102,19 +98,19 @@ public class TranspileToNodeJs extends AnAction
     private String transpileFunction(Function typed)
     {
         It<PsiElement> stats = Tls.findChildren(typed, GroupStatement.class)
-            .fst().fap(gr -> getChildrenWithLeaf(gr))
+            .fst().fap(Tls::getChildrenWithLeaf)
             .flt(leaf -> !leaf.getText().equals("{"));
         L<PsiElement> args = L(typed.getParameters());
         String name = typed.getName();
         name = "__construct".equals(name) ? "constructor" : name;
 
         L<String> argNames = args.itr().cst(Parameter.class)
-            .map(arg -> arg.getName()).arr();
+            .map(Parameter::getName).arr();
         L<String> closureVars = ClosRes.getClosureVars(typed)
-            .map(v -> v.getName()).arr();
+            .map(PhpNamedElement::getName).arr();
         L<String> usedVars = opt(typed.getLastChild())
-            .fap(grpst -> FuncCallRes.findUsedVars(grpst))
-            .map(v -> v.getName())
+            .fap(FuncCallRes::findUsedVars)
+            .map(PhpNamedElement::getName)
             .flt(varName -> !argNames.contains(varName))
             .flt(varName -> !closureVars.contains(varName))
             .flt(varName -> !varName.equals("this"))
@@ -358,7 +354,7 @@ public class TranspileToNodeJs extends AnAction
                         })))
             , () -> Tls.cast(MultiassignmentExpression.class, psi)
                 .map(multiass -> {
-                    It<String> vars = It(multiass.getVariables()).map(v -> trans(v));
+                    IIt<String> vars = It(multiass.getVariables()).map(v -> trans(v));
                     return "[" + vars.str(", ") + "] = " +
                         opt(multiass.getValue())
                             .map(v -> trans(v)).def("");
@@ -375,7 +371,7 @@ public class TranspileToNodeJs extends AnAction
                         (fallback.equals("null") ? "" : " || " + fallback);
                 })
         );
-        return It(result).def(getChildrenWithLeaf(psi)
+        return It(result).orr(getChildrenWithLeaf(psi)
             .map(c -> trans(c))).str("");
     }
 

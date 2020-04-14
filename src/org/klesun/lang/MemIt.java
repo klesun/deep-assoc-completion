@@ -82,4 +82,10 @@ public class MemIt<A> implements IReusableIt<A>
     public String toString() {
         return "MemIt" + arr();
     }
+
+    @Override
+    public MemIt<A> mem()
+    {
+        return this;
+    }
 }

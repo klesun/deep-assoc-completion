@@ -63,7 +63,7 @@ public class RemoveUnusedUsesSaveHandler implements FileDocumentManagerListener
                 ApplicationManager.getApplication().runWriteAction(() ->
                     CommandProcessor.getInstance().runUndoTransparentAction(() ->
                         unuseRanges.arr().srt(r -> -r.a) // start from the end to not mess up range indexes
-                            .fch(range -> document.deleteString(range.a, range.b))));
+                            .forEach(range -> document.deleteString(range.a, range.b))));
             }
         }
     }

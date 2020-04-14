@@ -29,7 +29,7 @@ public class SearchCtx extends Lang
     // for performance measurement
     private int expressionsResolved = 0;
     // direct type cache
-    final private Map<PsiSig, Iterable<DeepType>> ctxToExprToResult = new HashMap<>();
+    final private Map<PsiSig, IIt<DeepType>> ctxToExprToResult = new HashMap<>();
     // usage type cache
     final public Map<PhpExpression, MemIt<DeepType>> exprToUsageResult = new HashMap<>();
     public Opt<Integer> overrideMaxExpr = non();
@@ -105,7 +105,7 @@ public class SearchCtx extends Lang
         return false;
     }
 
-    private Opt<Iterable<DeepType>> takeFromCache(IExprCtx ctx, PhpExpression expr)
+    private Opt<IIt<DeepType>> takeFromCache(IExprCtx ctx, PhpExpression expr)
     {
         PsiSig sig = new PsiSig(expr, ctx);
         return opt(ctxToExprToResult.get(sig));
@@ -118,7 +118,7 @@ public class SearchCtx extends Lang
         return Tls.singleLine(expr.getText(), 120) + " - " + expr.getContainingFile().getName() + ":" + phpLineNum;
     }
 
-    private void putToCache(IExprCtx ctx, PhpExpression expr, Iterable<DeepType> result)
+    private void putToCache(IExprCtx ctx, PhpExpression expr, IIt<DeepType> result)
     {
         PsiSig sig = new PsiSig(expr, ctx);
         ctxToExprToResult.remove(sig);
@@ -142,7 +142,7 @@ public class SearchCtx extends Lang
         return fromEnd.rvr();
     }
 
-    public Iterable<DeepType> findExprType(PhpExpression expr, ExprCtx exprCtx)
+    public IIt<DeepType> findExprType(PhpExpression expr, ExprCtx exprCtx)
     {
         currentExpr = som(exprCtx);
 
@@ -163,7 +163,7 @@ public class SearchCtx extends Lang
             return It.non();
         }
 
-        Opt<Iterable<DeepType>> result = takeFromCache(exprCtx, expr);
+        Opt<IIt<DeepType>> result = takeFromCache(exprCtx, expr);
         if (result.has()) {
             if (debug) {
                 //System.out.println(indent + "<< TAKING RESULT FROM CACHE");
@@ -175,25 +175,18 @@ public class SearchCtx extends Lang
                 putToCache(exprCtx, expr, list());
             }
 
-            It<DeepType> tit = new DirectTypeResolver(exprCtx).resolve(expr)
+            IIt<DeepType> tit = new DirectTypeResolver(exprCtx).resolve(expr)
                 //.lmt(1000) // .lmt() is just a safety measure, it should not be needed if everything works properly
                 .unq() // .unq() before caching is important since types taken from cache would grow in count exponentially otherwise
                 ;
-            Iterable<DeepType> mit = new MemIt<>(tit);
+            IReusableIt<DeepType> mit = tit instanceof L ? tit.arr() : tit.mem();
             result = som(mit);
             if (shouldCache(exprCtx)) {
                 result.thn(mt -> putToCache(exprCtx, expr, mit));
             }
         }
 
-        return It(result.def(It.non()))
-            .btw(t -> {
-                if (debug) {
-                    System.out.println(Tls.repeat("  ", exprCtx.depth) + "| " + Tls.singleLine(expr.getText(), 60) + " | " + t);
-                }
-            })
-            .thn(cnt -> exprCtx.typeCnt = som(cnt))
-            ;
+        return result.def(It.non());
     }
 
     public int getExpressionsResolved()

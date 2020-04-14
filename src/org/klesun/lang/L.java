@@ -10,16 +10,28 @@ import java.util.List;
  * the class (yeah, less performance, but easier to read)
  * some integration with Opt class
  */
-public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IReusableIt<T>
+public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IResolvedIt<T>
 {
+    final private static L NON = new L(true);
+
+    public static <A> L<A> non()
+    {
+        return NON;
+    }
+
     L(List<T> source)
     {
-        super(source);
+        super(source, false);
+    }
+
+    public L(boolean immutable)
+    {
+        super(new ArrayList<>(), immutable);
     }
 
     public L()
     {
-        super(new ArrayList<>());
+        this(false);
     }
 
     /** "gat" stands for "get at" */
@@ -63,16 +75,6 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IReusableI
     public L<T> arr()
     {
         return this;
-    }
-
-    /**
-     * you can read it as "wide map" or "wrap", either  way it does the
-     * opposite of "fop" - it takes this list and makes something else
-     * it is often handy since declaring a var in php is too verbose to be usable
-     */
-    public <Tnew> Tnew wap(Lang.F<L<T>, Tnew> wrapper)
-    {
-        return wrapper.apply(this);
     }
 
     /**
@@ -132,12 +134,12 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IReusableI
         return cct(more.arr());
     }
 
-    public <U extends Comparable> It<T> srt(Lang.F<T, U> makeValue)
+    public <U extends Comparable> IIt<T> srt(Lang.F<T, U> makeValue)
     {
         L<U> weights = map(makeValue).arr();
         L<Integer> indexes = Tls.range(0, size()).arr();
         indexes.sort(Comparator.comparing(weights::get));
-        return indexes.map(idx -> s.get(idx));
+        return indexes.map(s::get);
     }
 
     /** for "reverse" */
@@ -205,6 +207,6 @@ public class L<@NonNull T> extends ListWrapper<T> implements List<T>, IReusableI
                 return result;
             }
         }
-        return Lang.list();
+        return non();
     }
 }

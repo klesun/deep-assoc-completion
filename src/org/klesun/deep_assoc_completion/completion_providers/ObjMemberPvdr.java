@@ -97,10 +97,10 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
                     .withIcon(AssocKeyPvdr.getIcon())
                     .withTypeText(prop.getBriefTypes().wap(its -> {
                         PhpType ideaType = new PhpType();
-                        its.fch(ideaType::add);
+                        its.forEach(ideaType::add);
                         return ideaType.toString();
                     }))))
-            .unq(l -> l.getLookupString())
+            .unq(LookupElementBuilder::getLookupString)
             ;
     }
 

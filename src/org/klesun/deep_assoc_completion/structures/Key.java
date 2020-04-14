@@ -5,6 +5,8 @@ import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
+import org.klesun.lang.Tls.IOnDemand;
+
 import static org.klesun.lang.Lang.Granted;
 
 import java.util.LinkedHashSet;
@@ -78,9 +80,10 @@ public class Key
         return typeGetters;
     }
 
-    public Opt<String> getBriefKey()
+    public Opt<String> getBriefKey(boolean resolveIter)
     {
-        return Lang.It(keyType.getTypes()).fst()
+        L<DeepType> usedTypes = resolveIter || keyType.types instanceof IResolvedIt ? keyType.types.arr() : L.non();
+        return usedTypes.fst()
             .fop(t -> Lang.opt(t.stringValue))
             .map(n -> n + ":");
     }
@@ -88,10 +91,10 @@ public class Key
     public Opt<String> getBriefVal()
     {
         return typeGetters
-            .fap(g -> g.ifHas())
+            .fap(IOnDemand::ifHas)
             .fap(mt -> mt.types)
             .fap(t -> t.getBriefVal()).unq()
-            .wap(fqns -> fqns.arr())
-            .wap(fqns -> fqns.size() > 0 ? Lang.som(fqns.itr().str("|")) : Lang.non());
+            .wap(IIt::arr)
+            .wap(fqns -> fqns.has() ? Lang.som(fqns.itr().str("|")) : Lang.non());
     }
 }

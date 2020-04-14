@@ -117,7 +117,7 @@ public class FuncCtx extends Lang implements IFuncCtx
         return clsOpt.map(cls -> cls.getFQN()).any(fqn -> fqn.startsWith("\\Dyninno\\Core\\Database\\"));
     }
 
-    private void setThisType(MemberReference memRef, F<PhpExpression, It<DeepType>> findExprType)
+    private void setThisType(MemberReference memRef, F<PhpExpression, IIt<DeepType>> findExprType)
     {
         opt(memRef.getClassReference())
             .thn(clsRef -> {
@@ -128,7 +128,7 @@ public class FuncCtx extends Lang implements IFuncCtx
             });
     }
 
-    public FuncCtx subCtxDirect(FunctionReference funcCall, F<PhpExpression, It<DeepType>> findExprType)
+    public FuncCtx subCtxDirect(FunctionReference funcCall, F<PhpExpression, IIt<DeepType>> findExprType)
     {
         FuncCtx self = subCtxDirectGeneric(funcCall, findExprType);
         Tls.cast(MethodReference.class, funcCall)
@@ -137,7 +137,7 @@ public class FuncCtx extends Lang implements IFuncCtx
     }
 
     /** the property name passed to the __get($propName) */
-    public FuncCtx subCtxMagicProp(FieldReference fieldRef, F<PhpExpression, It<DeepType>> findExprType)
+    public FuncCtx subCtxMagicProp(FieldReference fieldRef, F<PhpExpression, IIt<DeepType>> findExprType)
     {
         Opt<S<Mt>> argGetter = Opt.fst(
             () -> opt(fieldRef.getName())
@@ -154,7 +154,7 @@ public class FuncCtx extends Lang implements IFuncCtx
         return subCtx;
     }
 
-    public FuncCtx subCtxMem(MemberReference fieldRef, F<PhpExpression, It<DeepType>> findExprType)
+    public FuncCtx subCtxMem(MemberReference fieldRef, F<PhpExpression, IIt<DeepType>> findExprType)
     {
         FuncCtx subCtx = new FuncCtx(this, L(), fieldRef, EArgPsiType.DIRECT);
         subCtx.setThisType(fieldRef, findExprType);
@@ -177,7 +177,7 @@ public class FuncCtx extends Lang implements IFuncCtx
         return subCtx;
     }
 
-    public FuncCtx subCtxDirect(NewExpression funcCall, F<PhpExpression, It<DeepType>> findExprType)
+    public FuncCtx subCtxDirect(NewExpression funcCall, F<PhpExpression, IIt<DeepType>> findExprType)
     {
         FuncCtx self = subCtxDirectGeneric(funcCall, findExprType);
         opt(funcCall.getClassReference())
@@ -185,7 +185,7 @@ public class FuncCtx extends Lang implements IFuncCtx
         return self;
     }
 
-    public FuncCtx subCtxDirectGeneric(ParameterListOwner funcCall, F<PhpExpression, It<DeepType>> findExprType)
+    public FuncCtx subCtxDirectGeneric(ParameterListOwner funcCall, F<PhpExpression, IIt<DeepType>> findExprType)
     {
         L<PsiElement> psiArgs = L(funcCall.getParameters());
         L<S<Mt>> argGetters = psiArgs.map((psi) -> S(() ->
@@ -203,7 +203,7 @@ public class FuncCtx extends Lang implements IFuncCtx
     }
 
     /** context from args passed in array for example in array_map or array_filter */
-    public FuncCtx subCtxSingleArgArr(PhpExpression argArr, int argOrder, F<PhpExpression, It<DeepType>> findExprType)
+    public FuncCtx subCtxSingleArgArr(PhpExpression argArr, int argOrder, F<PhpExpression, IIt<DeepType>> findExprType)
     {
         L<S<Mt>> argGetters = Tls.range(0, argOrder + 1)
             .map(i -> S(() -> i == argOrder
@@ -214,7 +214,7 @@ public class FuncCtx extends Lang implements IFuncCtx
     }
 
     /** when you have expression PSI and it is not directly passed to the func, ex. call_user_func_array() */
-    public FuncCtx subCtxIndirect(PhpExpression args, F<PhpExpression, It<DeepType>> findExprType)
+    public FuncCtx subCtxIndirect(PhpExpression args, F<PhpExpression, IIt<DeepType>> findExprType)
     {
         S<Mt> getMt = Tls.onDemand(() -> Mt.mem(findExprType.apply(args)));
         L<S<Mt>> argGetters = list();
@@ -300,7 +300,8 @@ public class FuncCtx extends Lang implements IFuncCtx
     /** for debug */
     public It<Mt> getArgs()
     {
-        return Tls.range(0, argGetters.size()).map(i -> getCached(i, argGetters.get(i)));
+        return Tls.range(0, argGetters.size())
+            .map(i -> getCached(i, argGetters.get(i)));
     }
 
     public String toString()

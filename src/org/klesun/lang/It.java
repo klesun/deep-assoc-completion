@@ -2,10 +2,15 @@ package org.klesun.lang;
 
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.lang.iterators.ArrayIterator;
+import org.klesun.lang.iterators.FilterIterator;
+import org.klesun.lang.iterators.MapIterator;
 import org.klesun.lang.iterators.ThenIterator;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import static org.klesun.lang.Lang.It;
 import static org.klesun.lang.Lang.L;
@@ -102,11 +107,6 @@ public class It<A> implements IIt<A>
         return getIterator().hasNext();
     }
 
-    public MemIt<A> mem()
-    {
-        return new MemIt<>(() -> dispose());
-    }
-
     public void fch(Lang.C2<A, Integer> f)
     {
         Lang.Mutable<Integer> mutI = new Lang.Mutable<>(0);
@@ -115,11 +115,6 @@ public class It<A> implements IIt<A>
             mutI.set(i + 1);
             f.accept(el, i);
         });
-    }
-
-    public <B> B wap(Lang.F<It<A>, B> wrapper)
-    {
-        return wrapper.apply(It(this));
     }
 
     public void fch(Lang.C<A> f)
@@ -145,6 +140,12 @@ public class It<A> implements IIt<A>
         return dispose();
     }
 
+    @Override
+    public It<A> itr()
+    {
+        return this;
+    }
+
     /** Don't even think of casting it to the Iterable. Seriously, don't. */
     public Object getSourceHash()
     {
@@ -154,5 +155,62 @@ public class It<A> implements IIt<A>
     public String toString()
     {
         return "It." + (has() ? "som()" : "non()");
+    }
+
+    // following are reused in IIt
+
+    public <B> It<B> map(Lang.F<A, B> mapper)
+    {
+        return map((el, i) -> mapper.apply(el));
+    }
+
+    public <B> It<B> map(Lang.F2<A, Integer, B> mapper)
+    {
+        return new It<>(() -> new MapIterator<>(iterator(), mapper));
+    }
+
+    public It<A> flt(Lang.F2<A, Integer, Boolean> pred)
+    {
+        return new It<>(() -> new FilterIterator<>(iterator(), pred));
+    }
+
+    public It<A> flt(Predicate<A> pred)
+    {
+        return flt((el, i) -> pred.test(el));
+    }
+
+    public <B> It<B> fop(Lang.F2<A, Integer, Opt<B>> convert)
+    {
+        return map(convert).fap(IIt::itr);
+    }
+
+    /** flat map optional, remove elements that don't match */
+    public <B> It<B> fop(Lang.F<A, Opt<B>> convert)
+    {
+        return map(convert).fap(IIt::itr);
+    }
+
+    public <B extends A> It<B> cst(Class<B> cls)
+    {
+        return fap(val -> Tls.cast(cls, val));
+    }
+
+    public It<A> unq(Lang.F<A, Object> getHash)
+    {
+        Set<Object> occurrences = new HashSet<>();
+        return flt(t -> {
+            Object hash = getHash.apply(t);
+            if (occurrences.contains(hash)) {
+                return false;
+            } else {
+                occurrences.add(hash);
+                return true;
+            }
+        });
+    }
+
+    public It<A> unq()
+    {
+        return unq(t -> t);
     }
 }

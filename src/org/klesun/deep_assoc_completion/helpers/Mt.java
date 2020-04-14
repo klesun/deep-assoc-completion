@@ -51,12 +51,12 @@ public class Mt
         this(types, REASON.OK);
     }
 
-    public static Mt mem(It<DeepType> iter)
+    public static Mt mem(IIt<DeepType> iter)
     {
         return new Mt(iter.mem());
     }
 
-    public static DeepType getInArraySt(It<DeepType> types, PsiElement call)
+    public static DeepType getInArraySt(IIt<DeepType> types, PsiElement call)
     {
         Key keyEntry = new Key(KeyType.integer(call), call)
             .addType(Tls.onDemand(() -> new Mt(types.mem())), PhpType.MIXED);
@@ -92,7 +92,7 @@ public class Mt
         return getStringValueSt(types);
     }
 
-    public It<String> getStringValues()
+    public IIt<String> getStringValues()
     {
         return types.fop(t -> opt(t.stringValue));
     }
@@ -108,7 +108,7 @@ public class Mt
         return getKey(nullKey);
     }
 
-    public static It<DeepType> getPropOfName(It<Key> allProps, String keyName)
+    public static It<DeepType> getPropOfName(IIt<Key> allProps, String keyName)
     {
         return allProps
             .flt(k -> keyName == null || k.keyType.getTypes()
@@ -192,9 +192,10 @@ public class Mt
         return ideaType;
     }
 
-    public It<PhpType> getIdeaTypes()
+    public IIt<PhpType> getIdeaTypes()
     {
-        return It(types).map(t -> t.briefType).map(it -> it.filterMixed()).unq();
+        return types.map(t -> t.briefType)
+            .map(PhpType::filterMixed).unq();
     }
 
     public String getBriefValueText(int maxLen, Set<DeepType> circularRefs)
@@ -216,7 +217,7 @@ public class Mt
                 briefValues.add("{" + Tls.implode(", ", keyNames.map(k -> k + ":")) + "}");
             }
         }
-        It<String> strvals = types.fop(litt -> opt(litt.stringValue)
+        IIt<String> strvals = types.fop(litt -> opt(litt.stringValue)
             .map(s -> {
                 boolean literal = types.all((t, i) -> t.definition.getText().equals(s))
                     || litt.briefType.equals(PhpType.INT)
@@ -238,7 +239,9 @@ public class Mt
             briefValues.add("[" + getEl().getBriefValueText(maxLen, circularRefs) + "]");
         }
         if (briefValues.isEmpty() && types.size() > 0) {
-            It<String> psiParts = types.flt(t -> t.isExactPsi).map(t -> Tls.singleLine(t.definition.getText(), 40));
+            IIt<String> psiParts = types
+                .flt(t -> t.isExactPsi)
+                .map(t -> Tls.singleLine(t.definition.getText(), 40));
             briefValues.add(Tls.implode("|", psiParts.unq()));
         }
         String fullStr = Tls.implode("|", briefValues);

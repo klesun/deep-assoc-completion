@@ -1,8 +1,11 @@
 package org.klesun.lang;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import static org.klesun.lang.Lang.*;
 
@@ -13,7 +16,7 @@ import static org.klesun.lang.Lang.*;
  *
  * if value is null, Opt is empty
  */
-public class Opt<T> implements Iterable<T>
+public class Opt<T> implements IResolvedIt<T>
 {
     final private boolean has;
     final private T value;
@@ -40,6 +43,7 @@ public class Opt<T> implements Iterable<T>
     }
 
     /** transform value if present */
+    @Override
     public <T1> Opt<T1> map(Lang.F<T, T1> f)
     {
         if (has()) {
@@ -49,9 +53,10 @@ public class Opt<T> implements Iterable<T>
         }
     }
 
-    public Opt<T> flt(Lang.F<T, Boolean> f)
+    @Override
+    public Opt<T> flt(Predicate<T> f)
     {
-        return map(v -> f.apply(v) ? v : null);
+        return map(v -> f.test(v) ? v : null);
     }
 
     /**
@@ -60,6 +65,7 @@ public class Opt<T> implements Iterable<T>
      * does not infer properly with method references
      * TODO: refactor all usages to cst(SomePsi.class) and fap(() -> ...)
      */
+    @Override
     public <T1> Opt<T1> fop(Lang.F<T, Opt<T1>> f)
     {
         return map(f).uni(
@@ -68,35 +74,23 @@ public class Opt<T> implements Iterable<T>
         );
     }
 
+    @Override
     public <T1 extends T> Opt<T1> cst(Class<T1> cls)
     {
         return fap((val) -> Tls.cast(cls, val)).fst();
     }
 
-    public L<T> arr()
+    @Override
+    public Opt<T> unq(Lang.F<T, Object> getHash)
     {
-        return L(fap(a -> list(a)));
+        // optional value is always unique ^_^
+        return this;
     }
-
-    /** transform opt to array */
-    public <Tnew> It<Tnew> fap(F<T, Iterable<Tnew>> f)
+    @Override
+    public Opt<T> unq()
     {
-        return uni((val) -> It(f.apply(val)), () -> It.non());
-    }
-
-    public Boolean any(F<T, Boolean> pred)
-    {
-        return has ? pred.apply(value) : false;
-    }
-
-    public Boolean all(F<T, Boolean> pred)
-    {
-        return has ? pred.apply(value) : true;
-    }
-
-    public It<T> itr()
-    {
-        return It(arr());
+        // optional value is always unique ^_^
+        return this;
     }
 
     /**
@@ -172,16 +166,24 @@ public class Opt<T> implements Iterable<T>
         return new Opt<>(null);
     }
 
+    @NotNull
     @Override
     public Iterator<T> iterator() {
-        return itr().iterator();
-    }
-
-    /** returned by .thn() - needed since i want to limit chaining to end
-     * on .thn() cuz else it's very easy to make a mistake with brackets */
-    private static class Then
-    {
-        // TODO: implement!
+        return new Iterator<T>() {
+            private boolean done = false;
+            public boolean hasNext() {
+                return !done && has();
+            }
+            public T next() {
+                if (!done) {
+                    done = true;
+                    return unw();
+                } else {
+                    String msg = "Tried to next() a finished Opt iterator";
+                    throw new NoSuchElementException(msg);
+                }
+            }
+        };
     }
 
     public int hashCode()
@@ -193,12 +195,11 @@ public class Opt<T> implements Iterable<T>
     {
         return opt(other)
             .fop(that -> Tls.cast(Opt.class, that))
-            .flt(that -> {
+            .any(that -> {
                 if (!this.has()) return !that.has();
                 if (!that.has()) return false;
                 return Objects.equals(this.unw(), that.unw());
-            })
-            .has();
+            });
     }
 
     public String toString()

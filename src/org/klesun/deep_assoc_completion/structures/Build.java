@@ -49,8 +49,13 @@ public class Build {
         return this;
     }
 
+    public Build keys(IReusableIt<Key> keys) {
+        this.deepType.keys = keys;
+        return this;
+    }
+
     public Build keys(Iterable<Key> keys) {
-        this.deepType.keys = new MemIt<>(keys);
+        this.keys(new MemIt<>(keys));
         return this;
     }
 

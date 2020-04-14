@@ -9,6 +9,7 @@ import com.jetbrains.php.lang.psi.elements.PhpClass;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
+import org.klesun.lang.IIt;
 import org.klesun.lang.It;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
@@ -51,7 +52,7 @@ public class MemRes {
                 , ctx.getFakeFileSource() // phpdoc above class
                     .fap(tag -> Tls.getParents(tag).cct(som(tag)))
                     .cst(PhpDocComment.class)
-                    .fap(doc -> Tls.getNextSiblings(doc))
+                    .fap(Tls::getNextSiblings)
                     .flt(sib -> !(sib instanceof PsiWhiteSpace))
                 , ctx.getFakeFileSource() // phpdoc inside class
                     .fap(doc -> Tls.getParents(doc).cct(som(doc)))
@@ -61,11 +62,11 @@ public class MemRes {
                 if (list("self", "static").contains(cls)) {
                     return ctx.getSelfType()
                         .fap(ideat -> ArrCtorRes.resolveIdeaTypeCls(ideat, proj))
-                        .def(som(clsPsi));
+                        .orr(som(clsPsi));
                 } else if ("$this".equals(cls)) {
                     Mt thisMt = ctx.getThisType().wap(Mt::mem);
                     return ArrCtorRes.resolveMtInstCls(thisMt, proj)
-                        .def(som(clsPsi));
+                        .orr(som(clsPsi));
                 } else {
                     return It.non();
                 }

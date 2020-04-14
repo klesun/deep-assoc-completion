@@ -22,7 +22,7 @@ public class DeepType extends Lang
     // please, do not change this fields directly - ise Build.java
     // probably should make them all protected and add getters...
 
-    public IIt<Key> keys = new MemIt<>(It.non());
+    public IReusableIt<Key> keys = new MemIt<>(It.non());
     // just like array keys, but dynamic object properties
     public final Dict<Key> props = new Dict<>(L());
     // applicable to closures and function names
@@ -155,7 +155,7 @@ public class DeepType extends Lang
         LinkedHashMap<String, List<DeepType>> mergedKeys = new LinkedHashMap<>();
         Set<String> mergedProps = new HashSet<>(L(types).fap(t -> t.props.kys()).arr());
         List<DeepType> indexTypes = list();
-        List<String> briefTypes = list();
+        L<String> briefTypes = list();
 
         types.forEach(t -> {
             t.keys.forEach((v) -> {
@@ -184,14 +184,15 @@ public class DeepType extends Lang
         } else if (indexTypes.size() > 0) {
             result = "[" + varExport(indexTypes, level, circularRefs) + "]";
         } else if (briefTypes.size() > 0) {
-            It<String> briefs = It(new HashSet<>(briefTypes)).flt(t -> !"".equals(t));
+            IIt<String> briefs = briefTypes.unq()
+                .flt(t -> !"".equals(t));
             result = "'" + Tls.implode("|", briefs) + "'";
         }
         circularRefs.removeAll(types);
         return result;
     }
 
-    public Opt<String> getBriefVal()
+    public Opt<String> getBriefVal(boolean resolveIter)
     {
         String typeInfo = null;
         if (clsRefType.has()) {
@@ -199,7 +200,8 @@ public class DeepType extends Lang
         } else if (stringValue != null) {
             typeInfo = "'" + stringValue + "'";
         } else if (keys.has()) {
-            typeInfo = "[" + keys.fap(k -> k.getBriefKey()).unq().str() + "]";
+            L<Key> usedKeys = resolveIter || keys instanceof IResolvedIt ? keys.arr() : L.non();
+            typeInfo = "[" + usedKeys.fap(k -> k.getBriefKey(resolveIter)).unq().str() + "]";
         } else if (returnTypeGetters.has()) {
             typeInfo = "(...) ==> {...}";
         } else if (props.size() > 0) {
@@ -208,11 +210,16 @@ public class DeepType extends Lang
         return opt(typeInfo);
     }
 
+    public Opt<String> getBriefVal()
+    {
+        return getBriefVal(false);
+    }
+
     @Override
     public String toString()
     {
-        Opt<String> typeInfoOpt = getBriefVal();
-        String typeInfo = getBriefVal().def("unk()");
+        Opt<String> typeInfoOpt = getBriefVal(true);
+        String typeInfo = typeInfoOpt.def("unk()");
         if (!typeInfoOpt.has()) {
             if (isNumber) {
                 typeInfo = "int";

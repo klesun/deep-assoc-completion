@@ -265,10 +265,11 @@ public class ReturnTypeDefs
             T2("pass", str(call).mt())
         ));
     }
-    private It<DeepType> image_type_to_mime_type(FunctionReferenceImpl call)
+    private L<DeepType> image_type_to_mime_type(FunctionReferenceImpl call)
     {
         return Cst.IMAGETYPE_.map(nme -> nme.b)
-            .map(strVal -> str(call, strVal));
+            .map(strVal -> str(call, strVal))
+            .arr();
     }
 
     private It<DeepType> debug_backtrace(FunctionReferenceImpl call)

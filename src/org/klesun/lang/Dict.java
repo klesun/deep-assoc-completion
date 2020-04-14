@@ -38,10 +38,9 @@ public class Dict<T> implements Map<String, T>
         subject.forEach((k,v) -> f.accept(v,k));
     }
     // "pairs"
-    public L<Lang.T2<String, T>> prs() {
-        L<Lang.T2<String, T>> result = Lang.list();
-        fch((v,k) -> result.add(Lang.T2(k,v)));
-        return result;
+    public It<Lang.T2<String, T>> prs() {
+        return It(subject.entrySet())
+            .map(e -> T2(e.getKey(), e.getValue()));
     }
     // "values"
     public It<T> vls() {

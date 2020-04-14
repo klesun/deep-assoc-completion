@@ -19,30 +19,6 @@ import static org.klesun.lang.Lang.*;
 public interface IIt<A> extends Iterable<A> {
     boolean has();
 
-    default It<A> itr() {
-        return Lang.It(this);
-    }
-
-    default <B> It<B> map(Lang.F<A, B> mapper)
-    {
-        return map((el, i) -> mapper.apply(el));
-    }
-
-    default <B> It<B> map(Lang.F2<A, Integer, B> mapper)
-    {
-        return new It<>(() -> new MapIterator<>(iterator(), mapper));
-    }
-
-    default It<A> flt(Lang.F2<A, Integer, Boolean> pred)
-    {
-        return new It<>(() -> new FilterIterator<>(iterator(), pred));
-    }
-
-    default It<A> flt(Predicate<A> pred)
-    {
-        return flt((el, i) -> pred.test(el));
-    }
-
     default <B> It<B> fap(Lang.F2<A, Integer, Iterable<B>> flatten)
     {
         return It(() -> new FlatMapIterator<>(iterator(), flatten));
@@ -51,26 +27,6 @@ public interface IIt<A> extends Iterable<A> {
     default <B> It<B> fap(Lang.F<A, Iterable<B>> flatten)
     {
         return fap((el, i) -> flatten.apply(el));
-    }
-
-    default <B extends A> It<B> cst(Class<B> cls)
-    {
-        return fap(val -> Tls.cast(cls, val));
-    }
-
-    /**
-     * "fop" stands for "Filter Optional"
-     * this is a combination of map and filter
-     */
-    default <B> It<B> fop(Lang.F2<A, Integer, Opt<B>> convert)
-    {
-        return map(convert).fap(a -> a.itr());
-    }
-
-    /** flat map optional, remove elements that don't match */
-    default <B> It<B> fop(Lang.F<A, Opt<B>> convert)
-    {
-        return map(convert).fap(a -> a.itr());
     }
 
     /** flat map optional, become empty optional if at least one element does not match */
@@ -85,39 +41,13 @@ public interface IIt<A> extends Iterable<A> {
         }
     }
 
-    default It<A> unq()
-    {
-        Set<A> occurences = new HashSet<>();
-        return flt(t -> {
-            if (occurences.contains(t)) {
-                return false;
-            } else {
-                occurences.add(t);
-                return true;
-            }
-        });
-    }
-
     default It<A> lmt(int limit)
     {
         return It(() -> new EndIterator<>(iterator(), (el, i) -> i + 1 >= limit, false));
     }
 
-    default It<A> unq(Lang.F<A, Object> getHash)
-    {
-        Set<Object> occurences = new HashSet<>();
-        return flt(t -> {
-            Object hash = getHash.apply(t);
-            if (occurences.contains(hash)) {
-                return false;
-            } else {
-                occurences.add(hash);
-                return true;
-            }
-        });
-    }
-
-    default It<A> def(Iterable<A> fallback)
+    /** see https://doc.rust-lang.org/std/result/enum.Result.html#method.or */
+    default It<A> orr(Iterable<A> fallback)
     {
         return It.frs(() -> this, () -> fallback);
     }
@@ -152,7 +82,7 @@ public interface IIt<A> extends Iterable<A> {
 
     default String str(String delim)
     {
-        return Tls.implode(delim, map(val -> val.toString()));
+        return Tls.implode(delim, map(Object::toString));
     }
 
     default String str()
@@ -199,10 +129,65 @@ public interface IIt<A> extends Iterable<A> {
         return end(false, endPred);
     }
 
+    /**
+     * you can read it as "wide map" or "wrap", either  way it does the
+     * opposite of "fop" - it takes this list and makes something else
+     * it is often handy since declaring a var in php is too verbose to be usable
+     */
+    default  <B> B wap(Lang.F<IIt<A>, B> wrapper)
+    {
+        return wrapper.apply(this);
+    }
+
+    default It<A> itr()
+    {
+        return Lang.It(this);
+    }
+
     default L<A> arr()
     {
         L<A> arr = L();
         iterator().forEachRemaining(arr::add);
         return arr;
+    }
+
+    default MemIt<A> mem()
+    {
+        return new MemIt<>(this::iterator);
+    }
+
+    // following are expressed through It as default implementation
+
+    default <B> IIt<B> map(Lang.F<A, B> mapper) {
+        return itr().map(mapper);
+    }
+    default <B> It<B> map(Lang.F2<A, Integer, B> mapper) {
+        return itr().map(mapper);
+    }
+    default It<A> flt(Lang.F2<A, Integer, Boolean> pred) {
+        return itr().flt(pred);
+    }
+    default IIt<A> flt(Predicate<A> pred) {
+        return itr().flt(pred);
+    }
+    /**
+     * "fop" stands for "Filter Optional"
+     * this is a combination of map and filter
+     */
+    default <B> It<B> fop(Lang.F2<A, Integer, Opt<B>> convert) {
+        return itr().fop(convert);
+    }
+    /** flat map optional, remove elements that don't match */
+    default <B> IIt<B> fop(Lang.F<A, Opt<B>> convert) {
+        return itr().fop(convert);
+    }
+    default <B extends A> IIt<B> cst(Class<B> cls) {
+        return itr().cst(cls);
+    }
+    default IIt<A> unq(Lang.F<A, Object> getHash) {
+        return itr().unq(getHash);
+    }
+    default IIt<A> unq() {
+        return itr().unq();
     }
 }

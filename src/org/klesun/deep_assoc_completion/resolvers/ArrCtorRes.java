@@ -75,7 +75,7 @@ public class ArrCtorRes extends Lang
     {
         return It(ideaTypeToFqn(ideaType))
             .fap(clsPath -> PhpIndex.getInstance(project).getAnyByFQN(clsPath))
-            .fop(rvd -> opt(rvd));
+            .fop(Lang::opt);
     }
 
     private static It<PhpClass> resolveIdeaTypeClsRelaxed(It<PhpType> ideaTypeTit, Project project)
@@ -250,11 +250,12 @@ public class ArrCtorRes extends Lang
             .map(meth -> MethCallRes.findMethRetType(meth))
             .map(retTypeGetter -> (ctx) -> new MemIt<>(retTypeGetter.apply(ctx)));
 
-        It<Key> idxKeys = orderedParams
+        L<Key> idxKeys = orderedParams
             .fap((valuePsi, i) -> opt(valuePsi.getFirstChild())
                 .fop(toCast(PhpExpression.class))
                 .map(val -> new Key(i + "", ctx.getRealPsi(val))
-                    .addType(() -> ctx.findExprType(val).wap(Mt::mem), Tls.getIdeaType(val))));
+                    .addType(() -> ctx.findExprType(val).wap(Mt::mem), Tls.getIdeaType(val))))
+            .arr();
 
         It<Key> assocKeys = resolveAssoc(expr);
 
