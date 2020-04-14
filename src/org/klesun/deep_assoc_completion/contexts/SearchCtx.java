@@ -179,7 +179,7 @@ public class SearchCtx extends Lang
                 //.lmt(1000) // .lmt() is just a safety measure, it should not be needed if everything works properly
                 .unq() // .unq() before caching is important since types taken from cache would grow in count exponentially otherwise
                 ;
-            IReusableIt<DeepType> mit = tit instanceof L ? tit.arr() : tit.mem();
+            IReusableIt<DeepType> mit = tit instanceof IResolvedIt ? tit.arr() : tit.mem();
             result = som(mit);
             if (shouldCache(exprCtx)) {
                 result.thn(mt -> putToCache(exprCtx, expr, mit));

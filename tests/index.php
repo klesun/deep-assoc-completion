@@ -682,14 +682,17 @@ class DeepKeysTest
      * @param array $attributes = [
      *     'namespace' => '',
      *     'slug' => '',
-     *     'name' => '',
+     *     'name' => 'Vasya',
      *     'is_localized' => false,
      *     'is_nullable' => false,
-     *     'is_to_be_changed' => false,
+     *     'amount' => 50.00,
      *     'default_value' => null,
      *     'validation_rules' => [],
      *     'field_type' => \App\Enums\SettingFieldType::getInstance(),
-     *     'options' => []
+     *     'options' => [
+     *         'asd' => 123,
+     *         'dsa' => 345,
+     *     ],
      * ]
      * @param callable $callback
      */

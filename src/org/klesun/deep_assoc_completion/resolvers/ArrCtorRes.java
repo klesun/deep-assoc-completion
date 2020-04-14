@@ -215,12 +215,14 @@ public class ArrCtorRes extends Lang
             .map(c -> c.replaceAll("^//\\s*", ""));
     }
 
-    private It<Key> resolveAssoc(ArrayCreationExpressionImpl expr)
+    private L<Key> resolveAssoc(ArrayCreationExpressionImpl expr)
     {
         return It(expr.getHashElements()).fap((keyRec) -> opt(keyRec.getValue())
             .fop(toCast(PhpExpression.class))
             .fap(v -> {
-                S<Mt> getType = Tls.onDemand(() -> ctx.findExprType(v).wap(Mt::mem));
+                IIt<DeepType> valtit = ctx.findExprType(v);
+                IReusableIt<DeepType> mit = valtit instanceof IResolvedIt ? valtit.arr() : valtit.mem();
+                Granted<Mt> getType = Granted(new Mt(mit));
                 return opt(keyRec.getKey())
                     .fop(toCast(PhpExpression.class))
                     .map(keyPsi -> ctx.findExprType(keyPsi))
@@ -238,7 +240,8 @@ public class ArrCtorRes extends Lang
                             return som(keyEntry.addType(getType));
                         }
                     });
-            }));
+            }))
+            .arr();
     }
 
     public DeepType resolve(ArrayCreationExpressionImpl expr)
@@ -257,10 +260,10 @@ public class ArrCtorRes extends Lang
                     .addType(() -> ctx.findExprType(val).wap(Mt::mem), Tls.getIdeaType(val))))
             .arr();
 
-        It<Key> assocKeys = resolveAssoc(expr);
+        L<Key> assocKeys = resolveAssoc(expr);
 
         return new Build(expr, PhpType.ARRAY)
-            .keys(It.cnc(idxKeys, assocKeys))
+            .keys(assocKeys.cct(idxKeys))
             .returnTypeGetters(returnTypeGetters)
             .get();
     }

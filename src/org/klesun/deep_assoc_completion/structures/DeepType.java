@@ -41,10 +41,12 @@ public class DeepType extends Lang
     // constant name
     public Opt<String> cstName = non();
     public @Nullable String stringValue = null;
+    public Opt<Boolean> booleanValue = non();
     public final PsiElement definition;
     public final PhpType briefType;
     public boolean isNumber = false;
     public boolean isExactPsi = true;
+    public boolean isNull = false;
 
     private DeepType(@NotNull PsiElement definition, PhpType briefType, String stringValue, boolean isExactPsi)
     {
@@ -73,6 +75,16 @@ public class DeepType extends Lang
     public DeepType(PhpExpression definition)
     {
         this(definition, Tls.getIdeaType(definition));
+        String exprStr = opt(definition.getText())
+            .map(txt -> txt.toLowerCase())
+            .def("");
+        if ("true".equals(exprStr)) {
+            booleanValue = som(true);
+        } else if ("false".equals(exprStr)) {
+            booleanValue = som(false);
+        } else if ("null".equals(exprStr)) {
+            isNull = true;
+        }
     }
 
     public DeepType(StringLiteralExpressionImpl lit)
@@ -92,6 +104,13 @@ public class DeepType extends Lang
     public static DeepType makeInt(PsiElement numPsi, String number)
     {
         DeepType self = new DeepType(numPsi, PhpType.INT, number);
+        self.isNumber = true;
+        return self;
+    }
+
+    public static DeepType makeFloat(PsiElement numPsi, String number)
+    {
+        DeepType self = new DeepType(numPsi, PhpType.FLOAT, number);
         self.isNumber = true;
         return self;
     }
@@ -198,7 +217,11 @@ public class DeepType extends Lang
         if (clsRefType.has()) {
             typeInfo = clsRefType.unw() + "::class";
         } else if (stringValue != null) {
-            typeInfo = "'" + stringValue + "'";
+            if (isNumber) {
+                typeInfo = stringValue;
+            } else {
+                typeInfo = "'" + stringValue + "'";
+            }
         } else if (keys.has()) {
             L<Key> usedKeys = resolveIter || keys instanceof IResolvedIt ? keys.arr() : L.non();
             typeInfo = "[" + usedKeys.fap(k -> k.getBriefKey(resolveIter)).unq().str() + "]";
@@ -206,6 +229,10 @@ public class DeepType extends Lang
             typeInfo = "(...) ==> {...}";
         } else if (props.size() > 0) {
             typeInfo = "obj(" + props.kys().str() + ")";
+        } else if (booleanValue.has()) {
+            typeInfo = booleanValue.unw() + "";
+        } else if (isNull) {
+            typeInfo = "null";
         }
         return opt(typeInfo);
     }

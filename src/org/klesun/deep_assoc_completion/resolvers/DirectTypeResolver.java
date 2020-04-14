@@ -86,10 +86,20 @@ public class DirectTypeResolver {
                 .map(arr -> new ArrCtorRes(ctx).resolve(arr))
             , () -> Tls.cast(StringLiteralExpressionImpl.class, expr)
                 .map(lit -> new DeepType(lit))
+            , () -> Tls.cast(ConstantReferenceImpl.class, expr)
+                .flt(cst -> // they are defined through themselves in Core_d.php
+                    cst.getText().toLowerCase().equals("null") ||
+                    cst.getText().toLowerCase().equals("true") ||
+                    cst.getText().toLowerCase().equals("false"))
+                .map(cst -> new DeepType(cst))
             , () -> Tls.cast(PhpExpressionImpl.class, expr)
                 .fop(casted -> opt(casted.getText())
                     .flt(text -> Tls.regex("^\\d+$", text).has())
                     .map(num -> DeepType.makeInt(casted, num)))
+            , () -> Tls.cast(PhpExpressionImpl.class, expr)
+                .fop(casted -> opt(casted.getText())
+                    .flt(text -> Tls.regex("^\\d+\\.\\d+$", text).has())
+                    .map(num -> DeepType.makeFloat(casted, num)))
             , () -> Tls.cast(BinaryExpressionImpl.class, expr)
                 .fop(bin -> opt(bin.getOperation())
                     .flt(op -> op.getText().equals("-")
@@ -108,7 +118,7 @@ public class DirectTypeResolver {
     {
         IResolvedIt<DeepType> plainTypes = resolveAsPlainType(expr);
         if (plainTypes.has()) {
-            // no lazy resolution for straightforward expressions like 'ololo', 123, ['a' => 5, 'b' => 6]
+            // no lazy resolution for straightforward expressions like 'blablabla', 123, ['a' => 5, 'b' => 6]
             return plainTypes;
         }
 
@@ -129,10 +139,6 @@ public class DirectTypeResolver {
                 .map(dir -> dir.getPath() + "/")
                 .fap(dirPath -> som(new DeepType(expr, PhpType.STRING, dirPath)))
             , () -> Tls.cast(ConstantReferenceImpl.class, expr)
-                .flt(cst -> // they are defined through themselves in Core_d.php
-                    !cst.getText().toLowerCase().equals("null") &&
-                    !cst.getText().toLowerCase().equals("true") &&
-                    !cst.getText().toLowerCase().equals("false"))
                 .fap(cst -> It(cst.multiResolve(false))
                     .map(ref -> ref.getElement())
                     .cst(Constant.class)
@@ -174,8 +180,7 @@ public class DirectTypeResolver {
                 .fap(call -> new MethCallRes(ctx).resolveCall(call))
             , () -> Tls.cast(FieldReferenceImpl.class, expr)
                 .fap(fieldRef -> new FieldRes(ctx).resolve(fieldRef))
-            , () -> Tls.cast(PhpExpression.class, expr)
-                .fap(t -> list(new DeepType(t)))
+            , () -> som(new DeepType(expr))
         );
     }
 }

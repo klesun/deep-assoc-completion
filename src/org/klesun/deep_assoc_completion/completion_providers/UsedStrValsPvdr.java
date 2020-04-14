@@ -90,15 +90,15 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
                         // could actually make some mechanism to pass optional context type info, like
                         // value in case it is array key, or signatures when it is method name...
                         .map(strVal -> makeLookupBase(strVal, valtarr))
-                        .map((lookup) -> new BasePriorityOption(lookup, 100)),
+                        .map((lookup) -> new BasePriorityOption(lookup, 10000)),
                     t.cstName
                         .map(cstName -> makeLookupBase(cstName, list(t))
                             .withTailText(opt(t.stringValue).map(strVal -> " = " + strVal).def(""), true)
                             .withInsertHandler(GuiUtil.toAlwaysRemoveQuotes()))
-                        .map((lookup) -> new BasePriorityOption(lookup, 150))
+                        .map((lookup) -> new BasePriorityOption(lookup, 15000))
                 ));
             }))
-            .map((prio, i) -> PrioritizedLookupElement.withPriority(prio.lookup, prio.basePriority - i))
+            .map((prio, i) -> PrioritizedLookupElement.withPriority(prio.lookup, prio.basePriority - i * 100))
             .unq(LookupElement::getLookupString);
     }
 

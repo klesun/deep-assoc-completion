@@ -75,11 +75,6 @@ public class Key
         return briefTypes;
     }
 
-    public L<Tls.IOnDemand<Mt>> getTypeGetters()
-    {
-        return typeGetters;
-    }
-
     public Opt<String> getBriefKey(boolean resolveIter)
     {
         L<DeepType> usedTypes = resolveIter || keyType.types instanceof IResolvedIt ? keyType.types.arr() : L.non();
