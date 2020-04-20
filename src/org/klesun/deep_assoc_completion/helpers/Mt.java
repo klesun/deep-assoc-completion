@@ -241,7 +241,8 @@ public class Mt
         if (briefValues.isEmpty() && types.size() > 0) {
             IIt<String> psiParts = types
                 .flt(t -> t.isExactPsi)
-                .map(t -> Tls.singleLine(t.definition.getText(), 40));
+                .fap(t -> opt(t.definition.getText()))
+                .map(text -> Tls.singleLine(text, 40));
             briefValues.add(Tls.implode("|", psiParts.unq()));
         }
         String fullStr = Tls.implode("|", briefValues);

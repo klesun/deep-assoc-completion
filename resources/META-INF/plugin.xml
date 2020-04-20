@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.04.14.001</version>
+    <version>2020.04.20.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,8 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#106 Show value type info in argument keys completion popup. Aka "only gripe with this excellent plugin" fix</li>
-        <li>#149: Do not fail function resolution if it is defined more than once in the project</li>
+        <li>Fix: missing null check for PsiElement::getText() in getBriefValueText(). Rarely, but sometimes may return null.</li>
     </ul>
     ]]>
     </change-notes>
