@@ -39,11 +39,13 @@ public class DocParamRes extends Lang
 
     private static class PropDoc
     {
+        final String docTag;
         final String type;
         final String name;
         String desc;
 
-        PropDoc(String type, String name, String desc) {
+        PropDoc(String docTag, String type, String name, String desc) {
+            this.docTag = docTag;
             this.type = type.startsWith("\\") ? type : "\\" + type;
             this.name = name;
             this.desc = desc;
@@ -78,15 +80,27 @@ public class DocParamRes extends Lang
      *          @property float price
      *      }
      * }
+     *
+     *  following is WordPress format, should also be supported
+     *
+     * @param string|array $query {
+     *     Optional. Array or string of Query parameters.
+     *
+     *     @type int          $attachment_id           Attachment post ID. Used for 'attachment' post_type.
+     *     @type int|string   $author                  Author ID, or comma-separated list of IDs.
+     *     @type string       $author_name             User 'user_nicename'.
+     *     @type array        $author__in              An array of author IDs to query from.
+     *     @type array        $author__not_in          An array of author IDs not to query from.
+     * }
      */
-    private static L<PropDoc> parseMiraObjPropertyDoc(String body)
+    private static L<PropDoc> parseWordpressDoc(String body)
     {
         Mutable<Integer> depth = new Mutable<>(0);
         L<PropDoc> props = L();
         for (String line: body.split("\n")) {
             if (depth.get() == 0) {
-                Tls.regex("\\s*@(property|var|param)\\s+([A-Za-z\\d\\\\_]+)\\s+\\$?(\\w+)(.*)", line)
-                    .map(matches -> new PropDoc(matches.get(1), matches.get(2), matches.get(3)))
+                Tls.regex("\\s*@(property|var|param|type)\\s+([A-Za-z\\d\\\\_\\|]+)\\s+\\$?(\\w+)(.*)", line)
+                    .map(matches -> new PropDoc(matches.get(0), matches.get(1), matches.get(2), matches.get(3)))
                     .thn(prop -> {
                         props.add(prop);
                         if (Tls.regex(".*\\{\\s*", prop.desc).has()) {
@@ -104,20 +118,27 @@ public class DocParamRes extends Lang
         return props;
     }
 
-    private static Opt<DeepType> propDescToType(String propDesc, PsiElement decl)
+    private static Opt<DeepType> wpDescToType(PropDoc parentProp, PsiElement decl)
     {
-        L<PropDoc> props = parseMiraObjPropertyDoc(propDesc);
+        L<PropDoc> props = parseWordpressDoc(parentProp.desc);
         if (props.size() > 0) {
             DeepType type = new DeepType(decl, PhpType.OBJECT);
             props.fch(prop -> {
                 PhpType fqnType = new PhpType().add(prop.type);
-                type.addProp(prop.name, decl)
+                Key keyEntry = parentProp.type.contains("array")
+                    ? type.addKey(new Key(prop.name, decl).keyType)
+                    : type.addProp(prop.name, decl);
+                keyEntry
                     .addType(
-                        () -> propDescToType(prop.desc, decl).itr()
+                        () -> wpDescToType(prop, decl).itr()
                             .cct(list(new DeepType(decl, fqnType, false)))
                             .wap(Mt::mem),
                         fqnType
                     );
+                String desc = prop.desc.trim();
+                if (desc.length() > 0 && !desc.startsWith("{")) {
+                    keyEntry.addComments(som(desc));
+                }
             });
 
             return opt(type);
@@ -175,9 +196,9 @@ public class DocParamRes extends Lang
             opt(doc.getParent())
                 .fop(toCast(PhpDocComment.class))
                 .fop(full -> getDocCommentText(full))
-                .fap(clean -> parseMiraObjPropertyDoc(clean))
+                .fap(clean -> parseWordpressDoc(clean))
                 .flt(prop -> nameMatches(prop, doc))
-                .fop(prop -> propDescToType(prop.desc, doc))
+                .fop(prop -> wpDescToType(prop, doc))
         );
     }
 

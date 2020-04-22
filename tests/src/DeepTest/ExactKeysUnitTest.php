@@ -2386,6 +2386,28 @@ class ExactKeysUnitTest extends AbstractExactKeysUnitTest implements IExactKeysU
         ];
     }
 
+    /**
+     * @param string|array $args {
+     *     Optional. An array of arguments.
+     *
+     *     @type int|string $ololo Description. Default 'value'. Accepts 'value', 'value'.
+     *                             (aligned with Description, if wraps to a new line)
+     *     @type type $lalala Description.
+     *     @type array $moreOpts {
+     *         @type \DateTime $extraOpt1 some extremely extravagant extra option
+     *         @type float $extraOpt2
+     *     }
+     * }
+     */
+    public function provide_wordpressPhpDoc($args)
+    {
+        $args[''];
+        return [
+            [$args, ['ololo', 'lalala', 'moreOpts']],
+            [$args['moreOpts'], ['extraOpt1', 'extraOpt2']],
+        ];
+    }
+
     //=============================
     // following are not implemented yet
     //=============================
