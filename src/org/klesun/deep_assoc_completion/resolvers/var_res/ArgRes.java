@@ -3,7 +3,6 @@ package org.klesun.deep_assoc_completion.resolvers.var_res;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.jetbrains.php.PhpClassHierarchyUtils;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocCommentImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.PhpDocRefImpl;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.impl.tags.PhpDocDataProviderImpl;
@@ -251,7 +250,7 @@ public class ArgRes extends Lang
                 .map(lst -> lst.getParent())
                 .fop(Tls.toCast(MethodImpl.class))
                 .fap(meth -> opt(meth.getContainingClass())
-                    .fap(cls -> It(PhpClassHierarchyUtils.getSuperClasses(cls))
+                    .fap(cls -> MethCallRes.getSupersAllowDupeFqn(cls)
                         .fap(ifc -> ifc.getMethods())
                         .flt(ifcMeth -> meth.getName().equals(ifcMeth.getName()))))
                 .fop(meth -> L(meth.getParameters()).gat(order))

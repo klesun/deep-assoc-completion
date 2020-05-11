@@ -52,6 +52,14 @@ public class MethCallRes extends Lang
         return callCls.equals(cls) && callMet.equals(mth);
     }
 
+    public static It<PhpClass> getSupersAllowDupeFqn(PhpClass cls) {
+        return It.cnc(
+            PhpClassHierarchyUtils.getSuperClasses(cls),
+            It(cls.getImplementedInterfaces()),
+            It(cls.getTraits())
+        );
+    }
+
     public static It<Method> findOverridingMethods(Method meth)
     {
         return opt(PhpIndex.getInstance(meth.getProject()))
@@ -64,7 +72,7 @@ public class MethCallRes extends Lang
     public static It<Method> findOverriddenMethods(Method meth)
     {
         It<Method> overridden = opt(meth.getContainingClass())
-            .fap(PhpClassHierarchyUtils::getSuperClasses)
+            .fap(MethCallRes::getSupersAllowDupeFqn)
             .fap(PhpClass::getMethods)
             .flt(m -> m.getName().equals(meth.getName()));
         return It.cnc(som(meth), overridden);
@@ -74,7 +82,7 @@ public class MethCallRes extends Lang
     public static It<Field> findOverriddenFields(FieldImpl caretField)
     {
         return opt(caretField.getContainingClass())
-            .fap(PhpClassHierarchyUtils::getSuperClasses)
+            .fap(MethCallRes::getSupersAllowDupeFqn)
             .fap(clsArg -> clsArg.getFields())
             .flt(m -> m.getName().equals(caretField.getName()));
     }

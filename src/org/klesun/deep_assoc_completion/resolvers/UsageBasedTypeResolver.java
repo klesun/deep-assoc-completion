@@ -1,7 +1,6 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
-import com.jetbrains.php.PhpClassHierarchyUtils;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
@@ -21,7 +20,6 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.It;
-import org.klesun.lang.L;
 import org.klesun.lang.*;
 
 import java.util.HashSet;
@@ -179,7 +177,7 @@ public class UsageBasedTypeResolver
             // Laravel's Model takes array of initial column values in constructor
             .flt(cls -> order == 0)
             .fap(cls -> {
-                L<PhpClass> supers = L(PhpClassHierarchyUtils.getSuperClasses(cls));
+                L<PhpClass> supers = MethCallRes.getSupersAllowDupeFqn(cls).arr();
                 boolean isModel = supers.any(sup -> sup.getFQN()
                     .equals("\\Illuminate\\Database\\Eloquent\\Model"));
                 if (!isModel) {
