@@ -1,6 +1,7 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
+import com.jetbrains.php.PhpClassHierarchyUtils;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.*;
@@ -178,7 +179,7 @@ public class UsageBasedTypeResolver
             // Laravel's Model takes array of initial column values in constructor
             .flt(cls -> order == 0)
             .fap(cls -> {
-                L<PhpClass> supers = L(cls.getSupers());
+                L<PhpClass> supers = L(PhpClassHierarchyUtils.getSuperClasses(cls));
                 boolean isModel = supers.any(sup -> sup.getFQN()
                     .equals("\\Illuminate\\Database\\Eloquent\\Model"));
                 if (!isModel) {

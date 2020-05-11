@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.indexing.ID;
+import com.jetbrains.php.PhpClassHierarchyUtils;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
@@ -63,7 +64,7 @@ public class MethCallRes extends Lang
     public static It<Method> findOverriddenMethods(Method meth)
     {
         It<Method> overridden = opt(meth.getContainingClass())
-            .fap(cls -> It(cls.getSupers()))
+            .fap(PhpClassHierarchyUtils::getSuperClasses)
             .fap(PhpClass::getMethods)
             .flt(m -> m.getName().equals(meth.getName()));
         return It.cnc(som(meth), overridden);
@@ -73,7 +74,7 @@ public class MethCallRes extends Lang
     public static It<Field> findOverriddenFields(FieldImpl caretField)
     {
         return opt(caretField.getContainingClass())
-            .fap(cls -> It(cls.getSupers()))
+            .fap(PhpClassHierarchyUtils::getSuperClasses)
             .fap(clsArg -> clsArg.getFields())
             .flt(m -> m.getName().equals(caretField.getName()));
     }

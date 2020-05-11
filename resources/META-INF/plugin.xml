@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.04.22.001</version>
+    <version>2020.05.11.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#152 Add support for WordPress phpdoc array keys format - https://make.wordpress.org/core/handbook/best-practices/inline-documentation-standards/php/#1-1-parameters-that-are-arrays</li>
+        <li>#153 Do not fail field decl keys completion when parent class has multiple files with same matching FQN in project</li>
+        <li>Also fix few more places that suffered from dupe FQN parent classes</li>
     </ul>
     ]]>
     </change-notes>
