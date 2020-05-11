@@ -53,8 +53,11 @@ public class MethCallRes extends Lang
     }
 
     public static It<PhpClass> getSupersAllowDupeFqn(PhpClass cls) {
+        String superName = cls.getSuperFQN();
+        PhpIndex phpIndex = PhpIndex.getInstance(cls.getProject());
+
         return It.cnc(
-            PhpClassHierarchyUtils.getSuperClasses(cls),
+            phpIndex.getClassesByFQN(superName),
             It(cls.getImplementedInterfaces()),
             It(cls.getTraits())
         );
