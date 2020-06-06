@@ -2,14 +2,10 @@ package org.klesun.deep_assoc_completion.completion_providers;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.IconLoader;
 import com.intellij.psi.PsiElement;
-import com.intellij.ui.IconManager;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
-import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
@@ -21,7 +17,6 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.icons.DeepIcons;
-import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 import org.klesun.lib.PhpToolbox;
 
@@ -75,7 +70,6 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         briefVal = Tls.substr(briefVal, 0, maxValLen - keyName.length());
         return LookupElementBuilder.create(keyName)
             .withBoldness(!Tls.isNum(keyName))
-            .withInsertHandler(GuiUtil.toRemoveIntStrQuotes())
             .withTailText(briefVal, true)
             .withIcon(getIcon())
             .withTypeText(ideaType, false);
@@ -88,30 +82,39 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
     static class MutableLookup extends LookupElement
     {
         public LookupElementBuilder lookupData;
-        private boolean includeQuotes;
-        private InsertHandler<LookupElement> onInsert = GuiUtil.toRemoveIntStrQuotes();
+        private boolean isCaretInsideQuotes;
 
-        public MutableLookup(LookupElementBuilder lookupData, boolean includeQuotes) {
+        public MutableLookup(LookupElementBuilder lookupData, boolean isCaretInsideQuotes) {
             this.lookupData = lookupData;
-            this.includeQuotes = includeQuotes;
+            this.isCaretInsideQuotes = isCaretInsideQuotes;
         }
+
+        private boolean shouldAddQuotes() {
+            return !isCaretInsideQuotes
+                && !Tls.isNum(lookupData.getLookupString());
+        }
+
         public String getKeyName() {
             return lookupData.getLookupString();
         }
         @NotNull public String getLookupString() {
-            return includeQuotes && !Tls.isNum(lookupData.getLookupString())
+            return shouldAddQuotes()
                 ? "'" + lookupData.getLookupString() + "'"
                 : lookupData.getLookupString();
         }
         public void renderElement(LookupElementPresentation presentation) {
             lookupData.renderElement(presentation);
-            if (includeQuotes && !Tls.isNum(lookupData.getLookupString())) {
+            if (shouldAddQuotes()) {
                 presentation.setItemText("'" + lookupData.getLookupString() + "'");
             }
         }
         public void handleInsert(InsertionContext ctx)
         {
-            onInsert.handleInsert(ctx, this);
+            int endPos = ctx.getTailOffset();
+            // place caret after closing bracket
+            int offset = isCaretInsideQuotes ? 2 : 1;
+            ctx.getEditor().getCaretModel().moveToOffset(endPos + offset);
+            GuiUtil.removeIntStrQuotes(ctx, this);
         }
     }
 
@@ -186,8 +189,9 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    private T2<Dict<MutableLookup>, Map<String, Set<String>>> addNameOnly(Mt arrMt, CompletionResultSet result, boolean includeQuotes, C<String> onFirst)
-    {
+    private T2<Dict<MutableLookup>, Map<String, Set<String>>> addNameOnly(
+        Mt arrMt, CompletionResultSet result, boolean isCaretInsideQuotes, C<String> onFirst
+    ) {
         Set<String> keyNames = new LinkedHashSet<>();
         Map<String, Set<String>> keyToComments = new HashMap<>();
         Mutable<Boolean> isFirst = new Mutable<>(true);
@@ -210,7 +214,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                     }
                     keyNames.add(keyName);
                     LookupElementBuilder justName = makePaddedLookup(keyName, "resolving...", "", BRIEF_VALUE_MAX_LEN);
-                    MutableLookup mutLookup = new MutableLookup(justName, includeQuotes);
+                    MutableLookup mutLookup = new MutableLookup(justName, isCaretInsideQuotes);
                     int basePriority = Tls.isNum(keyName) ? 2000 : 2500;
                     result.addElement(PrioritizedLookupElement.withPriority(mutLookup, basePriority - keyNames.size()));
                     nameToMutLookup.put(keyName, mutLookup);
@@ -241,9 +245,9 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         Set<String> suggested = new HashSet<>();
         PsiElement caretPsi = parameters.getPosition(); // usually leaf element
         Opt<PsiElement> firstParent = opt(caretPsi.getParent());
-        boolean includeQuotes = firstParent
+        boolean isCaretInsideQuotes = firstParent
             .fop(toCast(StringLiteralExpression.class)) // inside ['']
-            .uni(l -> false, () -> true); // else just inside []
+            .uni(l -> true, () -> false); // else just inside []
 
         long startTime = System.nanoTime();
         Mutable<Long> firstTime = new Mutable<>(-1L);
@@ -266,7 +270,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
         Mt arrMt = Mt.mem(arrTit);
         // preliminary keys without type - they may be at least 3 times faster in some cases
-        T2<Dict<MutableLookup>, Map<String, Set<String>>> tuple = addNameOnly(arrMt, result, includeQuotes, (keyName) -> {
+        T2<Dict<MutableLookup>, Map<String, Set<String>>> tuple = addNameOnly(arrMt, result, isCaretInsideQuotes, (keyName) -> {
             System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
             firstTime.set(System.nanoTime() - startTime);
         });

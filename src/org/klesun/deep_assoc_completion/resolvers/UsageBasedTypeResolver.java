@@ -508,7 +508,8 @@ public class UsageBasedTypeResolver
                                     .flt(kt -> !kt.isNumber())
                                     .flt(kt -> !alreadyDeclared.contains(kt.stringValue))
                             ));
-                    })));
+                    })
+            ));
     }
 
     private It<DeepType> resolveOverriddenFieldType(FieldImpl field)
@@ -572,6 +573,7 @@ public class UsageBasedTypeResolver
             asAssignment
         ).mem();
         putToCache(caretExpr, result);
+
         return result.itr();
     }
 }
