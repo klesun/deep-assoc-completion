@@ -1,9 +1,6 @@
 package org.klesun.deep_assoc_completion.completion_providers;
 
-import com.intellij.codeInsight.completion.CompletionParameters;
-import com.intellij.codeInsight.completion.CompletionProvider;
-import com.intellij.codeInsight.completion.CompletionResultSet;
-import com.intellij.codeInsight.completion.PrioritizedLookupElement;
+import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.psi.PsiElement;
@@ -76,6 +73,11 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         return lookup;
     }
 
+    private static void placeCaretAfterStrLit(InsertionContext ctx, LookupElement lookup)
+    {
+        ctx.getEditor().getCaretModel().moveToOffset(ctx.getSelectionEndOffset() + 1);
+    }
+
     private static It<LookupElement> makeOptions(It<DeepType> assocTit)
     {
         return assocTit
@@ -89,7 +91,8 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
                         .flt(strVal -> !t.cstName.has() || !t.isNumber)
                         // could actually make some mechanism to pass optional context type info, like
                         // value in case it is array key, or signatures when it is method name...
-                        .map(strVal -> makeLookupBase(strVal, valtarr))
+                        .map(strVal -> makeLookupBase(strVal, valtarr)
+                            .withInsertHandler(UsedStrValsPvdr::placeCaretAfterStrLit))
                         .map((lookup) -> new BasePriorityOption(lookup, 10000)),
                     t.cstName
                         .map(cstName -> makeLookupBase(cstName, list(t))
@@ -257,10 +260,15 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
             alreadySuggested.add(otherSourceResult.getLookupElement().getLookupString());
         });
 
+        Opt<StringLiteralExpression> litOpt = opt(parameters.getPosition().getParent())
+            .fop(toCast(StringLiteralExpression.class));
+        if (!litOpt.has()) {
+            return;
+        }
+        StringLiteralExpression lit = litOpt.unw();
+
         long startTime = System.nanoTime();
-        It<DeepType> assocTit = opt(parameters.getPosition().getParent()) // StringLiteralExpressionImpl
-            .fop(toCast(StringLiteralExpression.class))
-            .fap(lit -> resolve(lit, parameters.isAutoPopup()));
+        It<DeepType> assocTit = resolve(lit, parameters.isAutoPopup());
 
         makeOptions(assocTit)
             .flt(our -> !alreadySuggested.contains(our.getLookupString()))
