@@ -450,7 +450,7 @@ public class UsageBasedTypeResolver
         return It.cnc(asField, asVar);
     }
 
-    private Set<String> getExplicitKeys(ArrayCreationExpression arrCtor, PhpExpression caretExpr) {
+    public static Set<String> getExplicitKeys(ArrayCreationExpression arrCtor, PhpExpression caretExpr) {
         return It(arrCtor.getHashElements())
             .fop(el -> opt(el.getKey()))
             .flt(keyPsi -> !keyPsi.equals(caretExpr)) // preserve for GoTo decl
@@ -459,7 +459,7 @@ public class UsageBasedTypeResolver
             .wap(tit -> new HashSet<>(tit.arr()));
     }
 
-    private It<DeepType> resolveArrCtor(ArrayCreationExpression arrCtor) {
+    public It<DeepType> resolveArrCtor(ArrayCreationExpression arrCtor) {
         It<DeepType> asListAss = opt(arrCtor.getParent())
             .cst(MultiassignmentExpression.class)
             .fap(multi -> opt(multi.getValue()))
@@ -497,17 +497,8 @@ public class UsageBasedTypeResolver
                             .fop(toCast(PhpPsiElementImpl.class))
                             .arr().indexOf(caretExpr.getParent());
                         Opt<String> key = order > -1 ? opt(order + "") : opt(null);
-                        Set<String> alreadyDeclared = getExplicitKeys(arrCtor, caretExpr);
                         return resolveArrCtor(arrCtor)
-                            .fap(t -> It.cnc(
-                                Mt.getKeySt(t, key.def(null)),
-                                // if user just started typing the key, there is no => after it, hence IDEA
-                                // parses it as sequential element - show assoc key options here as well if any
-                                Tls.cast(StringLiteralExpression.class, caretExpr)
-                                    .fap(lit -> t.keys.fap(k -> k.keyType.getTypes()))
-                                    .flt(kt -> !kt.isNumber())
-                                    .flt(kt -> !alreadyDeclared.contains(kt.stringValue))
-                            ));
+                            .fap(t -> Mt.getKeySt(t, key.def(null)));
                     })
             ));
     }

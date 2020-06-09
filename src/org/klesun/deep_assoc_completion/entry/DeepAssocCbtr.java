@@ -8,6 +8,7 @@ import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocToken;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.completion_providers.*;
@@ -98,6 +99,17 @@ public class DeepAssocCbtr extends CompletionContributor
                 .withSuperParent(3, ArrayCreationExpression.class)
                 ,
             new ArrFuncRefNamePvdr()
+        );
+        //  \/
+        // [''] + zhopa = ['zhopa' => ]
+        this.extend(
+            CompletionType.BASIC,
+            PlatformPatterns.psiElement()
+                .withSuperParent(1, StringLiteralExpression.class)
+                .withSuperParent(2, PhpPsiElementImpl.class)
+                .withSuperParent(3, ArrayCreationExpression.class)
+            ,
+            new ArrCtorIncompleteAssocKeyPvdr()
         );
         // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
         // or in_array('', $types) or in_array($type, ['AIR', ''])

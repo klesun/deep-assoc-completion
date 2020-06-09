@@ -49,7 +49,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    private static LookupElementBuilder makeLookupBase(String keyName, L<DeepType> valtarr)
+    public static LookupElementBuilder makeLookupBase(String keyName, L<DeepType> valtarr)
     {
         String typeStr = valtarr.size() < 1 ? "from usage" :
             valtarr.fop(t -> opt(t.briefType)).wap(pstit -> {
@@ -82,15 +82,10 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
     {
         return assocTit
             .fap((assoct, i) -> assoct.keys.fap(keyObj -> {
-                L<DeepType> valtarr = keyObj.typeGetters
-                    .fap(g -> g instanceof Granted ? som(g.get()) : non())
-                    .fap(mt -> mt.types instanceof IResolvedIt ? mt.types.arr() : non())
-                    .arr();
+                L<DeepType> valtarr = keyObj.getGrantedValues();
                 return keyObj.keyType.types.fap((t) -> It.cnc(
                     opt(t.stringValue)
                         .flt(strVal -> !t.cstName.has() || !t.isNumber)
-                        // could actually make some mechanism to pass optional context type info, like
-                        // value in case it is array key, or signatures when it is method name...
                         .map(strVal -> makeLookupBase(strVal, valtarr)
                             .withInsertHandler(UsedStrValsPvdr::placeCaretAfterStrLit))
                         .map((lookup) -> new BasePriorityOption(lookup, 10000)),

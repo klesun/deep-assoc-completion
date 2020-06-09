@@ -7,10 +7,11 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.*;
 import org.klesun.lang.Tls.IOnDemand;
 
-import static org.klesun.lang.Lang.Granted;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import static org.klesun.lang.Lang.*;
+import static org.klesun.lang.Lang.non;
 
 public class Key
 {
@@ -91,6 +92,15 @@ public class Key
             .fap(t -> t.getBriefVal()).unq()
             .wap(IIt::arr)
             .wap(fqns -> fqns.has() ? Lang.som(fqns.itr().str("|")) : Lang.non());
+    }
+
+    /** values that are cheap to obtain, like phpdoc or direct array creation */
+    public L<DeepType> getGrantedValues()
+    {
+        return typeGetters
+            .fap(g -> g instanceof Granted ? som(g.get()) : non())
+            .fap(mt -> mt.types instanceof IResolvedIt ? mt.types.arr() : non())
+            .arr();
     }
 
     @Override
