@@ -127,6 +127,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
             .cst(PhpPsiElementImpl.class)
             .fop(psi -> opt(psi.getParent()))
             .cst(ArrayHashElement.class)
+            .flt(hash -> lit.equals(hash.getKey()))
             .fop(psi -> opt(psi.getParent()))
             .cst(ArrayCreationExpression.class)
             .fap(arrCtor -> new UsageBasedTypeResolver(funcCtx).resolve(arrCtor));
