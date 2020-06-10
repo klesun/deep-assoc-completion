@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.06.10.001</version>
+    <version>2020.06.11.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,8 +38,7 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>Automagically add associative array => arrow when you complete a key name and put caret at value</li>
-        <li>#106 Fix, do not mistakenly suggest keys in the associative array constructor value</li>
+        <li>#145 Add curly braces when using method autocomplete in strings</li>
     </ul>
     ]]>
     </change-notes>
