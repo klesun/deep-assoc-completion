@@ -132,8 +132,8 @@ public class DeepType extends Lang
     {
         // TODO: get rid of this function, we should not iterate through all types during resolution
         return keys
-            .flt(k -> k.typeGetters.has() && k.keyType.getTypes().any(kt -> kt.isNumber() || kt.stringValue == null))
-            .fap(k -> k.typeGetters.fap(mtg -> mtg.get().types));
+            .flt(k -> k.valueTypeGetters.has() && k.keyType.getTypes().any(kt -> kt.isNumber() || kt.stringValue == null))
+            .fap(k -> k.valueTypeGetters.fap(mtg -> mtg.get().types));
     }
 
     /** @deprecated - kept for compatibility with deep-js, shall be remove eventually - use Build.java instead */

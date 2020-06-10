@@ -20,8 +20,7 @@ import static org.klesun.lang.Lang.non;
 public class KeyEntry
 {
     final public KeyType keyType;
-    // TODO: rename to valueTypeGetters
-    final public L<Tls.IOnDemand<Mt>> typeGetters = Lang.L();
+    final public L<Tls.IOnDemand<Mt>> valueTypeGetters = Lang.L();
     // to get quick built-in type info
     final private L<PhpType> briefTypes = Lang.L();
     // where Go To Definition will lead
@@ -50,9 +49,9 @@ public class KeyEntry
     public KeyEntry addType(Lang.S<Mt> getter, PhpType briefType)
     {
         if (getter instanceof Granted) {
-            typeGetters.add(Granted(getter.get()));
+            valueTypeGetters.add(Granted(getter.get()));
         } else {
-            typeGetters.add(Tls.onDemand(getter));
+            valueTypeGetters.add(Tls.onDemand(getter));
         }
         briefTypes.add(briefType);
         return this;
@@ -72,7 +71,7 @@ public class KeyEntry
 
     public It<DeepType> getValueTypes()
     {
-        return typeGetters.fap(g -> g.get().types);
+        return valueTypeGetters.fap(g -> g.get().types);
     }
 
     public L<PhpType> getBriefTypes()
@@ -90,7 +89,7 @@ public class KeyEntry
 
     public Opt<String> getBriefVal()
     {
-        return typeGetters
+        return valueTypeGetters
             .fap(IOnDemand::ifHas)
             .fap(mt -> mt.types)
             .fap(t -> t.getBriefVal()).unq()
@@ -101,7 +100,7 @@ public class KeyEntry
     /** values that are cheap to obtain, like phpdoc or direct array creation */
     public L<DeepType> getGrantedValues()
     {
-        return typeGetters
+        return valueTypeGetters
             .fap(g -> g instanceof Granted ? som(g.get()) : non())
             .fap(mt -> mt.types instanceof IResolvedIt ? mt.types.arr() : non())
             .arr();
