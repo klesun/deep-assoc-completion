@@ -46,7 +46,6 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         int shift = meth.getParameters().length > 0 ? 1 : 2;
 
         return (ctx, lookup) -> {
-            int from = ctx.getStartOffset();
             int to = ctx.getTailOffset();
             // adding parentheses around caret
             ctx.getEditor().getDocument().insertString(to, "(");
