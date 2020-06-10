@@ -8,7 +8,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.Key;
+import org.klesun.deep_assoc_completion.structures.KeyEntry;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.deep_assoc_completion.structures.psalm.*;
 import org.klesun.lang.It;
@@ -52,11 +52,11 @@ public class PsalmRes {
             || cls.fqn.equals("SplQueue") || cls.fqn.equals("\\SplQueue");
     }
 
-    private static It<Key> genericsToArrKeys(List<IType> defs, PsiElement goToPsi, Map<String, MemIt<DeepType>> generics)
+    private static It<KeyEntry> genericsToArrKeys(List<IType> defs, PsiElement goToPsi, Map<String, MemIt<DeepType>> generics)
     {
         if (defs.size() == 1) {
             KeyType keyt = KeyType.integer(goToPsi);
-            Key keyObj = new Key(keyt, goToPsi);
+            KeyEntry keyObj = new KeyEntry(keyt, goToPsi);
             keyObj.addType(() -> {
                 It<DeepType> tit = psalmToDeep(defs.get(0), goToPsi, generics);
                 return Mt.mem(tit);
@@ -65,7 +65,7 @@ public class PsalmRes {
         } else if (defs.size() == 2) {
             It<DeepType> kit = psalmToDeep(defs.get(1), goToPsi, generics);
             KeyType keyt = KeyType.mt(kit, goToPsi);
-            Key keyObj = new Key(keyt, goToPsi);
+            KeyEntry keyObj = new KeyEntry(keyt, goToPsi);
             keyObj.addType(() -> {
                 It<DeepType> tit = psalmToDeep(defs.get(1), goToPsi, generics);
                 return Mt.mem(tit);
@@ -87,7 +87,7 @@ public class PsalmRes {
                 .map(psalm -> psalmToDeep(psalm, goToPsi, generics))
                 .map(Mt::mem)
                 .arr();
-            It<Key> keyEntries = It.non();
+            It<KeyEntry> keyEntries = It.non();
             if (isArrayLike(cls)) {
                 keyEntries = genericsToArrKeys(cls.generics, goToPsi, generics);
             }
@@ -103,14 +103,14 @@ public class PsalmRes {
             non()
             , Tls.cast(TAssoc.class, psalmType)
                 .map(assoc -> {
-                    It<Key> keyEntries = It(assoc.keys.entrySet()).map(e -> {
+                    It<KeyEntry> keyEntries = It(assoc.keys.entrySet()).map(e -> {
                         String keyName = e.getKey();
                         IType psalmVal = e.getValue();
                         Mt valMt = Mt.mem(psalmToDeep(psalmVal, goToPsi, generics));
                         PhpType ideaType = valMt.getIdeaTypes().fst().def(PhpType.UNSET);
                         List<String> comments = opt(assoc.keyToComments.get(keyName))
                             .fap(c -> c).flt(c -> !c.trim().equals("")).map(c -> c).arr();
-                        return new Key(keyName, goToPsi)
+                        return new KeyEntry(keyName, goToPsi)
                             .addType(Granted(valMt), ideaType)
                             .addComments(comments);
                     });

@@ -17,7 +17,7 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.other_plugin_integration.DeepAssocApi;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.Key;
+import org.klesun.deep_assoc_completion.structures.KeyEntry;
 import org.klesun.lang.*;
 
 import java.util.ArrayList;
@@ -125,8 +125,8 @@ public class DocParamRes extends Lang
             DeepType type = new DeepType(decl, PhpType.OBJECT);
             props.fch(prop -> {
                 PhpType fqnType = new PhpType().add(prop.type);
-                Key keyEntry = parentProp.type.contains("array")
-                    ? type.addKey(new Key(prop.name, decl).keyType)
+                KeyEntry keyEntry = parentProp.type.contains("array")
+                    ? type.addKey(new KeyEntry(prop.name, decl).keyType)
                     : type.addProp(prop.name, decl);
                 keyEntry
                     .addType(
@@ -179,7 +179,7 @@ public class DocParamRes extends Lang
         Mt valMt = Mt.mem(valTit);
         for (int i = assKeys.size() - 1; i >= 0; --i) {
             Mt valMtF = valMt;
-            Key keyEntry = new Key(assKeys.get(i), sourcePsi)
+            KeyEntry keyEntry = new KeyEntry(assKeys.get(i), sourcePsi)
                 .addType(() -> valMtF);
             valMt = new Build(sourcePsi, PhpType.ARRAY)
                 .keys(som(keyEntry)).get().mt();

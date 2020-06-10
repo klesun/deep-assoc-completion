@@ -13,7 +13,11 @@ import java.util.Set;
 import static org.klesun.lang.Lang.*;
 import static org.klesun.lang.Lang.non;
 
-public class Key
+/**
+ * represents a pair of key type and value type
+ * in an associative array or sequential array
+ */
+public class KeyEntry
 {
     final public KeyType keyType;
     // TODO: rename to valueTypeGetters
@@ -24,7 +28,7 @@ public class Key
     final public PsiElement definition;
     public Set<String> comments = new LinkedHashSet<>();
 
-    public Key(String name, @NotNull PsiElement definition)
+    public KeyEntry(String name, @NotNull PsiElement definition)
     {
         DeepType kt = new DeepType(definition, PhpType.STRING, name);
         KeyType keyType = KeyType.mt(Lang.som(kt), definition);
@@ -32,18 +36,18 @@ public class Key
         this.definition = definition;
     }
 
-    public Key(KeyType keyType, @NotNull PsiElement definition)
+    public KeyEntry(KeyType keyType, @NotNull PsiElement definition)
     {
         this.keyType = keyType;
         this.definition = definition;
     }
 
-    public Key(KeyType keyType)
+    public KeyEntry(KeyType keyType)
     {
         this(keyType, keyType.definition);
     }
 
-    public Key addType(Lang.S<Mt> getter, PhpType briefType)
+    public KeyEntry addType(Lang.S<Mt> getter, PhpType briefType)
     {
         if (getter instanceof Granted) {
             typeGetters.add(Granted(getter.get()));
@@ -54,13 +58,13 @@ public class Key
         return this;
     }
 
-    public Key addComments(Iterable<String> comments)
+    public KeyEntry addComments(Iterable<String> comments)
     {
         comments.forEach(this.comments::add);
         return this;
     }
 
-    public Key addType(Lang.S<Mt> getter)
+    public KeyEntry addType(Lang.S<Mt> getter)
     {
         addType(getter, PhpType.MIXED);
         return this;

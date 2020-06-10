@@ -9,7 +9,7 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.DirectTypeResolver;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.Key;
+import org.klesun.deep_assoc_completion.structures.KeyEntry;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
@@ -192,7 +192,7 @@ public class ReturnTypeDefs
             T2("tag", str(call, "issue").mt()),
             T2("value", str(call, "pki.goog▒").mt())
         ));
-        Key keyEntry = new Key(KeyType.integer(call), call)
+        KeyEntry keyEntry = new KeyEntry(KeyType.integer(call), call)
             .addType(() -> new Mt(list(assoct)));
 
         return new Build(call, PhpType.ARRAY)
@@ -232,7 +232,7 @@ public class ReturnTypeDefs
         if (!callCtx.getArg(0).has()) {
             return assoct;
         } else {
-            Key keyEntry = new Key(KeyType.integer(call))
+            KeyEntry keyEntry = new KeyEntry(KeyType.integer(call))
                 .addType(() -> new Mt(list(assoct)));
             return new Build(call, PhpType.ARRAY)
                 .keys(som(keyEntry)).get();
@@ -274,7 +274,7 @@ public class ReturnTypeDefs
 
     private It<DeepType> debug_backtrace(FunctionReferenceImpl call)
     {
-        Key keyEntry = new Key(KeyType.integer(call))
+        KeyEntry keyEntry = new KeyEntry(KeyType.integer(call))
             .addType(() -> new Mt(list(assoc(call, list(
                 T2("file", str(call, "/var/www/vendor/something/Model.php").mt()),
                 T2("line", inte(call, 465).mt()),

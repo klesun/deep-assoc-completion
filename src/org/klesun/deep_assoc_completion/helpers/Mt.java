@@ -4,7 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.Key;
+import org.klesun.deep_assoc_completion.structures.KeyEntry;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
@@ -58,7 +58,7 @@ public class Mt
 
     public static DeepType getInArraySt(IIt<DeepType> types, PsiElement call)
     {
-        Key keyEntry = new Key(KeyType.integer(call), call)
+        KeyEntry keyEntry = new KeyEntry(KeyType.integer(call), call)
             .addType(Tls.onDemand(() -> new Mt(types.mem())), PhpType.MIXED);
         return new Build(call, PhpType.ARRAY)
             .keys(som(keyEntry)).get();
@@ -108,7 +108,7 @@ public class Mt
         return getKey(nullKey);
     }
 
-    public static It<DeepType> getPropOfName(IIt<Key> allProps, String keyName)
+    public static It<DeepType> getPropOfName(IIt<KeyEntry> allProps, String keyName)
     {
         return allProps
             .flt(k -> keyName == null || k.keyType.getTypes()
@@ -180,7 +180,7 @@ public class Mt
             .fap(k -> k.keyType.getNames()).unq();
     }
 
-    public It<Key> getAssignedProps()
+    public It<KeyEntry> getAssignedProps()
     {
         return types.fap(t -> t.props.vls());
     }

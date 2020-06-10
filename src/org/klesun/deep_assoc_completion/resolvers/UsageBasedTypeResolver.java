@@ -17,7 +17,7 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.Key;
+import org.klesun.deep_assoc_completion.structures.KeyEntry;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.It;
 import org.klesun.lang.*;
@@ -99,7 +99,7 @@ public class UsageBasedTypeResolver
                                 S<Mt> getType = () -> Tls.findParent(lit, ArrayAccessExpression.class, a -> true)
                                     .fap(acc -> new UsageBasedTypeResolver(nextCtx, depthLeft - 1).resolve(acc))
                                     .wap(Mt::mem);
-                                Key keyEntry = new Key(name, t.definition).addType(getType, PhpType.UNSET);
+                                KeyEntry keyEntry = new KeyEntry(name, t.definition).addType(getType, PhpType.UNSET);
                                 return new Build(arg, PhpType.ARRAY)
                                     .keys(som(keyEntry))
                                     .get();
@@ -160,7 +160,7 @@ public class UsageBasedTypeResolver
     public static DeepType makeAssoc(PsiElement psi, Iterable<T2<String, PsiElement>> keys)
     {
         return new Build(psi, PhpType.ARRAY)
-            .keys(It(keys).map(tup -> new Key(tup.a, tup.b)))
+            .keys(It(keys).map(tup -> new KeyEntry(tup.a, tup.b)))
             .get();
     }
 
@@ -214,7 +214,7 @@ public class UsageBasedTypeResolver
                 .map(expr -> expr.getFirstChild())
                 .fop(toCast(Function.class))) // TODO: support in a var
             .fap(func -> {
-                Key keyEntry = new Key(KeyType.unknown(argList))
+                KeyEntry keyEntry = new KeyEntry(KeyType.unknown(argList))
                     .addType(() -> L(argList.getParameters())
                         .gat(caretArgOrder)
                         .cst(PhpExpression.class)

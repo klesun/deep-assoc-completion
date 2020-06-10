@@ -15,7 +15,7 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.mem_res.MemRes;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.Key;
+import org.klesun.deep_assoc_completion.structures.KeyEntry;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
@@ -215,7 +215,7 @@ public class ArrCtorRes extends Lang
             .map(c -> c.replaceAll("^//\\s*", ""));
     }
 
-    private L<Key> resolveAssoc(ArrayCreationExpressionImpl expr)
+    private L<KeyEntry> resolveAssoc(ArrayCreationExpressionImpl expr)
     {
         return It(expr.getHashElements()).fap((keyRec) -> opt(keyRec.getValue())
             .fop(toCast(PhpExpression.class))
@@ -230,11 +230,11 @@ public class ArrCtorRes extends Lang
                     .fap(keyStrValues -> {
                         if (keyStrValues.has()) {
                             return keyStrValues.map(key ->
-                                new Key(key, ctx.getRealPsi(keyRec))
+                                new KeyEntry(key, ctx.getRealPsi(keyRec))
                                     .addType(getType, Tls.getIdeaType(v))
                                     .addComments(gatherSurroundingComments(keyRec)));
                         } else {
-                            Key keyEntry = new Key(
+                            KeyEntry keyEntry = new KeyEntry(
                                 KeyType.unknown(keyRec), opt(keyRec.getKey()).def(expr)
                             );
                             return som(keyEntry.addType(getType));
@@ -253,14 +253,14 @@ public class ArrCtorRes extends Lang
             .map(meth -> MethCallRes.findMethRetType(meth))
             .map(retTypeGetter -> (ctx) -> new MemIt<>(retTypeGetter.apply(ctx)));
 
-        L<Key> idxKeys = orderedParams
+        L<KeyEntry> idxKeys = orderedParams
             .fap((valuePsi, i) -> opt(valuePsi.getFirstChild())
                 .fop(toCast(PhpExpression.class))
-                .map(val -> new Key(i + "", ctx.getRealPsi(val))
+                .map(val -> new KeyEntry(i + "", ctx.getRealPsi(val))
                     .addType(() -> ctx.findExprType(val).wap(Mt::mem), Tls.getIdeaType(val))))
             .arr();
 
-        L<Key> assocKeys = resolveAssoc(expr);
+        L<KeyEntry> assocKeys = resolveAssoc(expr);
 
         return new Build(expr, PhpType.ARRAY)
             .keys(assocKeys.cct(idxKeys))

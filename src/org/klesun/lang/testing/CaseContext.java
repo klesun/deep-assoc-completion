@@ -2,7 +2,7 @@ package org.klesun.lang.testing;
 
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.Key;
+import org.klesun.deep_assoc_completion.structures.KeyEntry;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.Lang;
@@ -29,13 +29,13 @@ public class CaseContext
         this.logger = logger;
     }
 
-    public L<Error> testCasePartial(List<Key> actual, Key expected) {
+    public L<Error> testCasePartial(List<KeyEntry> actual, KeyEntry expected) {
         logger.setCaseContext(this);
         L<Error> errors = list();
 
         DeepType expectedt = expected.getValueTypes().fst().unw();
         expectedt.keys.itr().fch((subExpected) -> subExpected.keyType.getNames().fch(subKey -> {
-            It<Key> havingKey = Lang.It(actual)
+            It<KeyEntry> havingKey = Lang.It(actual)
                 .fap(krecs -> krecs.getValueTypes())
                 .fap(t -> t.keys)
                 .flt(k -> k.keyType.getNames().any(n -> n.equals(subKey)));

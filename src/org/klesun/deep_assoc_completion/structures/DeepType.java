@@ -22,9 +22,9 @@ public class DeepType extends Lang
     // please, do not change this fields directly - ise Build.java
     // probably should make them all protected and add getters...
 
-    public IReusableIt<Key> keys = L.non();
+    public IReusableIt<KeyEntry> keys = L.non();
     // just like array keys, but dynamic object properties
-    public final Dict<Key> props = new Dict<>(L());
+    public final Dict<KeyEntry> props = new Dict<>(L());
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
@@ -137,18 +137,18 @@ public class DeepType extends Lang
     }
 
     /** @deprecated - kept for compatibility with deep-js, shall be remove eventually - use Build.java instead */
-    public Key addKey(KeyType keyType)
+    public KeyEntry addKey(KeyType keyType)
     {
-        Key keyEntry = new Key(keyType, definition);
+        KeyEntry keyEntry = new KeyEntry(keyType, definition);
         keys = It.cnc(keys, som(keyEntry)).mem();
         return keyEntry;
     }
 
-    public Key addProp(String name, PsiElement definition)
+    public KeyEntry addProp(String name, PsiElement definition)
     {
         DeepType kt = new DeepType(definition, PhpType.STRING, name);
         KeyType keyType = KeyType.mt(som(kt), definition);
-        Key keyEntry = new Key(keyType, definition);
+        KeyEntry keyEntry = new KeyEntry(keyType, definition);
         props.put(name, keyEntry);
         return keyEntry;
     }
@@ -223,7 +223,7 @@ public class DeepType extends Lang
                 typeInfo = "'" + stringValue + "'";
             }
         } else if (keys.has()) {
-            L<Key> usedKeys = resolveIter || keys instanceof IResolvedIt ? keys.arr() : L.non();
+            L<KeyEntry> usedKeys = resolveIter || keys instanceof IResolvedIt ? keys.arr() : L.non();
             typeInfo = "[" + usedKeys.fap(k -> k.getBriefKey(resolveIter)).unq().str() + "]";
         } else if (returnTypeGetters.has()) {
             typeInfo = "(...) ==> {...}";

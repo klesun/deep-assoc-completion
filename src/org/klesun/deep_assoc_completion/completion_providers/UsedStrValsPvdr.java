@@ -239,7 +239,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
                     resolveArrayIntersect(lit, exprCtx)
                 );
                 return strts.map(strt -> new Build(lit, PhpType.UNSET).keys(list(
-                    new Key(KeyType.mt(som(strt), strt.definition))
+                    new KeyEntry(KeyType.mt(som(strt), strt.definition))
                 )).get());
             }
         );

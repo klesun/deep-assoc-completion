@@ -48,7 +48,7 @@ public class VarRes
                 .map(names -> new Build(strt.definition, PhpType.ARRAY)
                     .keys(names.map(n -> {
                         DeepType valt = new DeepType(strt.definition, PhpType.STRING);
-                        return new Key(n, strt.definition)
+                        return new KeyEntry(n, strt.definition)
                             .addType(() -> new Mt(list(valt)), PhpType.STRING);
                     }))
                     .get()));
