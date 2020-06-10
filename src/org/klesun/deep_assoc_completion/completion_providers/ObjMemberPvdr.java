@@ -11,6 +11,7 @@ import com.intellij.ui.JBColor;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ClassConstImpl;
+import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
@@ -38,17 +39,23 @@ import static org.klesun.lang.Lang.*;
 public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
 {
     private boolean hadBuiltIns = false;
+    private Opt<VariableImpl> strInjectVarOpt = non();
 
-    private static InsertHandler<LookupElement> makeMethInsertHandler(Method meth)
+    private InsertHandler<LookupElement> makeMethInsertHandler(Method meth)
     {
         int shift = meth.getParameters().length > 0 ? 1 : 2;
 
         return (ctx, lookup) -> {
+            int from = ctx.getStartOffset();
             int to = ctx.getTailOffset();
             // adding parentheses around caret
             ctx.getEditor().getDocument().insertString(to, "(");
             ctx.getEditor().getDocument().insertString(to + 1, ")");
             ctx.getEditor().getCaretModel().moveToOffset(to + shift);
+            strInjectVarOpt.thn(varPsi -> {
+                ctx.getEditor().getDocument().insertString(to + "()".length(), "}");
+                ctx.getEditor().getDocument().insertString(varPsi.getTextOffset(), "{");
+            });
         };
     }
 
@@ -186,6 +193,17 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         Opt<PhpExpression> clsRefOpt = opt(parameters.getPosition().getParent())
             .fop(toCast(MemberReference.class))
             .fop(mem -> opt(mem.getClassReference()));
+
+        strInjectVarOpt = clsRefOpt
+            .fop(ref -> opt(ref.getParent()))
+            .cst(FieldReference.class) // because IntellijiIdeaRulezzz
+            .fop(ref -> opt(ref.getParent()))
+            .cst(VariableImpl.class) // dunno why AST is this way...
+            .flt(ref -> opt(ref.getParent())
+                .cst(StringLiteralExpression.class)
+                .cst(StringLiteralExpression.class)
+                .has());
+
         if (!hasBuiltIns || !parameters.isAutoPopup()) {
             FuncCtx funcCtx = new FuncCtx(search);
             hadBuiltIns = hasBuiltIns;
