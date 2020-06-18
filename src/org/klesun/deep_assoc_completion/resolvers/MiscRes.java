@@ -156,11 +156,11 @@ public class MiscRes extends Lang
             return som(DeepType.makeInt(deepType.definition, deepType.stringValue));
         } else if (phpType.equals("array")) {
             DeepType arrt = new DeepType(deepType.definition, PhpType.ARRAY);
-            arrt.keys = It.cnc(deepType.keys, deepType.props.vls()).mem();
+            arrt.keys = It.cnc(deepType.keys, deepType.props).mem();
             return som(arrt);
         } else if (phpType.equals("object")) {
             DeepType objt = new DeepType(deepType.definition, PhpType.OBJECT);
-            It.cnc(deepType.props.vls(), deepType.keys)
+            It.cnc(deepType.props, deepType.keys)
                 .fch(k -> k.keyType.getNames()
                     .fch(n -> objt.addProp(n, k.definition)
                         .addType(() -> Mt.mem(k.getValueTypes()))));

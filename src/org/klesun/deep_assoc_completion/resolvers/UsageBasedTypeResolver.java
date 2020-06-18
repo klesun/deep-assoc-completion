@@ -396,7 +396,7 @@ public class UsageBasedTypeResolver
                     .fap(fld -> opt(fld.getClassReference()))
                     .fap(fld -> fakeCtx.findExprType(fld))
                     // TODO: add declared field names here too
-                    .fap(objt -> objt.props.vls())
+                    .fap(objt -> objt.props)
                     .fap(prop -> prop.keyType.getTypes()),
                 // $this->props[$varName]
                 opt(refVar.getParent())

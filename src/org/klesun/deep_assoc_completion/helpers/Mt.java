@@ -119,7 +119,7 @@ public class Mt
 
     public static It<DeepType> getDynaPropSt(DeepType type, String keyName)
     {
-        return getPropOfName(type.props.vls(), keyName);
+        return getPropOfName(type.props, keyName);
     }
 
     public static It<DeepType> getKeySt(DeepType type, String keyName)
@@ -182,7 +182,7 @@ public class Mt
 
     public It<KeyEntry> getAssignedProps()
     {
-        return types.fap(t -> t.props.vls());
+        return types.fap(t -> t.props);
     }
 
     public static PhpType joinIdeaTypes(Iterable<PhpType> ideaTypes)

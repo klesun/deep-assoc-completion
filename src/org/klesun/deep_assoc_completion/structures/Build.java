@@ -54,6 +54,11 @@ public class Build {
         return this;
     }
 
+    public Build props(L<KeyEntry> props) {
+        this.deepType.props = props;
+        return this;
+    }
+
     public Build keys(Iterable<KeyEntry> keys) {
         this.keys(new MemIt<>(keys));
         return this;

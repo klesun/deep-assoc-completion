@@ -159,7 +159,7 @@ public class FieldRes extends Lang
                 return new KeyEntry(keyType, f)
                     .addType(() -> Mt.mem(declToExplTypes(f, memCtx)), f.getType());
             });
-        return It.cnc(mt.types.fap(t -> t.props.vls()), declared);
+        return It.cnc(mt.types.fap(t -> t.props), declared);
     }
 
     public It<Field> getBriefDecls(MemberReference fieldRef)

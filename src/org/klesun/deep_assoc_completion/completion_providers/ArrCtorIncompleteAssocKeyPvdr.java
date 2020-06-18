@@ -15,7 +15,6 @@ import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
-import org.klesun.lang.Lang.Granted;
 
 import java.util.Set;
 

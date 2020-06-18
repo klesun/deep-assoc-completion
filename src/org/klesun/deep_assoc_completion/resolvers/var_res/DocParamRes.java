@@ -121,27 +121,33 @@ public class DocParamRes extends Lang
     private static Opt<DeepType> wpDescToType(PropDoc parentProp, PsiElement decl)
     {
         L<PropDoc> props = parseWordpressDoc(parentProp.desc);
+        L<KeyEntry> assocKeys = L();
+        L<KeyEntry> propKeys = L();
         if (props.size() > 0) {
-            DeepType type = new DeepType(decl, PhpType.OBJECT);
             props.fch(prop -> {
                 PhpType fqnType = new PhpType().add(prop.type);
-                KeyEntry keyEntry = parentProp.type.contains("array")
-                    ? type.addKey(new KeyEntry(prop.name, decl).keyType)
-                    : type.addProp(prop.name, decl);
-                keyEntry
-                    .addType(
-                        () -> wpDescToType(prop, decl).itr()
-                            .cct(list(new DeepType(decl, fqnType, false)))
-                            .wap(Mt::mem),
-                        fqnType
-                    );
+                L<DeepType> valts = wpDescToType(prop, decl).arr()
+                    .cct(list(new DeepType(decl, fqnType, false)));
+                Granted<Mt> getType = Granted(new Mt(valts));
+                KeyEntry keyEntry = new KeyEntry(prop.name, decl)
+                    .addType(getType, fqnType);
+                if (parentProp.type.contains("array")) {
+                    assocKeys.add(keyEntry);
+                } else {
+                    propKeys.add(keyEntry);
+                }
                 String desc = prop.desc.trim();
                 if (desc.length() > 0 && !desc.startsWith("{")) {
                     keyEntry.addComments(som(desc.replaceAll("\\s+", " ")));
                 }
             });
 
-            return opt(type);
+            PhpType pst = PhpType.builder()
+                .add(parentProp.type).build();
+            return opt(new Build(decl, pst)
+                .keys(assocKeys)
+                .props(propKeys)
+                .get());
         } else {
             return opt(null);
         }

@@ -24,7 +24,7 @@ public class DeepType extends Lang
 
     public IReusableIt<KeyEntry> keys = L.non();
     // just like array keys, but dynamic object properties
-    public final Dict<KeyEntry> props = new Dict<>(L());
+    public L<KeyEntry> props = L.non();
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
@@ -149,7 +149,7 @@ public class DeepType extends Lang
         DeepType kt = new DeepType(definition, PhpType.STRING, name);
         KeyType keyType = KeyType.mt(som(kt), definition);
         KeyEntry keyEntry = new KeyEntry(keyType, definition);
-        props.put(name, keyEntry);
+        props.add(keyEntry);
         return keyEntry;
     }
 
@@ -172,7 +172,10 @@ public class DeepType extends Lang
         circularRefs.addAll(types);
 
         LinkedHashMap<String, List<DeepType>> mergedKeys = new LinkedHashMap<>();
-        Set<String> mergedProps = new HashSet<>(L(types).fap(t -> t.props.kys()).arr());
+        Set<String> mergedProps = new HashSet<>(L(types)
+            .fap(t -> t.props.fap(ke -> ke.keyType.types))
+            .fap(t -> opt(t.stringValue))
+            .arr());
         List<DeepType> indexTypes = list();
         L<String> briefTypes = list();
 
@@ -228,7 +231,10 @@ public class DeepType extends Lang
         } else if (returnTypeGetters.has()) {
             typeInfo = "(...) ==> {...}";
         } else if (props.size() > 0) {
-            typeInfo = "obj(" + props.kys().str() + ")";
+            typeInfo = "obj(" + props
+                .fap(ke -> ke.keyType.types)
+                .fap(t -> opt(t.stringValue))
+                .str() + ")";
         } else if (booleanValue.has()) {
             typeInfo = booleanValue.unw() + "";
         } else if (isNull) {
