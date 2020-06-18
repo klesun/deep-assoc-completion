@@ -137,7 +137,7 @@ public class DocParamRes extends Lang
                     );
                 String desc = prop.desc.trim();
                 if (desc.length() > 0 && !desc.startsWith("{")) {
-                    keyEntry.addComments(som(desc));
+                    keyEntry.addComments(som(desc.replaceAll("\\s+", " ")));
                 }
             });
 
