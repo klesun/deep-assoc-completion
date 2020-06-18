@@ -13,7 +13,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.KeyEntry;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.*;
@@ -74,7 +74,7 @@ public class MysqliRes
             () -> Tls.regex("\\s*SELECT\\s+(\\S.*?)\\s+FROM\\s+([A-Za-z_][A-Za-z0-9_]*)?.*?", sql, regexFlags),
             () -> Tls.regex("\\s*SELECT\\s+(\\S.*)", sql, regexFlags) // partial SQL without FROM
         );
-        Iterable<KeyEntry> keys = matched.fap(matches -> {
+        Iterable<Key> keys = matched.fap(matches -> {
             It<String> fields = It(matches.gat(0).def("").split(",", -1));
             String table = matches.gat(1).def("");
             return fields.map(str -> str.trim())
@@ -87,7 +87,7 @@ public class MysqliRes
                             .fap(a -> list(a));
                     }
                 });
-        }).map(name -> new KeyEntry(name, ctx.getRealPsi(strType.definition))
+        }).map(name -> new Key(name, ctx.getRealPsi(strType.definition))
             .addType(() -> new Mt(list(new DeepType(strType.definition, PhpType.STRING))), PhpType.STRING));
 
         return new Build(strType.definition, PhpType.ARRAY)

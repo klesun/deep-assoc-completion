@@ -17,7 +17,7 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.other_plugin_integration.DeepAssocApi;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.KeyEntry;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.lang.*;
 
 import java.util.ArrayList;
@@ -121,15 +121,15 @@ public class DocParamRes extends Lang
     private static Opt<DeepType> wpDescToType(PropDoc parentProp, PsiElement decl)
     {
         L<PropDoc> props = parseWordpressDoc(parentProp.desc);
-        L<KeyEntry> assocKeys = L();
-        L<KeyEntry> propKeys = L();
+        List<Key> assocKeys = new ArrayList<>();
+        List<Key> propKeys = new ArrayList<>();
         if (props.size() > 0) {
             props.fch(prop -> {
                 PhpType fqnType = new PhpType().add(prop.type);
                 L<DeepType> valts = wpDescToType(prop, decl).arr()
                     .cct(list(new DeepType(decl, fqnType, false)));
                 Granted<Mt> getType = Granted(new Mt(valts));
-                KeyEntry keyEntry = new KeyEntry(prop.name, decl)
+                Key keyEntry = new Key(prop.name, decl)
                     .addType(getType, fqnType);
                 if (parentProp.type.contains("array")) {
                     assocKeys.add(keyEntry);
@@ -145,8 +145,8 @@ public class DocParamRes extends Lang
             PhpType pst = PhpType.builder()
                 .add(parentProp.type).build();
             return opt(new Build(decl, pst)
-                .keys(assocKeys)
-                .props(propKeys)
+                .keys(L(assocKeys))
+                .props(L(propKeys))
                 .get());
         } else {
             return opt(null);
@@ -185,7 +185,7 @@ public class DocParamRes extends Lang
         Mt valMt = Mt.mem(valTit);
         for (int i = assKeys.size() - 1; i >= 0; --i) {
             Mt valMtF = valMt;
-            KeyEntry keyEntry = new KeyEntry(assKeys.get(i), sourcePsi)
+            Key keyEntry = new Key(assKeys.get(i), sourcePsi)
                 .addType(() -> valMtF);
             valMt = new Build(sourcePsi, PhpType.ARRAY)
                 .keys(som(keyEntry)).get().mt();

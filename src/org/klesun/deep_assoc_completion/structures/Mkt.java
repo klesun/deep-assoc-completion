@@ -81,10 +81,10 @@ public class Mkt {
 
     public static DeepType assoc(PsiElement psi, IResolvedIt<T2<String, Mt>> keys)
     {
-        IResolvedIt<KeyEntry> keyEntries = It(keys)
+        IResolvedIt<Key> keyEntries = It(keys)
             .map(tup -> tup.nme((name, valMt) -> {
                 PhpType ideaType = valMt.getIdeaTypes().fst().def(PhpType.UNSET);
-                return new KeyEntry(name, psi).addType(Granted(valMt), ideaType);
+                return new Key(name, psi).addType(Granted(valMt), ideaType);
             }))
             .arr();
         return new Build(psi, PhpType.ARRAY)
@@ -95,10 +95,10 @@ public class Mkt {
 
     public static DeepType assocCmnt(PsiElement psi, Iterable<T3<String, Mt, Opt<String>>> keys)
     {
-        It<KeyEntry> keyEntries = It(keys)
+        It<Key> keyEntries = It(keys)
             .map(tup -> tup.nme((keyName, mt, cmnt) -> {
                 PhpType ideaType = mt.getIdeaTypes().fst().def(PhpType.UNSET);
-                return new KeyEntry(keyName, psi)
+                return new Key(keyName, psi)
                     .addType(Granted(mt), ideaType).addComments(cmnt);
             }));
         return new Build(psi, PhpType.ARRAY)

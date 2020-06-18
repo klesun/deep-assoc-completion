@@ -10,9 +10,11 @@ import com.jetbrains.php.lang.psi.elements.impl.NewExpressionImpl;
 import com.jetbrains.php.lang.psi.elements.impl.TernaryExpressionImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.deep_assoc_completion.structures.psalm.PsalmFuncInfo;
 import org.klesun.lang.*;
 
@@ -159,11 +161,13 @@ public class MiscRes extends Lang
             arrt.keys = It.cnc(deepType.keys, deepType.props).mem();
             return som(arrt);
         } else if (phpType.equals("object")) {
-            DeepType objt = new DeepType(deepType.definition, PhpType.OBJECT);
-            It.cnc(deepType.props, deepType.keys)
-                .fch(k -> k.keyType.getNames()
-                    .fch(n -> objt.addProp(n, k.definition)
-                        .addType(() -> Mt.mem(k.getValueTypes()))));
+            IReusableIt<Key> props = It.cnc(
+                deepType.props, deepType.keys
+            ).mem();
+            DeepType objt = new Build(
+                deepType.definition, PhpType.OBJECT
+            ).props(props).get();
+
             return som(objt);
         } else if (phpType.equals("bool") || phpType.equals("boolean")) {
             return som(new DeepType(deepType.definition, PhpType.BOOLEAN, deepType.stringValue));

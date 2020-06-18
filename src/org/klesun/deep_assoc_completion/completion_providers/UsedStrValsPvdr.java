@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import static org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr.BRIEF_VALUE_MAX_LEN;
+import static org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr.COMMENTED_MAX_LEN;
 import static org.klesun.lang.Lang.*;
 
 // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
@@ -49,8 +51,10 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    public static LookupElementBuilder makeLookupBase(String keyName, L<DeepType> valtarr)
+    public static LookupElementBuilder makeLookupBase(String keyName, L<DeepType> valtarr, String comment)
     {
+        int maxValLen = comment.length() > 0 ? COMMENTED_MAX_LEN : BRIEF_VALUE_MAX_LEN;
+
         String typeStr = valtarr.size() < 1 ? "from usage" :
             valtarr.fop(t -> opt(t.briefType)).wap(pstit -> {
                 PhpTypeBuilder pstBuilder = PhpType.builder();
@@ -64,11 +68,17 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         if ("int".equals(typeStr)) {
             lookup = lookup.withInsertHandler(GuiUtil.toRemoveIntStrQuotes());
         }
-        It<String> briefValStrs = valtarr.fap(t -> t.getBriefVal());
-        if (briefValStrs.has()) {
-            String valStr = briefValStrs.str("|");
-            valStr = Tls.substr(valStr, 0, AssocKeyPvdr.BRIEF_VALUE_MAX_LEN);
-            lookup = lookup.withTailText(" = " + valStr, true);
+        String valStr = new Mt(valtarr).getBriefValueText(maxValLen);
+        valStr = Tls.substr(valStr, 0, BRIEF_VALUE_MAX_LEN);
+        if (comment.length() > 0) {
+            valStr = valStr.length() > 0
+                ? " = " + Tls.substr(valStr, 0, 20) + " // " + comment
+                : " " + comment;
+        } else if (valStr.length() > 0) {
+            valStr = " = " + valStr;
+        }
+        if (valStr.length() > 0) {
+            lookup = lookup.withTailText(valStr, true);
         }
         return lookup;
     }
@@ -86,11 +96,11 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
                 return keyObj.keyType.types.fap((t) -> It.cnc(
                     opt(t.stringValue)
                         .flt(strVal -> !t.cstName.has() || !t.isNumber)
-                        .map(strVal -> makeLookupBase(strVal, valtarr)
+                        .map(strVal -> makeLookupBase(strVal, valtarr, Tls.implode(" ", keyObj.comments).trim())
                             .withInsertHandler(UsedStrValsPvdr::placeCaretAfterStrLit))
                         .map((lookup) -> new BasePriorityOption(lookup, 10000)),
                     t.cstName
-                        .map(cstName -> makeLookupBase(cstName, list(t))
+                        .map(cstName -> makeLookupBase(cstName, list(t), "")
                             .withTailText(opt(t.stringValue).map(strVal -> " = " + strVal).def(""), true)
                             .withInsertHandler(GuiUtil.toAlwaysRemoveQuotes()))
                         .map((lookup) -> new BasePriorityOption(lookup, 15000))
@@ -239,7 +249,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
                     resolveArrayIntersect(lit, exprCtx)
                 );
                 return strts.map(strt -> new Build(lit, PhpType.UNSET).keys(list(
-                    new KeyEntry(KeyType.mt(som(strt), strt.definition))
+                    new Key(KeyType.mt(som(strt), strt.definition))
                 )).get());
             }
         );

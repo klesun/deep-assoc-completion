@@ -28,7 +28,7 @@ import org.klesun.deep_assoc_completion.resolvers.VarRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.AssRes;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.KeyEntry;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.lang.It;
 import org.klesun.lang.MemIt;
 import org.klesun.lang.Tls;
@@ -124,7 +124,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
                     .keys(t.keys.fap(k -> {
                         PhpType briefType = k.getBriefTypes().wap(Mt::joinIdeaTypes);
                         return k.keyType.getNames()
-                            .map(n -> new KeyEntry(prefix + n, k.definition)
+                            .map(n -> new Key(prefix + n, k.definition)
                                 .addType(() -> Mt.mem(k.getValueTypes()), briefType));
                     }))
                     .get());

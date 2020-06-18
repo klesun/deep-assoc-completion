@@ -9,7 +9,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.KeyEntry;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.deep_assoc_completion.structures.KeyType;
 import org.klesun.lang.*;
 
@@ -99,7 +99,7 @@ public class ClosRes extends Lang
                 .map(key -> ctx.findExprType(key))
                 .map(kit -> KeyType.mt(kit, yld))
                 .def(KeyType.integer(yld));
-            KeyEntry keyEntry = new KeyEntry(kt, yld)
+            Key keyEntry = new Key(kt, yld)
                 .addType(Tls.onDemand(() -> valMt), PhpType.MIXED);
             DeepType result = new Build(yld, pst)
                 .keys(som(keyEntry)).get();

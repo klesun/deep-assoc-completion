@@ -22,9 +22,9 @@ public class DeepType extends Lang
     // please, do not change this fields directly - ise Build.java
     // probably should make them all protected and add getters...
 
-    public IReusableIt<KeyEntry> keys = L.non();
+    public IReusableIt<Key> keys = L.non();
     // just like array keys, but dynamic object properties
-    public L<KeyEntry> props = L.non();
+    public IReusableIt<Key> props = L.non();
     // applicable to closures and function names
     // (starting with self::) and [$obj, 'functionName'] tuples
     // slowly migrating returnTypes from constant values to a function
@@ -137,19 +137,10 @@ public class DeepType extends Lang
     }
 
     /** @deprecated - kept for compatibility with deep-js, shall be remove eventually - use Build.java instead */
-    public KeyEntry addKey(KeyType keyType)
+    public Key addKey(KeyType keyType)
     {
-        KeyEntry keyEntry = new KeyEntry(keyType, definition);
+        Key keyEntry = new Key(keyType, definition);
         keys = It.cnc(keys, som(keyEntry)).mem();
-        return keyEntry;
-    }
-
-    public KeyEntry addProp(String name, PsiElement definition)
-    {
-        DeepType kt = new DeepType(definition, PhpType.STRING, name);
-        KeyType keyType = KeyType.mt(som(kt), definition);
-        KeyEntry keyEntry = new KeyEntry(keyType, definition);
-        props.add(keyEntry);
         return keyEntry;
     }
 
@@ -226,11 +217,11 @@ public class DeepType extends Lang
                 typeInfo = "'" + stringValue + "'";
             }
         } else if (keys.has()) {
-            L<KeyEntry> usedKeys = resolveIter || keys instanceof IResolvedIt ? keys.arr() : L.non();
+            L<Key> usedKeys = resolveIter || keys instanceof IResolvedIt ? keys.arr() : L.non();
             typeInfo = "[" + usedKeys.fap(k -> k.getBriefKey(resolveIter)).unq().str() + "]";
         } else if (returnTypeGetters.has()) {
             typeInfo = "(...) ==> {...}";
-        } else if (props.size() > 0) {
+        } else if (props.has()) {
             typeInfo = "obj(" + props
                 .fap(ke -> ke.keyType.types)
                 .fap(t -> opt(t.stringValue))

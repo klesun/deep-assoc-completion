@@ -14,10 +14,12 @@ import static org.klesun.lang.Lang.*;
 import static org.klesun.lang.Lang.non;
 
 /**
+ * TODO: rename to KeyEntry when will be updating deep-js-completion next time
+ *
  * represents a pair of key type and value type
  * in an associative array or sequential array
  */
-public class KeyEntry
+public class Key
 {
     final public KeyType keyType;
     final public L<Tls.IOnDemand<Mt>> valueTypeGetters = Lang.L();
@@ -27,7 +29,7 @@ public class KeyEntry
     final public PsiElement definition;
     public Set<String> comments = new LinkedHashSet<>();
 
-    public KeyEntry(String name, @NotNull PsiElement definition)
+    public Key(String name, @NotNull PsiElement definition)
     {
         DeepType kt = new DeepType(definition, PhpType.STRING, name);
         KeyType keyType = KeyType.mt(Lang.som(kt), definition);
@@ -35,18 +37,18 @@ public class KeyEntry
         this.definition = definition;
     }
 
-    public KeyEntry(KeyType keyType, @NotNull PsiElement definition)
+    public Key(KeyType keyType, @NotNull PsiElement definition)
     {
         this.keyType = keyType;
         this.definition = definition;
     }
 
-    public KeyEntry(KeyType keyType)
+    public Key(KeyType keyType)
     {
         this(keyType, keyType.definition);
     }
 
-    public KeyEntry addType(Lang.S<Mt> getter, PhpType briefType)
+    public Key addType(Lang.S<Mt> getter, PhpType briefType)
     {
         if (getter instanceof Granted) {
             valueTypeGetters.add(Granted(getter.get()));
@@ -57,13 +59,13 @@ public class KeyEntry
         return this;
     }
 
-    public KeyEntry addComments(Iterable<String> comments)
+    public Key addComments(Iterable<String> comments)
     {
         comments.forEach(this.comments::add);
         return this;
     }
 
-    public KeyEntry addType(Lang.S<Mt> getter)
+    public Key addType(Lang.S<Mt> getter)
     {
         addType(getter, PhpType.MIXED);
         return this;

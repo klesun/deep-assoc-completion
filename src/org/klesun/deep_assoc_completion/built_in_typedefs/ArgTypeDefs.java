@@ -154,10 +154,10 @@ public class ArgTypeDefs
         } else if ("curl_setopt".equals(name) && argOrder == 1) {
             return cst(ctx, Cst.CURLOPT_().map(cst -> cst.a));
         } else if ("curl_setopt_array".equals(name) && argOrder == 1) {
-            It<KeyEntry> keyEntries = Cst.CURLOPT_().fap(t -> t.nme((cstName, getType, descr) -> {
+            It<Key> keyEntries = Cst.CURLOPT_().fap(t -> t.nme((cstName, getType, descr) -> {
                 return Mkt.cst(ctx, som(cstName)).map(cst -> {
                     Mt valmt = getType.apply(cst.definition);
-                    return new KeyEntry(KeyType.mt(som(cst), cst.definition), cst.definition)
+                    return new Key(KeyType.mt(som(cst), cst.definition), cst.definition)
                         .addType(Granted(valmt), valmt.getIdeaTypes().fst().def(PhpType.UNSET))
                         .addComments(opt(descr).flt(c -> c.length() > 0));
                 });
@@ -187,6 +187,6 @@ public class ArgTypeDefs
                 "LIBXML_HTML_NOIMPLIED", "LIBXML_HTML_NODEFDTD"
             ));
         }
-        return It.non();
+        return non();
     }
 }

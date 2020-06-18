@@ -154,13 +154,13 @@ public class SearchCtx extends Lang
         }
 
         if (exprCtx.depth > maxDepth) {
-            return It.non();
+            return non();
         }
         L<PsiElement> chain = getExprChain(exprCtx);
         if (++expressionsResolved > getMaxExpressions()) {
-            return It.non();
+            return non();
         } else if (timeout.flt(tout -> seconds > tout).has()) {
-            return It.non();
+            return non();
         }
 
         Opt<IIt<DeepType>> result = takeFromCache(exprCtx, expr);
@@ -169,7 +169,7 @@ public class SearchCtx extends Lang
                 //System.out.println(indent + "<< TAKING RESULT FROM CACHE");
             }
         } else if (isRecursion(chain)) {
-            return It.non();
+            return non();
         } else {
             if (shouldCache(exprCtx)) {
                 putToCache(exprCtx, expr, list());
@@ -186,7 +186,7 @@ public class SearchCtx extends Lang
             }
         }
 
-        return result.def(It.non());
+        return result.def(non());
     }
 
     public int getExpressionsResolved()

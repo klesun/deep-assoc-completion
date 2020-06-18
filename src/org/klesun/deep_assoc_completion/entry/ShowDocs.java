@@ -23,7 +23,7 @@ import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.structures.KeyEntry;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.lang.It;
 import org.klesun.lang.Tls;
 
@@ -57,7 +57,7 @@ public class ShowDocs extends AnAction
                                 .fap(t -> t.keys)
                                 .fap(k -> k.keyType.getNames())
                                 .unq()
-                                .map(n -> new KeyEntry(n, psi)))
+                                .map(n -> new Key(n, psi)))
                             .get());
                 })
         );

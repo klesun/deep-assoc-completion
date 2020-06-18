@@ -41,7 +41,7 @@ public class ArrCtorIncompleteAssocKeyPvdr extends CompletionProvider<Completion
 			L<DeepType> valtarr = keyObj.getGrantedValues();
 			return keyObj.keyType.types.fap((t) -> opt(t.stringValue)
 				.flt(strVal -> !t.isNumber)
-				.map(strVal -> UsedStrValsPvdr.makeLookupBase(strVal, valtarr)));
+				.map(strVal -> UsedStrValsPvdr.makeLookupBase(strVal, valtarr, Tls.implode(" ", keyObj.comments).trim())));
 		});
 	}
 

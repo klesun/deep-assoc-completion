@@ -122,7 +122,7 @@ public class DirectTypeResolver {
             return plainTypes;
         }
 
-        return It.frs(It::non
+        return It.frs(() -> non()
             , () -> Tls.cast(VariableImpl.class, expr)
                 .fap(v -> new VarRes(ctx).resolve(v))
             , () -> Tls.cast(FunctionReferenceImpl.class, expr)

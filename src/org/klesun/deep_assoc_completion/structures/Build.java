@@ -49,17 +49,17 @@ public class Build {
         return this;
     }
 
-    public Build keys(IReusableIt<KeyEntry> keys) {
+    public Build keys(IReusableIt<Key> keys) {
         this.deepType.keys = keys;
         return this;
     }
 
-    public Build props(L<KeyEntry> props) {
+    public Build props(IReusableIt<Key> props) {
         this.deepType.props = props;
         return this;
     }
 
-    public Build keys(Iterable<KeyEntry> keys) {
+    public Build keys(Iterable<Key> keys) {
         this.keys(new MemIt<>(keys));
         return this;
     }

@@ -32,7 +32,7 @@ import static org.klesun.lang.Lang.*;
 public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 {
     final public static int BRIEF_VALUE_MAX_LEN = 50;
-    final private static int COMMENTED_MAX_LEN = 90;
+    final public static int COMMENTED_MAX_LEN = 90;
 
     private static ImageIcon icon = null;
 
