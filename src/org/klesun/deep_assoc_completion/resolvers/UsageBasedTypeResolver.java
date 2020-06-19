@@ -441,7 +441,7 @@ public class UsageBasedTypeResolver
             asVar = opt(ass.getVariable())
                 .fop(toCast(Variable.class))
                 .fap(var -> It.cnc(
-                    new VarRes(fakeCtx).getDocType(var),
+                    new VarRes(fakeCtx).resolve(var),
                     findVarTypeFromUsage(var)
                 ));
         }

@@ -136,6 +136,8 @@ public class ScopeFinder extends Lang
     {
         if (isPartOfAssignment(reference, caretVar)) {
             return false;
+        } else if (opt(reference.getParent()).cst(SelfAssignmentExpression.class).has()) {
+            return false; // += extends the type, not nullifies it
         } else if (caretVar.getTextOffset() < reference.getTextOffset()) {
             return false;
         }
