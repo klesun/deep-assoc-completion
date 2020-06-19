@@ -333,7 +333,9 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                 for (F<LookupElementBuilder, LookupElementBuilder> updater: metCommentOpt) {
                     lookup = updater.apply(lookup);
                 }
-                hadComments.set(commentOpt.has());
+                if (commentOpt.has()) {
+                    hadComments.set(true);
+                }
                 search.overrideMaxExpr = non();
                 mutLook.lookupData = lookup;
             });

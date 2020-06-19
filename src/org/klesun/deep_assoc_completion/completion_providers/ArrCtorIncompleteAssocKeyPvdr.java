@@ -14,6 +14,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.lang.*;
 
 import java.util.Set;
@@ -36,13 +37,11 @@ public class ArrCtorIncompleteAssocKeyPvdr extends CompletionProvider<Completion
 			.cst(ArrayCreationExpression.class);
 	}
 
-	private static It<LookupElementBuilder> makeOptions(DeepType assoct) {
-		return assoct.keys.fap(keyObj -> {
-			L<DeepType> valtarr = keyObj.getGrantedValues();
-			return keyObj.keyType.types.fap((t) -> opt(t.stringValue)
-				.flt(strVal -> !t.isNumber)
-				.map(strVal -> UsedStrValsPvdr.makeLookupBase(strVal, valtarr, Tls.implode(" ", keyObj.comments).trim())));
-		});
+	private static It<LookupElementBuilder> makeOptions(Key keyObj) {
+		L<DeepType> valtarr = keyObj.getGrantedValues();
+		return keyObj.keyType.types.fap((t) -> opt(t.stringValue)
+			.flt(strVal -> !t.isNumber)
+			.map(strVal -> UsedStrValsPvdr.makeLookupBase(strVal, valtarr, Tls.implode(" ", keyObj.comments).trim())));
 	}
 
 	private static void followUpConstructs(InsertionContext ctx) {
@@ -58,6 +57,7 @@ public class ArrCtorIncompleteAssocKeyPvdr extends CompletionProvider<Completion
 		@NotNull ProcessingContext processingContext,
 		@NotNull CompletionResultSet result
 	) {
+		Mutable<Boolean> hadComments = new Mutable<>(false);
 		opt(parameters.getPosition().getParent())
 			.cst(StringLiteralExpression.class)
 			.fap(lit -> {
@@ -71,6 +71,12 @@ public class ArrCtorIncompleteAssocKeyPvdr extends CompletionProvider<Completion
 				return getArrCtor(lit).fap(arrCtor -> {
 					Set<String> alreadyDeclared = UsageBasedTypeResolver.getExplicitKeys(arrCtor, lit);
 					return new UsageBasedTypeResolver(exprCtx).resolve(arrCtor)
+						.fap(assoct -> assoct.keys)
+						.btw(ke -> {
+							if (L(ke.comments).str().trim().length() > 0) {
+								hadComments.set(true);
+							}
+						})
 						.fap(ArrCtorIncompleteAssocKeyPvdr::makeOptions)
 						.flt(lookup -> !alreadyDeclared.contains(lookup.getLookupString()))
 						.map(lookup -> lookup.withInsertHandler((ctx, $) -> followUpConstructs(ctx)));
@@ -79,5 +85,10 @@ public class ArrCtorIncompleteAssocKeyPvdr extends CompletionProvider<Completion
 			.map((lookup, i) -> PrioritizedLookupElement.withPriority(lookup, 10000 - i * 100))
 			.unq(LookupElement::getLookupString)
 			.forEach(result::addElement);
+
+		if (hadComments.get()) {
+			// note, this character is not a simple space, it's U+2003 EM SPACE (mutton)
+			result.addLookupAdvertisement(Tls.repeat(" ", 80 ));
+		}
 	}
 }

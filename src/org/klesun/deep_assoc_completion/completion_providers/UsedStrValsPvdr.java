@@ -88,10 +88,10 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         ctx.getEditor().getCaretModel().moveToOffset(ctx.getSelectionEndOffset() + 1);
     }
 
-    private static It<LookupElement> makeOptions(It<DeepType> assocTit)
+    private static It<LookupElement> makeOptions(IIt<Key> assocTit)
     {
         return assocTit
-            .fap((assoct, i) -> assoct.keys.fap(keyObj -> {
+            .fap(keyObj -> {
                 L<DeepType> valtarr = keyObj.getGrantedValues();
                 return keyObj.keyType.types.fap((t) -> It.cnc(
                     opt(t.stringValue)
@@ -105,7 +105,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
                             .withInsertHandler(GuiUtil.toAlwaysRemoveQuotes()))
                         .map((lookup) -> new BasePriorityOption(lookup, 15000))
                 ));
-            }))
+            })
             .map((prio, i) -> PrioritizedLookupElement.withPriority(prio.lookup, prio.basePriority - i * 100))
             .unq(LookupElement::getLookupString);
     }
@@ -274,7 +274,15 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         StringLiteralExpression lit = litOpt.unw();
 
         long startTime = System.nanoTime();
-        It<DeepType> assocTit = resolve(lit, parameters.isAutoPopup());
+        Mutable<Boolean> hadComments = new Mutable<>(false);
+        MemIt<Key> assocTit = resolve(lit, parameters.isAutoPopup())
+            .fap(assoct -> assoct.keys)
+            .btw(ke -> {
+                if (L(ke.comments).str().trim().length() > 0) {
+                    hadComments.set(true);
+                }
+            })
+            .mem();
 
         makeOptions(assocTit)
             .flt(our -> !alreadySuggested.contains(our.getLookupString()))
@@ -283,6 +291,10 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         double seconds = elapsed / 1000000000.0;
         if (seconds > 0.1) {
             System.out.println("resolved str values in " + seconds + " seconds");
+        }
+        if (hadComments.get()) {
+            // note, this character is not a simple space, it's U+2003 EM SPACE (mutton)
+            result.addLookupAdvertisement(Tls.repeat(" ", 80 ));
         }
     }
 }
