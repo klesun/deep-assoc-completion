@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.helpers;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.Key;
@@ -122,7 +123,7 @@ public class Mt
         return getPropOfName(type.props, keyName);
     }
 
-    public static It<DeepType> getKeySt(DeepType type, String keyName)
+    public static It<DeepType> getKeySt(DeepType type, @Nullable String keyName)
     {
         return It.cnc(
             type.keys

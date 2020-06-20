@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.06.19.003</version>
+    <version>2020.06.20.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,10 +38,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#156 Do not treat <code>+=</code> as <code>=</code></li>
-        <li>#155 Include comment in usage-based completion options if any</li>
-        <li>#155 Preserve qtype annotations in WordPress phpdoc based key completion</li>
-        <li>Some refactoring that could potentially break something, pls let me know if something stops working</li>
+        <li>#157 Suggest completion when assigning new value on a key in existing variable</li>
+        <li>Fix: Do not suggest in assignment the key that is added in same exact assignment</li>
     </ul>
     ]]>
     </change-notes>

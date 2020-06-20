@@ -8,6 +8,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.lang.It;
 import org.klesun.lang.Lang;
+import org.klesun.lang.Tls;
 
 public class ArrAccRes extends Lang
 {
@@ -25,14 +26,17 @@ public class ArrAccRes extends Lang
             .fap(expr -> ctx.findExprType(expr));
 
         return opt(keyAccess.getIndex()).itr()
-            .map(v -> v.getValue())
-            .fop(toCast(PhpExpression.class))
-            .fap(keyPsi -> {
-                // resolving key type can be a complex operation - we don't
-                // want that if we already know that mt has no known key names
-                @Nullable String keyName = ctx.limitResolveDepth(15, keyPsi)
-                    .wap(Mt::getStringValueSt);
-                return tit.fap(t -> Mt.getKeySt(t, keyName));
-            });
+            .fap(v -> opt(v.getValue()).uni(
+                psi -> Tls.cast(PhpExpression.class, psi).fap(keyPsi -> {
+                    // resolving key type can be a complex operation - we don't
+                    // want that if we already know that mt has no known key names
+                    @Nullable String keyName = ctx.limitResolveDepth(15, keyPsi)
+                        .wap(Mt::getStringValueSt);
+                    return tit.fap(t -> Mt.getKeySt(t, keyName));
+                }),
+                // getValue() would be null in `$arr[]`, but we
+                // want to resolve it for assignment completion
+                () -> tit.fap(Mt::getElSt)
+            ));
     }
 }

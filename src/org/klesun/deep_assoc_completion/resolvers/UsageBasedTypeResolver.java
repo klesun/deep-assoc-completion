@@ -439,10 +439,11 @@ public class UsageBasedTypeResolver
             IExprCtx fakeCtx = new ExprCtx(funcCtx, expr, 0);
 
             asVar = opt(ass.getVariable())
-                .fop(toCast(Variable.class))
+                .cst(PhpExpression.class)
                 .fap(var -> It.cnc(
-                    new VarRes(fakeCtx).resolve(var),
-                    findVarTypeFromUsage(var)
+                    fakeCtx.findExprType(var),
+                    Tls.cast(PhpNamedElement.class, var)
+                        .fap(this::findVarTypeFromUsage)
                 ));
         }
 
