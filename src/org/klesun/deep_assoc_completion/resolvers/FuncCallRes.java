@@ -171,8 +171,7 @@ public class FuncCallRes extends Lang
                             PhpType briefType = new PhpType();
                             refs.map(var -> Tls.getIdeaType(var)).forEach(briefType::add);
                             return som(new Key(varName, call)
-                                .addType(() -> refs
-                                    .fap(ref -> ctx.findExprType(ref))
+                                .addType(() -> new VarRes(ctx).resolveRefs(refs, call)
                                     .wap(Mt::mem), briefType));
                         } else {
                             return non();

@@ -311,19 +311,12 @@ public class VarRes
         return !filtered.isEmpty();
     }
 
-    public It<DeepType> resolve(Variable caretVar)
+    public It<DeepType> resolveRefs(IIt<? extends PsiElement> references, PsiElement caretPsi)
     {
-        IIt<PsiElement> references = findDeclarations(caretVar)
-            .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, caretVar))
-            ;
-
-        // @var docs are a special case since they give type
-        // info from any position (above/below/right of/left of the var declaration)
-        It<DeepType> docTypes = getDocType(caretVar);
-        Opt<Function> caretScope = Tls.findParent(caretVar, Function.class, a -> true)
-            .fop(func -> caretVar.getParent() instanceof PhpUseList
+        Opt<Function> caretScope = Tls.findParent(caretPsi, Function.class, a -> true)
+            .fop(func -> caretPsi.getParent() instanceof PhpUseList
                 ? Tls.findParent(func, Function.class, a -> true) : som(func));
-        Opt<PsiFile> caretFile = opt(caretVar.getContainingFile());
+        Opt<PsiFile> caretFile = opt(caretPsi.getContainingFile());
 
         L<Assign> asses = references
             .fap(refPsi -> {
@@ -335,7 +328,7 @@ public class VarRes
                 if (isClosureVar) {
                     return non(); // refPsi is outside the function, a closure, handled manually
                 }
-                return resolveRef(refPsi, ScopeFinder.didSurelyHappen(refPsi, caretVar));
+                return resolveRef(refPsi, ScopeFinder.didSurelyHappen(refPsi, caretPsi));
             })
             .arr();
 
@@ -350,6 +343,20 @@ public class VarRes
         if (lastDeclPos > -1) {
             asses = asses.sub(lastDeclPos);
         }
+
+        return AssRes.assignmentsToTypes(asses);
+    }
+
+    public It<DeepType> resolve(Variable caretVar)
+    {
+        IIt<PsiElement> references = findDeclarations(caretVar)
+            .flt(refPsi -> !refPsi.equals(caretVar))
+            .flt(refPsi -> ScopeFinder.didPossiblyHappen(refPsi, caretVar))
+            ;
+
+        // @var docs are a special case since they give type
+        // info from any position (above/below/right of/left of the var declaration)
+        It<DeepType> docTypes = getDocType(caretVar);
 
         DeepType typeFromIdea = new DeepType(caretVar);
         It<DeepType> thisType = opt(caretVar)
@@ -376,7 +383,7 @@ public class VarRes
             hasClassInfo(typeFromIdea.briefType)
                 ? som(typeFromIdea) : non(),
             thisType, closureType,
-            AssRes.assignmentsToTypes(asses)
+            resolveRefs(references, caretVar)
         )   .orr(() -> assertDeclFromGlobal(caretVar)
                 .fap(f -> f.get()).iterator())
             .orr(som(typeFromIdea));
