@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.06.20.001</version>
+    <version>2020.06.24.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,8 +38,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#157 Suggest completion when assigning new value on a key in existing variable</li>
-        <li>Fix: Do not suggest in assignment the key that is added in same exact assignment</li>
+        <li>#137 Add basic support for psalm callable signatures</li>
+        <li>#137 Support `type[]` in PSALM phpdoc</li>
     </ul>
     ]]>
     </change-notes>
