@@ -119,6 +119,13 @@ public class PsalmRes {
                         .keys(keyEntries)
                         .get();
                 })
+            , Tls.cast(TFunc.class, psalmType)
+                .map(func -> new Build(goToPsi, PhpType.CALLABLE)
+                    .isExactPsi(false)
+                    .returnTypeGetters(list(ctx -> {
+                        return psalmToDeep(func.returnType, goToPsi, generics).mem();
+                    }))
+                    .get())
             , Tls.cast(TClass.class, psalmType)
                 .fap(cls -> psalmClsToDeep(cls, goToPsi, generics))
             // if we ever support references, should add check for infinite recursion here...
