@@ -160,6 +160,31 @@ public class PsalmTypeExprParser
         }
     }
 
+    private Opt<TFunc> parseFunc()
+    {
+        ArrayList<TFunc.Param> params = new ArrayList<>();
+        do {
+            Opt<? extends IType> typeOpt = parseMultiValue();
+            if (!typeOpt.has()) {
+                System.out.println("no arg type opt huj");
+                return non();
+            }
+            IType type = typeOpt.unw();
+
+            boolean isOptional = this.unprefix("\\=");
+            boolean isSpread = this.unprefix("\\.\\.\\.");
+
+            params.add(new TFunc.Param(type, isOptional, isSpread));
+        } while (this.unprefix("\\s*,\\s*"));
+
+        if (!this.unprefix("\\s*\\)\\s*:\\s*")) {
+            System.out.println("no ending after " + params.size());
+            return non();
+        }
+        return parseMultiValue()
+            .map(returnType -> new TFunc(params, returnType));
+    }
+
     private Opt<? extends IType> parseSingleValue()
     {
         this.unprefix("\\s+");
@@ -182,6 +207,8 @@ public class PsalmTypeExprParser
             parsed = som(wrappedType);
         } else if (this.unprefix("array\\s*\\{\\s*")) {
             parsed = parseAssocKeys();
+        } else if (this.unprefix("\\\\?(?:callable|Closure)\\s*\\(\\s*")) {
+            parsed = parseFunc();
         } else if (this.unprefix("([a-zA-Z\\\\_][a-zA-Z\\\\_0-9\\-]*)\\s*")) {
             // should be put after SomeClass::class check when it is implemented
             String fqn = this.lastMatch.get(1);
