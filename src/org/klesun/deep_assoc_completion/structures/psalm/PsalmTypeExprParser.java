@@ -166,14 +166,23 @@ public class PsalmTypeExprParser
         // a comment, just ignore for now
         this.unprefix("\\/\\/.*\\n");
         Opt<? extends IType> parsed = non();
-        if (this.unprefix("([a-zA-Z\\\\_][a-zA-Z\\\\_0-9]*)\\s*<\\s*")) {
+        if (this.unprefix("([a-zA-Z\\\\_][a-zA-Z\\\\_0-9\\-]*)\\s*<\\s*")) {
             String fqn = this.lastMatch.get(1);
             parsed = parseTypeList()
                 .map(generics -> new TClass(fqn, generics))
                 .flt(t -> unprefix("\\s*>\\s*"));
+        } else if (this.unprefix("([a-zA-Z\\\\_][a-zA-Z\\\\_0-9\\-]*)\\s*((?:\\[\\])+)\\s*")) {
+            // traditional phpdoc format for array of type
+            String fqn = this.lastMatch.get(1);
+            String bracketsStr = this.lastMatch.get(2);
+            IType wrappedType = new TClass(fqn, L.non());
+            for (int i = 0; i < bracketsStr.length() / 2; ++i) {
+                wrappedType = new TClass("array", list(wrappedType));
+            }
+            parsed = som(wrappedType);
         } else if (this.unprefix("array\\s*\\{\\s*")) {
             parsed = parseAssocKeys();
-        } else if (this.unprefix("([a-zA-Z\\\\_][a-zA-Z\\\\_0-9]*)\\s*")) {
+        } else if (this.unprefix("([a-zA-Z\\\\_][a-zA-Z\\\\_0-9\\-]*)\\s*")) {
             // should be put after SomeClass::class check when it is implemented
             String fqn = this.lastMatch.get(1);
             parsed = som(new TClass(fqn, new ArrayList<>()));
