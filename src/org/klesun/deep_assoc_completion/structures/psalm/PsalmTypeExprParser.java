@@ -132,8 +132,9 @@ public class PsalmTypeExprParser
     {
         LinkedHashMap<String, IType> keys = new LinkedHashMap<>();
         LinkedHashMap<String, List<String>> keyToComments = new LinkedHashMap<>();
-        while (this.unprefix("\\s*(\\w+)\\s*:\\s*")) {
+        while (this.unprefix("\\s*(\\w+)(\\??)\\s*:\\s*")) {
             String keyName = this.lastMatch.get(1);
+            Boolean isOptional = this.lastMatch.get(2).equals("?");
             Opt<? extends IType> typeOpt = parseMultiValue();
             if (typeOpt.has()) {
                 keys.put(keyName, typeOpt.unw());
