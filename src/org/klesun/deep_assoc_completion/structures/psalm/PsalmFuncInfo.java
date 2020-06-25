@@ -79,7 +79,8 @@ public class PsalmFuncInfo {
     private static Opt<GenericDef> assertTplTag(RawDocTag tag)
     {
         return opt(tag)
-            .flt(t -> t.tagName.equals("template"))
+            .flt(t -> t.tagName.equals("template")
+                    || t.tagName.equals("psalm-template"))
             .fop(t -> Tls.regex("\\s*(\\w+)(?:\\s+(?:of|as)\\s+(\\w+))?[\\s\\S]*", t.textLeft))
             .map(match -> {
                 String name = match.get(0);
@@ -104,7 +105,9 @@ public class PsalmFuncInfo {
             .fap(txt -> getRawTags(txt))
             .fap(t -> assertTplTag(t)).arr();
         for (PsalmDocTag psalmTag: getPsalmTags(doc)) {
-            if (psalmTag.tagName.equals("property")) {
+            if (psalmTag.tagName.equals("property") ||
+                psalmTag.tagName.equals("psalm-property")
+            ) {
                 Tls.regex("\\s*\\$(\\w+)\\s*(.*)", psalmTag.textLeft).thn(m -> {
                     String propName = m.get(0);
                     String textLeft = m.get(1);
@@ -113,7 +116,9 @@ public class PsalmFuncInfo {
                     );
                     clsInfo.magicProps.put(propName, newPsalm);
                 });
-            } else if (psalmTag.tagName.equals("method")) {
+            } else if (psalmTag.tagName.equals("method")
+                    || psalmTag.tagName.equals("psalm-method")
+            ) {
                 Tls.regex("\\s*(\\w+)(.*)", psalmTag.textLeft).thn(m -> {
                     String methName = m.get(0);
                     String textLeft = m.get(1);
@@ -150,7 +155,8 @@ public class PsalmFuncInfo {
         L<ArgDef> params = psalmTags
             .flt(t -> t.tagName.equals("param")
                     || t.tagName.equals("psalm-param")
-                    || t.tagName.equals("var"))
+                    || t.tagName.equals("var")
+                    || t.tagName.equals("psalm-var"))
             .map(t -> {
                 String varName = Tls.regex("\\s*\\$(\\w+).*", t.textLeft)
                     .map(m -> m.get(0)).def("");
@@ -161,7 +167,8 @@ public class PsalmFuncInfo {
             }).arr();
 
         Opt<IType> returnType = psalmTags
-            .flt(t -> t.tagName.equals("return"))
+            .flt(t -> t.tagName.equals("return")
+                    || t.tagName.equals("psalm-return"))
             .map(t -> t.psalmType).fst();
 
         return new PsalmFuncInfo(docComment, classGenerics, funcGenerics, params, returnType);
