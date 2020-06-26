@@ -106,7 +106,9 @@ public class PsalmFuncInfo {
             .fap(t -> assertTplTag(t)).arr();
         for (PsalmDocTag psalmTag: getPsalmTags(doc)) {
             if (psalmTag.tagName.equals("property") ||
-                psalmTag.tagName.equals("psalm-property")
+                psalmTag.tagName.equals("property-read") ||
+                psalmTag.tagName.equals("psalm-property") ||
+                psalmTag.tagName.equals("psalm-property-read")
             ) {
                 Tls.regex("\\s*\\$(\\w+)\\s*(.*)", psalmTag.textLeft).thn(m -> {
                     String propName = m.get(0);
@@ -114,11 +116,14 @@ public class PsalmFuncInfo {
                     PsalmDocTag newPsalm = new PsalmDocTag(
                         psalmTag.tagName, psalmTag.psalmType, textLeft
                     );
-                    clsInfo.magicProps.put(propName, newPsalm);
+                    // @psalm-property > @property
+                    if (!clsInfo.magicProps.containsKey(propName) ||
+                        !clsInfo.magicProps.get(propName).tagName.startsWith("psalm-")
+                    ) {
+                        clsInfo.magicProps.put(propName, newPsalm);
+                    }
                 });
-            } else if (psalmTag.tagName.equals("method")
-                    || psalmTag.tagName.equals("psalm-method")
-            ) {
+            } else if (psalmTag.tagName.equals("method")) {
                 Tls.regex("\\s*(\\w+)(.*)", psalmTag.textLeft).thn(m -> {
                     String methName = m.get(0);
                     String textLeft = m.get(1);

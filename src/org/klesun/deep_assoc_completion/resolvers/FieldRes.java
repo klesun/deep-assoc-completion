@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocProperty;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocPropertyTag;
 import com.jetbrains.php.lang.psi.elements.*;
@@ -116,7 +117,13 @@ public class FieldRes extends Lang
         It<DeepType> magicTs = Tls.cast(PhpDocProperty.class, resolved)
             .fap(prop -> opt(prop.getParent()))
             .cst(PhpDocPropertyTag.class)
-            .fap(tag -> new DocParamRes(memCtx).resolve(tag));
+            .fap(tag -> It.cnc(
+                new DocParamRes(memCtx).resolve(tag),
+                Tls.findParent(resolved, PhpDocComment.class)
+                    .fap(doc -> PsalmRes.resolveMagicProp(
+                        doc, resolved.getName(), memCtx.subCtxEmpty()
+                    ))
+            ));
 
         DeepType builtInTs = new DeepType(resolved, resolved.getType());
 

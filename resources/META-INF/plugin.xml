@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.06.25.001</version>
+    <version>2020.06.26.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -38,7 +38,8 @@ This plugin greatly extends phpstorm's typing with associative array support<br/
 
     <change-notes><![CDATA[
     <ul>
-        <li>#160 Support @psalm-property, @psalm-return, @psalm-var. And just in case also @psalm-method and @psalm-template</li>
+        <li>#160 Support @psalm-property, @psalm-return, @psalm-var. And just in case also @psalm-template</li>
+        <li>#160 Support @psalm-property when class additionally has a @property phpdoc</li>
     </ul>
     ]]>
     </change-notes>
