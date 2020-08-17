@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.resolvers;
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
@@ -231,7 +232,7 @@ public class PsalmRes {
         });
     }
 
-    public static It<DeepType> resolveReturn(PhpDocReturnTag docTag, IExprCtx ctx)
+    public static It<DeepType> resolveReturn(PhpDocTag docTag, IExprCtx ctx)
     {
         return opt(docTag.getParent())
             .cst(PhpDocComment.class)

@@ -5,12 +5,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.indexing.ID;
-import com.jetbrains.php.PhpClassHierarchyUtils;
 import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethod;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocMethodTag;
-import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
+import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.ClassReferenceImpl;
 import com.jetbrains.php.lang.psi.elements.impl.FieldImpl;
@@ -192,7 +191,7 @@ public class MethCallRes extends Lang
         return types;
     }
 
-    private static It<DeepType> parseReturnDoc(PhpDocReturnTag returnDoc, IExprCtx funcCtx)
+    private static It<DeepType> parseReturnDoc(PhpDocTag returnDoc, IExprCtx funcCtx)
     {
         IExprCtx docCtx = funcCtx.subCtxDoc(returnDoc);
         String regex = "^\\s*(like|=|)\\s*((?:\\[|\\\\?[a-zA-Z_]+[\\(:]|new\\s+).*)$";
@@ -200,9 +199,10 @@ public class MethCallRes extends Lang
             .fop(match -> match.gat(1))
             .fap(expr -> DocParamRes.parseExpression(expr, returnDoc.getProject(), docCtx));
         It<DeepType> asPsalm = PsalmRes.resolveReturn(returnDoc, funcCtx);
-        PhpType docPst = returnDoc.getDocType();
+        L<String> typeStrings = opt(returnDoc.getDocType())
+            .fap(PhpType::getTypes).arr();
         // phpstorm resolves explicit types ok, but not static, naturally
-        It<DeepType> asStatic = !docPst.getTypes().contains("static")
+        It<DeepType> asStatic = !typeStrings.contains("static")
             ? It.non() : It.cnc(
                 funcCtx.getSelfType().map(clst -> new DeepType(returnDoc, clst)),
                 funcCtx.getThisType()
@@ -241,8 +241,11 @@ public class MethCallRes extends Lang
 
     public static It<DeepType> findDocRetType(PhpDocComment doc, IExprCtx ctx)
     {
-        return opt(doc.getReturnTag())
-            .fap(tag -> parseReturnDoc(tag, ctx).mem());
+        return It.cnc(
+            opt(doc.getReturnTag()),
+            It(doc.getChildren()).cst(PhpDocTag.class)
+                .flt(t -> "@psalm-return".equals(t.getName()))
+        ).fap(tag -> parseReturnDoc(tag, ctx));
     }
 
     public static It<DeepType> findFuncDocRetType(Function func, IExprCtx ctx)

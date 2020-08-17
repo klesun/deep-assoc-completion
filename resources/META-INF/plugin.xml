@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.08.18.001</version>
+    <version>2020.08.18.002</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -47,6 +47,7 @@
     <change-notes><![CDATA[
     <ul>
         #162 Do not eliminate $this context info when resolving interface own method phpdocs' -m 'Only eliminate it for the implementations-based resolution
+        #162 Support @psalm-return in method call type resolution
     </ul>
     ]]>
     </change-notes>
