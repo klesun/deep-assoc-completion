@@ -274,4 +274,9 @@ public class Mt
     {
         return types.any(t -> t.isNumber());
     }
+
+    @Override
+    public String toString() {
+        return "Mt(" + types + ")";
+    }
 }

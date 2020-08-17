@@ -19,10 +19,7 @@ import org.klesun.deep_assoc_completion.resolvers.UsageBasedTypeResolver;
 import org.klesun.deep_assoc_completion.structures.ArgOrder;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.structures.Mkt;
-import org.klesun.lang.It;
-import org.klesun.lang.Lang;
-import org.klesun.lang.Opt;
-import org.klesun.lang.Tls;
+import org.klesun.lang.*;
 
 public class ArgRes extends Lang
 {

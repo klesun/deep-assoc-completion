@@ -266,8 +266,9 @@ public class MethCallRes extends Lang
 
     public static F<IExprCtx, It<DeepType>> findMethRetType(Method meth)
     {
-        return (IExprCtx funcCtx) -> {
+        return (IExprCtx fullCtx) -> {
             L<Method> impls = list(meth);
+            IExprCtx implCtx = fullCtx;
             if (meth.isAbstract()) {
                 impls = It.cnc(list(meth), findOverridingMethods(meth)).arr();
                 // ignore $this and args in implementations
@@ -275,16 +276,16 @@ public class MethCallRes extends Lang
                 // ... maybe should not look for implementations if return
                 // type is explicitly stated to be a class, not array?
                 if (!DeepSettings.inst(meth.getProject()).passArgsToImplementations) {
-                    funcCtx = funcCtx.subCtxEmpty();
+                    implCtx = fullCtx.subCtxEmpty();
                 }
             }
-            IExprCtx finalCtx = funcCtx;
-            It<DeepType> docTit = findFuncDocRetType(meth, finalCtx);
+            IExprCtx finalImplCtx = implCtx;
+            It<DeepType> docTit = findFuncDocRetType(meth, fullCtx);
             It<DeepType> magicDocTit = Tls.cast(PhpDocMethod.class, meth)
-                .fap(doc -> parseMethDoc(doc, finalCtx));
+                .fap(doc -> parseMethDoc(doc, fullCtx));
             It<DeepType> implTit = impls.fap(m -> It.cnc(
                 opt(m.getReturnType()).fap(rt -> list(new DeepType(rt, rt.getType()))),
-                ClosRes.getReturnedValue(m, finalCtx)
+                ClosRes.getReturnedValue(m, finalImplCtx)
             ));
             return It.cnc(docTit, magicDocTit, implTit);
         };

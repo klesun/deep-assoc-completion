@@ -157,4 +157,9 @@ public class ExprCtx implements IExprCtx {
     {
         return depth;
     }
+
+    @Override
+    public String toString() {
+        return "ExprCtx(" + Lang.substr(expr.getText(), 0, 40) + ")";
+    }
 }

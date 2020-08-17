@@ -197,6 +197,10 @@ public class PsalmFuncInfo {
             this.name = name;
             this.ofType = ofType;
         }
+        @Override
+        public String toString() {
+            return "GenericDef(" + name + ")";
+        }
     }
 
     public static class RawDocTag {
