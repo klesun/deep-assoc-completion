@@ -7,6 +7,7 @@ import com.intellij.codeInsight.lookup.LookupElementPresentation;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.tree.PsiCommentImpl;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
@@ -24,6 +25,7 @@ import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.icons.DeepIcons;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
+import org.klesun.deep_assoc_completion.structures.Mkt;
 import org.klesun.lang.It;
 import org.klesun.lang.L;
 import org.klesun.lang.*;
@@ -64,6 +66,40 @@ public class TwigVarNamePvdr extends CompletionProvider<CompletionParameters>
         return fchs;
     }
 
+    private static Opt<PsiElement> getPrev(PsiElement psi) {
+        do {
+            PsiElement prev = psi.getPrevSibling();
+            if (prev != null) {
+                return som(prev);
+            }
+            psi = psi.getParent();
+        } while (psi != null);
+
+        return non();
+    }
+
+    private static Opt<T2<String, String>> assertSymfonyVarDoc(PsiElement psi) {
+        return Tls.cast(PsiCommentImpl.class, psi)
+            .fop(cmt -> Tls.regex("^\\{#\\s*@var\\s+(\\w+)\\s*(=\\s*\\S.*?)\\s*#\\}$", cmt.getText()))
+            .map(match -> T2(match.get(0), match.get(1)));
+    }
+
+    /**
+     * examples:
+     * {# @var someVar \SomeNs\SomeVarClass #}
+     * {# @var someVarRec = \SomeNs\SomeVarClass::makeRecord() #}
+     */
+    private static It<T2<String, String>> getSymfonyVarDocExprs(PsiElement caretLeaf) {
+        Opt<PsiElement> prevOpt = getPrev(caretLeaf);
+        List<T2<String, String>> varTuples = new ArrayList<>();
+        while (prevOpt.has()) {
+            PsiElement prev = prevOpt.unw();
+            assertSymfonyVarDoc(prev).thn(varTuples::add);
+            prevOpt = getPrev(prev);
+        }
+        return It(varTuples);
+    }
+
     private static It<DeepType> resolveVar(String varName, L<T2<String, String>> parentLoops, Mt rootMt)
     {
         for (int i = 0; i < parentLoops.size(); ++i) {
@@ -77,39 +113,67 @@ public class TwigVarNamePvdr extends CompletionProvider<CompletionParameters>
         return rootMt.getKey(varName).types.itr();
     }
 
+    private static L<String> getKeyPath(PsiElement caretLeaf, PsiFile f) {
+        int r = caretLeaf.getTextOffset();
+        int l = Math.max(0, r - 100);
+        String prefix = f.getText().substring(l, r);
+        return Tls.regex("^[\\s\\S]*?((?:\\w+\\.)+)\\w*$", prefix)
+            .fap(m -> m.gat(0))
+            .fap(str -> L(str.split("\\.")))
+            .arr();
+    }
+
+    private Opt<ExprCtx> makeExprCtx(CompletionParameters parameters) {
+        return opt(parameters.getOriginalPosition()).map(caretLeaf -> {
+            int depth = AssocKeyPvdr.getMaxDepth(parameters);
+            SearchCtx search = new SearchCtx(parameters).setDepth(depth);
+            FuncCtx funcCtx = new FuncCtx(search);
+            search.isMain = true;
+            return new ExprCtx(funcCtx, caretLeaf, 0);
+        });
+    }
+
+    private It<DeepType> resolve(ExprCtx exprCtx, TwigFile f) {
+        PsiElement caretLeaf = exprCtx.expr;
+
+        It<DeepType> varsDefsTit = getSymfonyVarDocExprs(caretLeaf).map(tuple -> {
+            String varName = tuple.a;
+            String eqExpr = tuple.b;
+            Mt eqMt = new DocParamRes(exprCtx)
+                .parseEqExpression(eqExpr, f)
+                .wap(Mt::mem);
+            return Mkt.assoc(caretLeaf, som(T2(varName, eqMt)));
+        });
+        It<DeepType> rootTit = getRootDocTypes(f, exprCtx);
+
+        L<String> keyPath = getKeyPath(caretLeaf, f);
+        if (keyPath.size() > 0) {
+            String varName = keyPath.remove(0);
+            L<T2<String, String>> parentLoops = getParentLoops(caretLeaf);
+            Mt rootMt = Mt.mem(rootTit);
+            It<DeepType> varTit = It.cnc(
+                resolveVar(varName, parentLoops, rootMt),
+                // more correct approach would be to only use var definition if it's name was not overridden in a loop, but
+                // for simplicity sake I'll keep all definitions names global, there is no support for {% set ... %} anyway
+                varsDefsTit.fap(t -> Mt.getKeySt(t, varName))
+            );
+            return varTit.fap(t -> Mt.getKeyPath(t, keyPath));
+        } else {
+            return It.cnc(varsDefsTit, rootTit);
+        }
+    }
+
     @Override
-    protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
-    {
-        It<LookupElement> options = opt(parameters.getOriginalPosition())
-            .fap(caretLeaf -> {
-                int depth = AssocKeyPvdr.getMaxDepth(parameters);
-                SearchCtx search = new SearchCtx(parameters).setDepth(depth);
-                FuncCtx funcCtx = new FuncCtx(search);
-                search.isMain = true;
-                ExprCtx exprCtx = new ExprCtx(funcCtx, caretLeaf, 0);
-
-                Mt mt = opt(caretLeaf.getContainingFile())
+    protected void addCompletions(
+        @NotNull CompletionParameters parameters,
+        @NotNull ProcessingContext processingContext,
+        @NotNull CompletionResultSet result
+    ) {
+        It<LookupElement> options = makeExprCtx(parameters)
+            .fap(exprCtx -> {
+                Mt mt = opt(exprCtx.expr.getContainingFile())
                     .cst(TwigFile.class)
-                    .fap(f -> {
-                        It<DeepType> rootTit = getRootDocTypes(f, exprCtx);
-
-                        int r = caretLeaf.getTextOffset();
-                        int l = Math.max(0, r - 100);
-                        String prefix = f.getText().substring(l, r);
-                        L<String> keyPath = Tls.regex("^[\\s\\S]*?((?:\\w+\\.)+)\\w*$", prefix)
-                            .fap(m -> m.gat(0))
-                            .fap(str -> L(str.split("\\.")))
-                            .arr();
-                        if (keyPath.size() > 0) {
-                            String varName = keyPath.remove(0);
-                            L<T2<String, String>> parentLoops = getParentLoops(caretLeaf);
-                            Mt rootMt = Mt.mem(rootTit);
-                            It<DeepType> varTit = resolveVar(varName, parentLoops, rootMt);
-                            return varTit.fap(t -> Mt.getKeyPath(t, keyPath));
-                        } else {
-                            return rootTit;
-                        }
-                    })
+                    .fap(f -> resolve(exprCtx, f))
                     .wap(Mt::mem);
 
                 return mt.types

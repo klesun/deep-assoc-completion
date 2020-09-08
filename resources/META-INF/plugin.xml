@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.08.18.002</version>
+    <version>2020.09.09.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -47,8 +47,7 @@
 
     <change-notes><![CDATA[
     <ul>
-        #162 Do not eliminate $this context info when resolving interface own method phpdocs' -m 'Only eliminate it for the implementations-based resolution
-        #162 Support @psalm-return in method call type resolution
+        <li>#165 Support <code>{# @var data = \Some\Class::makeData() #}</code> notation in Twig, matching <a href="https://stackoverflow.com/questions/26274704/phpstorm-autocomplete-twig-vars/30997797#30997797">Symfony one</a></li>
     </ul>
     ]]>
     </change-notes>
