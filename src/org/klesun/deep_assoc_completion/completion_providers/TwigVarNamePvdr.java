@@ -80,7 +80,7 @@ public class TwigVarNamePvdr extends CompletionProvider<CompletionParameters>
 
     private static Opt<T2<String, String>> assertSymfonyVarDoc(PsiElement psi) {
         return Tls.cast(PsiCommentImpl.class, psi)
-            .fop(cmt -> Tls.regex("^\\{#\\s*@var\\s+(\\w+)\\s*(=\\s*\\S.*?)\\s*#\\}$", cmt.getText()))
+            .fop(cmt -> Tls.regex("^\\{#\\s*@var\\s+(\\w+)(?:\\s+\\S+)?\\s*(=\\s*\\S.*?)\\s*#\\}$", cmt.getText()))
             .map(match -> T2(match.get(0), match.get(1)));
     }
 
