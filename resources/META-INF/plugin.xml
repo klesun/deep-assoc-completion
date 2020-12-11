@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.09.09.002</version>
+    <version>2020.12.11.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -47,13 +47,14 @@
 
     <change-notes><![CDATA[
     <ul>
-        <li>#165 Support <code>{# @var data = \Some\Class::makeData() #}</code> notation in Twig, matching <a href="https://stackoverflow.com/questions/26274704/phpstorm-autocomplete-twig-vars/30997797#30997797">Symfony one</a></li>
+        <li>Fix failing get_class_vars() test - manually support self::class resolution</li>
+        <li>(Newer idea versions treat it differently than SomeClass::class)</li>
     </ul>
     ]]>
     </change-notes>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-    <idea-version since-build="192.6817.20"/> <!-- PhpType.STATIC -->
+    <idea-version since-build="203.5981.155"/> <!-- self::class no more resolvable by built-in tools -->
 
     <extensions defaultExtensionNs="com.intellij">
         <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DeepAssocCbtr"/>

@@ -44,7 +44,17 @@ public class DirectTypeResolver {
     {
         if ("class".equals(cst.getName())) {
             return opt(cst.getClassReference())
-                .fap(cls -> new MiscRes(ctx).resolveClassReference(cst, cls))
+                .fap(cls -> {
+                    if (cls.getText().equals("self")) {
+                        // in newer idea builds self::class resolution
+                        // yields nothing, hence the custom logic
+                        return Tls
+                            .findParent(cst, PhpClass.class)
+                            .map(clsDef -> clsDef.getType());
+                    } else {
+                        return new MiscRes(ctx).resolveClassReference(cst, cls);
+                    }
+                })
                 .map(ideaType -> DeepType.makeClsRef(cst, ideaType));
         } else {
             return getClsConstDecl(cst)
