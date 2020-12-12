@@ -30,7 +30,7 @@ public class DocParamRes extends Lang
     // wrapping in a function so that global variables did not affect result (had a global variable
     // called $i with a definite value, and when I used $i to define _any_ key, I got no completion)
     final public static String EXPR_PREFIX = "<?php\n(function(){return ";
-    final public static String EXPR_POSTFIX = ";})();";
+    final public static String EXPR_POSTFIX = "\n;})();";
 
     public DocParamRes(IExprCtx ctx)
     {
