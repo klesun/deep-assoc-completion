@@ -6,6 +6,9 @@ import com.jetbrains.php.PhpIndex;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
 import com.jetbrains.php.lang.psi.elements.MemberReference;
 import com.jetbrains.php.lang.psi.elements.PhpClass;
+import com.jetbrains.php.lang.psi.elements.PhpExpression;
+import com.jetbrains.php.lang.psi.elements.PhpTypedElement;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
@@ -41,6 +44,18 @@ public class MemRes {
                 idx.getInterfacesByName(clean)
             ).flt(cls -> cls.getFQN().endsWith(clean));
         }
+    }
+
+    /**
+     * in newer idea builds self::class resolution
+     * yields nothing, hence the custom logic
+     */
+    public static Opt<PhpType> assertSelfIdeaType(PhpExpression clsRef)
+    {
+        return opt(clsRef)
+            .flt(ref -> ref.getText().equals("self"))
+            .fop(ref -> Tls.findParent(ref, PhpClass.class))
+            .map(PhpTypedElement::getType);
     }
 
     public It<PhpClass> resolveCls(MemberReference mem)

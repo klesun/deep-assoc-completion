@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.resolvers.mem_res.MemRes;
 import org.klesun.deep_assoc_completion.structures.ArgOrder;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
@@ -109,22 +110,17 @@ public class FuncCtx extends Lang implements IFuncCtx
         }
     }
 
-    // when self::doSomething is used in non-static context and doSomething() is a non-static method
-    // I believe this is deprecated in PHP 7, but there are few places in our framework that use this
-    public static boolean isWhitelistedStaticThis(PhpExpression ref)
-    {
-        Opt<PhpClass> clsOpt = Tls.findParent(ref, PhpClass.class, a -> true);
-        return clsOpt.map(cls -> cls.getFQN()).any(fqn -> fqn.startsWith("\\Dyninno\\Core\\Database\\"));
-    }
-
     private void setThisType(MemberReference memRef, F<PhpExpression, IIt<DeepType>> findExprType)
     {
         opt(memRef.getClassReference())
             .thn(clsRef -> {
-                this.clsIdeaType = opt(clsRef.getType());
-                if (!(clsRef instanceof ClassReference) || isWhitelistedStaticThis(memRef)) {
+                Opt<PhpType> asSelf = non();
+                if (clsRef instanceof ClassReference) {
+                    asSelf = MemRes.assertSelfIdeaType(clsRef);
+                } else {
                     this.instGetter = opt(() -> Mt.mem(findExprType.apply(clsRef)));
                 }
+                this.clsIdeaType = asSelf.has() ? asSelf : som(clsRef.getType());
             });
     }
 

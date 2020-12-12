@@ -8,6 +8,7 @@ import com.jetbrains.php.lang.psi.elements.impl.*;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
+import org.klesun.deep_assoc_completion.resolvers.mem_res.MemRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.lang.*;
 
@@ -44,17 +45,11 @@ public class DirectTypeResolver {
     {
         if ("class".equals(cst.getName())) {
             return opt(cst.getClassReference())
-                .fap(cls -> {
-                    if (cls.getText().equals("self")) {
-                        // in newer idea builds self::class resolution
-                        // yields nothing, hence the custom logic
-                        return Tls
-                            .findParent(cst, PhpClass.class)
-                            .map(clsDef -> clsDef.getType());
-                    } else {
-                        return new MiscRes(ctx).resolveClassReference(cst, cls);
-                    }
-                })
+                .fap(cls -> It.frs(
+                    () -> MemRes.assertSelfIdeaType(cls)
+                        .orr(new MiscRes(ctx).resolveClassReference(cst, cls)),
+                    () -> new MiscRes(ctx).resolveClassReference(cst, cls)
+                ))
                 .map(ideaType -> DeepType.makeClsRef(cst, ideaType));
         } else {
             return getClsConstDecl(cst)
@@ -170,12 +165,6 @@ public class DirectTypeResolver {
                             .fap(clsVar -> ctx.findExprType(clsVar)),
                         () -> som(DeepType.makeClsRef(expr, expr.getType()))
                     );
-                    if (FuncCtx.isWhitelistedStaticThis(expr) &&
-                        list("self", "static").contains(expr.getText())
-                    ) {
-                        // deprecated PHP feature - to access non-static fields/methods from non-static context via self::
-                        clsTit = It.cnc(clsTit, ctx.getThisType());
-                    }
                     return clsTit;
                 })
             , () -> Tls.cast(ClassConstantReferenceImpl.class, expr)

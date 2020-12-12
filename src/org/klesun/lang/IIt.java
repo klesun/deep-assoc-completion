@@ -14,7 +14,6 @@ import static org.klesun.lang.Lang.*;
 
 /**
  * an interface implemented by both It (a disposable iterator) and L (a reusable list)
- * TODO: make Opt laos implement this (will need to refactor everything to work with IIt instead of It)
  */
 public interface IIt<A> extends Iterable<A> {
     boolean has();
