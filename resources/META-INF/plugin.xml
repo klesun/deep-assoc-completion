@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.12.11.001</version>
+    <version>2020.12.11.002</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -47,8 +47,7 @@
 
     <change-notes><![CDATA[
     <ul>
-        <li>Fix failing get_class_vars() test - manually support self::class resolution</li>
-        <li>(Newer idea versions treat it differently than SomeClass::class)</li>
+        <li>Fix various typing issues of self:: caused by compatibility break in newer idea versions</li>
     </ul>
     ]]>
     </change-notes>

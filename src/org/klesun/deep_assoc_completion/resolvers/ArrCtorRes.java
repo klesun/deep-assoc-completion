@@ -53,7 +53,8 @@ public class ArrCtorRes extends Lang
                     // since 2019.2.3 phpstorm started to prefix _static_ class type with "#S"
                     fqn = fqn.substring(2);
                 }
-                Opt<L<String>> asMc = Tls.regex("#M#C(.+?)\\.\\w+", fqn);
+                // #-#-#M#C\App\Models\City.get?n?m|#-#-#?#M#C\App\Models\City.get?1?n?m|?
+                Opt<L<String>> asMc = Tls.regex(".*#M#C(.+?)\\.\\w+.*", fqn);
                 if (asMc.has()) {
                     // I guess #M#C means "Member's class"
                     fqn = asMc.unw().get(0);
