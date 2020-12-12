@@ -76,7 +76,8 @@ public class MemRes {
                 () -> ctx.getSelfType()
                     // IDEA resolves static:: incorrectly, it either treats it
                     // same as self::, either does not resolve it at all
-                    .flt(typ -> obj.getText().equals("static"))
+                    // upd. in newer versions self:: does not get treated as an expression
+                    .flt(typ -> obj.getText().equals("static") || obj.getText().equals("self"))
                     .fap(typ -> ArrCtorRes.resolveIdeaTypeCls(typ, obj.getProject())),
                 () -> {
                     Mt mt = Mt.mem(ctx.findExprType(obj));
