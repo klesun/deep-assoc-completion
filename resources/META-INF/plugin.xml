@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.12.11.002</version>
+    <version>2020.12.11.003</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -48,6 +48,9 @@
     <change-notes><![CDATA[
     <ul>
         <li>Fix various typing issues of self:: caused by compatibility break in newer idea versions</li>
+        <li>#163 Support PSALM nullable type annotations</li>
+        <li>#166 Fix, do not fail to parse doc expression with traling comment</li>
+        <li>#166 Use psalm param type definition in argument keys completion (Not just when accessing keys on an existing var)</li>
     </ul>
     ]]>
     </change-notes>
