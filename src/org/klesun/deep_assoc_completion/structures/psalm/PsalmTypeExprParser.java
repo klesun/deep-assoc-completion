@@ -191,6 +191,7 @@ public class PsalmTypeExprParser
         this.unprefix("\\s+");
         // a comment, just ignore for now
         this.unprefix("\\/\\/.*\\n");
+        boolean isNullable = this.unprefix("\\?");
         Opt<? extends IType> parsed = non();
         if (this.unprefix("([a-zA-Z\\\\_][a-zA-Z\\\\_0-9\\-]*)\\s*<\\s*")) {
             String fqn = this.lastMatch.get(1);
@@ -224,6 +225,8 @@ public class PsalmTypeExprParser
             parsed = som(new TPrimitive(PhpType.TRUE, "1"));
         } else if (this.unprefix("false\\b")) {
             parsed = som(new TPrimitive(PhpType.FALSE, ""));
+        } else if (this.unprefix("null\\b")) {
+            parsed = som(new TPrimitive(PhpType.NULL, ""));
         } else if (this.unprefix("['\"]")) {
             char quote = this.lastMatch.get(0).charAt(0);
             parsed = parseString(quote).map(value ->
@@ -233,6 +236,10 @@ public class PsalmTypeExprParser
         }
         if (!parsed.has()) {
             //System.out.println("failed to parse psalm value - " + Tls.substr(getTextLeft(), 0, 20));
+        }
+        if (isNullable) {
+            IType nullt = new TPrimitive(PhpType.NULL, "");
+            parsed = parsed.map(type -> new TMulti(list(nullt, type)));
         }
         return parsed;
     }
