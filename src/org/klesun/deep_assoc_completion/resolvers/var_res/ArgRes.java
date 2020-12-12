@@ -30,7 +30,7 @@ public class ArgRes extends Lang
         this.trace = trace;
     }
 
-    private static Opt<Integer> getArgOrder(ParameterImpl param)
+    private static Opt<Integer> getArgOrder(Parameter param)
     {
         return Tls.findParent(param, ParameterListImpl.class, psi -> true)
             .map(list -> L(list.getParameters()).indexOf(param));
@@ -236,6 +236,27 @@ public class ArgRes extends Lang
                 .fap(order -> Mt.getKeySt(t, order + "")));
     }
 
+    public static It<DeepType> resolveDeclaredType(Parameter arg, IExprCtx clsCtx)
+    {
+        int order = getArgOrder(arg).def(-1);
+        return It.cnc(
+            opt(arg.getDocComment())
+                .fap(doc -> It(doc.getParamTags()))
+                .flt(tag -> arg.getName().equals(tag.getVarName()))
+                .fap(doc -> new DocParamRes(clsCtx).resolve(doc)),
+            opt(arg.getParent()).fap(lst -> opt(lst.getParent()))
+                .cst(Function.class)
+                .fap(func -> It.cnc(
+                    UsageBasedTypeResolver.findMetaArgType(func, order, clsCtx),
+                    opt(func.getDocComment())
+                        .fap(doc -> PsalmRes.resolveVar(doc, arg.getName(), clsCtx))
+                )),
+            opt(arg.getDefaultValue()).itr()
+                .cst(PhpExpression.class)
+                .fap(xpr -> clsCtx.subCtxEmpty().findExprType(xpr))
+        );
+    }
+
     public It<DeepType> resolveArg(ParameterImpl param)
     {
         int order = getArgOrder(param).def(-1);
@@ -268,23 +289,8 @@ public class ArgRes extends Lang
             .def(trace);
 
         It<DeepType> declTit = decls
-            .fap(arg -> It.cnc(
-                opt(arg.getDocComment())
-                    .fap(doc -> It(doc.getParamTags()))
-                    .flt(tag -> param.getName().equals(tag.getVarName()))
-                    .fap(doc -> new DocParamRes(clsCtx).resolve(doc)),
-                opt(arg.getParent()).fap(lst -> opt(lst.getParent()))
-                    .cst(Function.class)
-                    .fap(func -> It.cnc(
-                        UsageBasedTypeResolver.findMetaArgType(func, order, clsCtx),
-                        opt(func.getDocComment())
-                            .fap(doc -> PsalmRes.resolveVar(doc, param.getName(), clsCtx))
+            .fap(arg -> resolveDeclaredType(arg, clsCtx));
 
-                    )),
-                opt(arg.getDefaultValue()).itr()
-                    .cst(PhpExpression.class)
-                    .fap(xpr -> trace.subCtxEmpty().findExprType(xpr))
-            ));
         // treat empty args as any args in the doc,
         // since it's a pain to list all args every time
         boolean isNoArgDoc = !trace.func().hasArgs() && trace.isInComment();

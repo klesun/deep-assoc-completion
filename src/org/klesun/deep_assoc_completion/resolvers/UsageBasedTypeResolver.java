@@ -14,6 +14,7 @@ import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.resolvers.var_res.ArgRes;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.Build;
 import org.klesun.deep_assoc_completion.structures.DeepType;
@@ -89,6 +90,7 @@ public class UsageBasedTypeResolver
         return L(meth.getParameters()).gat(argOrder)
             .fop(toCast(ParameterImpl.class))
             .fap(arg -> It.cnc(
+                ArgRes.resolveDeclaredType(arg, nextCtx),
                 findUsedIndexes(meth, arg.getName())
                     .map(idx -> idx.getValue())
                     .cst(PhpExpression.class)
@@ -105,12 +107,6 @@ public class UsageBasedTypeResolver
                                     .get();
                             }))
                     ),
-                opt(arg.getDocComment())
-                    .map(doc -> doc.getParamTagByName(arg.getName()))
-                    .fap(doc -> new DocParamRes(nextCtx).resolve(doc)),
-                opt(arg.getDefaultValue())
-                    .cst(PhpExpression.class)
-                    .fap(xpr -> nextCtx.subCtxEmpty().findExprType(xpr)),
                 new UsageBasedTypeResolver(nextCtx, depthLeft - 1).findVarTypeFromUsage(arg)
             ));
     }
