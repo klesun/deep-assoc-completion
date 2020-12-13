@@ -74,7 +74,7 @@ public class FuncCtx extends Lang implements IFuncCtx
     {
         return variadicOrders.fst()
             .flt(firstVari -> firstVari <= order)
-            .map(firstVari -> argGetters.fap((get, i) -> {
+            .map(firstVari -> argGetters.rap((get, i) -> {
                 if (i >= firstVari) {
                     Mt mt = getCached(order, get);
                     if (variadicOrders.contains(i)) {

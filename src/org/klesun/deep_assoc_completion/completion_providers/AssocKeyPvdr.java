@@ -323,8 +323,8 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                 Set<String> comments = opt(keyToComments.get(keyName)).def(new HashSet<>());
                 String comment = Tls.implode(" ", comments);
                 Opt<String> commentOpt = comment.trim().equals("") ? non() : som(comment);
-                L<F<LookupElementBuilder, LookupElementBuilder>> metCommentOpt = list();
-                metCommentOpt = commentOpt.fap(c -> assertMetaComment(c, exprCtx)).arr();
+                L<F<LookupElementBuilder, LookupElementBuilder>> metCommentOpt = commentOpt
+                    .fap(c -> assertMetaComment(c, exprCtx)).arr();
                 if (metCommentOpt.has()) {
                     commentOpt = non();
                 }

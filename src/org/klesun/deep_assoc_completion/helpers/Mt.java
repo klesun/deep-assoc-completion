@@ -52,6 +52,16 @@ public class Mt
         this(types, REASON.OK);
     }
 
+    /** try to reuse existing container if possible */
+    public static Mt reuse(IIt<DeepType> types)
+    {
+        if (types instanceof IReusableIt) {
+            return new Mt((IReusableIt<DeepType>)types);
+        } else {
+            return mem(types);
+        }
+    }
+
     public static Mt mem(IIt<DeepType> iter)
     {
         return new Mt(iter.mem());

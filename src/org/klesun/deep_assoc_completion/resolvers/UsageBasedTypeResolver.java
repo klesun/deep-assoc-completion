@@ -287,7 +287,7 @@ public class UsageBasedTypeResolver
             ));
     }
 
-    private static It<DeepType> findFqnMetaArgType(String fqn, int argOrder, IExprCtx ctx)
+    private static IIt<DeepType> findFqnMetaArgType(String fqn, int argOrder, IExprCtx ctx)
     {
         try {
             return MethCallRes.findFqnMetaType(fqn, ctx,
@@ -296,20 +296,21 @@ public class UsageBasedTypeResolver
             );
         } catch (NoClassDefFoundError exc) {
             // can happen due to wrong phpstorm version in my plugin.xml
-            return It.non();
+            return non();
         }
     }
 
-    public static It<DeepType> findMetaArgType(Function func, int argOrder, IExprCtx ctx)
+    public static IIt<DeepType> findMetaArgType(Function func, int argOrder, IExprCtx ctx)
     {
         String fqn = func.getFQN();
         return findFqnMetaArgType(fqn, argOrder, ctx);
     }
 
-    private It<DeepType> findCallableMetaArgType(Function func, int argOrder)
+    private IIt<DeepType> findCallableMetaArgType(Function func, int argOrder)
     {
         return Tls.cast(Method.class, func).uni(
-            meth -> MethCallRes.findOverriddenMethods(meth).fap(m -> findMetaArgType(m, argOrder, fakeCtx)),
+            meth -> MethCallRes.findOverriddenMethods(meth).arr()
+                .rap(m -> findMetaArgType(m, argOrder, fakeCtx)),
             () -> findMetaArgType(func, argOrder, fakeCtx)
         );
     }

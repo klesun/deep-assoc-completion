@@ -153,21 +153,21 @@ public class DocParamRes extends Lang
         }
     }
 
-    public static It<DeepType> parseExpression(String expr, Project project, IExprCtx docCtx)
+    public static IIt<DeepType> parseExpression(String expr, Project project, IExprCtx docCtx)
     {
         // adding "$arg = " so anonymous functions were parsed as expressions
         expr = EXPR_PREFIX + expr + EXPR_POSTFIX;
         PsiFile psiFile = PsiFileFactory.getInstance(project).createFileFromText(PhpLanguage.INSTANCE, expr);
         return opt(psiFile.getFirstChild())
-            .fop(toCast(GroupStatement.class))
+            .cst(GroupStatement.class)
             .map(gr -> gr.getFirstPsiChild())
-            .fop(toCast(Statement.class))
+            .cst(Statement.class)
             .map(st -> st.getFirstChild())
-            .fop(toCast(PhpExpression.class))
-            .fap(ex -> docCtx.findExprType(ex));
+            .cst(PhpExpression.class).arr()
+            .rap(ex -> docCtx.findExprType(ex));
     }
 
-    public It<DeepType> parseEqExpression(String eqExpr, PsiElement sourcePsi)
+    public IIt<DeepType> parseEqExpression(String eqExpr, PsiElement sourcePsi)
     {
         IExprCtx docCtx = ctx.subCtxDoc(sourcePsi);
 
@@ -179,10 +179,10 @@ public class DocParamRes extends Lang
             eqExpr = keyMatchOpt.unw().get(1);
         }
 
-        It<DeepType> valTit = Tls.regex("^\\s*=\\s*(.+)$", eqExpr)
+        IIt<DeepType> valTit = Tls.regex("^\\s*=\\s*(.+)$", eqExpr)
             .fop(matches -> matches.gat(0))
-            .fap(expr -> parseExpression(expr, sourcePsi.getProject(), docCtx));
-        Mt valMt = Mt.mem(valTit);
+            .rap(expr -> parseExpression(expr, sourcePsi.getProject(), docCtx));
+        Mt valMt = Mt.reuse(valTit);
         for (int i = assKeys.size() - 1; i >= 0; --i) {
             Mt valMtF = valMt;
             Key keyEntry = new Key(assKeys.get(i), sourcePsi)
@@ -190,25 +190,26 @@ public class DocParamRes extends Lang
             valMt = new Build(sourcePsi, PhpType.ARRAY)
                 .keys(som(keyEntry)).get().mt();
         }
-        return valMt.types.itr();
+        return valMt.types;
     }
 
-    private It<DeepType> parseDoc(PhpDocTag doc)
+    private IIt<DeepType> parseDoc(PhpDocTag doc)
     {
         String tagValue = doc.getTagValue();
-        return It.cnc(
+        return IResolvedIt.rnc(
             parseEqExpression(tagValue, doc),
             DeepAssocApi.inst().parseDoc(tagValue, doc),
             opt(doc.getParent())
                 .fop(toCast(PhpDocComment.class))
                 .fop(full -> getDocCommentText(full))
-                .fap(clean -> parseWordpressDoc(clean))
+                .rap(clean -> parseWordpressDoc(clean))
                 .flt(prop -> nameMatches(prop, doc))
                 .fop(prop -> wpDescToType(prop, doc))
+                .arr()
         );
     }
 
-    public It<DeepType> resolve(PhpDocTag doc)
+    public IIt<DeepType> resolve(PhpDocTag doc)
     {
         return parseDoc(doc);
     }

@@ -206,4 +206,9 @@ public class Opt<T> implements IResolvedIt<T>
     {
         return !has() ? "non" : "som(" + unw() + ")";
     }
+
+    @Override
+    public int size() {
+        return has ? 1 : 0;
+    }
 }

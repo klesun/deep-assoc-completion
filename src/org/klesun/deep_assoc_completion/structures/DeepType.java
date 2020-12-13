@@ -253,7 +253,7 @@ public class DeepType extends Lang
                 typeInfo = "new<" + generics.size() + ">";
             }
         }
-        return "deep(" + typeInfo + ")" + " " + briefType + " " + Tls.singleLine(definition.getText(), 60);
+        return "deep(" + typeInfo + ")" + " " + briefType + " " + Tls.singleLine(definition.getText(), 30);
     }
 
     public boolean hasNumberIndexes()

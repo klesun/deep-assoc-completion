@@ -31,6 +31,7 @@ public class It<A> implements IIt<A>
     private Opt<Exception> createdAt = Lang.non();
     private Opt<Exception> disposedAt = Lang.non();
     private boolean disposed = false;
+    public boolean knownToBeEmpty = false;
 
     public It(Iterable<A> sourceIter)
     {
@@ -47,7 +48,9 @@ public class It<A> implements IIt<A>
 
     public static <B> It<B> non()
     {
-        return new It<>(list());
+        It<B> it = new It<>(list());
+        it.knownToBeEmpty = true;
+        return it;
     }
 
     public static <B> It<B> frs(S<? extends Iterable<B>>... args)

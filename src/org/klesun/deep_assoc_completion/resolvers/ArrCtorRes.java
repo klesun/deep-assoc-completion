@@ -255,7 +255,7 @@ public class ArrCtorRes extends Lang
             .map(retTypeGetter -> (ctx) -> new MemIt<>(retTypeGetter.apply(ctx)));
 
         L<Key> idxKeys = orderedParams
-            .fap((valuePsi, i) -> opt(valuePsi.getFirstChild())
+            .rap((valuePsi, i) -> opt(valuePsi.getFirstChild())
                 .fop(toCast(PhpExpression.class))
                 .map(val -> new Key(i + "", ctx.getRealPsi(val))
                     .addType(() -> ctx.findExprType(val).wap(Mt::mem), Tls.getIdeaType(val))))

@@ -144,21 +144,21 @@ public class MethCallRes extends Lang
         }
     }
 
-    public static It<DeepType> findFqnMetaType(
+    public static IIt<DeepType> findFqnMetaType(
         String fqn, IExprCtx ctx,
         ID<String, Collection<PhpExpectedFunctionArgument>> idxKey,
         Predicate<PhpExpectedFunctionArgument> argCond
     ) {
-        return ctx.getProject().fap(proj -> {
+        return ctx.getProject().rap(proj -> {
             FileBasedIndex index = FileBasedIndex.getInstance();
             PhpIndex phpIdx = PhpIndex.getInstance(proj);
             GlobalSearchScope scope = GlobalSearchScope.allScope(proj);
             return list(fqn, fqn.replaceAll("^\\\\", ""))
-                .fap(fullFqn -> It(index.getValues(idxKey, fullFqn, scope))
-                    .fap(col -> col)
-                    .flt(argCond)
+                .rap(fullFqn -> L(index.getValues(idxKey, fullFqn, scope))
+                    .rap(Lang::L)
+                    .flt(argCond).arr()
                     .cst(PhpExpectedFunctionScalarArgument.class)
-                    .unq().fap(exp -> {
+                    .unq().arr().rap(exp -> {
                         Opt<? extends PsiElement> declOpt = Opt.fst(
                             () -> opt(exp.getNamedElement(proj)),
                             () -> getFuncByFqn(fqn, phpIdx).fst().map(a -> a)
@@ -171,13 +171,13 @@ public class MethCallRes extends Lang
         });
     }
 
-    public static It<DeepType> findFqnMetaDefRetType(String fqn, IExprCtx ctx)
+    public static IIt<DeepType> findFqnMetaDefRetType(String fqn, IExprCtx ctx)
     {
         try {
             return findFqnMetaType(fqn, ctx, PhpExpectedReturnValuesIndex.KEY, arg -> true);
         } catch (NoClassDefFoundError exc) {
             // can happen due to wrong phpstorm version in my plugin.xml
-            return It.non();
+            return non();
         }
     }
 
@@ -198,7 +198,7 @@ public class MethCallRes extends Lang
         It<DeepType> asEq = Tls.regex(regex, returnDoc.getTagValue())
             .fop(match -> match.gat(1))
             .fap(expr -> DocParamRes.parseExpression(expr, returnDoc.getProject(), docCtx));
-        It<DeepType> asPsalm = PsalmRes.resolveReturn(returnDoc, funcCtx);
+        IIt<DeepType> asPsalm = PsalmRes.resolveReturn(returnDoc, funcCtx);
         L<String> typeStrings = opt(returnDoc.getDocType())
             .fap(PhpType::getTypes).arr();
         // phpstorm resolves explicit types ok, but not static, naturally

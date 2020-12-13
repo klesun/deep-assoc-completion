@@ -2,7 +2,6 @@ package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.psi.PsiElement;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.PhpDocComment;
-import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocReturnTag;
 import com.jetbrains.php.lang.documentation.phpdoc.psi.tags.PhpDocTag;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
@@ -53,61 +52,64 @@ public class PsalmRes {
             || cls.fqn.equals("SplQueue") || cls.fqn.equals("\\SplQueue");
     }
 
-    private static It<Key> genericsToArrKeys(List<IType> defs, PsiElement goToPsi, Map<String, MemIt<DeepType>> generics)
+    private static IIt<Key> genericsToArrKeys(List<IType> defs, PsiElement goToPsi, Map<String, MemIt<DeepType>> generics)
     {
         if (defs.size() == 1) {
             KeyType keyt = KeyType.integer(goToPsi);
             Key keyObj = new Key(keyt, goToPsi);
             keyObj.addType(() -> {
-                It<DeepType> tit = psalmToDeep(defs.get(0), goToPsi, generics);
-                return Mt.mem(tit);
+                IIt<DeepType> rit = psalmToDeep(defs.get(0), goToPsi, generics);
+                return Mt.reuse(rit);
             });
-            return It(som(keyObj));
+            return som(keyObj);
         } else if (defs.size() == 2) {
-            It<DeepType> kit = psalmToDeep(defs.get(1), goToPsi, generics);
+            IIt<DeepType> kit = psalmToDeep(defs.get(1), goToPsi, generics);
             KeyType keyt = KeyType.mt(kit, goToPsi);
             Key keyObj = new Key(keyt, goToPsi);
             keyObj.addType(() -> {
-                It<DeepType> tit = psalmToDeep(defs.get(1), goToPsi, generics);
-                return Mt.mem(tit);
+                IIt<DeepType> rit = psalmToDeep(defs.get(1), goToPsi, generics);
+                return Mt.reuse(rit);
             });
-            return It(som(keyObj));
+            return som(keyObj);
         } else {
-            return It.non();
+            return non();
         }
     }
 
-    private static It<DeepType> psalmClsToDeep(TClass cls, PsiElement goToPsi, Map<String, MemIt<DeepType>> generics)
+    private static IResolvedIt<DeepType> psalmPlainClsToDeep(TClass cls, PsiElement goToPsi, Map<String, MemIt<DeepType>> generics)
     {
-        Opt<MemIt<DeepType>> genOpt = opt(generics.get(cls.fqn));
-        if (genOpt.has()) {
-            return genOpt.fap(a -> a);
-        } else {
-            PhpType phpType = new PhpType().add(cls.fqn);
-            L<Mt> genMts = Lang.It(cls.generics)
-                .map(psalm -> psalmToDeep(psalm, goToPsi, generics))
-                .map(Mt::mem)
-                .arr();
-            It<Key> keyEntries = It.non();
-            if (isArrayLike(cls)) {
-                keyEntries = genericsToArrKeys(cls.generics, goToPsi, generics);
-            }
-            return new Build(goToPsi, phpType)
-                .isExactPsi(false).generics(genMts)
-                .keys(keyEntries).itr();
+        PhpType phpType = new PhpType().add(cls.fqn);
+        L<Mt> genMts = Lang.It(cls.generics)
+            .map(psalm -> psalmToDeep(psalm, goToPsi, generics))
+            .map(Mt::mem)
+            .arr();
+        IIt<Key> keyEntries = non();
+        if (isArrayLike(cls)) {
+            keyEntries = genericsToArrKeys(cls.generics, goToPsi, generics);
         }
+        DeepType type = new Build(goToPsi, phpType)
+            .isExactPsi(false).generics(genMts)
+            .keys(keyEntries).get();
+        return som(type);
     }
 
-    private static It<DeepType> psalmToDeep(IType psalmType, PsiElement goToPsi, Map<String, MemIt<DeepType>> generics)
+    private static IIt<DeepType> psalmToDeep(IType psalmType, PsiElement goToPsi, Map<String, MemIt<DeepType>> generics)
     {
-        return It.cnc(
-            non()
-            , Tls.cast(TAssoc.class, psalmType)
+        Opt<MemIt<DeepType>> asGeneric = Tls.cast(TClass.class, psalmType)
+            .fop(cls -> opt(generics.get(cls.fqn)));
+        if (asGeneric.has()) {
+            // the only type that requires heavy deep resolution, for all others
+            // can reuse the collection and safely take type hints to show
+            return asGeneric.fap(a -> a);
+        }
+
+        return IResolvedIt.fst(L::non
+            , () -> Tls.cast(TAssoc.class, psalmType)
                 .map(assoc -> {
                     It<Key> keyEntries = It(assoc.keys.entrySet()).map(e -> {
                         String keyName = e.getKey();
                         IType psalmVal = e.getValue();
-                        Mt valMt = Mt.mem(psalmToDeep(psalmVal, goToPsi, generics));
+                        Mt valMt = Mt.reuse(psalmToDeep(psalmVal, goToPsi, generics));
                         PhpType ideaType = valMt.getIdeaTypes().fst().def(PhpType.UNSET);
                         List<String> comments = opt(assoc.keyToComments.get(keyName))
                             .fap(c -> c).flt(c -> !c.trim().equals("")).map(c -> c).arr();
@@ -120,20 +122,22 @@ public class PsalmRes {
                         .keys(keyEntries)
                         .get();
                 })
-            , Tls.cast(TFunc.class, psalmType)
+            , () -> Tls.cast(TFunc.class, psalmType)
                 .map(func -> new Build(goToPsi, PhpType.CALLABLE)
                     .isExactPsi(false)
                     .returnTypeGetters(list(ctx -> {
                         return psalmToDeep(func.returnType, goToPsi, generics).mem();
                     }))
                     .get())
-            , Tls.cast(TClass.class, psalmType)
-                .fap(cls -> psalmClsToDeep(cls, goToPsi, generics))
+            , () -> Tls.cast(TClass.class, psalmType)
+                .map(cls -> psalmPlainClsToDeep(cls, goToPsi, generics))
+                .def(L())
             // if we ever support references, should add check for infinite recursion here...
-            , Tls.cast(TMulti.class, psalmType)
+            , () -> Tls.cast(TMulti.class, psalmType)
                 .fap(multi -> It(multi.types)
                     .fap(t -> psalmToDeep(t, goToPsi, generics)))
-            , Tls.cast(TPrimitive.class, psalmType)
+                .arr()
+            , () -> Tls.cast(TPrimitive.class, psalmType)
                 .map(prim -> new DeepType(goToPsi, prim.kind, prim.stringValue))
         );
     }
@@ -224,44 +228,44 @@ public class PsalmRes {
     // following functions are entry points
     //====================================================
 
-    private static It<DeepType> infoToDeep(PsalmFuncInfo psalmInfo, PsiElement goToPsi, IExprCtx ctx)
+    private static IIt<DeepType> infoToDeep(PsalmFuncInfo psalmInfo, PsiElement goToPsi, IExprCtx ctx)
     {
-        return psalmInfo.returnType.fap(psalmt -> {
+        return psalmInfo.returnType.rap(psalmt -> {
             Map<String, MemIt<DeepType>> gents = getGenericTypes(psalmInfo, ctx);
             return psalmToDeep(psalmt, goToPsi, gents);
         });
     }
 
-    public static It<DeepType> resolveReturn(PhpDocTag docTag, IExprCtx ctx)
+    public static IIt<DeepType> resolveReturn(PhpDocTag docTag, IExprCtx ctx)
     {
         return opt(docTag.getParent())
             .cst(PhpDocComment.class)
             .map(docComment -> PsalmFuncInfo.parse(docComment))
-            .fap(psalmInfo -> infoToDeep(psalmInfo, docTag, ctx));
+            .rap(psalmInfo -> infoToDeep(psalmInfo, docTag, ctx));
     }
 
-    public static It<DeepType> resolveMagicReturn(PhpDocComment docComment, String methName, IExprCtx ctx)
+    public static IIt<DeepType> resolveMagicReturn(PhpDocComment docComment, String methName, IExprCtx ctx)
     {
         PsalmFuncInfo.PsalmClsInfo clsInfo = PsalmFuncInfo.parseClsDoc(docComment);
         return opt(clsInfo.magicMethods.get(methName))
-            .fap(psalmInfo -> infoToDeep(psalmInfo, docComment, ctx));
+            .rap(psalmInfo -> infoToDeep(psalmInfo, docComment, ctx));
     }
 
-    public static It<DeepType> resolveVar(PhpDocComment docComment, String varName, IExprCtx ctx)
+    public static IIt<DeepType> resolveVar(PhpDocComment docComment, String varName, IExprCtx ctx)
     {
         PsalmFuncInfo psalmInfo = PsalmFuncInfo.parse(docComment);
         Map<String, MemIt<DeepType>> generics = getGenericTypes(psalmInfo, ctx);
         return psalmInfo.params.flt(p -> p.name.equals(varName) || p.name.equals(""))
-            .fap(p -> p.psalmType)
-            .fap(psalmt -> psalmToDeep(psalmt, docComment, generics));
+            .fop(p -> p.psalmType).arr()
+            .rap(psalmt -> psalmToDeep(psalmt, docComment, generics));
     }
 
-    public static It<DeepType> resolveMagicProp(PhpDocComment docComment, String name, IExprCtx ctx)
+    public static IIt<DeepType> resolveMagicProp(PhpDocComment docComment, String name, IExprCtx ctx)
     {
         PsalmFuncInfo.PsalmClsInfo clsInfo = PsalmFuncInfo.parseClsDoc(docComment);
         Map<String, MemIt<DeepType>> generics = getClsGenericTypes(clsInfo.generics, ctx);
         return opt(clsInfo.magicProps.get(name))
             .map(p -> p.psalmType)
-            .fap(psalmt -> psalmToDeep(psalmt, docComment, generics));
+            .rap(psalmt -> psalmToDeep(psalmt, docComment, generics));
     }
 }

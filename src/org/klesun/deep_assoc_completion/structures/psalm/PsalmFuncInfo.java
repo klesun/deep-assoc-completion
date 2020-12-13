@@ -165,7 +165,7 @@ public class PsalmFuncInfo {
             .map(t -> {
                 String varName = Tls.regex("\\s*\\$(\\w+).*", t.textLeft)
                     .map(m -> m.get(0)).def("");
-                Opt<Integer> order = argPsis.fap((psi, i) -> {
+                Opt<Integer> order = argPsis.rap((psi, i) -> {
                     return psi.getName().equals(varName) ? som(i) : non();
                 }).fst();
                 return new ArgDef(varName, order, som(t.psalmType));

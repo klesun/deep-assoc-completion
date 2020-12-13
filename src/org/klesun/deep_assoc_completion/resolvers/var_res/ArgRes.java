@@ -236,24 +236,24 @@ public class ArgRes extends Lang
                 .fap(order -> Mt.getKeySt(t, order + "")));
     }
 
-    public static It<DeepType> resolveDeclaredType(Parameter arg, IExprCtx clsCtx)
+    public static IIt<DeepType> resolveDeclaredType(Parameter arg, IExprCtx clsCtx)
     {
         int order = getArgOrder(arg).def(-1);
-        return It.cnc(
+        return IResolvedIt.rnc(
             opt(arg.getDocComment())
-                .fap(doc -> It(doc.getParamTags()))
-                .flt(tag -> arg.getName().equals(tag.getVarName()))
-                .fap(doc -> new DocParamRes(clsCtx).resolve(doc)),
-            opt(arg.getParent()).fap(lst -> opt(lst.getParent()))
+                .rap(doc -> L(doc.getParamTags()))
+                .flt(tag -> arg.getName().equals(tag.getVarName())).arr()
+                .rap(doc -> new DocParamRes(clsCtx).resolve(doc)),
+            opt(arg.getParent()).fop(lst -> opt(lst.getParent()))
                 .cst(Function.class)
-                .fap(func -> It.cnc(
+                .rap(func -> IResolvedIt.rnc(
                     UsageBasedTypeResolver.findMetaArgType(func, order, clsCtx),
                     opt(func.getDocComment())
-                        .fap(doc -> PsalmRes.resolveVar(doc, arg.getName(), clsCtx))
+                        .rap(doc -> PsalmRes.resolveVar(doc, arg.getName(), clsCtx))
                 )),
-            opt(arg.getDefaultValue()).itr()
+            opt(arg.getDefaultValue())
                 .cst(PhpExpression.class)
-                .fap(xpr -> clsCtx.subCtxEmpty().findExprType(xpr))
+                .rap(xpr -> clsCtx.subCtxEmpty().findExprType(xpr))
         );
     }
 
