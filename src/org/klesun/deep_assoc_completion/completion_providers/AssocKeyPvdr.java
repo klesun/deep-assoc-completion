@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
+import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
@@ -206,6 +207,13 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                     .cst(AssignmentExpression.class)
                     .flt(ass -> acc.equals(ass.getVariable())))
                 .fop(ass -> opt(ass.getValue()))
+            , () -> Tls.cast(StringLiteralExpression.class, keyPsi)
+                .fop(lit -> opt(lit.getParent())
+                    .cst(PhpPsiElementImpl.class)
+                    .fop(el -> opt(el.getParent())
+                    .cst(ArrayHashElement.class)
+                    .flt(hashEl -> lit.equals(hashEl.getKey()))))
+                .fop(hashEl -> opt(hashEl.getValue()))
         );
     }
 
@@ -223,6 +231,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         } else {
             return tryTakeValuePsi(key.definition)
                 .map(valPsi -> valPsi.getText())
+                .map(valStr -> valStr.replaceAll("\\s{2,}", ""))
                 .map(valStr -> substr(valStr, 0, BRIEF_VALUE_MAX_LEN))
                 .def("");
         }
