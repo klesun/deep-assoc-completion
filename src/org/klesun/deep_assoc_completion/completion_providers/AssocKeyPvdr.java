@@ -17,6 +17,7 @@ import org.klesun.deep_assoc_completion.structures.DeepType;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.*;
 import org.klesun.deep_assoc_completion.icons.DeepIcons;
+import org.klesun.deep_assoc_completion.structures.Key;
 import org.klesun.lang.*;
 import org.klesun.lib.PhpToolbox;
 
@@ -189,6 +190,27 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
+    /**
+     * a tradeoff after idea removed possibility to update tail text in completion option after it was
+     * shown - show type at once if it is already resolved (direct keys definition, phpdoc, etc...)
+     */
+    private String getGrantedBriefValue(Key key)
+    {
+        IIt<String> granteds = key.getGrantedValues()
+            .map(t -> t.getBriefVal(false).def("?"));
+        if (granteds.has()) {
+            Set<String> typeStringsSet = new LinkedHashSet<>(granteds.arr());
+            return substr(It(typeStringsSet).str("|"), 0, BRIEF_VALUE_MAX_LEN);
+        } else if (key.definition instanceof ArrayHashElement) {
+            ArrayHashElement casted = (ArrayHashElement)key.definition;
+            String valueStr = opt(casted.getValue())
+                .map(PsiElement::getText).def("");
+            return substr(valueStr, 0, BRIEF_VALUE_MAX_LEN);
+        } else {
+            return "";
+        }
+    }
+
     private T2<Dict<MutableLookup>, Map<String, Set<String>>> addNameOnly(
         Mt arrMt, CompletionResultSet result, boolean isCaretInsideQuotes, C<String> onFirst
     ) {
@@ -214,7 +236,9 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                     }
                     keyNames.add(keyName);
                     String briefTypeRaw = Mt.getKeyBriefTypeSt(k.getBriefTypes()).filterUnknown().filterMixed().toStringResolved();
-                    LookupElementBuilder justName = makePaddedLookup(keyName, briefTypeRaw, "resolving...", BRIEF_VALUE_MAX_LEN);
+
+                    String briefVal = getGrantedBriefValue(k);
+                    LookupElementBuilder justName = makePaddedLookup(keyName, briefTypeRaw, briefVal, BRIEF_VALUE_MAX_LEN);
                     MutableLookup mutLookup = new MutableLookup(justName, isCaretInsideQuotes);
                     int basePriority = Tls.isNum(keyName) ? 2000 : 2500;
                     LookupElement prio = PrioritizedLookupElement
@@ -265,9 +289,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
             printExprTree(exprCtx, search, 0);
             throw exc;
         }
-        System.out.println("gonna start iterating with " + search.getExpressionsResolved() + " expression already resolved");
         arrTit.has();
-        System.out.println("checked if iterator has anything, took " + search.getExpressionsResolved() + " expressions");
 
         result.startBatch();
 
