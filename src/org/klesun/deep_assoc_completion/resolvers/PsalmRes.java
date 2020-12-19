@@ -106,7 +106,7 @@ public class PsalmRes {
         return IResolvedIt.fst(L::non
             , () -> Tls.cast(TAssoc.class, psalmType)
                 .map(assoc -> {
-                    It<Key> keyEntries = It(assoc.keys.entrySet()).map(e -> {
+                    L<Key> keyEntries = L(assoc.keys.entrySet()).map(e -> {
                         String keyName = e.getKey();
                         IType psalmVal = e.getValue();
                         Mt valMt = Mt.reuse(psalmToDeep(psalmVal, goToPsi, generics));
@@ -116,7 +116,7 @@ public class PsalmRes {
                         return new Key(keyName, goToPsi)
                             .addType(Granted(valMt), ideaType)
                             .addComments(comments);
-                    });
+                    }).arr();
                     return new Build(goToPsi, PhpType.ARRAY)
                         .isExactPsi(false)
                         .keys(keyEntries)

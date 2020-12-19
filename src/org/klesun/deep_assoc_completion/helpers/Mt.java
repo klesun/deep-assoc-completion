@@ -108,7 +108,7 @@ public class Mt
         return types.fop(t -> opt(t.stringValue));
     }
 
-    public static It<DeepType> getElSt(DeepType arrt)
+    public static IIt<DeepType> getElSt(DeepType arrt)
     {
         return getKeySt(arrt, null);
     }
@@ -133,10 +133,11 @@ public class Mt
         return getPropOfName(type.props, keyName);
     }
 
-    public static It<DeepType> getKeySt(DeepType type, @Nullable String keyName)
+    public static IIt<DeepType> getKeySt(DeepType type, @Nullable String keyName)
     {
-        return It.cnc(
+        return IResolvedIt.rnc(
             type.keys
+                // TODO: rnc!
                 .flt(k -> keyName == null || k.keyType.getTypes()
                     .any(kt -> keyName.equals(kt.stringValue)
                         || kt.stringValue == null
@@ -145,6 +146,7 @@ public class Mt
             opt(type.briefType.elementType().filterUnknown().filterMixed())
                 .flt(it -> !it.isEmpty()).itr()
                 .map(it -> new DeepType(type.definition, it, false))
+                .arr()
         );
     }
 

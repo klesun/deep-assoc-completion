@@ -29,7 +29,7 @@ public class SearchCtx extends Lang
     // for performance measurement
     private int expressionsResolved = 0;
     // direct type cache
-    final private Map<PsiSig, IIt<DeepType>> ctxToExprToResult = new HashMap<>();
+    final private Map<PsiSig, IReusableIt<DeepType>> ctxToExprToResult = new HashMap<>();
     // usage type cache
     final public Map<PhpExpression, MemIt<DeepType>> exprToUsageResult = new HashMap<>();
     public Opt<Integer> overrideMaxExpr = non();
@@ -105,7 +105,7 @@ public class SearchCtx extends Lang
         return false;
     }
 
-    private Opt<IIt<DeepType>> takeFromCache(IExprCtx ctx, PhpExpression expr)
+    private Opt<IReusableIt<DeepType>> takeFromCache(IExprCtx ctx, PhpExpression expr)
     {
         PsiSig sig = new PsiSig(expr, ctx);
         return opt(ctxToExprToResult.get(sig));
@@ -118,7 +118,7 @@ public class SearchCtx extends Lang
         return Tls.singleLine(expr.getText(), 120) + " - " + expr.getContainingFile().getName() + ":" + phpLineNum;
     }
 
-    private void putToCache(IExprCtx ctx, PhpExpression expr, IIt<DeepType> result)
+    private void putToCache(IExprCtx ctx, PhpExpression expr, IReusableIt<DeepType> result)
     {
         PsiSig sig = new PsiSig(expr, ctx);
         ctxToExprToResult.remove(sig);
@@ -163,7 +163,7 @@ public class SearchCtx extends Lang
             return non();
         }
 
-        Opt<IIt<DeepType>> result = takeFromCache(exprCtx, expr);
+        Opt<IReusableIt<DeepType>> result = takeFromCache(exprCtx, expr);
         if (result.has()) {
             if (debug) {
                 //System.out.println(indent + "<< TAKING RESULT FROM CACHE");

@@ -118,7 +118,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    public static It<DeepType> resolveAtPsi(PsiElement caretPsi, IExprCtx funcCtx)
+    public static IIt<DeepType> resolveAtPsi(PsiElement caretPsi, IExprCtx funcCtx)
     {
         return opt(caretPsi.getParent())
             .map(litRaw -> litRaw.getParent())
@@ -126,8 +126,8 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
             .map(index -> index.getParent())
             .fop(toCast(ArrayAccessExpression.class))
             .map(expr -> expr.getValue())
-            .fop(toCast(PhpExpression.class))
-            .fap(srcExpr -> funcCtx.findExprType(srcExpr));
+            .fop(toCast(PhpExpression.class)).arr()
+            .rap(srcExpr -> funcCtx.findExprType(srcExpr));
     }
 
     private static It<F<LookupElementBuilder, LookupElementBuilder>> assertMetaComment(String comment, ExprCtx ctx) {
@@ -162,7 +162,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
     public static LookupElementBuilder makeFullLookup(Mt arrMt, String keyName, Opt<String> commentOpt)
     {
-        Mt keyMt = It(arrMt.types).fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::mem);
+        Mt keyMt = arrMt.types.fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::mem);
         int maxValLen = commentOpt.has() ? COMMENTED_MAX_LEN : BRIEF_VALUE_MAX_LEN;
         String briefValue = keyMt.getBriefValueText(maxValLen);
         if (commentOpt.has()) {
@@ -213,20 +213,21 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                         onFirst.accept(keyName);
                     }
                     keyNames.add(keyName);
-                    LookupElementBuilder justName = makePaddedLookup(keyName, "resolving...", "", BRIEF_VALUE_MAX_LEN);
+                    String briefTypeRaw = Mt.getKeyBriefTypeSt(k.getBriefTypes()).filterUnknown().filterMixed().toStringResolved();
+                    LookupElementBuilder justName = makePaddedLookup(keyName, briefTypeRaw, "resolving...", BRIEF_VALUE_MAX_LEN);
                     MutableLookup mutLookup = new MutableLookup(justName, isCaretInsideQuotes);
                     int basePriority = Tls.isNum(keyName) ? 2000 : 2500;
-                    result.addElement(PrioritizedLookupElement.withPriority(mutLookup, basePriority - keyNames.size()));
+                    LookupElement prio = PrioritizedLookupElement
+                        .withPriority(mutLookup, basePriority - keyNames.size());
+                    result.addElement(prio);
                     nameToMutLookup.put(keyName, mutLookup);
-
-                    String briefTypeRaw = Mt.getKeyBriefTypeSt(k.getBriefTypes()).filterUnknown().filterMixed().toStringResolved();
-                    mutLookup.lookupData = makePaddedLookup(keyName, briefTypeRaw, "", BRIEF_VALUE_MAX_LEN);
                 }
                 String comment = Tls.implode(" ", k.comments);
                 if (!comment.trim().equals("")) {
                     keyNamesToAdd.fch(name -> {
                         opt(nameToMutLookup.get(name)).thn(mutLookup -> {
-                            mutLookup.lookupData = mutLookup.lookupData.withTailText(" " + Tls.substr(comment, 0, BRIEF_VALUE_MAX_LEN), true);
+                            mutLookup.lookupData = mutLookup.lookupData
+                                .withTailText(" " + Tls.substr(comment, 0, BRIEF_VALUE_MAX_LEN), true);
                         });
                         if (!keyToComments.containsKey(name)) {
                             keyToComments.put(name, new LinkedHashSet<>());
@@ -257,7 +258,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         FuncCtx funcCtx = new FuncCtx(search);
         search.isMain = true;
         ExprCtx exprCtx = new ExprCtx(funcCtx, caretPsi, 0);
-        It<DeepType> arrTit;
+        IIt<DeepType> arrTit;
         try {
             arrTit = resolveAtPsi(caretPsi, exprCtx);
         } catch (Throwable exc) {
@@ -268,7 +269,9 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         arrTit.has();
         System.out.println("checked if iterator has anything, took " + search.getExpressionsResolved() + " expressions");
 
-        Mt arrMt = Mt.mem(arrTit);
+        result.startBatch();
+
+        Mt arrMt = Mt.reuse(arrTit);
         // preliminary keys without type - they may be at least 3 times faster in some cases
         T2<Dict<MutableLookup>, Map<String, Set<String>>> tuple = addNameOnly(arrMt, result, isCaretInsideQuotes, (keyName) -> {
             System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
