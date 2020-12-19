@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.12.11.003</version>
+    <version>2020.12.19.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -15,7 +15,7 @@
 <img align="left" width="48px" src="https://user-images.githubusercontent.com/5202330/102693412-1182b780-4223-11eb-898d-007287c7e45c.png"/>
 <br/>
 <br/>
-<p> = greatly extends phpstorm's typing with associative array support</p>
+<p> = greatly extends phpstorm's typing with associativegit  array support</p>
 <br clear="all"/>
 <p>You can chat with dev team in telegram: <a href="https://t.me/klesun_productions">t.me/klesun_productions</a></p>
 <img style="width: 33%; height: auto;" src="https://user-images.githubusercontent.com/5202330/30349574-179c80e2-981c-11e7-9783-c7b9e6076c5c.png"/>
@@ -48,10 +48,9 @@
 
     <change-notes><![CDATA[
     <ul>
-        <li>Fix various typing issues of self:: caused by compatibility break in newer idea versions</li>
-        <li>#163 Support PSALM nullable type annotations</li>
-        <li>#166 Fix, do not fail to parse doc expression with traling comment</li>
-        <li>#166 Use psalm param type definition in argument keys completion (Not just when accessing keys on an existing var)</li>
+        <li>#172 Make key value preview great again</li>
+        <li>(When value is a simple known structure, show it, otherwise show the expression code that creates it when possible)</li>
+        <li>This is an alternative behaviour instead of the one that worked before idea 2020 with values preview updating dynamically in the completion popup</li>
     </ul>
     ]]>
     </change-notes>
