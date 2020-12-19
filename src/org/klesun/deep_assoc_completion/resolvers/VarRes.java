@@ -70,16 +70,16 @@ public class VarRes
                 return args.gat(1)
                     .flt(asd -> isCaretArr)
                     .fop(Tls.toCast(PhpExpression.class))
-                    .map(el -> new Assign(keys, () -> ctx.findExprType(el), false, el, Tls.getIdeaType(el)));
+                    .map(el -> new Assign(keys, ctx.findExprType(el), false, el, Tls.getIdeaType(el)));
             });
     }
 
-    private Opt<S<IIt<DeepType>>> assertForeachElement(PsiElement varRef)
+    private Opt<IIt<DeepType>> assertForeachElement(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .cst(ForeachImpl.class)
             .fop(fch -> ForEach.parse(fch))
-            .map(fchObj -> () -> {
+            .map(fchObj -> {
                 IIt<DeepType> artit = ctx.findExprType(fchObj.srcArr);
                 if (opt(varRef).equals(fchObj.keyVar)) {
                     return artit.fap(t -> t.keys)
@@ -98,12 +98,12 @@ public class VarRes
             });
     }
 
-    private Opt<S<IIt<DeepType>>> assertDeclFromGlobal(PsiElement varRef)
+    private Opt<IIt<DeepType>> assertDeclFromGlobal(PsiElement varRef)
     {
         return Tls.cast(Variable.class, varRef)
             .flt(varPsi -> VarNamePvdr.isGlobalContext(varPsi))
             .flt(varPsi -> !"".equals(varPsi.getName()))
-            .map(varPsi -> () -> VarNamePvdr.resolveGlobalsMagicVar(ctx, varPsi)
+            .map(varPsi -> VarNamePvdr.resolveGlobalsMagicVar(ctx, varPsi)
                 .fap(globt -> Mt.getKeySt(globt, varPsi.getName())));
     }
 
@@ -172,21 +172,22 @@ public class VarRes
         ));
     }
 
-    private Opt<S<IIt<DeepType>>> assertTupleAssignment(PsiElement varRef)
+    private Opt<IIt<DeepType>> assertTupleAssignment(PsiElement varRef)
     {
         return parseAsTupleAssignment(varRef)
-            .map(tuple -> () -> tuple
+            .map(tuple -> tuple
                 .nme((keyPath, arrVal) -> ctx.findExprType(arrVal)
                     .fap(arrt -> {
-                        It<DeepType> takenTit = list(arrt).itr();
+                        IIt<DeepType> takenTit = list(arrt);
                         for (String key: keyPath) {
+                            // probably should reuse collection when possible...
                             takenTit = takenTit.fap(t -> Mt.getKeySt(t, key));
                         }
                         return takenTit;
                     })));
     }
 
-    private Opt<S<IIt<DeepType>>> assertPregMatchResult(PsiElement varRef)
+    private Opt<IIt<DeepType>> assertPregMatchResult(PsiElement varRef)
     {
         return opt(varRef.getParent())
             .fop(toCast(ParameterListImpl.class))
@@ -198,7 +199,7 @@ public class VarRes
             .flt(fun -> opt(fun.getName()).def("").equals("preg_match"))
             .fop(fun -> L(fun.getParameters()).fst())
             .fop(toCast(PhpExpression.class))
-            .map(regexPsi -> () -> {
+            .map(regexPsi -> {
                 IIt<DeepType> tit = ctx.findExprType(regexPsi);
                 return makeRegexNameCaptureTypes(tit);
             });
@@ -242,13 +243,13 @@ public class VarRes
                 .map(varTypes -> new Assign(list(), varTypes, didSurelyHappen, refPsi, PhpType.ARRAY))
             , () -> Tls.cast(ParameterImpl.class, refPsi)
                 .map(param -> {
-                    S<IIt<DeepType>> mtg = () -> new ArgRes(ctx).resolveArg(param);
+                    IIt<DeepType> mtg = new ArgRes(ctx).resolveArg(param);
                     return new Assign(list(), mtg, true, refPsi, param.getType());
                 })
             , () -> Tls.cast(Variable.class, refPsi)
                 .fop(vari -> opt(vari.getParent()))
                 .cst(UnaryExpression.class) // ++$i
-                .map(una -> new Assign(list(), () -> It(som(DeepType.makeInt(una, null))), true, una, una.getType()))
+                .map(una -> new Assign(list(), som(DeepType.makeInt(una, null)), true, una, una.getType()))
             , () -> assertDeclFromGlobal(refPsi)
                 .map(elTypes -> new Assign(list(), elTypes, didSurelyHappen, refPsi, PhpType.MIXED))
         );
@@ -385,7 +386,7 @@ public class VarRes
             thisType, closureType,
             resolveRefs(references, caretVar)
         )   .orr(() -> assertDeclFromGlobal(caretVar)
-                .fap(f -> f.get()).iterator())
+                .fap(f -> f).iterator())
             .orr(som(typeFromIdea));
     }
 

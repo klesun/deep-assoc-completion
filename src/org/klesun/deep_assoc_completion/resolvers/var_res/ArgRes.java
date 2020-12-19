@@ -257,18 +257,18 @@ public class ArgRes extends Lang
         );
     }
 
-    public It<DeepType> resolveArg(ParameterImpl param)
+    public IIt<DeepType> resolveArg(ParameterImpl param)
     {
         int order = getArgOrder(param).def(-1);
 
-        It<ParameterImpl> decls = It.cnc(
+        IIt<ParameterImpl> decls = IResolvedIt.rnc(
             // get doc comments from the initial abstract method if any
-            opt(param.getParent()).itr()
+            opt(param.getParent())
                 .fop(Tls.toCast(ParameterListImpl.class))
                 .map(lst -> lst.getParent())
                 .fop(Tls.toCast(MethodImpl.class))
-                .fap(meth -> opt(meth.getContainingClass())
-                    .fap(cls -> MethCallRes.getSupersAllowDupeFqn(cls)
+                .rap(meth -> opt(meth.getContainingClass())
+                    .rap(cls -> MethCallRes.getSupersAllowDupeFqn(cls)
                         .fap(ifc -> ifc.getMethods())
                         .flt(ifcMeth -> meth.getName().equals(ifcMeth.getName()))))
                 .fop(meth -> L(meth.getParameters()).gat(order))
@@ -294,7 +294,7 @@ public class ArgRes extends Lang
         // treat empty args as any args in the doc,
         // since it's a pain to list all args every time
         boolean isNoArgDoc = !trace.func().hasArgs() && trace.isInComment();
-        It<DeepType> genericTit = It();
+        final It<DeepType> genericTit;
         if (!trace.func().areArgsKnown() || isNoArgDoc) {
             // passed args not known - if caret was inside this function
             genericTit = It(peekOutside(param));
@@ -308,7 +308,7 @@ public class ArgRes extends Lang
                     }
                 });
         }
-        return It.cnc(
+        return IResolvedIt.rnc(
             declTit,
             resolveFromDataProviderDoc(param),
             genericTit

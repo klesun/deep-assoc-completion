@@ -32,7 +32,7 @@ import static org.klesun.lang.Lang.*;
  */
 public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 {
-    final public static int BRIEF_VALUE_MAX_LEN = 50;
+    final public static int BRIEF_VALUE_MAX_LEN = 65;
     final public static int COMMENTED_MAX_LEN = 90;
 
     private static ImageIcon icon = null;
@@ -79,6 +79,8 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
     /**
      * unlike built-in LookupElement, this one can be changed after being
      * displayed (if more detailed type info was calculated in background)
+     *
+     * upd.: mutations are no more updating UI sadly, so this class is pretty useless now
      */
     static class MutableLookup extends LookupElement
     {
@@ -315,7 +317,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         result.addLookupAdvertisement(prefix + "Resolved " + search.getExpressionsResolved() +
             " expressions in " + (elapsed / 1000000000.0) + " sec. First in " + (firstTime.get() / 1000000000.0) + postfix);
 
-        //printExprTree(exprCtx, 0);
+        //printExprTree(exprCtx, search, 0);
 
         // I enabled auto-popup for it, but I want it to show
         // only my options, not 100500k built-in suggestions
@@ -343,6 +345,8 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         Mutable<Boolean> hadComments = new Mutable<>(false);
         nameToMutLookup
             .fch((mutLook, keyName) -> {
+                // TODO: move comments logic to instant popup data, as they won't work anymore if added separately
+
                 search.overrideMaxExpr = som(search.getExpressionsResolved() + 25);
 
                 Set<String> comments = opt(keyToComments.get(keyName)).def(new HashSet<>());

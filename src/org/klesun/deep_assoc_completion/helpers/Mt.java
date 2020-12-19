@@ -62,6 +62,7 @@ public class Mt
         }
     }
 
+    /** not sure there is point in ever using it over reuse() ... */
     public static Mt mem(IIt<DeepType> iter)
     {
         return new Mt(iter.mem());

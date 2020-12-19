@@ -51,7 +51,7 @@ public class MethCallRes extends Lang
         return callCls.equals(cls) && callMet.equals(mth);
     }
 
-    public static It<PhpClass> getSupersAllowDupeFqn(PhpClass cls) {
+    public static L<PhpClass> getSupersAllowDupeFqn(PhpClass cls) {
         String superName = cls.getSuperFQN();
         PhpIndex phpIndex = PhpIndex.getInstance(cls.getProject());
 
@@ -59,7 +59,7 @@ public class MethCallRes extends Lang
             phpIndex.getClassesByFQN(superName),
             It(cls.getImplementedInterfaces()),
             It(cls.getTraits())
-        );
+        ).arr();
     }
 
     public static It<Method> findOverridingMethods(Method meth)

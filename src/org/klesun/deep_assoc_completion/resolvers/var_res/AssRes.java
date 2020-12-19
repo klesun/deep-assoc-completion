@@ -27,17 +27,17 @@ public class AssRes extends Lang
         this.ctx = ctx;
     }
 
-    private static It<DeepType> makeType(L<KeyType> keys, S<? extends Iterable<DeepType>> getType, PsiElement psi, PhpType briefType)
+    private static IIt<DeepType> makeType(L<KeyType> keys, IIt<DeepType> types, PsiElement psi, PhpType briefType)
     {
         if (keys.size() == 0) {
-            return It(getType.get());
+            return types instanceof IReusableIt ? (IReusableIt<DeepType>)types : It(types);
         } else {
             KeyType nextKey = keys.get(0);
             L<KeyType> furtherKeys = keys.sub(1);
-            S<Iterable<DeepType>> memoized = Tls.onDemand(() -> new MemIt<>(getType.get()));
+            IReusableIt<DeepType> memoized = Mt.reuse(types).types;
 
-            Key keyEntry = new Key(nextKey, nextKey.definition).addType(() ->
-                makeType(furtherKeys, memoized, psi, briefType).wap(Mt::mem), briefType);
+            Mt valMt = makeType(furtherKeys, memoized, psi, briefType).wap(Mt::reuse);
+            Key keyEntry = new Key(nextKey, nextKey.definition).addType(Granted(valMt), briefType);
             return new Build(psi, PhpType.ARRAY)
                 .keys(som(keyEntry)).itr();
         }
@@ -49,7 +49,7 @@ public class AssRes extends Lang
     }
 
     // null in key chain means index (when it is number or variable, not named key)
-    private Opt<T2<List<KeyType>, S<IIt<DeepType>>>> collectKeyAssignment(AssignmentExpressionImpl ass)
+    private Opt<T2<List<KeyType>, IIt<DeepType>>> collectKeyAssignment(AssignmentExpressionImpl ass)
     {
         Opt<ArrayAccessExpressionImpl> nextKeyOpt = opt(ass.getVariable())
             .fop(toCast(ArrayAccessExpressionImpl.class));
@@ -77,7 +77,7 @@ public class AssRes extends Lang
 
         return opt(ass.getValue())
             .fop(toCast(PhpExpression.class))
-            .map(value -> T2(keys, () -> ctx.findExprType(value)));
+            .map(value -> T2(keys, ctx.findExprType(value)));
     }
 
     private static Opt<AssignmentExpressionImpl> findParentAssignment(PsiElement caretVar) {

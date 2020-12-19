@@ -16,8 +16,7 @@ import java.util.List;
 public class Assign extends Lang
 {
     final public List<KeyType> keys;
-    // list?
-    final public S<IIt<DeepType>> assignedType;
+    final public IIt<DeepType> assignedType;
     // when true, that means this assignment happens _always_,
     // i.e. it is not inside an "if" branch or a loop
     final public boolean didSurelyHappen;
@@ -25,10 +24,10 @@ public class Assign extends Lang
     final public PsiElement psi;
     final public PhpType briefType;
 
-    public Assign(List<KeyType> keys, S<IIt<DeepType>> assignedType, boolean didSurelyHappen, PsiElement psi, PhpType briefType)
+    public Assign(List<KeyType> keys, IIt<DeepType> assignedType, boolean didSurelyHappen, PsiElement psi, PhpType briefType)
     {
         this.keys = keys;
-        this.assignedType = Tls.onDemand(assignedType);
+        this.assignedType = assignedType;
         this.didSurelyHappen = didSurelyHappen;
         this.psi = psi;
         this.briefType = briefType;
