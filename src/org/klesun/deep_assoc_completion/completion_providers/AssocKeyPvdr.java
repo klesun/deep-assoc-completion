@@ -192,6 +192,23 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
+    private Opt<PsiElement> tryTakeValuePsi(PsiElement keyPsi)
+    {
+        return Opt.fst(Lang::non
+            , () -> Tls.cast(ArrayHashElement.class, keyPsi)
+                .fop(hashEl -> opt(hashEl.getValue()))
+            , () -> Tls.cast(StringLiteralExpression.class, keyPsi)
+                .fop(lit -> opt(lit.getParent()))
+                .cst(ArrayIndex.class)
+                .fop(lit -> opt(lit.getParent()))
+                .cst(ArrayAccessExpression.class)
+                .fop(acc -> opt(acc.getParent())
+                    .cst(AssignmentExpression.class)
+                    .flt(ass -> acc.equals(ass.getVariable())))
+                .fop(ass -> opt(ass.getValue()))
+        );
+    }
+
     /**
      * a tradeoff after idea removed possibility to update tail text in completion option after it was
      * shown - show type at once if it is already resolved (direct keys definition, phpdoc, etc...)
@@ -203,13 +220,11 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         if (granteds.has()) {
             Set<String> typeStringsSet = new LinkedHashSet<>(granteds.arr());
             return substr(It(typeStringsSet).str("|"), 0, BRIEF_VALUE_MAX_LEN);
-        } else if (key.definition instanceof ArrayHashElement) {
-            ArrayHashElement casted = (ArrayHashElement)key.definition;
-            String valueStr = opt(casted.getValue())
-                .map(PsiElement::getText).def("");
-            return substr(valueStr, 0, BRIEF_VALUE_MAX_LEN);
         } else {
-            return "";
+            return tryTakeValuePsi(key.definition)
+                .map(valPsi -> valPsi.getText())
+                .map(valStr -> substr(valStr, 0, BRIEF_VALUE_MAX_LEN))
+                .def("");
         }
     }
 
@@ -298,7 +313,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         Mt arrMt = Mt.reuse(arrTit);
         // preliminary keys without type - they may be at least 3 times faster in some cases
         T2<Dict<MutableLookup>, Map<String, Set<String>>> tuple = addNameOnly(arrMt, result, isCaretInsideQuotes, (keyName) -> {
-            System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
+            //System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
             firstTime.set(System.nanoTime() - startTime);
         });
         Dict<MutableLookup> nameToMutLookup = tuple.a;
