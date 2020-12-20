@@ -376,7 +376,7 @@ public class UsageBasedTypeResolver
         return It.cnc(asFqnMeta, asRealFuncArg, asMagicCtorArg);
     }
 
-    private It<DeepType> findVarTypeFromUsage(PhpNamedElement caretVar)
+    public It<DeepType> findVarTypeFromUsage(PhpNamedElement caretVar)
     {
         if (depthLeft < 1) {
             return It.non();

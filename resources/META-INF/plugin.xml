@@ -60,7 +60,8 @@
     <idea-version since-build="203.5981.155"/> <!-- self::class no more resolvable by built-in tools -->
 
     <extensions defaultExtensionNs="com.intellij">
-        <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DeepAssocCbtr"/>
+        <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DirectTypeCompletionContributor"/>
+        <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.UsageBasedCompletionContributor"/>
         <completion.contributor language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.RestoreBuiltinCbtr"/>
         <psi.referenceContributor implementation="org.klesun.deep_assoc_completion.entry.ArrFuncRefCbtr"/>
         <gotoDeclarationHandler implementation="org.klesun.deep_assoc_completion.go_to_decl_providers.MainGoToDecl"/>

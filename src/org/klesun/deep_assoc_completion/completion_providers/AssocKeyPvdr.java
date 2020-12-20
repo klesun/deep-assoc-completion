@@ -317,8 +317,6 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         }
         arrTit.has();
 
-        result.startBatch();
-
         Mt arrMt = Mt.reuse(arrTit);
         // preliminary keys without type - they may be at least 3 times faster in some cases
         T2<Dict<MutableLookup>, Map<String, Set<String>>> tuple = addNameOnly(arrMt, result, isCaretInsideQuotes, (keyName) -> {

@@ -21,9 +21,9 @@ import static org.klesun.lang.Lang.toCast;
  * using declaration inside the initial function
  * that created this array
  */
-public class DeepAssocCbtr extends CompletionContributor
+public class DirectTypeCompletionContributor extends CompletionContributor
 {
-    public DeepAssocCbtr()
+    public DirectTypeCompletionContributor()
     {
         // $arr[''];
         this.extend(
@@ -74,14 +74,6 @@ public class DeepAssocCbtr extends CompletionContributor
                 ,
             new VarNamePvdr()
         );
-        // json_encode($data, JSON_PRETTY_PRINT | );
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, ConstantReference.class) // because IntellijIdeaRulezzz
-                ,
-            new ArgCstPvdr()
-        );
         // for cases when only Deep Resolve can say what class it is
         this.extend(
             CompletionType.BASIC,
@@ -90,7 +82,6 @@ public class DeepAssocCbtr extends CompletionContributor
                 ,
             new ObjMemberPvdr()
         );
-
         // [Something::class, '']
         this.extend(
             CompletionType.BASIC,
@@ -99,27 +90,6 @@ public class DeepAssocCbtr extends CompletionContributor
                 .withSuperParent(3, ArrayCreationExpression.class)
                 ,
             new ArrFuncRefNamePvdr()
-        );
-        //  \/
-        // [''] + zhopa = ['zhopa' => ]
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                .withSuperParent(2, PhpPsiElementImpl.class)
-                .withSuperParent(3, ArrayCreationExpression.class)
-            ,
-            new ArrCtorIncompleteAssocKeyPvdr()
-        );
-        // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
-        // or in_array('', $types) or in_array($type, ['AIR', ''])
-        // should suggest possible values of 'type'
-        this.extend(
-            CompletionType.BASIC,
-            PlatformPatterns.psiElement()
-                .withSuperParent(1, StringLiteralExpression.class)
-                ,
-            new UsedStrValsPvdr()
         );
     }
 

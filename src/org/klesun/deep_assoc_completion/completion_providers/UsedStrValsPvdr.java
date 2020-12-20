@@ -148,6 +148,33 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         return new UsageBasedTypeResolver(funcCtx).resolve(lit);
     }
 
+    /**
+     *      \/ should suggest keys used in doStuff()
+     * $arr[''] = 123;
+     * doStuff($arr);
+     */
+    private static IIt<DeepType> resolveAssignedKey(StringLiteralExpression lit, IExprCtx funcCtx)
+    {
+        return opt(lit.getParent())
+            .cst(ArrayIndex.class)
+            .fop(idx -> opt(idx.getParent()))
+            .cst(ArrayAccessExpression.class)
+            .flt(acc -> {
+                boolean isStatementStart = opt(acc.getParent())
+                    .cst(Statement.class)
+                    .has();
+                boolean isAssignment = opt(acc.getParent())
+                    .cst(AssignmentExpression.class)
+                    .any(ass -> acc.equals(ass.getVariable()));
+                return isStatementStart || isAssignment;
+            })
+            .fop(acc -> opt(acc.getValue()))
+            // probably will want to support $arr['a']['b'] = ... and $arr['a'][$i]['g'] = ... at some point...
+            // ... and go to definition
+            .cst(Variable.class)
+            .rap(new UsageBasedTypeResolver(funcCtx)::findVarTypeFromUsage);
+    }
+
     /*
      * moving all these built-in function resolutions inside UsageBasedTypeResolver.java
      * would be cooler, as it would also cover cases when they are called deeper
@@ -238,7 +265,12 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         IExprCtx exprCtx = new ExprCtx(funcCtx, lit, 0);
 
         return It.frs(
-            () -> resolveKeyArrCtor(lit, exprCtx),
+            // resolvers with associated value
+            () -> It.cnc(
+                resolveKeyArrCtor(lit, exprCtx),
+                resolveAssignedKey(lit, exprCtx)
+            ),
+            // resolvers with just string key
             () -> {
                 It<DeepType> strts = It.cnc(
                     resolveEqExpr(lit, exprCtx),
