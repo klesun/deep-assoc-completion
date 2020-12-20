@@ -171,6 +171,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
             .fop(acc -> opt(acc.getValue()))
             // probably will want to support $arr['a']['b'] = ... and $arr['a'][$i]['g'] = ... at some point...
             // ... and go to definition
+            // ... and to automatically put caret after closing bracket on completion, maybe even add equals and semicolon...
             .cst(Variable.class)
             .rap(new UsageBasedTypeResolver(funcCtx)::findVarTypeFromUsage);
     }

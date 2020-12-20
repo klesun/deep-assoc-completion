@@ -12,66 +12,69 @@ import org.klesun.lang.Opt;
 
 import static org.klesun.lang.Lang.*;
 
-/** short for "Make Type" */
+/**
+ * short for "Make Type"
+ * probably much better would be to instantiate this class with psi and isExactPsi=false always
+ */
 public class Mkt {
     public static DeepType str(PsiElement psi, String content)
     {
-        return new DeepType(psi, PhpType.STRING, content);
+        return new DeepType(psi, PhpType.STRING, content, false);
     }
 
     public static DeepType str(PsiElement psi)
     {
-        return new DeepType(psi, PhpType.STRING);
+        return new DeepType(psi, PhpType.STRING, false);
     }
 
     public static DeepType inte(PsiElement psi)
     {
-        return new DeepType(psi, PhpType.INT);
+        return new DeepType(psi, PhpType.INT, false);
     }
 
     public static DeepType inte(PsiElement psi, Integer content)
     {
-        return new DeepType(psi, PhpType.INT, content + "");
+        return new DeepType(psi, PhpType.INT, content + "", false);
     }
 
     public static DeepType inte(PsiElement psi, String content)
     {
-        return new DeepType(psi, PhpType.INT, content + "");
+        return new DeepType(psi, PhpType.INT, content + "", false);
     }
 
     public static DeepType floate(PsiElement psi)
     {
-        return new DeepType(psi, PhpType.FLOAT);
+        return new DeepType(psi, PhpType.FLOAT, false);
     }
 
     public static DeepType floate(PsiElement psi, double content)
     {
-        return new DeepType(psi, PhpType.FLOAT, content + "");
+        return new DeepType(psi, PhpType.FLOAT, content + "", false);
     }
 
     public static DeepType bool(PsiElement psi)
     {
-        return new DeepType(psi, PhpType.BOOLEAN);
+        return new DeepType(psi, PhpType.BOOLEAN, false);
     }
 
     public static DeepType bool(PsiElement psi, Boolean content)
     {
-        return new DeepType(psi, PhpType.BOOLEAN, (content ? 1 : 0) + "");
+        return new DeepType(psi, PhpType.BOOLEAN, (content ? 1 : 0) + "", false);
     }
 
     public static DeepType res(PsiElement psi)
     {
-        return new DeepType(psi, PhpType.RESOURCE);
+        return new DeepType(psi, PhpType.RESOURCE, false);
     }
 
     public static DeepType callable(PsiElement psi)
     {
-        return new DeepType(psi, PhpType.CALLABLE);
+        return new DeepType(psi, PhpType.CALLABLE, false);
     }
 
     public static DeepType arr(PsiElement psi)
     {
-        return new DeepType(psi, PhpType.ARRAY);
+        return new DeepType(psi, PhpType.ARRAY, false);
     }
 
     public static DeepType arr(PsiElement psi, Mt elt)
