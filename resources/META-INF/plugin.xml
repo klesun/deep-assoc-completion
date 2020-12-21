@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.12.19.001</version>
+    <version>2020.12.21.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -49,9 +49,10 @@
 
     <change-notes><![CDATA[
     <ul>
-        <li>#172 Make key value preview great again</li>
-        <li>(When value is a simple known structure, show it, otherwise show the expression code that creates it when possible)</li>
-        <li>This is an alternative behaviour instead of the one that worked before idea 2020 with values preview updating dynamically in the completion popup</li>
+        <li>#163 Fix, do not fail to parse PSALM function type annotation with no arguments</li>
+        <li>Fix, wrong interpretation of idea type notation for method argument (Plugin thought that method first argument is same as $this)</li>
+        <li>Remove irrelevant function declaration text from built-in keys value preview</li>
+        <li>#168 Suggest usage-based completion options in variable key assignment</li>
     </ul>
     ]]>
     </change-notes>
