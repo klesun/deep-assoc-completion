@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.helpers.*;
+import org.klesun.deep_assoc_completion.resolvers.ArrCtorRes;
 import org.klesun.lang.*;
 
 import java.util.*;
@@ -59,6 +60,9 @@ public class DeepType extends Lang
     public DeepType(PsiElement definition, PhpType briefType, String stringValue)
     {
         this(definition, briefType, stringValue, true);
+        if (briefType.equals(PhpType.NULL)) {
+            this.isNull = true;
+        }
     }
 
     public DeepType(PsiElement definition, PhpType briefType, boolean isExactPsi)
@@ -208,8 +212,11 @@ public class DeepType extends Lang
     public Opt<String> getBriefVal(boolean resolveIter)
     {
         String typeInfo = null;
+        Opt<PhpType> asObjPst = ArrCtorRes.filterObjPst(briefType);
         if (clsRefType.has()) {
             typeInfo = clsRefType.unw() + "::class";
+        } else if (isNull) {
+            typeInfo = "null";
         } else if (stringValue != null) {
             if (isNumber) {
                 typeInfo = stringValue;
@@ -228,8 +235,8 @@ public class DeepType extends Lang
                 .str() + ")";
         } else if (booleanValue.has()) {
             typeInfo = booleanValue.unw() + "";
-        } else if (isNull) {
-            typeInfo = "null";
+        } else if (asObjPst.has()) {
+            typeInfo = "new " + asObjPst.unw();
         }
         return opt(typeInfo);
     }
