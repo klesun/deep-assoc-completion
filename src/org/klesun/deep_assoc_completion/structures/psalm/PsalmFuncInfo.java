@@ -39,7 +39,7 @@ public class PsalmFuncInfo {
         this.returnType = returnType;
     }
 
-    private static It<RawDocTag> getRawTags(String docCommentText)
+    private static L<RawDocTag> getRawTags(String docCommentText)
     {
         List<RawDocTag> tags = new ArrayList<>();
         Opt<RawDocTag> current = non();
@@ -61,7 +61,7 @@ public class PsalmFuncInfo {
         if (current.has()) {
             tags.add(current.unw());
         }
-        return It(tags);
+        return L(tags);
     }
 
     private static L<PsalmDocTag> getPsalmTags(PhpDocComment docComment)

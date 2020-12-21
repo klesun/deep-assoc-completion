@@ -2,6 +2,8 @@ package org.klesun.deep_assoc_completion.structures.psalm;
 
 import java.util.List;
 
+import static org.klesun.lang.Lang.It;
+
 public class TFunc implements IType
 {
 	final public List<Param> params;
@@ -24,5 +26,10 @@ public class TFunc implements IType
 			this.isOptional = isOptional;
 			this.isSpread = isSpread;
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "callable(" + It(params).str(", ") + "): " + returnType;
 	}
 }

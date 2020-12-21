@@ -167,8 +167,7 @@ public class PsalmTypeExprParser
         do {
             Opt<? extends IType> typeOpt = parseMultiValue();
             if (!typeOpt.has()) {
-                System.out.println("no arg type opt huj");
-                return non();
+                break;
             }
             IType type = typeOpt.unw();
 
@@ -179,7 +178,6 @@ public class PsalmTypeExprParser
         } while (this.unprefix("\\s*,\\s*"));
 
         if (!this.unprefix("\\s*\\)\\s*:\\s*")) {
-            System.out.println("no ending after " + params.size());
             return non();
         }
         return parseMultiValue()
