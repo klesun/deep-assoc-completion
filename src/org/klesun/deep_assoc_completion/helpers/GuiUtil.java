@@ -1,9 +1,11 @@
 package org.klesun.deep_assoc_completion.helpers;
 
-import com.intellij.codeInsight.completion.InsertHandler;
-import com.intellij.codeInsight.completion.InsertionContext;
+import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.util.Consumer;
+import org.jetbrains.annotations.NotNull;
+import org.klesun.lang.Lang.Mutable;
 import org.klesun.lang.Tls;
 
 public class GuiUtil {
@@ -35,5 +37,31 @@ public class GuiUtil {
     public static InsertHandler<LookupElement> toAlwaysRemoveQuotes()
     {
         return GuiUtil::removeQuotes;
+    }
+
+    public static void runSafeRemainingContributors(
+        @NotNull CompletionResultSet result,
+        @NotNull CompletionParameters parameters,
+        Consumer<? super CompletionResult> consumer
+    ) {
+        Mutable<Boolean> isOurs = new Mutable<>(false);
+        try {
+            result.runRemainingContributors(parameters, contributorResult -> {
+                try {
+                    consumer.consume(contributorResult);
+                } catch (Throwable exc) {
+                    isOurs.set(true);
+                    throw exc;
+                }
+            });
+        } catch (Throwable exc) {
+            if (isOurs.get()) {
+                throw exc;
+            } else {
+                // ignore other plugins errors
+                System.out.println("runRemainingContributors() ran by deep-assoc resulted in error:");
+                exc.printStackTrace();
+            }
+        }
     }
 }

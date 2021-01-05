@@ -29,6 +29,7 @@ import java.util.Set;
 
 import static org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr.BRIEF_VALUE_MAX_LEN;
 import static org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr.COMMENTED_MAX_LEN;
+import static org.klesun.deep_assoc_completion.helpers.GuiUtil.runSafeRemainingContributors;
 import static org.klesun.lang.Lang.*;
 
 // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
@@ -294,7 +295,7 @@ public class UsedStrValsPvdr extends CompletionProvider<CompletionParameters>
         Set<String> alreadySuggested = new HashSet<>();
         // Symfony string completion options are usually more
         // relevant, so should make sure they are shown instantly
-        result.runRemainingContributors(parameters, otherSourceResult -> {
+        runSafeRemainingContributors(result, parameters, otherSourceResult -> {
             result.passResult(otherSourceResult);
             alreadySuggested.add(otherSourceResult.getLookupElement().getLookupString());
         });

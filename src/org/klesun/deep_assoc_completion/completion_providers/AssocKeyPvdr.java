@@ -26,6 +26,7 @@ import javax.swing.*;
 import java.net.URL;
 import java.util.*;
 
+import static org.klesun.deep_assoc_completion.helpers.GuiUtil.runSafeRemainingContributors;
 import static org.klesun.lang.Lang.*;
 
 /**
@@ -350,7 +351,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
             .def(false);
 
         nameToMutLookup.map(l -> l.getLookupString()).fch(el -> suggested.add(el));
-        result.runRemainingContributors(parameters, otherSourceResult -> {
+        runSafeRemainingContributors(result, parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
             LookupElement lookup = otherSourceResult.getLookupElement();
             boolean wouldBeDisplayedOnItsOwn = !isEmptySquareBracket || !parameters.isAutoPopup();

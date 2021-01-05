@@ -31,6 +31,7 @@ import org.klesun.lang.*;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.klesun.deep_assoc_completion.helpers.GuiUtil.runSafeRemainingContributors;
 import static org.klesun.lang.Lang.*;
 
 /**
@@ -177,7 +178,7 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
 
         long startTime = System.nanoTime();
         L<LookupElement> builtIns = list();
-        result.runRemainingContributors(parameters, otherSourceResult -> {
+        runSafeRemainingContributors(result, parameters, otherSourceResult -> {
             LookupElement kup = otherSourceResult.getLookupElement();
             builtIns.add(kup);
             result.addElement(kup);

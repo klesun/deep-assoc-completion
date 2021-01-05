@@ -22,6 +22,7 @@ import org.klesun.lang.It;
 import org.klesun.lang.Opt;
 import org.klesun.lang.Tls;
 
+import static org.klesun.deep_assoc_completion.helpers.GuiUtil.runSafeRemainingContributors;
 import static org.klesun.lang.Lang.*;
 
 
@@ -78,7 +79,7 @@ public class ArgCstPvdr extends CompletionProvider<CompletionParameters>
                 if (parameters.isAutoPopup() && list(" ", "(").contains(ch)) {
                     // skip all other contributors, since I enabled auto-popup in func args only for my
                     // particular case, not for hundreds of suggestions of all possible values in the scope
-                    result.runRemainingContributors(parameters, otherSrc -> {});
+                    runSafeRemainingContributors(result, parameters, otherSrc -> {});
                 }
                 SearchCtx search = new SearchCtx(caretLeaf.getProject())
                     .setDepth(AssocKeyPvdr.getMaxDepth(parameters.isAutoPopup(), caretLeaf.getProject()));

@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2020.12.21.001</version>
+    <version>2021.01.05.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -49,10 +49,7 @@
 
     <change-notes><![CDATA[
     <ul>
-        <li>#163 Fix, do not fail to parse PSALM function type annotation with no arguments</li>
-        <li>Fix, wrong interpretation of idea type notation for method argument (Plugin thought that method first argument is same as $this)</li>
-        <li>Remove irrelevant function declaration text from built-in keys value preview</li>
-        <li>#168 Suggest usage-based completion options in variable key assignment</li>
+        <li>#173 Do not fail on runRemainingContributors() if some other plugin threw an error</li>
     </ul>
     ]]>
     </change-notes>

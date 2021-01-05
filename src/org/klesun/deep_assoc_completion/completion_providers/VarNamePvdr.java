@@ -36,6 +36,7 @@ import org.klesun.lang.Tls;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.klesun.deep_assoc_completion.helpers.GuiUtil.runSafeRemainingContributors;
 import static org.klesun.lang.Lang.*;
 
 // string literal after `==` like in `$writeSsrRecords[0]['type'] === ''`
@@ -157,7 +158,7 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
         Set<String> suggested = new HashSet();
         // run remaining so that our completions were in the bottom of the list since
         // they are global hence least probably to be needed in a given context
-        result.runRemainingContributors(parameters, (fromOtherSrc) -> {
+        runSafeRemainingContributors(result, parameters, (fromOtherSrc) -> {
             LookupElement kup = fromOtherSrc.getLookupElement();
             suggested.add(kup.getLookupString());
             result.passResult(fromOtherSrc);
