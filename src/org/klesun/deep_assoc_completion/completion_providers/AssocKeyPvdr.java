@@ -201,26 +201,42 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
     private IIt<LookupKey> makeSuggestibleNames(DeepType kt, boolean isCaretInsideQuotes) {
         L<LookupKey> keyNamesToAdd = list();
-        if (kt.stringValue == null) {
-            //System.out.println(kt.definition.getText());
-            for (int n = 0; n < 5; ++n) {
-                LookupElementBuilder keyLookup = startLookupBuilder(n + "");
-                keyNamesToAdd.add(new LookupKey(keyLookup, n));
-            }
-        } else {
+        if (kt.stringValue != null) {
             String keyName = kt.stringValue;
             String lookupString = isCaretInsideQuotes || Tls.isNum(keyName) ? keyName : "'" + keyName + "'";
             LookupElementBuilder keyLookup = startLookupBuilder(lookupString)
                 .withBoldness(true);
-            keyNamesToAdd.add(new LookupKey(keyLookup, keyName));
+            keyNamesToAdd.add(new LookupKey(keyLookup, LookupKeyKind.NAME));
+        } else {
+            IIt<LookupKey> varNameLookups = opt(kt.definition)
+                .fop(psi -> Opt.fst(Tls::non
+                    , () -> Tls.cast(Variable.class, psi)
+                    , () -> Tls.cast(ArrayHashElement.class, psi)
+                        .fop(h -> opt(h.getKey()))
+                        .cst(Variable.class)
+                ))
+                .map(PhpNamedElement::getName)
+                .map(varName -> {
+                    LookupElementBuilder varLookup = startLookupBuilder("$" + varName);
+                    return new LookupKey(varLookup, LookupKeyKind.VAR);
+                });
+            varNameLookups.forEach(keyNamesToAdd::add);
+            for (int n = 0; n < 3; ++n) {
+                LookupElementBuilder keyLookup = startLookupBuilder(n + "");
+                keyNamesToAdd.add(new LookupKey(keyLookup, LookupKeyKind.INDEX));
+            }
         }
         return keyNamesToAdd.map(lk -> {
             LookupElementBuilder keyLookup = lk.lookup
                 .withInsertHandler((ctx, lookup) -> {
                     putCaretForward(ctx, isCaretInsideQuotes);
-                    GuiUtil.removeIntStrQuotes(ctx, lookup);
+                    if (lk.kind == LookupKeyKind.NAME) {
+                        GuiUtil.removeIntStrQuotes(ctx, lookup);
+                    } else { // var, index
+                        GuiUtil.removeQuotes(ctx, lookup);
+                    }
                 });
-            return new LookupKey(keyLookup, lk.keyName, lk.kind);
+            return new LookupKey(keyLookup, lk.kind);
         });
     }
 
@@ -231,14 +247,14 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         boolean isCaretInsideQuotes,
         C<String> onFirst
     ) {
-        Set<String> keyNames = new LinkedHashSet<>();
+        Set<String> suggested = new LinkedHashSet<>();
         Mutable<Boolean> isFirst = new Mutable<>(true);
         Mutable<Boolean> hadComments = new Mutable<>(false);
 
         arrMt.types.fap(t -> t.keys).fch((keyEntry, i) -> {
             keyEntry.keyType.getTypes().itr().fch((kt,j) -> {
                 IIt<LookupKey> newKeyNamesToAdd = makeSuggestibleNames(kt, isCaretInsideQuotes)
-                    .flt(lk -> !keyNames.contains(lk.keyName));
+                    .flt(lk -> !suggested.contains(lk.lookup.getLookupString()));
 
                 String comment = Tls.implode(" ", keyEntry.comments).trim();
                 Opt<String> commentOpt = comment.trim().equals("") ? non() : som(comment);
@@ -256,9 +272,8 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                 for (LookupKey lookupKey: newKeyNamesToAdd) {
                     if (isFirst.get()) {
                         isFirst.set(false);
-                        onFirst.accept(lookupKey.keyName);
+                        onFirst.accept(lookupKey.lookup.getLookupString());
                     }
-                    keyNames.add(lookupKey.keyName);
 
                     String tailText = prepareTailText(
                         lookupKey.lookup.getLookupString().length(),
@@ -272,16 +287,17 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                         lookup = updater.apply(lookup);
                     }
 
-                    int basePriority = lookupKey.kind == LookupKeyKind.INDEX ? 2000 : 2500;
-                    int priority = basePriority - keyNames.size();
+                    int basePriority = lookupKey.kind == LookupKeyKind.NAME ? 2500 : 2000;
+                    int priority = basePriority - suggested.size();
                     LookupElement prio = PrioritizedLookupElement
                         .withPriority(lookup, priority);
 
                     result.addElement(prio);
+                    suggested.add(lookupKey.lookup.getLookupString());
                 }
             });
         });
-        return T2(keyNames, hadComments.get());
+        return T2(suggested, hadComments.get());
     }
 
     @Override
@@ -312,8 +328,8 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
         Mt arrMt = Mt.reuse(arrTit);
         // preliminary keys without type - they may be at least 3 times faster in some cases
-        T2<Set<String>, Boolean> tuple = addNameOnly(arrMt, result, exprCtx, isCaretInsideQuotes, (keyName) -> {
-            //System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
+        T2<Set<String>, Boolean> tuple = addNameOnly(arrMt, result, exprCtx, isCaretInsideQuotes, (lookupString) -> {
+            //System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + lookupString);
             firstTime.set(System.nanoTime() - startTime);
         });
         Set<String> suggested = tuple.a;
@@ -359,26 +375,16 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    private static enum LookupKeyKind { NAME, INDEX };
+    private static enum LookupKeyKind { NAME, INDEX, VAR };
 
     private static class LookupKey {
 
         final public LookupElementBuilder lookup;
-        final public String keyName;
         final public LookupKeyKind kind;
 
-        LookupKey(LookupElementBuilder lookup, String keyName, LookupKeyKind kind) {
+        LookupKey(LookupElementBuilder lookup, LookupKeyKind kind) {
             this.lookup = lookup;
-            this.keyName = keyName;
             this.kind = kind;
-        }
-
-        LookupKey(LookupElementBuilder lookup, String keyName) {
-            this(lookup, keyName, LookupKeyKind.NAME);
-        }
-
-        LookupKey(LookupElementBuilder lookup, Integer index) {
-            this(lookup, index + "", LookupKeyKind.INDEX);
         }
     }
 }

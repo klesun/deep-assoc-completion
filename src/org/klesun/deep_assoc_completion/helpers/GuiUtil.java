@@ -17,7 +17,7 @@ public class GuiUtil {
         ctx.getEditor().getCaretModel().moveToOffset(endPos + offset);
     }
 
-    private static void removeQuotes(InsertionContext ctx, LookupElement lookup)
+    public static void removeQuotes(InsertionContext ctx, LookupElement lookup)
     {
         int from = ctx.getStartOffset();
         int to = ctx.getTailOffset();
