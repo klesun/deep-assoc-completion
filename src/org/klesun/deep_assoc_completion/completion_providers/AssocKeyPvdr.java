@@ -63,14 +63,8 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         return getMaxDepth(parameters.isAutoPopup(), parameters.getEditor().getProject());
     }
 
-    public static LookupElementBuilder makePaddedLookup(
-        String keyName,
-        String ideaType,
-        String briefVal,
-        Opt<String> commentOpt
-    ) {
+    private static String prepareTailText(int keyLength, String briefVal, Opt<String> commentOpt) {
         int maxValLen = commentOpt.has() ? COMMENTED_MAX_LEN : BRIEF_VALUE_MAX_LEN;
-        ideaType = !ideaType.equals("") ? ideaType : "?";
 
         // (keyName + briefVal) length must be constant for all keys, or you'll
         // get nasty broken position of type when you highlight an option
@@ -78,12 +72,26 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         if (commentOpt.has()) {
             briefVal = Tls.substr(briefVal, 0, 20) + "… " + commentOpt.unw();
         }
-        briefVal = Tls.substr(briefVal, 0, maxValLen - keyName.length());
+        return Tls.substr(briefVal, 0, maxValLen);
+    }
 
+    private static LookupElementBuilder startLookupBuilder(String keyName) {
         return LookupElementBuilder.create(keyName)
             .withBoldness(!Tls.isNum(keyName))
+            .withIcon(getIcon());
+    }
+
+    public static LookupElementBuilder makePaddedLookup(
+        String keyName,
+        String ideaType,
+        String briefVal,
+        Opt<String> commentOpt
+    ) {
+        ideaType = !ideaType.equals("") ? ideaType : "?";
+        briefVal = prepareTailText(keyName.length(), briefVal, commentOpt);
+
+        return startLookupBuilder(keyName)
             .withTailText(briefVal, true)
-            .withIcon(getIcon())
             .withTypeText(ideaType, false);
     }
 
@@ -236,7 +244,20 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    private T2<Dict<MutableLookup>, Boolean> addNameOnly(
+    private L<String> makeSuggestibleNames(DeepType kt) {
+        L<String> keyNamesToAdd = list();
+        if (kt.stringValue == null) {
+            //System.out.println(kt.definition.getText());
+            for (int n = 0; n < 5; ++n) {
+                keyNamesToAdd.add(n + "");
+            }
+        } else {
+            keyNamesToAdd.add(kt.stringValue);
+        }
+        return keyNamesToAdd;
+    }
+
+    private T2<Set<String>, Boolean> addNameOnly(
         Mt arrMt,
         CompletionResultSet result,
         ExprCtx exprCtx,
@@ -247,41 +268,36 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         Mutable<Boolean> isFirst = new Mutable<>(true);
         Mutable<Boolean> hadComments = new Mutable<>(false);
 
-        Dict<MutableLookup> nameToMutLookup = new Dict<>(new LinkedHashMap<>());
         arrMt.types.fap(t -> t.keys).fch((keyEntry, i) -> {
             keyEntry.keyType.getTypes().itr().fch((kt,j) -> {
-                L<String> keyNamesToAdd = list();
-                if (kt.stringValue == null) {
-                    for (int n = 0; n < 5; ++n) {
-                        keyNamesToAdd.add(n + "");
-                    }
-                } else {
-                    keyNamesToAdd.add(kt.stringValue);
+                L<String> newKeyNamesToAdd = makeSuggestibleNames(kt)
+                    .flt(kn -> !keyNames.contains(kn)).arr();
+
+                String comment = Tls.implode(" ", keyEntry.comments).trim();
+                Opt<String> commentOpt = comment.trim().equals("") ? non() : som(comment);
+                L<F<LookupElementBuilder, LookupElementBuilder>> metCommentOpt = commentOpt
+                    .fap(c -> assertMetaComment(c, exprCtx)).arr();
+                if (metCommentOpt.has()) {
+                    commentOpt = non();
                 }
-                L<String> newKeyNamesToAdd = keyNamesToAdd.flt(kn -> !keyNames.contains(kn)).arr();
-                String comment = Tls.implode(" ", keyEntry.comments);
+                if (commentOpt.has()) {
+                    hadComments.set(true);
+                }
+                String briefTypeRaw = Mt.getKeyBriefTypeSt(keyEntry.getBriefTypes())
+                    .filterUnknown().filterMixed().toStringResolved();
+
                 for (String keyName: newKeyNamesToAdd) {
                     if (isFirst.get()) {
                         isFirst.set(false);
                         onFirst.accept(keyName);
                     }
                     keyNames.add(keyName);
-                    String briefTypeRaw = Mt.getKeyBriefTypeSt(keyEntry.getBriefTypes())
-                        .filterUnknown().filterMixed().toStringResolved();
 
-                    String briefVal = getGrantedBriefValue(keyEntry);
+                    String tailText = prepareTailText(keyName.length(), getGrantedBriefValue(keyEntry), commentOpt);
+                    LookupElementBuilder justName = startLookupBuilder(keyName)
+                        .withTailText(tailText, true)
+                        .withTypeText(!briefTypeRaw.equals("") ? briefTypeRaw : "?", false);
 
-                    Opt<String> commentOpt = comment.trim().equals("") ? non() : som(comment);
-                    L<F<LookupElementBuilder, LookupElementBuilder>> metCommentOpt = commentOpt
-                        .fap(c -> assertMetaComment(c, exprCtx)).arr();
-                    if (metCommentOpt.has()) {
-                        commentOpt = non();
-                    }
-                    if (commentOpt.has()) {
-                        hadComments.set(true);
-                    }
-
-                    LookupElementBuilder justName = makePaddedLookup(keyName, briefTypeRaw, briefVal, commentOpt);
                     for (F<LookupElementBuilder, LookupElementBuilder> updater: metCommentOpt) {
                         justName = updater.apply(justName);
                     }
@@ -290,18 +306,17 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                     int basePriority = Tls.isNum(keyName) ? 2000 : 2500;
                     LookupElement prio = PrioritizedLookupElement
                         .withPriority(mutLookup, basePriority - keyNames.size());
+
                     result.addElement(prio);
-                    nameToMutLookup.put(keyName, mutLookup);
                 }
             });
         });
-        return T2(nameToMutLookup, hadComments.get());
+        return T2(keyNames, hadComments.get());
     }
 
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
-        Set<String> suggested = new HashSet<>();
         PsiElement caretPsi = parameters.getPosition(); // usually leaf element
         Opt<PsiElement> firstParent = opt(caretPsi.getParent());
         boolean isCaretInsideQuotes = firstParent
@@ -327,11 +342,11 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
         Mt arrMt = Mt.reuse(arrTit);
         // preliminary keys without type - they may be at least 3 times faster in some cases
-        T2<Dict<MutableLookup>, Boolean> tuple = addNameOnly(arrMt, result, exprCtx, isCaretInsideQuotes, (keyName) -> {
+        T2<Set<String>, Boolean> tuple = addNameOnly(arrMt, result, exprCtx, isCaretInsideQuotes, (keyName) -> {
             //System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
             firstTime.set(System.nanoTime() - startTime);
         });
-        Dict<MutableLookup> nameToMutLookup = tuple.a;
+        Set<String> suggested = tuple.a;
         boolean hadComments = tuple.b;
 
         long elapsed = System.nanoTime() - startTime;
@@ -357,7 +372,6 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
             .map(n -> n.equals("")|| n.equals("IntellijIdeaRulezzz"))
             .def(false);
 
-        nameToMutLookup.map(l -> l.getLookupString()).fch(el -> suggested.add(el));
         runSafeRemainingContributors(result, parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
             LookupElement lookup = otherSourceResult.getLookupElement();
