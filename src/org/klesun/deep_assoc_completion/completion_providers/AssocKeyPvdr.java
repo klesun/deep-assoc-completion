@@ -26,6 +26,7 @@ import javax.swing.*;
 import java.net.URL;
 import java.util.*;
 
+import static org.klesun.deep_assoc_completion.helpers.GuiUtil.putCaretForward;
 import static org.klesun.deep_assoc_completion.helpers.GuiUtil.runSafeRemainingContributors;
 import static org.klesun.lang.Lang.*;
 
@@ -77,7 +78,6 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
     private static LookupElementBuilder startLookupBuilder(String keyName) {
         return LookupElementBuilder.create(keyName)
-            .withBoldness(!Tls.isNum(keyName))
             .withIcon(getIcon());
     }
 
@@ -93,51 +93,6 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         return startLookupBuilder(keyName)
             .withTailText(briefVal, true)
             .withTypeText(ideaType, false);
-    }
-
-    /**
-     * unlike built-in LookupElement, this one can be changed after being
-     * displayed (if more detailed type info was calculated in background)
-     *
-     * upd.: mutations are no more updating UI sadly, so this class is pretty useless now
-     */
-    static class MutableLookup extends LookupElement
-    {
-        public LookupElementBuilder lookupData;
-        private boolean isCaretInsideQuotes;
-
-        public MutableLookup(LookupElementBuilder lookupData, boolean isCaretInsideQuotes) {
-            this.lookupData = lookupData;
-            this.isCaretInsideQuotes = isCaretInsideQuotes;
-        }
-
-        private boolean shouldAddQuotes() {
-            return !isCaretInsideQuotes
-                && !Tls.isNum(lookupData.getLookupString());
-        }
-
-        public String getKeyName() {
-            return lookupData.getLookupString();
-        }
-        @NotNull public String getLookupString() {
-            return shouldAddQuotes()
-                ? "'" + lookupData.getLookupString() + "'"
-                : lookupData.getLookupString();
-        }
-        public void renderElement(LookupElementPresentation presentation) {
-            lookupData.renderElement(presentation);
-            if (shouldAddQuotes()) {
-                presentation.setItemText("'" + lookupData.getLookupString() + "'");
-            }
-        }
-        public void handleInsert(InsertionContext ctx)
-        {
-            int endPos = ctx.getTailOffset();
-            // place caret after closing bracket
-            int offset = isCaretInsideQuotes ? 2 : 1;
-            ctx.getEditor().getCaretModel().moveToOffset(endPos + offset);
-            GuiUtil.removeIntStrQuotes(ctx, this);
-        }
     }
 
     public static IIt<DeepType> resolveAtPsi(PsiElement caretPsi, IExprCtx funcCtx)
@@ -244,17 +199,29 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    private L<String> makeSuggestibleNames(DeepType kt) {
-        L<String> keyNamesToAdd = list();
+    private IIt<LookupKey> makeSuggestibleNames(DeepType kt, boolean isCaretInsideQuotes) {
+        L<LookupKey> keyNamesToAdd = list();
         if (kt.stringValue == null) {
             //System.out.println(kt.definition.getText());
             for (int n = 0; n < 5; ++n) {
-                keyNamesToAdd.add(n + "");
+                LookupElementBuilder keyLookup = startLookupBuilder(n + "");
+                keyNamesToAdd.add(new LookupKey(keyLookup, n));
             }
         } else {
-            keyNamesToAdd.add(kt.stringValue);
+            String keyName = kt.stringValue;
+            String lookupString = isCaretInsideQuotes || Tls.isNum(keyName) ? keyName : "'" + keyName + "'";
+            LookupElementBuilder keyLookup = startLookupBuilder(lookupString)
+                .withBoldness(true);
+            keyNamesToAdd.add(new LookupKey(keyLookup, keyName));
         }
-        return keyNamesToAdd;
+        return keyNamesToAdd.map(lk -> {
+            LookupElementBuilder keyLookup = lk.lookup
+                .withInsertHandler((ctx, lookup) -> {
+                    putCaretForward(ctx, isCaretInsideQuotes);
+                    GuiUtil.removeIntStrQuotes(ctx, lookup);
+                });
+            return new LookupKey(keyLookup, lk.keyName, lk.kind);
+        });
     }
 
     private T2<Set<String>, Boolean> addNameOnly(
@@ -270,8 +237,8 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
         arrMt.types.fap(t -> t.keys).fch((keyEntry, i) -> {
             keyEntry.keyType.getTypes().itr().fch((kt,j) -> {
-                L<String> newKeyNamesToAdd = makeSuggestibleNames(kt)
-                    .flt(kn -> !keyNames.contains(kn)).arr();
+                IIt<LookupKey> newKeyNamesToAdd = makeSuggestibleNames(kt, isCaretInsideQuotes)
+                    .flt(lk -> !keyNames.contains(lk.keyName));
 
                 String comment = Tls.implode(" ", keyEntry.comments).trim();
                 Opt<String> commentOpt = comment.trim().equals("") ? non() : som(comment);
@@ -286,26 +253,29 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                 String briefTypeRaw = Mt.getKeyBriefTypeSt(keyEntry.getBriefTypes())
                     .filterUnknown().filterMixed().toStringResolved();
 
-                for (String keyName: newKeyNamesToAdd) {
+                for (LookupKey lookupKey: newKeyNamesToAdd) {
                     if (isFirst.get()) {
                         isFirst.set(false);
-                        onFirst.accept(keyName);
+                        onFirst.accept(lookupKey.keyName);
                     }
-                    keyNames.add(keyName);
+                    keyNames.add(lookupKey.keyName);
 
-                    String tailText = prepareTailText(keyName.length(), getGrantedBriefValue(keyEntry), commentOpt);
-                    LookupElementBuilder justName = startLookupBuilder(keyName)
+                    String tailText = prepareTailText(
+                        lookupKey.lookup.getLookupString().length(),
+                        getGrantedBriefValue(keyEntry), commentOpt
+                    );
+                    LookupElementBuilder lookup = lookupKey.lookup
                         .withTailText(tailText, true)
                         .withTypeText(!briefTypeRaw.equals("") ? briefTypeRaw : "?", false);
 
                     for (F<LookupElementBuilder, LookupElementBuilder> updater: metCommentOpt) {
-                        justName = updater.apply(justName);
+                        lookup = updater.apply(lookup);
                     }
 
-                    MutableLookup mutLookup = new MutableLookup(justName, isCaretInsideQuotes);
-                    int basePriority = Tls.isNum(keyName) ? 2000 : 2500;
+                    int basePriority = lookupKey.kind == LookupKeyKind.INDEX ? 2000 : 2500;
+                    int priority = basePriority - keyNames.size();
                     LookupElement prio = PrioritizedLookupElement
-                        .withPriority(mutLookup, basePriority - keyNames.size());
+                        .withPriority(lookup, priority);
 
                     result.addElement(prio);
                 }
@@ -386,6 +356,29 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         if (hadComments) {
             // note, this character is not a simple space, it's U+2003 EM SPACE (mutton)
             result.addLookupAdvertisement(Tls.repeat(" ", 80 ));
+        }
+    }
+
+    private static enum LookupKeyKind { NAME, INDEX };
+
+    private static class LookupKey {
+
+        final public LookupElementBuilder lookup;
+        final public String keyName;
+        final public LookupKeyKind kind;
+
+        LookupKey(LookupElementBuilder lookup, String keyName, LookupKeyKind kind) {
+            this.lookup = lookup;
+            this.keyName = keyName;
+            this.kind = kind;
+        }
+
+        LookupKey(LookupElementBuilder lookup, String keyName) {
+            this(lookup, keyName, LookupKeyKind.NAME);
+        }
+
+        LookupKey(LookupElementBuilder lookup, Integer index) {
+            this(lookup, index + "", LookupKeyKind.INDEX);
         }
     }
 }

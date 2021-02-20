@@ -2,6 +2,7 @@ package org.klesun.deep_assoc_completion.helpers;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.util.Consumer;
 import org.jetbrains.annotations.NotNull;
@@ -9,6 +10,13 @@ import org.klesun.lang.Lang.Mutable;
 import org.klesun.lang.Tls;
 
 public class GuiUtil {
+    public static void putCaretForward(InsertionContext ctx, boolean isCaretInsideQuotes) {
+        int endPos = ctx.getTailOffset();
+        // place caret after closing bracket
+        int offset = isCaretInsideQuotes ? 2 : 1;
+        ctx.getEditor().getCaretModel().moveToOffset(endPos + offset);
+    }
+
     private static void removeQuotes(InsertionContext ctx, LookupElement lookup)
     {
         int from = ctx.getStartOffset();
@@ -54,6 +62,8 @@ public class GuiUtil {
                     throw exc;
                 }
             });
+        } catch (ProcessCanceledException exc) {
+            // happens when user interrupts completion resolution, ignore
         } catch (Throwable exc) {
             if (isOurs.get()) {
                 throw exc;
