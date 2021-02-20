@@ -35,7 +35,7 @@ import static org.klesun.lang.Lang.*;
 public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 {
     final public static int BRIEF_VALUE_MAX_LEN = 65;
-    final public static int COMMENTED_MAX_LEN = 90;
+    final public static int COMMENTED_MAX_LEN = 110;
 
     private static ImageIcon icon = null;
 
@@ -63,14 +63,23 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         return getMaxDepth(parameters.isAutoPopup(), parameters.getEditor().getProject());
     }
 
-    private static LookupElementBuilder makePaddedLookup(String keyName, String ideaType, String briefVal, int maxValLen)
-    {
+    public static LookupElementBuilder makePaddedLookup(
+        String keyName,
+        String ideaType,
+        String briefVal,
+        Opt<String> commentOpt
+    ) {
+        int maxValLen = commentOpt.has() ? COMMENTED_MAX_LEN : BRIEF_VALUE_MAX_LEN;
         ideaType = !ideaType.equals("") ? ideaType : "?";
 
         // (keyName + briefVal) length must be constant for all keys, or you'll
         // get nasty broken position of type when you highlight an option
         briefVal = briefVal.trim().equals("") ? "" : " = " + briefVal;
+        if (commentOpt.has()) {
+            briefVal = Tls.substr(briefVal, 0, 20) + "… " + commentOpt.unw();
+        }
         briefVal = Tls.substr(briefVal, 0, maxValLen - keyName.length());
+
         return LookupElementBuilder.create(keyName)
             .withBoldness(!Tls.isNum(keyName))
             .withTailText(briefVal, true)
@@ -135,6 +144,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
             .rap(srcExpr -> funcCtx.findExprType(srcExpr));
     }
 
+    /** see https://github.com/klesun/deep-assoc-completion/issues/131 */
     private static It<F<LookupElementBuilder, LookupElementBuilder>> assertMetaComment(String comment, ExprCtx ctx) {
         L<T2<String, F2<LookupElementBuilder, String, LookupElementBuilder>>> mappers = list(
             T2("type_text", (lookup, value) -> lookup.withTypeText(value)),
@@ -163,18 +173,6 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                             (lookup) -> mapper.apply(lookup, value);
                         return updater;
                     }))));
-    }
-
-    public static LookupElementBuilder makeFullLookup(Mt arrMt, String keyName, Opt<String> commentOpt)
-    {
-        Mt keyMt = arrMt.types.fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::mem);
-        int maxValLen = commentOpt.has() ? COMMENTED_MAX_LEN : BRIEF_VALUE_MAX_LEN;
-        String briefValue = keyMt.getBriefValueText(maxValLen);
-        if (commentOpt.has()) {
-            briefValue = Tls.substr(briefValue, 0, 20) + " // " + commentOpt.unw();
-        }
-        String ideaTypeStr = keyMt.getIdeaTypes().flt(it -> !it.isEmpty()).lmt(2).str("|");
-        return makePaddedLookup(keyName, ideaTypeStr, briefValue, maxValLen);
     }
 
     private static void printExprTree(ExprCtx root, SearchCtx search, int depth)
@@ -238,15 +236,20 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    private T2<Dict<MutableLookup>, Map<String, Set<String>>> addNameOnly(
-        Mt arrMt, CompletionResultSet result, boolean isCaretInsideQuotes, C<String> onFirst
+    private T2<Dict<MutableLookup>, Boolean> addNameOnly(
+        Mt arrMt,
+        CompletionResultSet result,
+        ExprCtx exprCtx,
+        boolean isCaretInsideQuotes,
+        C<String> onFirst
     ) {
         Set<String> keyNames = new LinkedHashSet<>();
-        Map<String, Set<String>> keyToComments = new HashMap<>();
         Mutable<Boolean> isFirst = new Mutable<>(true);
+        Mutable<Boolean> hadComments = new Mutable<>(false);
+
         Dict<MutableLookup> nameToMutLookup = new Dict<>(new LinkedHashMap<>());
-        arrMt.types.fap(t -> t.keys).fch((k, i) -> {
-            k.keyType.getTypes().itr().fch((kt,j) -> {
+        arrMt.types.fap(t -> t.keys).fch((keyEntry, i) -> {
+            keyEntry.keyType.getTypes().itr().fch((kt,j) -> {
                 L<String> keyNamesToAdd = list();
                 if (kt.stringValue == null) {
                     for (int n = 0; n < 5; ++n) {
@@ -256,16 +259,33 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                     keyNamesToAdd.add(kt.stringValue);
                 }
                 L<String> newKeyNamesToAdd = keyNamesToAdd.flt(kn -> !keyNames.contains(kn)).arr();
+                String comment = Tls.implode(" ", keyEntry.comments);
                 for (String keyName: newKeyNamesToAdd) {
                     if (isFirst.get()) {
                         isFirst.set(false);
                         onFirst.accept(keyName);
                     }
                     keyNames.add(keyName);
-                    String briefTypeRaw = Mt.getKeyBriefTypeSt(k.getBriefTypes()).filterUnknown().filterMixed().toStringResolved();
+                    String briefTypeRaw = Mt.getKeyBriefTypeSt(keyEntry.getBriefTypes())
+                        .filterUnknown().filterMixed().toStringResolved();
 
-                    String briefVal = getGrantedBriefValue(k);
-                    LookupElementBuilder justName = makePaddedLookup(keyName, briefTypeRaw, briefVal, BRIEF_VALUE_MAX_LEN);
+                    String briefVal = getGrantedBriefValue(keyEntry);
+
+                    Opt<String> commentOpt = comment.trim().equals("") ? non() : som(comment);
+                    L<F<LookupElementBuilder, LookupElementBuilder>> metCommentOpt = commentOpt
+                        .fap(c -> assertMetaComment(c, exprCtx)).arr();
+                    if (metCommentOpt.has()) {
+                        commentOpt = non();
+                    }
+                    if (commentOpt.has()) {
+                        hadComments.set(true);
+                    }
+
+                    LookupElementBuilder justName = makePaddedLookup(keyName, briefTypeRaw, briefVal, commentOpt);
+                    for (F<LookupElementBuilder, LookupElementBuilder> updater: metCommentOpt) {
+                        justName = updater.apply(justName);
+                    }
+
                     MutableLookup mutLookup = new MutableLookup(justName, isCaretInsideQuotes);
                     int basePriority = Tls.isNum(keyName) ? 2000 : 2500;
                     LookupElement prio = PrioritizedLookupElement
@@ -273,22 +293,9 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                     result.addElement(prio);
                     nameToMutLookup.put(keyName, mutLookup);
                 }
-                String comment = Tls.implode(" ", k.comments);
-                if (!comment.trim().equals("")) {
-                    keyNamesToAdd.fch(name -> {
-                        opt(nameToMutLookup.get(name)).thn(mutLookup -> {
-                            mutLookup.lookupData = mutLookup.lookupData
-                                .withTailText(" " + Tls.substr(comment, 0, BRIEF_VALUE_MAX_LEN), true);
-                        });
-                        if (!keyToComments.containsKey(name)) {
-                            keyToComments.put(name, new LinkedHashSet<>());
-                        }
-                        keyToComments.get(name).addAll(k.comments);
-                    });
-                }
             });
         });
-        return T2(nameToMutLookup, keyToComments);
+        return T2(nameToMutLookup, hadComments.get());
     }
 
     @Override
@@ -320,12 +327,12 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
         Mt arrMt = Mt.reuse(arrTit);
         // preliminary keys without type - they may be at least 3 times faster in some cases
-        T2<Dict<MutableLookup>, Map<String, Set<String>>> tuple = addNameOnly(arrMt, result, isCaretInsideQuotes, (keyName) -> {
+        T2<Dict<MutableLookup>, Boolean> tuple = addNameOnly(arrMt, result, exprCtx, isCaretInsideQuotes, (keyName) -> {
             //System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + keyName);
             firstTime.set(System.nanoTime() - startTime);
         });
         Dict<MutableLookup> nameToMutLookup = tuple.a;
-        Map<String, Set<String>> keyToComments = tuple.b;
+        boolean hadComments = tuple.b;
 
         long elapsed = System.nanoTime() - startTime;
         String prefix = "";
@@ -362,37 +369,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
             }
         });
 
-        // following code calculates deeper type info for
-        // completion options and updates them in the dialog
-
-        Mutable<Boolean> hadComments = new Mutable<>(false);
-        nameToMutLookup
-            .fch((mutLook, keyName) -> {
-                // TODO: move comments logic to instant popup data, as they won't work anymore if added separately
-
-                search.overrideMaxExpr = som(search.getExpressionsResolved() + 25);
-
-                Set<String> comments = opt(keyToComments.get(keyName)).def(new HashSet<>());
-                String comment = Tls.implode(" ", comments);
-                Opt<String> commentOpt = comment.trim().equals("") ? non() : som(comment);
-                L<F<LookupElementBuilder, LookupElementBuilder>> metCommentOpt = commentOpt
-                    .fap(c -> assertMetaComment(c, exprCtx)).arr();
-                if (metCommentOpt.has()) {
-                    commentOpt = non();
-                }
-
-                LookupElementBuilder lookup = makeFullLookup(arrMt, keyName, commentOpt);
-                for (F<LookupElementBuilder, LookupElementBuilder> updater: metCommentOpt) {
-                    lookup = updater.apply(lookup);
-                }
-                if (commentOpt.has()) {
-                    hadComments.set(true);
-                }
-                search.overrideMaxExpr = non();
-                mutLook.lookupData = lookup;
-            });
-
-        if (hadComments.get()) {
+        if (hadComments) {
             // note, this character is not a simple space, it's U+2003 EM SPACE (mutton)
             result.addLookupAdvertisement(Tls.repeat(" ", 80 ));
         }

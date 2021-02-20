@@ -155,7 +155,7 @@ public class MethCallRes extends Lang
             GlobalSearchScope scope = GlobalSearchScope.allScope(proj);
             return list(fqn, fqn.replaceAll("^\\\\", ""))
                 .rap(fullFqn -> L(index.getValues(idxKey, fullFqn, scope))
-                    .rap(Lang::L)
+                    .rap(a -> L(a))
                     .flt(argCond).arr()
                     .cst(PhpExpectedFunctionScalarArgument.class)
                     .unq().arr().rap(exp -> {

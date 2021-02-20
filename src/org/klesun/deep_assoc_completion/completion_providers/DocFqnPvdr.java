@@ -29,7 +29,7 @@ import org.klesun.lang.Tls;
 
 import java.util.HashSet;
 
-import static org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr.getMaxDepth;
+import static org.klesun.deep_assoc_completion.completion_providers.AssocKeyPvdr.*;
 import static org.klesun.lang.Lang.*;
 
 /**
@@ -86,6 +86,14 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
         );
     }
 
+    private static LookupElementBuilder makeFullLookup(Mt arrMt, String keyName, Opt<String> commentOpt)
+    {
+        Mt keyMt = arrMt.types.fap(t -> Mt.getKeySt(t, keyName)).wap(Mt::mem);
+        String briefValue = keyMt.getBriefValueText(BRIEF_VALUE_MAX_LEN);
+        String ideaTypeStr = keyMt.getIdeaTypes().flt(it -> !it.isEmpty()).lmt(2).str("|");
+        return makePaddedLookup(keyName, ideaTypeStr, briefValue, commentOpt);
+    }
+
     private It<LookupElement> parseDocValue(String docValue, SearchCtx search, PsiElement tagValue, String regex)
     {
         FuncCtx ctx = new FuncCtx(search);
@@ -107,7 +115,7 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
                     fakeFileOpt
                         .map(file -> file.findElementAt(file.getText().indexOf("IntellijIdeaRulezzz")))
                         .map(psi -> AssocKeyPvdr.resolveAtPsi(psi, exprCtx).wap(Mt::mem))
-                        .fap(mt -> mt.getKeyNames().map(k -> AssocKeyPvdr.makeFullLookup(mt, k, non())))
+                        .fap(mt -> mt.getKeyNames().map(k -> makeFullLookup(mt, k, non())))
                 );
             });
     }
