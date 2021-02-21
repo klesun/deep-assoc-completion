@@ -225,6 +225,7 @@ public class ArrCtorRes extends Lang
                 IIt<DeepType> valtit = ctx.findExprType(v);
                 IReusableIt<DeepType> mit = valtit instanceof IResolvedIt ? valtit.arr() : valtit.mem();
                 Granted<Mt> getType = Granted(new Mt(mit));
+                L<String> comments = gatherSurroundingComments(keyRec).arr();
                 return opt(keyRec.getKey())
                     .fop(toCast(PhpExpression.class))
                     .map(keyPsi -> ctx.findExprType(keyPsi))
@@ -233,15 +234,15 @@ public class ArrCtorRes extends Lang
                         if (keyStrValues.has()) {
                             return keyStrValues.map(key ->
                                 new Key(key, ctx.getRealPsi(keyRec))
-                                    .addType(getType, Tls.getIdeaType(v))
-                                    .addComments(gatherSurroundingComments(keyRec)));
+                                    .addType(getType, Tls.getIdeaType(v)));
                         } else {
                             Key keyEntry = new Key(
                                 KeyType.unknown(keyRec), opt(keyRec.getKey()).def(expr)
                             );
                             return som(keyEntry.addType(getType));
                         }
-                    });
+                    })
+                    .map(ke -> ke.addComments(comments));
             }))
             .arr();
     }
