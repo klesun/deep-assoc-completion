@@ -3,9 +3,11 @@ package org.klesun.deep_assoc_completion.helpers;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.util.Consumer;
 import org.jetbrains.annotations.NotNull;
+import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.lang.Lang.Mutable;
 import org.klesun.lang.Tls;
 
@@ -52,6 +54,11 @@ public class GuiUtil {
         @NotNull CompletionParameters parameters,
         Consumer<? super CompletionResult> consumer
     ) {
+        Project project = parameters.getPosition().getProject();
+        if (!DeepSettings.inst(project).adjustOtherPluginOptions) {
+            // we want to make it disablable to debug an issue that happens during runRemainingContributors
+            return;
+        }
         Mutable<Boolean> isOurs = new Mutable<>(false);
         try {
             result.runRemainingContributors(parameters, contributorResult -> {

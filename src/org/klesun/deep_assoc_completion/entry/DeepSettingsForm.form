@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="org.klesun.deep_assoc_completion.entry.DeepSettingsForm">
-  <grid id="27dc6" binding="rootPanel" layout-manager="GridLayoutManager" row-count="8" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="27dc6" binding="rootPanel" layout-manager="GridLayoutManager" row-count="9" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
       <xy x="20" y="20" width="500" height="400"/>
@@ -10,7 +10,7 @@
     <children>
       <component id="c80ba" class="javax.swing.JSeparator">
         <constraints>
-          <grid row="7" column="0" row-span="1" col-span="2" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="8" column="0" row-span="1" col-span="2" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
       </component>
@@ -122,6 +122,17 @@
           <selected value="true"/>
           <text value="Enable Method/Field Deep Completion"/>
           <toolTipText value="As reported by Hugo, deep-assoc sometimes may suggest non-existing methods. As he proposed, I'm adding this setting for people who only want assoc key completion from this plugin, without suffering from probable bugs in method resolution."/>
+        </properties>
+      </component>
+      <component id="457d2" class="javax.swing.JCheckBox" binding="adjustOtherPluginOptions">
+        <constraints>
+          <grid row="7" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <enabled value="true"/>
+          <selected value="true"/>
+          <text value="Adjust Other Plugin Options"/>
+          <toolTipText value="When set, removes duplicate suggestions and sometimes lowers deep options when they are less relevant than others (like Symfony). This gets use of runRemainingContributors() and as a side effect, when some other completion plugin fails, stack trace will not show it's name. See #174."/>
         </properties>
       </component>
     </children>

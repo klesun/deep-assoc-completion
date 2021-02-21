@@ -26,6 +26,7 @@ public class DeepSettingsForm implements Configurable
     private JFormattedTextField usageBasedCompletionDepthLimit;
     private JCheckBox passArgsToImplementations;
     private JCheckBox enableMemberCompletion;
+    private JCheckBox adjustOtherPluginOptions;
 
     @Nls
     @Override
@@ -53,6 +54,7 @@ public class DeepSettingsForm implements Configurable
         return !getSettings().removeUnusedImportsOnSaveEnabled == removeUnusedImportsOnSaveEnabled.isSelected()
             || !getSettings().passArgsToImplementations == passArgsToImplementations.isSelected()
             || !getSettings().enableMemberCompletion == enableMemberCompletion.isSelected()
+            || !getSettings().adjustOtherPluginOptions == adjustOtherPluginOptions.isSelected()
             || !getSettings().explicitDepthLimit.toString().equals(explicitDepthLimit.getText())
             || !getSettings().implicitDepthLimit.toString().equals(implicitDepthLimit.getText())
             || !getSettings().totalExpressionLimit.toString().equals(totalExpressionLimit.getText())
@@ -81,6 +83,7 @@ public class DeepSettingsForm implements Configurable
         getSettings().removeUnusedImportsOnSaveEnabled = removeUnusedImportsOnSaveEnabled.isSelected();
         getSettings().passArgsToImplementations = passArgsToImplementations.isSelected();
         getSettings().enableMemberCompletion = enableMemberCompletion.isSelected();
+        getSettings().adjustOtherPluginOptions = adjustOtherPluginOptions.isSelected();
         getSettings().explicitDepthLimit = validateInt(explicitDepthLimit, 0, 100);
         getSettings().implicitDepthLimit = validateInt(implicitDepthLimit, 0, 100);
         getSettings().totalExpressionLimit = validateInt(totalExpressionLimit, 0, 1000000);
@@ -92,6 +95,7 @@ public class DeepSettingsForm implements Configurable
         removeUnusedImportsOnSaveEnabled.setSelected(getSettings().removeUnusedImportsOnSaveEnabled);
         passArgsToImplementations.setSelected(getSettings().passArgsToImplementations);
         enableMemberCompletion.setSelected(getSettings().enableMemberCompletion);
+        adjustOtherPluginOptions.setSelected(getSettings().adjustOtherPluginOptions);
         explicitDepthLimit.setText(getSettings().explicitDepthLimit.toString());
         implicitDepthLimit.setText(getSettings().implicitDepthLimit.toString());
         totalExpressionLimit.setText(getSettings().totalExpressionLimit.toString());

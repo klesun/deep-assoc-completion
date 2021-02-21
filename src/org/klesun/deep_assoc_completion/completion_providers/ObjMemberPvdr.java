@@ -184,14 +184,22 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
         }
 
         long startTime = System.nanoTime();
-        L<LookupElement> builtIns = list();
-        runSafeRemainingContributors(result, parameters, otherSourceResult -> {
-            LookupElement kup = otherSourceResult.getLookupElement();
-            builtIns.add(kup);
-            result.addElement(kup);
-        });
-        Boolean hasBuiltIns = builtIns.any(b -> !"class".equals(b.getLookupString()));
-        Set<String> suggested = new HashSet<>(builtIns.map(l -> l.getLookupString()).arr());
+        Set<String> suggested = new HashSet<>();
+        final boolean hasBuiltIns;
+        if (DeepSettings.inst(proj).adjustOtherPluginOptions) {
+            L<LookupElement> builtIns = list();
+            runSafeRemainingContributors(result, parameters, otherSourceResult -> {
+                LookupElement kup = otherSourceResult.getLookupElement();
+                builtIns.add(kup);
+                result.addElement(kup);
+            });
+            builtIns.map(l -> l.getLookupString()).forEach(suggested::add);
+            hasBuiltIns =
+                !DeepSettings.inst(proj).adjustOtherPluginOptions ||
+                    builtIns.any(b -> !"class".equals(b.getLookupString()));
+        } else {
+            hasBuiltIns = true;
+        }
         SearchCtx search = new SearchCtx(proj)
             .setDepth(AssocKeyPvdr.getMaxDepth(parameters));
 
