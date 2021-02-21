@@ -131,7 +131,7 @@
         <properties>
           <enabled value="true"/>
           <selected value="true"/>
-          <text value="Adjust Other Plugin Options"/>
+          <text value="Adjust Other Plugin Completions"/>
           <toolTipText value="When set, removes duplicate suggestions and sometimes lowers deep options when they are less relevant than others (like Symfony). This gets use of runRemainingContributors() and as a side effect, when some other completion plugin fails, stack trace will not show it's name. See #174."/>
         </properties>
       </component>
