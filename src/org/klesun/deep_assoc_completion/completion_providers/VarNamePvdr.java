@@ -6,6 +6,7 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -154,6 +155,12 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        if (DumbService.isDumb(parameters.getPosition().getProject())) {
+            // following code relies on complex reference resolutions
+            // very much, so trying to resolve type during indexing
+            // is pointless and is likely to cause exceptions
+            return;
+        }
         long startTime = System.nanoTime();
         Set<String> suggested = new HashSet();
         // run remaining so that our completions were in the bottom of the list since

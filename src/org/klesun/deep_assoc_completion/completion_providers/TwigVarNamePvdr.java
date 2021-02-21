@@ -4,6 +4,7 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.codeInsight.lookup.LookupElementPresentation;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
@@ -169,6 +170,12 @@ public class TwigVarNamePvdr extends CompletionProvider<CompletionParameters>
         @NotNull ProcessingContext processingContext,
         @NotNull CompletionResultSet result
     ) {
+        if (DumbService.isDumb(parameters.getPosition().getProject())) {
+            // following code relies on complex reference resolutions
+            // very much, so trying to resolve type during indexing
+            // is pointless and is likely to cause exceptions
+            return;
+        }
         It<LookupElement> options = makeExprCtx(parameters)
             .fap(exprCtx -> {
                 Mt mt = opt(exprCtx.expr.getContainingFile())

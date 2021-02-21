@@ -3,6 +3,7 @@ package org.klesun.deep_assoc_completion.completion_providers;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.ArrayCreationExpression;
 import com.jetbrains.php.lang.psi.elements.StringLiteralExpression;
@@ -57,6 +58,12 @@ public class ArrCtorIncompleteAssocKeyPvdr extends CompletionProvider<Completion
 		@NotNull ProcessingContext processingContext,
 		@NotNull CompletionResultSet result
 	) {
+		if (DumbService.isDumb(parameters.getPosition().getProject())) {
+			// following code relies on complex reference resolutions
+			// very much, so trying to resolve type during indexing
+			// is pointless and is likely to cause exceptions
+			return;
+		}
 		Mutable<Boolean> hadComments = new Mutable<>(false);
 		opt(parameters.getPosition().getParent())
 			.cst(StringLiteralExpression.class)

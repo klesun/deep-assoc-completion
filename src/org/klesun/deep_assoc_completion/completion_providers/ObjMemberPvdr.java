@@ -6,6 +6,7 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.util.ProcessingContext;
@@ -171,6 +172,12 @@ public class ObjMemberPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        if (DumbService.isDumb(parameters.getPosition().getProject())) {
+            // following code relies on complex reference resolutions
+            // very much, so trying to resolve type during indexing
+            // is pointless and is likely to cause exceptions
+            return;
+        }
         Project proj = parameters.getEditor().getProject();
         if (proj == null || !DeepSettings.inst(proj).enableMemberCompletion) {
             return;

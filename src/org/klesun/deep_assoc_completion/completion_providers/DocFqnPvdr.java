@@ -4,6 +4,7 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.completion.impl.CamelHumpMatcher;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -146,6 +147,12 @@ public class DocFqnPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        if (DumbService.isDumb(parameters.getPosition().getProject())) {
+            // following code relies on complex reference resolutions
+            // very much, so trying to resolve type during indexing
+            // is pointless and is likely to cause exceptions
+            return;
+        }
         int depth = getMaxDepth(parameters);
         SearchCtx search = new SearchCtx(parameters).setDepth(depth);
 

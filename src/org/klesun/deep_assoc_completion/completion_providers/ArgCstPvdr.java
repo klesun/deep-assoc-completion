@@ -5,6 +5,7 @@ import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.ParameterList;
@@ -63,6 +64,12 @@ public class ArgCstPvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        if (DumbService.isDumb(parameters.getPosition().getProject())) {
+            // following code relies on complex reference resolutions
+            // very much, so trying to resolve type during indexing
+            // is pointless and is likely to cause exceptions
+            return;
+        }
         int pos = parameters.getEditor().getCaretModel().getOffset();
         final String text;
         try {

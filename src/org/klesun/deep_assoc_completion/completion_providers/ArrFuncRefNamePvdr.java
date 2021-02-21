@@ -5,6 +5,7 @@ import com.intellij.codeInsight.completion.CompletionProvider;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.ui.JBColor;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.Method;
@@ -76,6 +77,12 @@ public class ArrFuncRefNamePvdr extends CompletionProvider<CompletionParameters>
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
+        if (DumbService.isDumb(parameters.getPosition().getProject())) {
+            // following code relies on complex reference resolutions
+            // very much, so trying to resolve type during indexing
+            // is pointless and is likely to cause exceptions
+            return;
+        }
         It<T2<Method, Boolean>> methods = opt(parameters.getPosition().getParent())
             .cst(StringLiteralExpressionImpl.class)
             .fap(literal -> resolve(literal, parameters.isAutoPopup()));
