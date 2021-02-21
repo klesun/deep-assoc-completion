@@ -1,7 +1,9 @@
 package org.klesun.deep_assoc_completion.resolvers;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.PsiCommentImpl;
 import com.intellij.psi.impl.source.tree.PsiWhiteSpaceImpl;
 import com.jetbrains.php.PhpIndex;
@@ -180,8 +182,8 @@ public class ArrCtorRes extends Lang
         PsiElement prev = hashEl.getPrevSibling();
         int indent = getIndent(hashEl);
         while (prev != null) {
-            boolean shouldSkip = prev instanceof PsiWhiteSpaceImpl;
-            if (prev instanceof PsiCommentImpl && getIndent(prev) == indent) {
+            boolean shouldSkip = prev instanceof PsiWhiteSpace;
+            if (prev instanceof PsiComment && getIndent(prev) == indent) {
                 comments.add(0, prev.getText());
             } else if (!shouldSkip) {
                 break;
@@ -213,7 +215,9 @@ public class ArrCtorRes extends Lang
     private static It<String> gatherSurroundingComments(ArrayHashElement hashEl)
     {
         return It.cnc(getTopComments(hashEl), getSideComments(hashEl))
-            .map(c -> c.replaceAll("^/\\*\\s*([\\s\\S]+?)\\*/$", "$1"))
+            .map(c -> c
+                .replaceAll("^/\\*+([\\s\\S]+?)\\*/$", "$1")
+                .replaceAll("(^|\\n)\\s*\\*(\\s*[^\\n]+)", "$2"))
             .map(c -> c.replaceAll("^//\\s*", ""));
     }
 
