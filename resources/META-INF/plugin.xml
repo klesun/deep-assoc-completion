@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2021.01.05.001</version>
+    <version>2021.02.21.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -49,13 +49,15 @@
 
     <change-notes><![CDATA[
     <ul>
-        <li>#173 Do not fail on runRemainingContributors() if some other plugin threw an error</li>
+        <li>#176 Fix scraped comments in completion preview - Show them deterministically, not on random</li>
+        <li>#176 Suggest scraped variable name in addition to 0,1,2,3,4 completion options</li>
+        <li>#176 Fix, do not miss scrapped comment when key is not a string literal</li>
+        <li>#176 Fix, check instanceof interface, not implementation for /** ... */ comment scraping</li>
     </ul>
     ]]>
     </change-notes>
 
-    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-    <idea-version since-build="203.5981.155"/> <!-- self::class no more resolvable by built-in tools -->
+    <idea-version since-build="202.8194.11"/> <!-- last phpstorm before java 11 -->
 
     <extensions defaultExtensionNs="com.intellij">
         <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DirectTypeCompletionContributor"/>
