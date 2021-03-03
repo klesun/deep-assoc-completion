@@ -94,3 +94,7 @@ Jetbrains Repository: [9927-deep-assoc-completion](https://plugins.jetbrains.com
 To build a jar use `Build -> Prepare Plugin ... For Deployment`. To debug use `Run -> Debug`. Since phpstorm project takes about a minute to start, you must find `Run -> Reload Changed Classes` very useful for micro changes.
 
 To use compiled `.jar` in your phpstorm go to `Settings -> Plugins -> Install plugin from disk` and select the `.jar` we compiled earlier.
+
+_________________________________________________________
+
+Shutout my thanks to the [JetBrains](https://jb.gg/OpenSource) for continuously supplying me an open source IDE license for this plugin development.
