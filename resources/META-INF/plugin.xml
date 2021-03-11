@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2021.02.21.001</version>
+    <version>2021.03.11.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -49,10 +49,9 @@
 
     <change-notes><![CDATA[
     <ul>
-        <li>#176 Fix scraped comments in completion preview - Show them deterministically, not on random</li>
-        <li>#176 Suggest scraped variable name in addition to 0,1,2,3,4 completion options</li>
-        <li>#176 Fix, do not miss scrapped comment when key is not a string literal</li>
-        <li>#176 Fix, check instanceof interface, not implementation for /** ... */ comment scraping</li>
+        <li>#177 Add support for phpstan-param, phan-param, and other equivalent phpdoc tags that were implemented for psalm-*</li>
+        <li>#174 Add "Adjust Other Plugin Completions" setting (To debug stack traces from other plugins shadowed by runRemainingContributors())</li>
+        <li>#174 Early exit completion resolution if indexing is in progress</li>
     </ul>
     ]]>
     </change-notes>
