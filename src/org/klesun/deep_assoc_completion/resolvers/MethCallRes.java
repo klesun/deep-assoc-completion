@@ -244,7 +244,11 @@ public class MethCallRes extends Lang
         return It.cnc(
             opt(doc.getReturnTag()),
             It(doc.getChildren()).cst(PhpDocTag.class)
-                .flt(t -> "@psalm-return".equals(t.getName()))
+                .flt(t -> {
+                    return "@psalm-return".equals(t.getName())
+                        || "@phpstan-return".equals(t.getName())
+                        || "@phan-return".equals(t.getName());
+                })
         ).fap(tag -> parseReturnDoc(tag, ctx));
     }
 

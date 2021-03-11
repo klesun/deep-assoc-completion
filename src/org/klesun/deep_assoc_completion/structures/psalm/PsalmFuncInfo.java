@@ -159,8 +159,13 @@ public class PsalmFuncInfo {
         L<Parameter> argPsis = funcOpt.fap(f -> It(f.getParameters())).arr();
         L<ArgDef> params = psalmTags
             .flt(t -> t.tagName.equals("param")
+                    || t.tagName.equals("phan-param")
+                    || t.tagName.equals("phpstan-param")
                     || t.tagName.equals("psalm-param")
                     || t.tagName.equals("var")
+                    || t.tagName.equals("phan-var")
+                    || t.tagName.equals("phan-var-force")
+                    || t.tagName.equals("phpstan-var")
                     || t.tagName.equals("psalm-var"))
             .map(t -> {
                 String varName = Tls.regex("\\s*\\$(\\w+).*", t.textLeft)
@@ -173,6 +178,8 @@ public class PsalmFuncInfo {
 
         Opt<IType> returnType = psalmTags
             .flt(t -> t.tagName.equals("return")
+                    || t.tagName.equals("phan-return")
+                    || t.tagName.equals("phpstan-return")
                     || t.tagName.equals("psalm-return"))
             .map(t -> t.psalmType).fst();
 
