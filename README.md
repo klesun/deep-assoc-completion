@@ -1,4 +1,4 @@
-PRs are welcome, will gladly help with any questions you may have, but pls try to avoid unnecessary refactoring and features that may cause considerable performance degradation, as such PRs won't be accepted. If in doubt, create an issue whether feature will be acceptable before starting to spend time on implementing it.
+PRs are welcome, will gladly help with any questions you may have, but pls try to avoid unnecessary refactoring and features that may cause considerable performance degradation, as such PRs won't be accepted. If in doubt, create an issue to discuss whether feature will be acceptable before starting to spend time on implementing it.
 
 ____________________________
 
