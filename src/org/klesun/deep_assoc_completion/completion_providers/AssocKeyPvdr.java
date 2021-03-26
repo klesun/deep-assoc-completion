@@ -8,6 +8,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.ProcessingContext;
 import com.jetbrains.php.lang.psi.elements.*;
 import com.jetbrains.php.lang.psi.elements.impl.PhpPsiElementImpl;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType;
+import com.jetbrains.php.lang.psi.resolve.types.PhpType.PhpTypeBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
@@ -267,8 +269,15 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
                 if (commentOpt.has()) {
                     hadComments.set(true);
                 }
-                String briefTypeRaw = Mt.getKeyBriefTypeSt(keyEntry.getBriefTypes())
-                    .filterUnknown().filterMixed().toStringResolved();
+                L<DeepType> valtarr = keyEntry.getGrantedValues();
+                String briefTypeRaw = valtarr.size() < 1
+                    ? Mt.getKeyBriefTypeSt(keyEntry.getBriefTypes())
+                        .filterUnknown().filterMixed().toStringResolved()
+                    : valtarr.fop(t -> opt(t.briefType)).wap(pstit -> {
+                        PhpTypeBuilder pstBuilder = PhpType.builder();
+                        pstit.forEach(pstBuilder::add);
+                        return pstBuilder.build().toString();
+                    });
 
                 for (LookupKey lookupKey: newKeyNamesToAdd) {
                     if (isFirst.get()) {
