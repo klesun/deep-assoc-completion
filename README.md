@@ -92,8 +92,8 @@ Jetbrains Repository: [9927-deep-assoc-completion](https://plugins.jetbrains.com
 - Select `Intelliji Platform Plugin`.
 - Select a _phpstorm_ or _IDEA Ultimate_ installation directory as `Project SDK` (java version is 8).
 - Select `deep-assoc-completion` project folder as `Project location`.
-- In `Project Structure -> Libraries` add `php.jar` and `php-openapi.jar` from `YourPhpStormDirectory/plugins/php/lib/` (in case of _IDEA Ultimate_, the `php` plugin should be installed, and the location is `HomeOrMyDocumentsDir/.IntellijIdea20XX.X/config/plugins/php/lib`).
-- In `Project Structure -> Modules -> Dependencies` set `Scope` of `php-openapi` to `Provided`.
+- In `Project Structure -> Libraries` add `php/lib/php.jar`, `php/lib/php-openapi.jar` and `twig/lib/twig.jar` from `YourPhpStormDirectory/plugins/[php|twig]` (in case of _IDEA Ultimate_, the `php` plugin should be installed, and the location is `HomeOrMyDocumentsDir/.IntellijIdea20XX.X/config/plugins/php/lib`).
+- In `Project Structure -> Modules -> Dependencies` set `Scope` of `php`, `php-openapi` and `twig` to `Provided`.
 
 To build a jar use `Build -> Prepare Plugin ... For Deployment`. To debug use `Run -> Debug`. Since phpstorm project takes about a minute to start, you must find `Run -> Reload Changed Classes` very useful for micro changes.
 
