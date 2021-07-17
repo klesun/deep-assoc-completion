@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2021.03.26.001</version>
+    <version>2021.07.18.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -49,12 +49,13 @@
 
     <change-notes><![CDATA[
     <ul>
-        <li>#182 Show union type from PSALM when available instead of just first type in completion preview</li>
+        <li>#187 Fix caret misposition after completing a key inside unterminated quotes (common when you have _Insert pair quote_ disabled in IDEA settings)</li>
+        <li>Built for java 11 now, not java 8 (hopefully archlinux users and others all have phpstorm that supports java 11 by this time)</li>
     </ul>
     ]]>
     </change-notes>
 
-    <idea-version since-build="202.8194.11"/> <!-- last phpstorm before java 11 -->
+    <idea-version since-build="211.7142.45"/> <!-- 2021.1.1 a recent version, building for java 11 from now on -->
 
     <extensions defaultExtensionNs="com.intellij">
         <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DirectTypeCompletionContributor"/>

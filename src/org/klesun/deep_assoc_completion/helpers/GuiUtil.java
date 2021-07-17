@@ -12,11 +12,20 @@ import org.klesun.lang.Lang.Mutable;
 import org.klesun.lang.Tls;
 
 public class GuiUtil {
-    public static void putCaretForward(InsertionContext ctx, boolean isCaretInsideQuotes) {
-        int endPos = ctx.getTailOffset();
+    public static void putCaretForward(InsertionContext ctx, QuotesState quotesState) {
         // place caret after closing bracket
-        int offset = isCaretInsideQuotes ? 2 : 1;
-        ctx.getEditor().getCaretModel().moveToOffset(endPos + offset);
+        int finalPos = ctx.getTailOffset();
+        if (quotesState.unterminatedQuoteChar.isEmpty() &&
+            !quotesState.lacksSurroundingQuotes
+        ) {
+            finalPos += 1; // ends before closing "'", place after the "'"
+        }
+        String caretChar = ctx.getEditor().getDocument()
+            .getText(new TextRange(finalPos, finalPos + 1));
+        if (caretChar.equals("]")) {
+            finalPos += 1; // place after the "]"
+        }
+        ctx.getEditor().getCaretModel().moveToOffset(finalPos);
     }
 
     public static void removeQuotes(InsertionContext ctx, LookupElement lookup)

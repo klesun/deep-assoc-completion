@@ -1,7 +1,11 @@
 package org.klesun.deep_assoc_completion.completion_providers;
 
-import com.intellij.codeInsight.completion.*;
-import com.intellij.codeInsight.lookup.*;
+import com.intellij.codeInsight.completion.CompletionParameters;
+import com.intellij.codeInsight.completion.CompletionProvider;
+import com.intellij.codeInsight.completion.CompletionResultSet;
+import com.intellij.codeInsight.completion.PrioritizedLookupElement;
+import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
@@ -16,18 +20,23 @@ import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
 import org.klesun.deep_assoc_completion.contexts.SearchCtx;
+import org.klesun.deep_assoc_completion.entry.DeepSettings;
+import org.klesun.deep_assoc_completion.helpers.GuiUtil;
+import org.klesun.deep_assoc_completion.helpers.Mt;
+import org.klesun.deep_assoc_completion.helpers.QuotesState;
+import org.klesun.deep_assoc_completion.icons.DeepIcons;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
-import org.klesun.deep_assoc_completion.entry.DeepSettings;
-import org.klesun.deep_assoc_completion.helpers.*;
-import org.klesun.deep_assoc_completion.icons.DeepIcons;
 import org.klesun.deep_assoc_completion.structures.Key;
+import org.klesun.lang.It;
+import org.klesun.lang.L;
 import org.klesun.lang.*;
 import org.klesun.lib.PhpToolbox;
 
 import javax.swing.*;
 import java.net.URL;
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import static org.klesun.deep_assoc_completion.helpers.GuiUtil.putCaretForward;
 import static org.klesun.deep_assoc_completion.helpers.GuiUtil.runSafeRemainingContributors;
@@ -202,11 +211,18 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         }
     }
 
-    private IIt<LookupKey> makeSuggestibleNames(DeepType kt, boolean isCaretInsideQuotes) {
+    private IIt<LookupKey> makeSuggestibleNames(DeepType kt, QuotesState quotesState) {
         L<LookupKey> keyNamesToAdd = list();
         if (kt.stringValue != null) {
             String keyName = kt.stringValue;
-            String lookupString = isCaretInsideQuotes || Tls.isNum(keyName) ? keyName : "'" + keyName + "'";
+            final String lookupString;
+            if (quotesState.unterminatedQuoteChar.isPresent()) {
+                lookupString = keyName + quotesState.unterminatedQuoteChar.get(); // close unterminated quote if any
+            } else if (quotesState.lacksSurroundingQuotes && !Tls.isNum(keyName)) {
+                lookupString = "'" + keyName + "'";
+            } else {
+                lookupString = keyName;
+            }
             LookupElementBuilder keyLookup = startLookupBuilder(lookupString)
                 .withBoldness(true);
             keyNamesToAdd.add(new LookupKey(keyLookup, LookupKeyKind.NAME));
@@ -232,7 +248,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         return keyNamesToAdd.map(lk -> {
             LookupElementBuilder keyLookup = lk.lookup
                 .withInsertHandler((ctx, lookup) -> {
-                    putCaretForward(ctx, isCaretInsideQuotes);
+                    putCaretForward(ctx, quotesState);
                     if (lk.kind == LookupKeyKind.NAME) {
                         GuiUtil.removeIntStrQuotes(ctx, lookup);
                     } else { // var, index
@@ -247,7 +263,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         Mt arrMt,
         CompletionResultSet result,
         ExprCtx exprCtx,
-        boolean isCaretInsideQuotes,
+        QuotesState quotesState,
         C<String> onFirst
     ) {
         Set<String> suggested = new LinkedHashSet<>();
@@ -256,7 +272,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
         arrMt.types.fap(t -> t.keys).fch((keyEntry, i) -> {
             keyEntry.keyType.getTypes().itr().fch((kt,j) -> {
-                IIt<LookupKey> newKeyNamesToAdd = makeSuggestibleNames(kt, isCaretInsideQuotes)
+                IIt<LookupKey> newKeyNamesToAdd = makeSuggestibleNames(kt, quotesState)
                     .flt(lk -> !suggested.contains(lk.lookup.getLookupString()));
 
                 String comment = Tls.implode(" ", keyEntry.comments).trim();
@@ -310,6 +326,22 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         return T2(suggested, hadComments.get());
     }
 
+    private static QuotesState getQuoteState(PsiElement caretPsi) {
+        Opt<PsiElement> firstParent = opt(caretPsi.getParent());
+        return firstParent
+            .cst(StringLiteralExpression.class) // inside ['']
+            .uni(
+                lit -> {
+                    String litText = lit.getText();
+                    char quoteChar = litText.charAt(0);
+                    return litText.endsWith(Character.toString(quoteChar))
+                        ? QuotesState.hasSurroundingQuotes()
+                        : QuotesState.unterminatedQuoteChar(quoteChar);
+                },
+                QuotesState::lacksSurroundingQuotes // else just inside []
+            );
+    }
+
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
@@ -320,10 +352,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
             return;
         }
         PsiElement caretPsi = parameters.getPosition(); // usually leaf element
-        Opt<PsiElement> firstParent = opt(caretPsi.getParent());
-        boolean isCaretInsideQuotes = firstParent
-            .fop(toCast(StringLiteralExpression.class)) // inside ['']
-            .uni(l -> true, () -> false); // else just inside []
+        QuotesState quotesState = getQuoteState(caretPsi);
 
         long startTime = System.nanoTime();
         Mutable<Long> firstTime = new Mutable<>(-1L);
@@ -344,7 +373,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
         Mt arrMt = Mt.reuse(arrTit);
         // preliminary keys without type - they may be at least 3 times faster in some cases
-        T2<Set<String>, Boolean> tuple = addNameOnly(arrMt, result, exprCtx, isCaretInsideQuotes, (lookupString) -> {
+        T2<Set<String>, Boolean> tuple = addNameOnly(arrMt, result, exprCtx, quotesState, (lookupString) -> {
             //System.out.println("resolved " + search.getExpressionsResolved() + " expressions for first key - " + lookupString);
             firstTime.set(System.nanoTime() - startTime);
         });
@@ -368,11 +397,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
         // I enabled auto-popup for it, but I want it to show
         // only my options, not 100500k built-in suggestions
-        boolean isEmptySquareBracket = firstParent
-            .fop(toCast(ConstantReference.class))
-            .map(cst -> cst.getName())
-            .map(n -> n.equals("")|| n.equals("IntellijIdeaRulezzz"))
-            .def(false);
+        boolean isEmptySquareBracket = quotesState.lacksSurroundingQuotes;
 
         runSafeRemainingContributors(result, parameters, otherSourceResult -> {
             // remove dupe built-in suggestions
