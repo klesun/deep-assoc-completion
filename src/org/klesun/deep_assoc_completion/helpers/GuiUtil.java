@@ -8,18 +8,31 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.util.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.klesun.deep_assoc_completion.entry.DeepSettings;
+import org.klesun.deep_assoc_completion.helpers.QuotesState.Kind;
 import org.klesun.lang.Lang.Mutable;
 import org.klesun.lang.Tls;
 
 public class GuiUtil {
     public static void putCaretForward(InsertionContext ctx, QuotesState quotesState) {
-        // place caret after closing bracket
+        // place caret after closing bracket if possible
         int finalPos = ctx.getTailOffset();
-        if (quotesState.unterminatedQuoteChar.isEmpty() &&
-            !quotesState.lacksSurroundingQuotes
-        ) {
-            finalPos += 1; // ends before closing "'", place after the "'"
+        boolean isCaretAfterClosingQuote =
+            quotesState.kind ==  Kind.HAD_LEFT ||
+            quotesState.kind ==  Kind.HAD_NONE;
+        if (!isCaretAfterClosingQuote) {
+            String expectedEndChar = quotesState.quoteChar.toString();
+            String actualEndChar = ctx.getEditor().getDocument()
+                .getText(new TextRange(finalPos, finalPos + 1));
+            if (!expectedEndChar.equals(actualEndChar)) {
+                // do not attempt to update caret position, as this
+                // completion did not end at the end of string literal
+                // may happen if it was an unterminated quote in the middle of line, rather than end
+                return;
+            } else  {
+                finalPos += 1; // ends before closing "'", place after the "'"
+            }
         }
+
         String caretChar = ctx.getEditor().getDocument()
             .getText(new TextRange(finalPos, finalPos + 1));
         if (caretChar.equals("]")) {

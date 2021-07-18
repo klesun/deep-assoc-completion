@@ -24,6 +24,7 @@ import org.klesun.deep_assoc_completion.entry.DeepSettings;
 import org.klesun.deep_assoc_completion.helpers.GuiUtil;
 import org.klesun.deep_assoc_completion.helpers.Mt;
 import org.klesun.deep_assoc_completion.helpers.QuotesState;
+import org.klesun.deep_assoc_completion.helpers.QuotesState.Kind;
 import org.klesun.deep_assoc_completion.icons.DeepIcons;
 import org.klesun.deep_assoc_completion.resolvers.var_res.DocParamRes;
 import org.klesun.deep_assoc_completion.structures.DeepType;
@@ -215,14 +216,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         L<LookupKey> keyNamesToAdd = list();
         if (kt.stringValue != null) {
             String keyName = kt.stringValue;
-            final String lookupString;
-            if (quotesState.unterminatedQuoteChar.isPresent()) {
-                lookupString = keyName + quotesState.unterminatedQuoteChar.get(); // close unterminated quote if any
-            } else if (quotesState.lacksSurroundingQuotes && !Tls.isNum(keyName)) {
-                lookupString = "'" + keyName + "'";
-            } else {
-                lookupString = keyName;
-            }
+            String lookupString = quotesState.completeQuoting(keyName);
             LookupElementBuilder keyLookup = startLookupBuilder(lookupString)
                 .withBoldness(true);
             keyNamesToAdd.add(new LookupKey(keyLookup, LookupKeyKind.NAME));
@@ -326,22 +320,6 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
         return T2(suggested, hadComments.get());
     }
 
-    private static QuotesState getQuoteState(PsiElement caretPsi) {
-        Opt<PsiElement> firstParent = opt(caretPsi.getParent());
-        return firstParent
-            .cst(StringLiteralExpression.class) // inside ['']
-            .uni(
-                lit -> {
-                    String litText = lit.getText();
-                    char quoteChar = litText.charAt(0);
-                    return litText.endsWith(Character.toString(quoteChar))
-                        ? QuotesState.hasSurroundingQuotes()
-                        : QuotesState.unterminatedQuoteChar(quoteChar);
-                },
-                QuotesState::lacksSurroundingQuotes // else just inside []
-            );
-    }
-
     @Override
     protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext processingContext, @NotNull CompletionResultSet result)
     {
@@ -352,7 +330,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
             return;
         }
         PsiElement caretPsi = parameters.getPosition(); // usually leaf element
-        QuotesState quotesState = getQuoteState(caretPsi);
+        QuotesState quotesState = QuotesState.fromCaretPsi(caretPsi);
 
         long startTime = System.nanoTime();
         Mutable<Long> firstTime = new Mutable<>(-1L);
@@ -397,7 +375,7 @@ public class AssocKeyPvdr extends CompletionProvider<CompletionParameters>
 
         // I enabled auto-popup for it, but I want it to show
         // only my options, not 100500k built-in suggestions
-        boolean isEmptySquareBracket = quotesState.lacksSurroundingQuotes;
+        boolean isEmptySquareBracket = quotesState.kind == Kind.HAD_NONE;
 
         runSafeRemainingContributors(result, parameters, otherSourceResult -> {
             // remove dupe built-in suggestions

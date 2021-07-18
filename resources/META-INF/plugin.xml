@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2021.07.18.001</version>
+    <version>2021.07.18.002</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
