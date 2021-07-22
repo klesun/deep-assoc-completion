@@ -177,7 +177,10 @@ function purchaseViaSoap($products, $currency, $amount)
 ```
 
 The plugin suggests you the keys function uses. Is helps a lot sometimes.
+_______________________________________________
 
+for more detailed list of phpdoc formats, see:
+https://github.com/klesun/deep-assoc-completion/issues/63
 _______________________________________________
 
 Last, but not... well, actually the least important feature - _Ctrl+Alt+Q_ - getting the json-like description of variable type. It may be handy sometimes when you, like, need to create an array with same keys as the variable, and you don't want to type them manually... And it helps to grasp the idea about the variable i guess.
