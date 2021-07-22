@@ -1,5 +1,7 @@
 PRs are welcome, will gladly help with any questions you may have, but pls try to avoid unnecessary refactoring and features that may cause considerable performance degradation, as such PRs won't be accepted. If in doubt, create an issue to discuss whether feature will be acceptable before starting to spend time on implementing it.
 
+If you need help with building the project or understanding the code, feel free to drop at https://t.me/klesun_productions, we can chat there ;)
+
 ____________________________
 
 Autocomplete keys of associative arrays defined in other functions.
