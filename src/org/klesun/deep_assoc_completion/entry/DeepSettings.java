@@ -23,7 +23,6 @@ public class DeepSettings implements PersistentStateComponent<DeepSettings> {
     public Integer implicitDepthLimit = 30;
     public Integer totalExpressionLimit = 7500;
     public Integer usageBasedCompletionDepthLimit = 3;
-    public Boolean removeUnusedImportsOnSaveEnabled = false;
     public Boolean passArgsToImplementations = false;
     public Boolean enableMemberCompletion = true;
     public Boolean adjustOtherPluginOptions = true;

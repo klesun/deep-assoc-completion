@@ -21,7 +21,6 @@ public class DeepSettingsForm implements Configurable
     private JPanel rootPanel;
     private JFormattedTextField explicitDepthLimit;
     private JFormattedTextField implicitDepthLimit;
-    private JCheckBox removeUnusedImportsOnSaveEnabled;
     private JFormattedTextField totalExpressionLimit;
     private JFormattedTextField usageBasedCompletionDepthLimit;
     private JCheckBox passArgsToImplementations;
@@ -47,12 +46,10 @@ public class DeepSettingsForm implements Configurable
 
     @Override
     public boolean isModified() {
-        if (removeUnusedImportsOnSaveEnabled == null) {
-            // will be null if "UI Designer" plugin is disabled during compilation
+        if (explicitDepthLimit == null) {
             return false;
         }
-        return !getSettings().removeUnusedImportsOnSaveEnabled == removeUnusedImportsOnSaveEnabled.isSelected()
-            || !getSettings().passArgsToImplementations == passArgsToImplementations.isSelected()
+        return !getSettings().passArgsToImplementations == passArgsToImplementations.isSelected()
             || !getSettings().enableMemberCompletion == enableMemberCompletion.isSelected()
             || !getSettings().adjustOtherPluginOptions == adjustOtherPluginOptions.isSelected()
             || !getSettings().explicitDepthLimit.toString().equals(explicitDepthLimit.getText())
@@ -80,7 +77,6 @@ public class DeepSettingsForm implements Configurable
 
     @Override
     public void apply() throws ConfigurationException {
-        getSettings().removeUnusedImportsOnSaveEnabled = removeUnusedImportsOnSaveEnabled.isSelected();
         getSettings().passArgsToImplementations = passArgsToImplementations.isSelected();
         getSettings().enableMemberCompletion = enableMemberCompletion.isSelected();
         getSettings().adjustOtherPluginOptions = adjustOtherPluginOptions.isSelected();
@@ -92,7 +88,6 @@ public class DeepSettingsForm implements Configurable
 
     @Override
     public void reset() {
-        removeUnusedImportsOnSaveEnabled.setSelected(getSettings().removeUnusedImportsOnSaveEnabled);
         passArgsToImplementations.setSelected(getSettings().passArgsToImplementations);
         enableMemberCompletion.setSelected(getSettings().enableMemberCompletion);
         adjustOtherPluginOptions.setSelected(getSettings().adjustOtherPluginOptions);

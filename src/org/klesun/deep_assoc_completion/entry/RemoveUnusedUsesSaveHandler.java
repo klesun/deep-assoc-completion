@@ -31,7 +31,7 @@ public class RemoveUnusedUsesSaveHandler implements FileDocumentManagerListener
     @Override
     public void beforeDocumentSaving(@NotNull Document document) {
         for (Project project : ProjectManager.getInstance().getOpenProjects()) {
-            if (DeepSettings.inst(project).removeUnusedImportsOnSaveEnabled) {
+            if (false) {
                 PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
                 if (psiFile == null) continue;
 

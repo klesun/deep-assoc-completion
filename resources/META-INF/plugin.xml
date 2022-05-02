@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2021.07.18.002</version>
+    <version>2022.04.02.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -49,13 +49,12 @@
 
     <change-notes><![CDATA[
     <ul>
-        <li>#187 Fix caret misposition after completing a key inside unterminated quotes (common when you have _Insert pair quote_ disabled in IDEA settings)</li>
-        <li>Built for java 11 now, not java 8 (hopefully archlinux users and others all have phpstorm that supports java 11 by this time)</li>
+        <li>#201 Remove "Remove unused uses on save" option from plugin settings, as it just always causes errors since 2022.1 IDE version. Please, use "Optimize imports" instead</li>
     </ul>
     ]]>
     </change-notes>
 
-    <idea-version since-build="211.7142.45"/> <!-- 2021.1.1 a recent version, building for java 11 from now on -->
+    <idea-version since-build="221.1.1"/> <!-- breaking changes in the IDE API related to progress indicator -->
 
     <extensions defaultExtensionNs="com.intellij">
         <completion.contributor order="first" language="PHP" implementationClass="org.klesun.deep_assoc_completion.entry.DirectTypeCompletionContributor"/>
@@ -72,7 +71,8 @@
             nonDefaultProject="true"
         />
         <projectService serviceImplementation="org.klesun.deep_assoc_completion.entry.DeepSettings"/>
-        <fileDocumentManagerListener implementation="org.klesun.deep_assoc_completion.entry.RemoveUnusedUsesSaveHandler"/>
+        <!-- disabled, as since 2022.1 it causes errors about progress indicator -->
+<!--        <fileDocumentManagerListener implementation="org.klesun.deep_assoc_completion.entry.RemoveUnusedUsesSaveHandler"/>-->
     </extensions>
 
     <extensions defaultExtensionNs="com.jetbrains.php">
