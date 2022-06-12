@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>lv.midiana.misc.phpstorm-plugins.deep-keys</id>
     <name>deep-assoc-completion</name>
-    <version>2022.04.02.001</version>
+    <version>2022.06.12.001</version>
     <vendor email="arturklesun@gmail.com" url="https://klesun-productions.com/entry/deep-assoc-completion">klesun</vendor>
 
     <description><![CDATA[
@@ -49,7 +49,7 @@
 
     <change-notes><![CDATA[
     <ul>
-        <li>#201 Remove "Remove unused uses on save" option from plugin settings, as it just always causes errors since 2022.1 IDE version. Please, use "Optimize imports" instead</li>
+        <li>#201, #206, 200: Fix 2022 update `Must be executed under progress indicator` compatibility breach - do not use ReferencesSearch when ctrl-hovering on global variables, as ref search now requires explicit action progress indicator</li>
     </ul>
     ]]>
     </change-notes>

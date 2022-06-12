@@ -6,6 +6,8 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.impl.CoreProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
@@ -20,6 +22,7 @@ import com.jetbrains.php.lang.psi.elements.Variable;
 import com.jetbrains.php.lang.psi.elements.impl.VariableImpl;
 import com.jetbrains.php.lang.psi.resolve.types.PhpType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.klesun.deep_assoc_completion.contexts.ExprCtx;
 import org.klesun.deep_assoc_completion.contexts.FuncCtx;
 import org.klesun.deep_assoc_completion.contexts.IExprCtx;
@@ -73,6 +76,11 @@ public class VarNamePvdr extends CompletionProvider<CompletionParameters>
 
     private static It<Variable> getGlobalsMagicVarUsages(Project project)
     {
+        if (!CoreProgressManager.getInstance().hasProgressIndicator()) {
+            return It.non(); // since 2022 ReferencesSearch only works in explicit actions having
+                // a progress indicator, like _ctrl+b_, whereas implicit actions like _ctrl+hover_
+                // would cause "Must be executed under progress indicator" errors shown to users
+        }
         try {
             return It(PhpIndex.getInstance(project).getVariablesByName("GLOBALS")).fst()
                 .fap(globVar -> ReferencesSearch.search(globVar, GlobalSearchScope.allScope(globVar.getProject()), false))
